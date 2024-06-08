@@ -4,7 +4,7 @@ import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 const Link = ({ onClick, ...props }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  //get the current route from store
+  //get the current route from store, later*
 
   let to = props.href || props.to || '#';
   const defaultCallback = (e) => {

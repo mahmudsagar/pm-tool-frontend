@@ -9,6 +9,7 @@ const Parallel = ({ path, target }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [open, setOpen] = React.useState(true);
 
+  /** will implement modal later */
   const Container = target === '_popup' ? Drawer : Drawer;
 
   const onClose = (state) => {
@@ -26,10 +27,8 @@ const Parallel = ({ path, target }) => {
 
 
   if (searchParams.has(path) && !open) {
-    console.log('open');
     return '';
   }
-  console.log('para');
   return <Container open={open} onOpenChange={onClose} className="popup-sidebar-container" rootClassName="popup-sidebar-container">
     <ProfileForm />
   </Container>
