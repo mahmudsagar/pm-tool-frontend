@@ -18,5 +18,15 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [{
+          "name": "react-router-dom",
+          "importNames": ["Link"],
+          "message": "Link from react-router-dom is not recommended, use BetterRouter/Link from local instead"
+        }]
+      }
+    ]
   },
 }
