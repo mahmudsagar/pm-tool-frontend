@@ -1,12 +1,11 @@
 import { Outlet, useSearchParams } from 'react-router-dom';
 import Link from './BetterRouter/Link';
 import { Fragment } from 'react';
-import Parallel from './BetterRouter/Parallel';
+import ParallelRoutePage from './BetterRouter/ParallelRoutePage';
 
 const App = () => {
   const [searchParams] = useSearchParams();
   const paramObject = Array.from(searchParams.entries()).filter(([, target]) => ['_sidebar', '_popup'].includes(target));
-  console.log(paramObject);
   return (
     <div className='bg-slate-200 w-screen'>
       <nav>
@@ -27,8 +26,7 @@ const App = () => {
       </nav>
       <Outlet />
 
-      {paramObject.map(([path, target], index) => <Fragment key={index}><Parallel path={path} target={target} /></Fragment>)}
-
+      {paramObject.map(([path, target], index) => <Fragment key={index}><ParallelRoutePage path={path} target={target} /></Fragment>)}
     </div>
   );
 };
