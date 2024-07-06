@@ -3,7 +3,7 @@ import Check from "@/pages/Check";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
 
-export const routeConfig = [
+export const routes = [
   {
     path: '/',
     element: <App />,

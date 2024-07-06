@@ -1,8 +1,8 @@
 import { useRoutes } from "react-router-dom";
-import { routeConfig } from "./config";
+import { routes } from "./config";
 
 const BetterRouter = () => {
-  const allRoutes = useRoutes(routeConfig);
+  const allRoutes = useRoutes(routes);
   return (
     <>
       {allRoutes}
