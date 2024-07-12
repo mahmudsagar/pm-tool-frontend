@@ -1,11 +1,37 @@
 import { Outlet, useSearchParams } from 'react-router-dom';
 import Link from './BetterRouter/Link';
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 import ParallelRoutePage from './BetterRouter/ParallelRoutePage';
+import useStore from './stores/store';
 
 const App = () => {
   const [searchParams] = useSearchParams();
   const paramObject = Array.from(searchParams.entries()).filter(([, target]) => ['_sidebar', '_popup'].includes(target));
+  const { pathname, search, href } = window.location;
+
+  const currentPage = useStore((state) => state.currentPage);
+  const setCurrentPage = useStore((state) => state.setCurrentPage);
+
+  useEffect(() => {
+    console.log('current page', currentPage, setCurrentPage);
+    try {
+      if (search.includes('_sidebar') || search.includes('_popup')) {
+        const activePath = (search.split('&').pop() || pathname).replace('?', '').replace(/%2F/g, "/");
+        const [path, target] = activePath.split('=')
+        setCurrentPage({ path, target });
+        //dispatch(setCurrentRoute({ path, target, type: 'parallel', ...(pageContent || {}) }))
+      }
+      else {
+        //dispatch(setCurrentRoute({ path: pathname + search, target: '_self', ...(pageContent || {}) }))
+        // if (setCurrentPageDetails) {
+        //   setCurrentPageDetails(pageContent)
+        // }
+      }
+    }
+    catch (_) {
+      //
+    }
+  }, [href, pathname, search]);
   return (
     <div className='bg-slate-200 w-screen'>
       <nav>
