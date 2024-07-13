@@ -2,6 +2,7 @@ import App from "@/App";
 import Check from "@/pages/Check";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
+import Sheet from "@/pages/sheet";
 
 export const routes = [
   {
@@ -21,6 +22,10 @@ export const routes = [
         element: <Form />
       },
     ]
+  },
+  {
+    path: "/sheet",
+    element: <Sheet />
   },
   {
     path: "*",

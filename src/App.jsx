@@ -30,7 +30,7 @@ const App = () => {
     }
   }, [href, pathname, search]);
   return (
-    <div className='bg-slate-200 w-screen'>
+    <div className='bg-slate-200 w-screen h-full'>
       <nav>
         <ul className='flex items-center justify-center py-4 gap-8 uppercase'>
           <li>
@@ -41,6 +41,9 @@ const App = () => {
           </li>
           <li>
             <Link to="/form/1">Form</Link>
+          </li>
+          <li>
+            <Link to="/sheet">Sheet</Link>
           </li>
           <li>
             <Link to="/form/1" target="_sidebar">Form in Drawer</Link>
