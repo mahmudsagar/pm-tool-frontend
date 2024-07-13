@@ -8,8 +8,8 @@ const useStore = create(subscribeWithSelector((set) => ({
 
   /** later organize with slices */
 
-  currentPage: {},
-  setCurrentPage: (pageDetail) => set({ currentPage: pageDetail }),
+  currentRoute: {},
+  setCurrentRoute: (pageDetail) => set({ currentRoute: pageDetail }),
 })));
 
 export default useStore;

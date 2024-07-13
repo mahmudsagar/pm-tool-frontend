@@ -9,23 +9,20 @@ const App = () => {
   const paramObject = Array.from(searchParams.entries()).filter(([, target]) => ['_sidebar', '_popup'].includes(target));
   const { pathname, search, href } = window.location;
 
-  const currentPage = useStore((state) => state.currentPage);
-  const setCurrentPage = useStore((state) => state.setCurrentPage);
+  const currentRoute = useStore((state) => state.currentRoute);
+  const setCurrentRoute = useStore((state) => state.setCurrentRoute);
 
   useEffect(() => {
-    console.log('current page', currentPage, setCurrentPage);
+    console.log('current page', currentRoute, setCurrentRoute);
     try {
       if (search.includes('_sidebar') || search.includes('_popup')) {
-        const activePath = (search.split('&').pop() || pathname).replace('?', '').replace(/%2F/g, "/");
+        const activePath = (search.split('&').findLast(item => item.includes("_sidebar") || item.includes("_popup")) || pathname).replace('?', '').replace(/%2F/g, "/");
+        console.log('activePath', activePath);
         const [path, target] = activePath.split('=')
-        setCurrentPage({ path, target });
-        //dispatch(setCurrentRoute({ path, target, type: 'parallel', ...(pageContent || {}) }))
+        setCurrentRoute({ path, target, type: "parallel" });
       }
       else {
-        //dispatch(setCurrentRoute({ path: pathname + search, target: '_self', ...(pageContent || {}) }))
-        // if (setCurrentPageDetails) {
-        //   setCurrentPageDetails(pageContent)
-        // }
+        setCurrentRoute({ path: pathname + search, target: '_self' });
       }
     }
     catch (_) {

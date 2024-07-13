@@ -84,6 +84,9 @@ const ProfileForm = () => {
 
   return (
     <div className="p-5 bg-slate-100">
+      <Link to="/check" target="_sidebar" className="bg-primary text-white p-1 mb-4">
+        nested page
+      </Link>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField

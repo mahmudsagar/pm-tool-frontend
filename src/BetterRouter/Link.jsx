@@ -1,10 +1,11 @@
 
 // eslint-disable-next-line no-restricted-imports
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import useStore from '@/stores/store';
 
-const Link = ({ onClick, ...props }) => {
+const Link = ({ onClick, layoutType = 'basic', ...props }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  //get the current route from store, later*
+  const currentRoute = useStore((state) => state.currentRoute);
 
   let to = props.href || props.to || '#';
   const defaultCallback = (e) => {
@@ -24,8 +25,6 @@ const Link = ({ onClick, ...props }) => {
         if (parsedUrl.origin !== window.location.origin) {
           throw new Error('External links are not allowed in popup or sidebar');
         }
-
-
         const pathname = parsedUrl.pathname;
         to = pathname;
       }
@@ -33,16 +32,21 @@ const Link = ({ onClick, ...props }) => {
         //
       }
       searchParams.set(to, target);
+      if (layoutType === 'split') {
+        searchParams.set('layoutType', 'split');
+      }
       setSearchParams(searchParams);
     }
     else if (target === '_self') {
-      // if (currentRoute.target.includes("_sidebar") || currentRoute.target.includes("_popup")) {
-      //   e.preventDefault();
-      //   searchParams.delete(currentRoute.path);
-      //   console.log(currentRoute.path);
-      //   searchParams.set(to, currentRoute.target);
-      //   setSearchParams(searchParams);
-      // }
+      if (currentRoute.target === "_sidebar" || currentRoute.target === "_popup") {
+        /** preventing link element behavior for changing route and update route manually */
+        e.preventDefault();
+        /** as the current target is self and current page already inside sidebar or popup, 
+         * render the new page in the current active sidebar or popup */
+        searchParams.delete(currentRoute.path);
+        searchParams.set(to, currentRoute.target);
+        setSearchParams(searchParams);
+      }
     }
   }
 
