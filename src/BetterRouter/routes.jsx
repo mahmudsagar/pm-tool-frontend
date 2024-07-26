@@ -1,4 +1,5 @@
-import App from "@/App";
+import Default from "@/layouts/Default";
+import Settings from "@/layouts/Settings";
 import Check from "@/pages/Check";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
@@ -7,7 +8,7 @@ import Sheet from "@/pages/sheet";
 export const routes = [
   {
     path: '/',
-    element: <App />,
+    element: <Default />, /** layout element */
     children: [
       {
         path: '/',
@@ -19,6 +20,24 @@ export const routes = [
       },
       {
         path: '/form/*',
+        element: <Form />
+      },
+    ]
+  },
+  {
+    path: '/settings',
+    element: <Settings />,
+    children: [
+      {
+        path: '/settings/',
+        element: <Home />
+      },
+      {
+        path: '/settings/check',
+        element: <Check />
+      },
+      {
+        path: '/settings/form/*',
         element: <Form />
       },
     ]

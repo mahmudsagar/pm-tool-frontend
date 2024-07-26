@@ -1,8 +1,8 @@
 
 import { matchRoutes, useSearchParams } from "react-router-dom";
 import React from "react";
-import Drawer from "./Drawer";
-import { routes } from "./config";
+import Drawer from "../Drawer";
+import { routes } from "../routes";
 
 
 const ParallelRoutePage = ({ path, target }) => {

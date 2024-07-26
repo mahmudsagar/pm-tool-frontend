@@ -12,4 +12,9 @@ const useStore = create(subscribeWithSelector((set) => ({
   setCurrentRoute: (pageDetail) => set({ currentRoute: pageDetail }),
 })));
 
+export const useSidebar = create((set) => ({
+  isOpen: true,
+  toggle: () => set((state) => ({ isOpen: !state.isOpen })),
+}));
+
 export default useStore;
