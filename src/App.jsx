@@ -7,7 +7,7 @@ const App = () => {
   const [searchParams] = useSearchParams();
   const paramObject = Array.from(searchParams.entries()).filter(([, target]) => ['_sidebar', '_popup'].includes(target));
   return (
-    <div className='bg-slate-200 w-screen'>
+    <div className='bg-slate-200 w-screen flex flex-col h-full min-h-screen'>
       <nav>
         <ul className='flex items-center justify-center py-4 gap-8 uppercase'>
           <li>

@@ -7,6 +7,9 @@ import { fileURLToPath, URL } from 'url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    "process.env.IS_PREACT": JSON.stringify("true"),
+  },
   plugins: [
     react(),
     alias({

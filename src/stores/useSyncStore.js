@@ -10,8 +10,10 @@ const useSyncStore = () => {
   const [, setWorker] = useState(null);
   const [, setClientId] = useState(null);
 
-  const { count, increment, decrement } = useStore(
+  const { viewData, setViewData, count, increment, decrement } = useStore(
     (state) => ({
+      viewData: state.viewData,
+      setViewData: state.setViewData,
       count: state.count,
       increment: state.increment,
       decrement: state.decrement
@@ -31,14 +33,14 @@ const useSyncStore = () => {
     const handleStateChange = (state) => {
       syncWorker.postMessage({
         type: 'BetterNotionStorage',
-        state: { count: state.count },
+        state: { viewData: state.viewData, count: state.count },
         clientId: id,
       });
     };
 
     const unsubscribe = useStore.subscribe(
       handleStateChange,
-      (state) => state.count
+      (state) => state.viewData
     );
 
     const handleStorageEvent = (event) => {
@@ -78,7 +80,7 @@ const useSyncStore = () => {
     };
   }, []);
 
-  return { count, increment, decrement };
+  return { viewData, setViewData, count, increment, decrement };
 };
 
 export default useSyncStore;

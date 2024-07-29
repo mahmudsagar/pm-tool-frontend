@@ -2,6 +2,10 @@ import App from "@/App";
 import Check from "@/pages/Check";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
+import Views from "@/pages/Views";
+
+// error page
+import ErrorBoundary from "@/pages/ErrorBoundary";
 
 export const routes = [
   {
@@ -20,11 +24,15 @@ export const routes = [
         path: '/form/*',
         element: <Form />
       },
+      {
+        path: '/views/:viewId',
+        element: <Views />
+      }
     ]
   },
   {
     path: "*",
-    element: <h1>404</h1>
+    element: <ErrorBoundary />
   }
 ]
 
