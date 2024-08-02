@@ -26,6 +26,12 @@ export const NavItems = [
     target: "_blank",
   },
   {
+    title: "Document",
+    icon: LayoutDashboard,
+    href: "/document",
+    color: "text-sky-500",
+  },
+  {
     title: "Form in Drawer",
     icon: LayoutDashboard,
     href: "/form/1",

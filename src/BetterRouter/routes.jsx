@@ -1,6 +1,7 @@
 import Default from "@/layouts/Default";
 import Settings from "@/layouts/Settings";
 import Check from "@/pages/Check";
+import Document from "@/pages/document";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
 import Sheet from "@/pages/sheet";
@@ -22,6 +23,10 @@ export const routes = [
         path: '/form/*',
         element: <Form />
       },
+      {
+        path: '/document/*',
+        element: <Document />
+      }
     ]
   },
   {
@@ -39,6 +44,10 @@ export const routes = [
       {
         path: '/settings/form/*',
         element: <Form />
+      },
+      {
+        path: '/settings/document/*',
+        element: <Document />
       },
     ]
   },
