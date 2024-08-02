@@ -1,7 +1,6 @@
 import '@univerjs/design/lib/index.css';
-import './index.css';
 
-import { Univer, LocaleType, UniverInstanceType } from '@univerjs/core';
+import { Univer, LocaleType, UniverInstanceType, Tools } from '@univerjs/core';
 import { defaultTheme } from '@univerjs/design';
 import { UniverDocsPlugin } from '@univerjs/docs';
 import { UniverFormulaEnginePlugin } from '@univerjs/engine-formula';
@@ -11,8 +10,11 @@ import { UniverSheetsFormulaPlugin } from '@univerjs/sheets-formula';
 import { UniverSheetsUIPlugin } from '@univerjs/sheets-ui';
 import { UniverUIPlugin } from '@univerjs/ui';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { enUS } from 'univer:locales'
 import { UniverDocsUIPlugin } from '@univerjs/docs-ui';
+import '@univerjs-pro/sheets-print/lib/index.css';
+import SheetsPrintPluginEnUS from '@univerjs-pro/sheets-print/locale/en-US';
+
+import './index.css';
 
 // eslint-disable-next-line react/display-name
 const UniverSheet = forwardRef(({ data }, ref) => {
@@ -36,7 +38,9 @@ const UniverSheet = forwardRef(({ data }, ref) => {
       theme: defaultTheme,
       locale: LocaleType.EN_US,
       locales: {
-        [LocaleType.EN_US]: enUS,
+        [LocaleType.EN_US]: Tools.deepMerge(
+          SheetsPrintPluginEnUS
+        ),
       },
     });
     univerRef.current = univer;
@@ -44,6 +48,8 @@ const UniverSheet = forwardRef(({ data }, ref) => {
     // core plugins
     univer.registerPlugin(UniverRenderEnginePlugin);
     univer.registerPlugin(UniverFormulaEnginePlugin);
+    univer.registerPlugin(SheetsPrintPluginEnUS);
+
     univer.registerPlugin(UniverUIPlugin, {
       container: containerRef.current,
     });

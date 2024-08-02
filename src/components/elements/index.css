@@ -3,3 +3,8 @@
   height: 100%;
   overflow: hidden;
 }
+
+.univer-theme {
+  --primary-color: #1890ff;
+  --primary-color-hover: #40a9ff;
+}
