@@ -1,9 +1,20 @@
 import { useEffect, useState } from "react";
-import { Excalidraw, getNonDeletedElements, getSceneVersion, restoreElements } from "@excalidraw/excalidraw";
+import {
+  Excalidraw,
+  getNonDeletedElements,
+  getSceneVersion,
+  restoreElements,
+  MainMenu,
+  THEME,
+} from "@excalidraw/excalidraw";
+import { } from "@excalidraw/excalidraw";
 
 import useSyncStore from '@/stores/useSyncStore';
+import { MoonIcon, SunIcon } from "lucide-react";
 
 export default function Whiteboard({ viewId, theme = 'light' }) {
+  const [isLightTheme, setIsLightTheme] = useState(true);
+
   // store data
   const { viewData, setViewData } = useSyncStore()
 
@@ -78,14 +89,26 @@ export default function Whiteboard({ viewId, theme = 'light' }) {
         </div> */}
       <div className='h-screen'>
         <Excalidraw
-          theme={theme}
+          theme={isLightTheme ? THEME.LIGHT : THEME.DARK}
           key={viewData[viewId]}
           initialData={{
             elements: viewData?.[viewId]
             // appState: { viewModeEnabled }
           }}
           onChange={handleChange}
-        />
+        >
+          <MainMenu>
+            <MainMenu.Item
+              icon={isLightTheme ? <MoonIcon /> : <SunIcon />}
+              onSelect={() => setIsLightTheme(prev => !prev)}
+            >
+              {isLightTheme ? 'Dark' : 'Light'} Mode
+            </MainMenu.Item>
+            {/* <MainMenu.Item onSelect={() => window.alert("Item2")}>
+              Item2
+            </MainMenu.Item> */}
+          </MainMenu>
+        </Excalidraw>
       </div>
     </div>
   );
