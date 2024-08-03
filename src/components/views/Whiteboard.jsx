@@ -3,7 +3,7 @@ import { Excalidraw, getNonDeletedElements, getSceneVersion, restoreElements } f
 
 import useSyncStore from '@/stores/useSyncStore';
 
-export default function Whiteboard({ viewId }) {
+export default function Whiteboard({ viewId, theme = 'light' }) {
   // store data
   const { viewData, setViewData } = useSyncStore()
 
@@ -29,7 +29,7 @@ export default function Whiteboard({ viewId }) {
       state.editingGroupId === null &&
       state.editingLinearElement === null
     ) {
-      // Maintaining scene version so data doesnt update on each state
+      // Maintaining scene version so data does not update on each state
       const sceneVersion = getSceneVersion(elements);
       if (sceneVersion > 0 && sceneVersion !== previousSceneVersion) {
         setPreviousSceneVersion(sceneVersion);
@@ -78,6 +78,7 @@ export default function Whiteboard({ viewId }) {
         </div> */}
       <div className='h-screen'>
         <Excalidraw
+          theme={theme}
           key={viewData[viewId]}
           initialData={{
             elements: viewData?.[viewId]
