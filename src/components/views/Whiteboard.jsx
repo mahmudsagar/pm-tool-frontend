@@ -12,7 +12,12 @@ import { } from "@excalidraw/excalidraw";
 import useSyncStore from '@/stores/useSyncStore';
 import { MoonIcon, SunIcon } from "lucide-react";
 
-export default function Whiteboard({ viewId, theme = 'light' }) {
+/**
+ * 
+ * @param {viewId} viewId of the current page
+ * @returns 
+ */
+export default function Whiteboard({ viewId }) {
   const [isLightTheme, setIsLightTheme] = useState(true);
 
   // store data
@@ -40,39 +45,26 @@ export default function Whiteboard({ viewId, theme = 'light' }) {
       state.editingGroupId === null &&
       state.editingLinearElement === null
     ) {
+      // disabled initialData onchange trigger
+      if (flags.justLoaded) {
+        setFlags(prev => ({
+          ...prev,
+          justLoaded: false
+        }))
+        return;
+      }
+
       // Maintaining scene version so data does not update on each state
       const sceneVersion = getSceneVersion(elements);
+      // console.log({ sceneVersion, previousSceneVersion, logic: sceneVersion > 0 && sceneVersion !== previousSceneVersion });
       if (sceneVersion > 0 && sceneVersion !== previousSceneVersion) {
         setPreviousSceneVersion(sceneVersion);
-
-        // disabled initialData onchange trigger
-        if (flags.justLoaded) {
-          setFlags(prev => ({
-            ...prev,
-            justLoaded: false
-          }))
-          return;
-        }
 
         // Send non deleted elements to store state
         setViewData(viewId, getNonDeletedElements(elements));
       }
     }
   }
-
-  useEffect(() => {
-    if (!flags.justLoaded) {
-      console.log("Triggering Restore", viewData[viewId])
-      setFlags(prev => ({
-        ...prev,
-        isDirty: true,
-      }))
-
-      // restoreElements(viewData[viewId])
-    }
-
-    return () => restoreElements([])
-  }, [viewData, viewId])
 
   return (
     <div className='h-full flex-1 flex flex-col'>
@@ -104,9 +96,6 @@ export default function Whiteboard({ viewId, theme = 'light' }) {
             >
               {isLightTheme ? 'Dark' : 'Light'} Mode
             </MainMenu.Item>
-            {/* <MainMenu.Item onSelect={() => window.alert("Item2")}>
-              Item2
-            </MainMenu.Item> */}
           </MainMenu>
         </Excalidraw>
       </div>
