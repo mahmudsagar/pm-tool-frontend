@@ -6,7 +6,6 @@
 
 /* customize theme */
 
-/* .univer-theme {
-  --primary-color: #1890ff;
-  --primary-color-hover: #40a9ff;
-} */
+html.dark .univer-theme {
+  filter: invert(1);
+}
