@@ -15,7 +15,7 @@ import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import ToolbarPlugin from './plugins/ToolbarPlugin';
 import TreeViewPlugin from './plugins/TreeViewPlugin';
 import { defaultTheme } from './theme/default';
-import './style.css';
+import './style.scss';
 
 const placeholder = 'Enter some rich text...';
 
@@ -32,7 +32,8 @@ const editorConfig = {
 
 export default function Editor() {
   return (
-    <LexicalComposer initialConfig={editorConfig}>
+   <div className='lexical-editor'>
+     <LexicalComposer initialConfig={editorConfig}>
       <div className="editor-container">
         <ToolbarPlugin />
         <div className="editor-inner">
@@ -54,5 +55,6 @@ export default function Editor() {
         </div>
       </div>
     </LexicalComposer>
+   </div>
   );
 }
