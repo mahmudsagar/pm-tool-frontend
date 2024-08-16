@@ -79,7 +79,7 @@ export function CommandMenu({ ...props }) {
         <Search className="inline-flex mr-1.5 h-4 w-4 text-muted-foreground" />
         <span className="hidden md:inline-flex">Click to search...</span>
         <span className="inline-flex md:hidden">Search...</span>
-        <kbd className="pointer-events-none absolute right-3.5 top-2.5 hidden h-5 select-none items-center gap-0.5 px-1.5 font-medium text-slate-500 sm:flex">
+        <kbd className="pointer-events-none absolute right-3.5 top-2.5 hidden h-5 select-none items-center gap-0.5 px-1.5 font-medium text-slate-500 dark:text-slate-400 sm:flex">
           <LucideCommand size={14} />
           <span className="text-xs text-[16px]">K</span>
         </kbd>
