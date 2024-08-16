@@ -79,7 +79,7 @@ export function SideNav({ items, setOpen, className }) {
                 <AccordionTrigger
                   className={cn(
                     buttonVariants({ variant: 'ghost' }),
-                    'group relative flex h-9 justify-between px-4 py-2 text-black duration-200 hover:bg-muted hover:no-underline',
+                    'group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
                   )}
                 >
                   <item.icon size={18} className={cn(item.color, 'inline group-hover:hidden group-data-[state=open]:hidden')} />
@@ -137,8 +137,8 @@ export function SideNav({ items, setOpen, className }) {
               }}
               className={cn(
                 buttonVariants({ variant: 'ghost' }),
-                'group relative flex h-9 justify-start text-black',
-                path === item.href && 'bg-slate-50 font-medium',
+                'group relative flex h-9 justify-start text-black dark:text-white',
+                path === item.href && 'bg-slate-50 dark:bg-slate-800 font-medium',
               )}
             >
               <item.icon size={18} className={cn(item.color)} />
