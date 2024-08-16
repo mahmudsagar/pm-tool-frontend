@@ -20,19 +20,19 @@ const sidebarTopLinks = [
     title: "Home",
     href: "/",
     icon: LucideHome,
-    className: "bg-slate-100 text-slate-500 rounded-lg py-2 px-6",
+    className: "bg-slate-100 dark:bg-transparent dark:border text-slate-500 dark:text-slate-400 rounded-lg py-2 px-6",
   },
   {
     title: "Calendar",
     href: "/check",
     icon: LucideCalendar,
-    className: "bg-slate-100 text-slate-500 rounded-lg py-2 px-6",
+    className: "bg-slate-100 dark:bg-transparent dark:border text-slate-500 dark:text-slate-400 rounded-lg py-2 px-6",
   },
   {
     title: "Inbox",
     href: "/form/1",
     icon: LucideInbox,
-    className: "bg-slate-100 text-slate-500 rounded-lg py-2 px-6",
+    className: "bg-slate-100 dark:bg-transparent dark:border text-slate-500 dark:text-slate-400 rounded-lg py-2 px-6",
   },
 ];
 
