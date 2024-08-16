@@ -20,19 +20,19 @@ const sidebarTopLinks = [
     title: "Home",
     href: "/",
     icon: LucideHome,
-    className: "bg-slate-100 dark:bg-transparent dark:border text-slate-500 dark:text-slate-400 rounded-lg py-2 px-6",
+    className: "bg-slate-100 dark:bg-transparent dark:border text-slate-500  rounded-lg py-2 px-6",
   },
   {
     title: "Calendar",
     href: "/check",
     icon: LucideCalendar,
-    className: "bg-slate-100 dark:bg-transparent dark:border text-slate-500 dark:text-slate-400 rounded-lg py-2 px-6",
+    className: "bg-slate-100 dark:bg-transparent dark:border text-slate-500  rounded-lg py-2 px-6",
   },
   {
     title: "Inbox",
     href: "/form/1",
     icon: LucideInbox,
-    className: "bg-slate-100 dark:bg-transparent dark:border text-slate-500 dark:text-slate-400 rounded-lg py-2 px-6",
+    className: "bg-slate-100 dark:bg-transparent dark:border text-slate-500  rounded-lg py-2 px-6",
   },
 ];
 
@@ -59,7 +59,7 @@ export function SideNav({ items, setOpen, className }) {
           <Link
             key={item.title}
             href={item.href}
-            className={cn(item.className, path === item.href ? "visited:text-purple-600 visited:bg-purple-50" : "")}>
+            className={cn(item.className, path === item.href ? "text-purple-600 bg-purple-50" : "")}>
             <item.icon />
           </Link>
         ))}
