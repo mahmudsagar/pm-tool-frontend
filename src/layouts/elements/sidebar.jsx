@@ -44,7 +44,7 @@ export default function Sidebar({ className }) {
               items={NavItems}
             />
           </div>
-          <div className="bg-white border-t pt-2">
+          <div className="border-t pt-2">
             {/* <Separator className="my-4" /> */}
             <div className="flex justify-between">
               <div className="flex gap-1.5">
@@ -60,7 +60,7 @@ export default function Sidebar({ className }) {
                 </div>
                 <div>
                   <h5 className="text-xs font-semibold">User Name</h5>
-                  <span className="text-slate-600 text-xs">Chief Technology Officer</span>
+                  <span className="text-slate-600 dark:text-slate-100 text-xs">Chief Technology Officer</span>
                 </div>
               </div>
               <DropdownMenu>
