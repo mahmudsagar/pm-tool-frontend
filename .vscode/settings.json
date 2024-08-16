@@ -23,5 +23,8 @@
   "less.validate": false,
   "[scss]": {
     "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   }
 }
