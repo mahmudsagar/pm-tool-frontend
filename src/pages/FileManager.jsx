@@ -4,22 +4,25 @@ import {
   ChevronDown,
   ArrowDownWideNarrow,
   AlignLeft,
-  LogOut
+  LogOut,
+  ArrowUpAZ,
+  ArrowDownZA,
+  CircleX,
+  FileText
 } from 'lucide-react';
 import {
   flexRender,
+  useReactTable,
   getCoreRowModel,
+  getSortedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
 } from "@tanstack/react-table";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -37,34 +40,74 @@ import {
 
 const data = [
   {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@yahoo.com",
+    id: "m5gr84i1",
+    icon: "Icon",
+    name: "App inspiration.png",
+    modified: "about a min ago",
+    modifiedBy: "Ralph Edwards",
+    fileSize: "200 KB",
+    sharing: "Private",
+    activity: "Olivia Rhye",
   },
   {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@gmail.com",
+    id: "m5gr84i2",
+    icon: "Icon",
+    name: "Tech requirements.pdf",
+    modified: "Jan 4, 2022",
+    modifiedBy: "Eleanor Pena",
+    fileSize: "720 KB",
+    sharing: "Private",
+    activity: "Phoenix Baker",
   },
   {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@gmail.com",
+    id: "m5gr84i3",
+    icon: "Icon",
+    name: "Dashboard screenshot.jpg",
+    modified: "Jan 2, 2022",
+    modifiedBy: "Cody Fisher",
+    fileSize: "16 MB",
+    sharing: "Private",
+    activity: "Lana Steiner",
   },
   {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@gmail.com",
+    id: "m5gr84i4",
+    icon: "Icon",
+    name: "Dashboard prototype recording.mp4",
+    modified: "about a min ago",
+    modifiedBy: "Bessie Cooper",
+    fileSize: "4.2 MB",
+    sharing: "Private",
+    activity: "Demi Wilkinson",
   },
   {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@hotmail.com",
+    id: "m5gr84i5",
+    icon: "Icon",
+    name: "Dashboard prototype FINAL.fig",
+    modified: "Jan 8, 2022",
+    modifiedBy: "Leslie Alexander",
+    fileSize: "400 KB",
+    sharing: "Private",
+    activity: "Candice Wu",
+  },
+  {
+    id: "m5gr84i6",
+    icon: "Icon",
+    name: "UX Design Guidelines.docx",
+    modified: "Jan 6, 2022",
+    modifiedBy: "Jane Cooper",
+    fileSize: "12 MB",
+    sharing: "Private",
+    activity: "Natali Craig",
+  },
+  {
+    id: "m5gr84i7",
+    icon: "Icon",
+    name: "Dashboard interaction.framerx",
+    modified: "Jan 4, 2022",
+    modifiedBy: "Savannah Nguyen",
+    fileSize: "800 KB",
+    sharing: "Private",
+    activity: "Drew Cano",
   },
 ]
 
@@ -92,69 +135,72 @@ export const columns = [
     enableHiding: false,
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "icon",
+    header: ({ column }) => {
+      return (
+        <FileText className='w-5 h-5' />
+      )
+    },
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
+      <div className="capitalize">{row.getValue("icon")}</div>
     ),
   },
   {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Email
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    accessorKey: "name",
+    header: "Name",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("name")}</div>
+    ),
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-
-      return <div className="text-right font-medium">{formatted}</div>
-    },
+    accessorKey: "modified",
+    header: "Modified",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("modified")}</div>
+    ),
   },
   {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const payment = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
+    accessorKey: "modifiedBy",
+    header: "Modified By",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("modifiedBy")}</div>
+    ),
   },
+  {
+    accessorKey: "fileSize",
+    header: "File Size",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("fileSize")}</div>
+    ),
+  },
+  {
+    accessorKey: "sharing",
+    header: "Sharing",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("sharing")}</div>
+    ),
+  },
+  {
+    accessorKey: "activity",
+    header: "Activity",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.getValue("activity")}</div>
+    ),
+  },
+  // {
+  //   accessorKey: "email",
+  //   header: ({ column }) => {
+  //     return (
+  //       <Button
+  //         variant="ghost"
+  //         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  //       >
+  //         Email
+  //       </Button>
+  //     )
+  //   },
+  //   cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+  // },
 ];
 
 const FileManager = () => {
@@ -167,13 +213,13 @@ const FileManager = () => {
     data,
     columns,
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    onRowSelectionChange: setRowSelection,
     getSortedRowModel: getSortedRowModel(),
+    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    getPaginationRowModel: getPaginationRowModel(),
     state: {
       sorting,
       columnFilters,
@@ -183,47 +229,42 @@ const FileManager = () => {
   })
 
   return (
-    <section className="w-full py-9 px-6">
+    <section className="w-full py-9 px-6 font-inter">
       <div className="flex items-center justify-between pb-6">
         <h3 className='text-xl font-medium'>My files</h3>
         <div className='menu-buttons flex items-center gap-8'>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <span variant="outline" className="ml-auto font-medium flex items-center justify-center text-base gap-2 cursor-pointer">
+              <button className="font-medium flex items-center justify-center text-base gap-2 focus:outline-none">
                 <ArrowDownWideNarrow className='w-4 h-4' />
                 Sort
                 <ChevronDown className='w-4 h-4' />
-              </span>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  )
-                })}
+              <DropdownMenuItem className="flex items-center gap-2 font-medium" onClick={() => table.getColumn("name").toggleSorting(true)}>
+                <ArrowUpAZ className='w-4 h-4' />
+                Asc
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2 font-medium" onClick={() => table.getColumn("name").toggleSorting(false)}>
+                <ArrowDownZA className='w-4 h-4' />
+                Desc
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2 font-medium" onClick={() => setSorting([])}>
+                <CircleX className='w-4 h-4' />
+                Unsorted
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="ml-auto flex items-center justify-center text-base gap-2">
+              <button className="flex items-center justify-center text-base gap-2 focus:outline-none">
                 <AlignLeft className='w-5 h-5' />
                 <ChevronDown className='w-4 h-4' />
               </button>
             </DropdownMenuTrigger>
           </DropdownMenu>
-          <button className="ml-auto font-medium flex items-center justify-center text-base gap-2">
+          <button variant="ghost" className="flex items-center justify-center text-base gap-2 focus:outline-none">
             <LogOut className='w-4 h-4' />
             Details
           </button>
@@ -282,7 +323,7 @@ const FileManager = () => {
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+          {table.getFilteredRowModel().rows.length} row(s) Selected.
         </div>
         <div className="space-x-2">
           <Button
@@ -307,4 +348,4 @@ const FileManager = () => {
   )
 }
 
-export default FileManager
+export default FileManager;
