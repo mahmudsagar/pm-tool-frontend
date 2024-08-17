@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, MoreVertical } from "lucide-react";
-import { SideNav } from "./side-nav";
+import { SidebarMenu } from "./SidebarMenu";
 import { NavItems } from "./constants/side-nav";
 import { useSidebar } from "@/stores/store";
 import { Separator } from "@/components/ui/separator";
@@ -39,7 +39,7 @@ export default function Sidebar({ className }) {
       <div className="py-4 h-full">
         <div className="px-4 h-full flex flex-col justify-between">
           <div className="font-inter h-5/6">
-            <SideNav
+            <SidebarMenu
               className="h-full text-background opacity-0 transition-all duration-300 group-hover:z-50 group-hover:ml-4 group-hover:rounded group-hover:bg-foreground group-hover:p-2 group-hover:opacity-100"
               items={NavItems}
             />
@@ -74,7 +74,6 @@ export default function Sidebar({ className }) {
                   <DropdownMenuItem>
                     <Link href="/">Profile</Link>
                   </DropdownMenuItem>
-
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
