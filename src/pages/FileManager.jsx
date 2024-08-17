@@ -8,7 +8,7 @@ import {
   ArrowUpAZ,
   ArrowDownZA,
   CircleX,
-  FileText
+  FileText,
 } from 'lucide-react';
 import {
   flexRender,
@@ -142,7 +142,9 @@ export const columns = [
       )
     },
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("icon")}</div>
+      <div className="w-10 h-10 bg-[#F4EBFF] rounded-full">
+        {row.getValue("icon")}
+      </div>
     ),
   },
   {
@@ -156,35 +158,35 @@ export const columns = [
     accessorKey: "modified",
     header: "Modified",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("modified")}</div>
+      <div className='text-[#475467]'>{row.getValue("modified")}</div>
     ),
   },
   {
     accessorKey: "modifiedBy",
     header: "Modified By",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("modifiedBy")}</div>
+      <div className='text-[#475467]'>{row.getValue("modifiedBy")}</div>
     ),
   },
   {
     accessorKey: "fileSize",
     header: "File Size",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("fileSize")}</div>
+      <div className='text-[#475467]'>{row.getValue("fileSize")}</div>
     ),
   },
   {
     accessorKey: "sharing",
     header: "Sharing",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("sharing")}</div>
+      <div className='text-[#475467]'>{row.getValue("sharing")}</div>
     ),
   },
   {
     accessorKey: "activity",
     header: "Activity",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("activity")}</div>
+      <div className='text-[#475467]'>{row.getValue("activity")}</div>
     ),
   },
   // {
@@ -277,7 +279,7 @@ const FileManager = () => {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead className="text-[#334155]" key={header.id}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(

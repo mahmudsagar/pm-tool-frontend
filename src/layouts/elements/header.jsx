@@ -1,52 +1,74 @@
-
 import { cn } from "@/lib/utils";
-import { Boxes, Slash } from "lucide-react";
-import Link from "@/BetterRouter/Link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileSidebar } from "./mobile-sidebar";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import DynamicBreadCrumb from "@/components/elements/breadcrumbs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from "@/BetterRouter/Link";
+import { History, MessageSquareMore, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export default function Header() {
+
     return (
         <div className="supports-backdrop-blur:bg-background/60 sticky left-0 right-0 top-0 z-20 border-b bg-background/95 backdrop-blur">
-            <nav className="flex h-16 items-center justify-between px-4">
-                <div>
-                    <Link
-                        href={"/"}
-                        className="hidden items-center justify-between gap-2 md:flex"
-                    >
-                        {/* <Boxes className="h-6 w-6" /> */}
-                        <h1 className="text-lg font-semibold">Better Notion</h1>
+            <nav className="flex h-16 items-center justify-between px-4 md:px-6 pr-2 md:pr-2">
 
-                    </Link>
-                    <Breadcrumb>
-                        <BreadcrumbList>
-                            <BreadcrumbItem>
-                                <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                            </BreadcrumbItem>
-
-                            <BreadcrumbSeparator>
-                                <Slash />
-                            </BreadcrumbSeparator>
-                            <BreadcrumbItem>
-                                <BreadcrumbLink href="/docs/components">Components</BreadcrumbLink>
-                            </BreadcrumbItem>
-                            <BreadcrumbSeparator>
-                                <Slash />
-                            </BreadcrumbSeparator>
-                            <BreadcrumbItem>
-                                <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
-                            </BreadcrumbItem>
-                        </BreadcrumbList>
-                    </Breadcrumb>
+                <div className="hidden md:block">
+                    <h3 className="text-base font-semibold">Better Notion</h3>
+                    <DynamicBreadCrumb />
                 </div>
+
                 <div className={cn("block md:!hidden")}>
                     <MobileSidebar />
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <ThemeToggle />
+                <div className="flex items-center gap-3">
+
+
+                    <div className="max-w-20 flex mr-3.5 flex-row-reverse justify-end items-center relative transform translate-z-0">
+                        <Avatar className="w-8 h-8 relative -mr-3.5">
+                            <AvatarImage src="https://avatars.githubusercontent.com/u/124598.png" alt="@shadcn" />
+                            <AvatarFallback>PP</AvatarFallback>
+                        </Avatar>
+                        <Avatar className="w-8 h-8 relative -mr-3.5">
+                            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                            <AvatarFallback>user</AvatarFallback>
+                        </Avatar>
+                        <Avatar className="w-8 h-8 relative -mr-3.5">
+                            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                            <AvatarFallback>user</AvatarFallback>
+                        </Avatar>
+                    </div>
+
+                    <div className="flex gap-0 items-center justify-between">
+                        <Link href="#" className="text-sm font-medium text-primary">
+                            <Button variant="ghost" size="icon">
+                                <History size={20} />
+                            </Button>
+                        </Link>
+                        <Link href="#" className="text-sm font-medium text-primary">
+                            <Button variant="ghost" size="icon">
+                                <MessageSquareMore size={20} />
+                            </Button>
+                        </Link>
+                        <ThemeToggle />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="w-6">
+                                    <MoreVertical className="h-4 w-4" />
+                                    <span className="sr-only">More</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                    <Link href="#">Profile</Link>
+                                </DropdownMenuItem>
+
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                    </div>
                 </div>
             </nav>
         </div>
