@@ -1,4 +1,4 @@
-import { BookOpenCheck, LayoutDashboard } from "lucide-react";
+import { BookOpenCheck, LayoutDashboard, File } from "lucide-react";
 export const NavItems = [
   {
     title: "Dashboard",
@@ -9,6 +9,11 @@ export const NavItems = [
     title: "Check",
     icon: LayoutDashboard,
     href: "/check",
+  },
+  {
+    title: "File Manager",
+    icon: File,
+    href: "/file-manager",
   },
   {
     title: "Form",
@@ -42,7 +47,7 @@ export const NavItems = [
         title: "Example-01",
         icon: BookOpenCheck,
         href: "/settings/check",
-      }
+      },
     ],
   },
 ];

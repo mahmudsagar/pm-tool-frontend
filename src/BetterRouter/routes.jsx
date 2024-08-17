@@ -2,6 +2,7 @@ import Default from "@/layouts/Default";
 import Settings from "@/layouts/Settings";
 import Check from "@/pages/Check";
 import Document from "@/pages/document";
+import FileManager from "@/pages/FileManager";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
 import Sheet from "@/pages/sheet";
@@ -18,6 +19,10 @@ export const routes = [
       {
         path: '/check',
         element: <Check />
+      },
+      {
+        path: '/file-manager',
+        element: <FileManager />
       },
       {
         path: '/form/*',
