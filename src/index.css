@@ -74,3 +74,52 @@
     @apply bg-background text-foreground;
   }
 }
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* width */
+
+/* set the width of the scrollbar */
+
+.better-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+/* Handle */
+
+/* set the color of the scrollbar and the radius of its corners */
+
+.better-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(150, 150, 150);
+  background-clip: padding-box;
+  border-bottom-left-radius: 5px;
+
+  border-top-left-radius: 5px;
+
+  border-bottom-right-radius: 5px;
+
+  border-top-right-radius: 5px;
+}
+
+/* Handle on hover */
+
+/* set the color of the scrollbar when hovered over */
+
+.better-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(131, 131, 131);
+}
+
+/* Handle on active */
+
+/* set the color of the scrollbar when clicked */
+
+.better-scrollbar::-webkit-scrollbar-thumb:active {
+  background: rgb(104, 104, 104);
+}
