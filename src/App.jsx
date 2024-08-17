@@ -1,33 +1,37 @@
-import { Outlet, useSearchParams } from 'react-router-dom';
-import Link from './BetterRouter/Link';
-import { Fragment } from 'react';
-import ParallelRoutePage from './BetterRouter/ParallelRoutePage';
+import { useEffect } from 'react';
+import useStore from './stores/store';
+import BetterRouter from './BetterRouter';
+import { ThemeProvider } from './components/theme-provider';
+import { Toaster } from './components/ui/toaster';
 
 const App = () => {
-  const [searchParams] = useSearchParams();
-  const paramObject = Array.from(searchParams.entries()).filter(([, target]) => ['_sidebar', '_popup'].includes(target));
-  return (
-    <div className='bg-slate-200 w-screen'>
-      <nav>
-        <ul className='flex items-center justify-center py-4 gap-8 uppercase'>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/check">Check</Link>
-          </li>
-          <li>
-            <Link to="/form/1">Form</Link>
-          </li>
-          <li>
-            <Link to="/form/1" target="_sidebar">Form in Drawer</Link>
-          </li>
-        </ul>
-      </nav>
-      <Outlet />
+  const { pathname, search, href } = window.location;
 
-      {paramObject.map(([path, target], index) => <Fragment key={index}><ParallelRoutePage path={path} target={target} /></Fragment>)}
-    </div>
+  const currentRoute = useStore((state) => state.currentRoute);
+  const setCurrentRoute = useStore((state) => state.setCurrentRoute);
+
+  useEffect(() => {
+    console.log('current page', currentRoute, setCurrentRoute);
+    try {
+      if (search.includes('_sidebar') || search.includes('_popup')) {
+        const activePath = (search.split('&').findLast(item => item.includes("_sidebar") || item.includes("_popup")) || pathname).replace('?', '').replace(/%2F/g, "/");
+        console.log('activePath', activePath);
+        const [path, target] = activePath.split('=')
+        setCurrentRoute({ path, target, type: "parallel" });
+      }
+      else {
+        setCurrentRoute({ path: pathname + search, target: '_self' });
+      }
+    }
+    catch (_) {
+      //
+    }
+  }, [href, pathname, search]);
+  return (
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <BetterRouter />
+      <Toaster />
+    </ThemeProvider>
   );
 };
 
