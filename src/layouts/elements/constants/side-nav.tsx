@@ -9,6 +9,7 @@ import {
   Sheet,
   ShieldQuestion,
   UserRoundCheck,
+  File,
 } from "lucide-react";
 export const NavItems = [
   {
@@ -30,6 +31,11 @@ export const NavItems = [
         title: "Form",
         icon: FormInput,
         href: "/form/1",
+      },
+      {
+        title: "File Manager",
+        icon: File,
+        href: "/file-manager",
       },
     ],
   },
