@@ -1,3 +1,9 @@
+html.dark {
+  .lexical-editor {
+    filter: invert(1);
+  }
+}
+
 .lexical-editor {
   /**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
