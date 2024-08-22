@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import data from './table-data';
 import columns from './table-columns';
 import DataTablePagination from './data-table-pagination';
-import DataTableColumnBody from './data-table-column-body';
-import DataTableColumnHeader from './data-table-column-header';
+import DataTableColumnBody from './data-table-body';
+import DataTableColumnHeader from './data-table-header';
 import {
   useReactTable,
   getCoreRowModel,

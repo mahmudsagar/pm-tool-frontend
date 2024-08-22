@@ -98,10 +98,10 @@ export default [
     cell: ({ row }) => (
       <div className="group flex items-center gap-8">
         <span>{row.getValue("name")}</span>
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-2 transition-opacity">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className='focus:outline-none'>
+              <button className="focus:outline-none group-hover:opacity-100 data-[state=open]:opacity-100 opacity-0 transition-opacity">
                 <MoreVertical className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
@@ -193,7 +193,7 @@ export default [
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" className="group-hover:opacity-100 data-[state=open]:opacity-100 opacity-0 transition-opacity">
             <ExternalLink className="w-4 h-4" />
           </Button>
         </div>
