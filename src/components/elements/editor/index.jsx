@@ -32,29 +32,29 @@ const editorConfig = {
 
 export default function Editor() {
   return (
-   <div className='lexical-editor'>
-     <LexicalComposer initialConfig={editorConfig}>
-      <div className="editor-container">
-        <ToolbarPlugin />
-        <div className="editor-inner">
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable
-                className="editor-input"
-                aria-placeholder={placeholder}
-                placeholder={
-                  <div className="editor-placeholder">{placeholder}</div>
-                }
-              />
-            }
-            ErrorBoundary={LexicalErrorBoundary}
-          />
-          <HistoryPlugin />
-          <AutoFocusPlugin />
-          <TreeViewPlugin />
+    <div className='lexical-editor'>
+      <LexicalComposer initialConfig={editorConfig}>
+        <div className="editor-container border">
+          <ToolbarPlugin />
+          <div className="editor-inner">
+            <RichTextPlugin
+              contentEditable={
+                <ContentEditable
+                  className="editor-input"
+                  aria-placeholder={placeholder}
+                  placeholder={
+                    <div className="editor-placeholder">{placeholder}</div>
+                  }
+                />
+              }
+              ErrorBoundary={LexicalErrorBoundary}
+            />
+            <HistoryPlugin />
+            <AutoFocusPlugin />
+            {/* <TreeViewPlugin /> */}
+          </div>
         </div>
-      </div>
-    </LexicalComposer>
-   </div>
+      </LexicalComposer>
+    </div>
   );
 }
