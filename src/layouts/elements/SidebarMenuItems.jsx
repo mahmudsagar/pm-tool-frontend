@@ -1,12 +1,12 @@
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "./subnav-accordion";
-import { ChevronDownIcon, MoreVertical } from "lucide-react";
+import { ChevronDownIcon } from "lucide-react";
 import Link from "@/BetterRouter/Link";
 import { useEffect, useState } from "react";
 import { useSidebar } from "@/stores/store";
@@ -81,10 +81,10 @@ const SidebarMenuItems = ({ items, className, setOpen }) => {
                       <div className="flex gap-1">
                         {item.actionItemDropdowns.map((actionItem, index) => <DropdownMenu key={index}>
                           <DropdownMenuTrigger asChild >
-                            <Button variant="ghost" size="icon" className="hover:bg-slate-300 w-6 h-6">
+                            <div size="icon" className="hover:bg-slate-400  w-6 h-6 rounded flex justify-center items-center">
                               {actionItem?.icon && <actionItem.icon className="h-4 w-4" />}
                               {actionItem?.title && <span className="pl-2">{actionItem.text}</span>}
-                            </Button>
+                            </div>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             {actionItem?.items?.map((item, index) => (

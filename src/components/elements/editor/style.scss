@@ -50,9 +50,9 @@ html.dark {
   }
 
   .editor-container {
-    margin: 20px auto 20px auto;
+    margin: 5px;
     border-radius: 2px;
-    max-width: 600px;
+    // max-width: 600px;
     color: #000;
     position: relative;
     line-height: 20px;
@@ -75,7 +75,7 @@ html.dark {
     position: relative;
     tab-size: 1;
     outline: 0;
-    padding: 15px 10px;
+    padding: 15px 10px 15px 24px;
     caret-color: #444;
   }
 

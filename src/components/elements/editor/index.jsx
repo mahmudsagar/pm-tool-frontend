@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
+import EditorCustom from './editor';
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -16,6 +17,10 @@ import ToolbarPlugin from './plugins/ToolbarPlugin';
 import TreeViewPlugin from './plugins/TreeViewPlugin';
 import { defaultTheme } from './theme/default';
 import './style.scss';
+import DraggableBlockPlugin from './plugins/DraggableBlockPlugin';
+import FloatingLinkEditorPlugin from './plugins/FloatingLinkEditorPlugin';
+import FloatingTextFormatToolbarPlugin from './plugins/FloatingTextFormatToolbarPlugin';
+import { useEffect, useState } from 'react';
 
 const placeholder = 'Enter some rich text...';
 
@@ -31,27 +36,94 @@ const editorConfig = {
 };
 
 export default function Editor() {
+
+  const [floatingAnchorElem, setFloatingAnchorElem] =
+    useState(null);
+  const [isSmallWidthViewport, setIsSmallWidthViewport] =
+    useState(false);
+  const [isLinkEditMode, setIsLinkEditMode] = useState(false);
+
+  const onRef = (_floatingAnchorElem) => {
+    console.log('onRef', _floatingAnchorElem);
+    if (_floatingAnchorElem !== null) {
+      setFloatingAnchorElem(_floatingAnchorElem);
+    }
+  };
+
+  useEffect(() => {
+    const updateViewPortWidth = () => {
+      const isNextSmallWidthViewport =
+        window.matchMedia('(max-width: 1025px)').matches;
+
+      if (isNextSmallWidthViewport !== isSmallWidthViewport) {
+        setIsSmallWidthViewport(isNextSmallWidthViewport);
+      }
+    };
+    updateViewPortWidth();
+    window.addEventListener('resize', updateViewPortWidth);
+
+    return () => {
+      window.removeEventListener('resize', updateViewPortWidth);
+    };
+  }, [isSmallWidthViewport]);
   return (
     <div className='lexical-editor'>
       <LexicalComposer initialConfig={editorConfig}>
         <div className="editor-container border">
           <ToolbarPlugin />
-          <div className="editor-inner">
+          <HistoryPlugin />
+          <div className="editor-inner min-h-screen" ref={onRef}>
             <RichTextPlugin
               contentEditable={
-                <ContentEditable
-                  className="editor-input"
-                  aria-placeholder={placeholder}
-                  placeholder={
-                    <div className="editor-placeholder">{placeholder}</div>
-                  }
-                />
+
+                <div className="editor-scroller">
+                  <div className="editor" ref={onRef}>
+                    <ContentEditable className="editor-input"
+                      aria-placeholder={placeholder} placeholder={placeholder} />
+                  </div>
+                </div>
               }
               ErrorBoundary={LexicalErrorBoundary}
             />
             <HistoryPlugin />
             <AutoFocusPlugin />
             {/* <TreeViewPlugin /> */}
+
+            <>
+              {floatingAnchorElem && !isSmallWidthViewport && (
+                <>
+                  <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
+                  {/* <CodeActionMenuPlugin anchorElem={floatingAnchorElem} /> */}
+                  <FloatingLinkEditorPlugin
+                    anchorElem={floatingAnchorElem}
+                    isLinkEditMode={isLinkEditMode}
+                    setIsLinkEditMode={setIsLinkEditMode}
+                  />
+                  {/* <TableCellActionMenuPlugin
+                  anchorElem={floatingAnchorElem}
+                  cellMerge={true}
+                /> */}
+                  <FloatingTextFormatToolbarPlugin
+                    anchorElem={floatingAnchorElem}
+                    setIsLinkEditMode={setIsLinkEditMode}
+                  />
+                </>
+              )}
+              {/* <CodeActionMenuPlugin anchorElem={floatingAnchorElem} /> */}
+              {/* <FloatingLinkEditorPlugin
+                anchorElem={floatingAnchorElem}
+                isLinkEditMode={isLinkEditMode}
+                setIsLinkEditMode={setIsLinkEditMode}
+              /> */}
+              {/* <TableCellActionMenuPlugin
+                anchorElem={floatingAnchorElem}
+                cellMerge={true}
+              /> */}
+              {/* <FloatingTextFormatToolbarPlugin
+                anchorElem={floatingAnchorElem}
+                setIsLinkEditMode={setIsLinkEditMode}
+              /> */}
+            </>
           </div>
         </div>
       </LexicalComposer>
