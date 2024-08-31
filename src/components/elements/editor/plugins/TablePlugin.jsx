@@ -6,7 +6,9 @@
  *
  */
 
-import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $createTableNodeWithDimensions,
   INSERT_TABLE_COMMAND,
@@ -16,47 +18,17 @@ import {
   $insertNodes,
   COMMAND_PRIORITY_EDITOR,
   createCommand,
-  EditorThemeClasses,
-  Klass,
-  LexicalCommand,
-  LexicalEditor,
-  LexicalNode,
 } from 'lexical';
-import {createContext, useContext, useEffect, useMemo, useState} from 'react';
-import * as React from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import invariant from 'shared/invariant';
 
-import Button from '../ui/Button';
-import {DialogActions} from '../ui/Dialog';
-import TextInput from '../ui/TextInput';
 
-export type InsertTableCommandPayload = Readonly<{
-  columns: string;
-  rows: string;
-  includeHeaders?: boolean;
-}>;
 
-export type CellContextShape = {
-  cellEditorConfig: null | CellEditorConfig;
-  cellEditorPlugins: null | JSX.Element | Array<JSX.Element>;
-  set: (
-    cellEditorConfig: null | CellEditorConfig,
-    cellEditorPlugins: null | JSX.Element | Array<JSX.Element>,
-  ) => void;
-};
 
-export type CellEditorConfig = Readonly<{
-  namespace: string;
-  nodes?: ReadonlyArray<Klass<LexicalNode>>;
-  onError: (error: Error, editor: LexicalEditor) => void;
-  readOnly?: boolean;
-  theme?: EditorThemeClasses;
-}>;
-
-export const INSERT_NEW_TABLE_COMMAND: LexicalCommand<InsertTableCommandPayload> =
+export const INSERT_NEW_TABLE_COMMAND =
   createCommand('INSERT_NEW_TABLE_COMMAND');
 
-export const CellContext = createContext<CellContextShape>({
+export const CellContext = createContext({
   cellEditorConfig: null,
   cellEditorPlugins: null,
   set: () => {
@@ -64,11 +36,8 @@ export const CellContext = createContext<CellContextShape>({
   },
 });
 
-export function TableContext({children}: {children: JSX.Element}) {
-  const [contextValue, setContextValue] = useState<{
-    cellEditorConfig: null | CellEditorConfig;
-    cellEditorPlugins: null | JSX.Element | Array<JSX.Element>;
-  }>({
+export function TableContext({ children }) {
+  const [contextValue, setContextValue] = useState({
     cellEditorConfig: null,
     cellEditorPlugins: null,
   });
@@ -79,7 +48,7 @@ export function TableContext({children}: {children: JSX.Element}) {
           cellEditorConfig: contextValue.cellEditorConfig,
           cellEditorPlugins: contextValue.cellEditorPlugins,
           set: (cellEditorConfig, cellEditorPlugins) => {
-            setContextValue({cellEditorConfig, cellEditorPlugins});
+            setContextValue({ cellEditorConfig, cellEditorPlugins });
           },
         }),
         [contextValue.cellEditorConfig, contextValue.cellEditorPlugins],
@@ -92,10 +61,7 @@ export function TableContext({children}: {children: JSX.Element}) {
 export function InsertTableDialog({
   activeEditor,
   onClose,
-}: {
-  activeEditor: LexicalEditor;
-  onClose: () => void;
-}): JSX.Element {
+}) {
   const [rows, setRows] = useState('5');
   const [columns, setColumns] = useState('5');
   const [isDisabled, setIsDisabled] = useState(true);
@@ -121,7 +87,7 @@ export function InsertTableDialog({
 
   return (
     <>
-      <TextInput
+      <Input
         placeholder={'# of rows (1-500)'}
         label="Rows"
         onChange={setRows}
@@ -129,7 +95,7 @@ export function InsertTableDialog({
         data-test-id="table-modal-rows"
         type="number"
       />
-      <TextInput
+      <Input
         placeholder={'# of columns (1-50)'}
         label="Columns"
         onChange={setColumns}
@@ -137,11 +103,11 @@ export function InsertTableDialog({
         data-test-id="table-modal-columns"
         type="number"
       />
-      <DialogActions data-test-id="table-model-confirm-insert">
+      {/* <DialogActions data-test-id="table-model-confirm-insert">
         <Button disabled={isDisabled} onClick={onClick}>
           Confirm
         </Button>
-      </DialogActions>
+      </DialogActions> */}
     </>
   );
 }
@@ -149,10 +115,7 @@ export function InsertTableDialog({
 export function TablePlugin({
   cellEditorConfig,
   children,
-}: {
-  cellEditorConfig: CellEditorConfig;
-  children: JSX.Element | Array<JSX.Element>;
-}): JSX.Element | null {
+}) {
   const [editor] = useLexicalComposerContext();
   const cellContext = useContext(CellContext);
 
@@ -163,9 +126,9 @@ export function TablePlugin({
 
     cellContext.set(cellEditorConfig, children);
 
-    return editor.registerCommand<InsertTableCommandPayload>(
+    return editor.registerCommand(
       INSERT_NEW_TABLE_COMMAND,
-      ({columns, rows, includeHeaders}) => {
+      ({ columns, rows, includeHeaders }) => {
         const tableNode = $createTableNodeWithDimensions(
           Number(rows),
           Number(columns),

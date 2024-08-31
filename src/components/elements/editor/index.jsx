@@ -5,16 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
-import EditorCustom from './editor';
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import { ContentEditable } from '@lexical/react/LexicalContentEditable';
+import ContentEditable from './ui/ContentEditable';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 
-import ToolbarPlugin from './plugins/ToolbarPlugin';
-import TreeViewPlugin from './plugins/TreeViewPlugin';
+import ToolbarPlugin from './plugins/ToolbarPlugin/index';
 import { defaultTheme } from './theme/default';
 import './style.scss';
 import DraggableBlockPlugin from './plugins/DraggableBlockPlugin';
@@ -70,7 +68,7 @@ export default function Editor() {
     <div className='lexical-editor'>
       <LexicalComposer initialConfig={editorConfig}>
         <div className="editor-container border">
-          <ToolbarPlugin />
+          <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />
           <HistoryPlugin />
           <div className="editor-inner min-h-screen" ref={onRef}>
             <RichTextPlugin
@@ -109,20 +107,6 @@ export default function Editor() {
                   />
                 </>
               )}
-              {/* <CodeActionMenuPlugin anchorElem={floatingAnchorElem} /> */}
-              {/* <FloatingLinkEditorPlugin
-                anchorElem={floatingAnchorElem}
-                isLinkEditMode={isLinkEditMode}
-                setIsLinkEditMode={setIsLinkEditMode}
-              /> */}
-              {/* <TableCellActionMenuPlugin
-                anchorElem={floatingAnchorElem}
-                cellMerge={true}
-              /> */}
-              {/* <FloatingTextFormatToolbarPlugin
-                anchorElem={floatingAnchorElem}
-                setIsLinkEditMode={setIsLinkEditMode}
-              /> */}
             </>
           </div>
         </div>

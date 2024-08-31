@@ -31,6 +31,7 @@
   padding: 8px;
   cursor: pointer;
   vertical-align: middle;
+  align-items: center;
 }
 
 .floating-text-format-popup button.popup-item:disabled {
@@ -41,17 +42,14 @@
   margin-right: 2px;
 }
 
-.floating-text-format-popup button.popup-item i.format {
-  background-size: contain;
+.floating-text-format-popup button.popup-item .format {
   height: 18px;
   width: 18px;
-  margin-top: 2px;
-  vertical-align: -0.25em;
-  display: flex;
+  vertical-align: middle;
   opacity: 0.6;
 }
 
-.floating-text-format-popup button.popup-item:disabled i.format {
+.floating-text-format-popup button.popup-item:disabled .format {
   opacity: 0.2;
 }
 
@@ -59,7 +57,7 @@
   background-color: rgba(223, 232, 250, 0.3);
 }
 
-.floating-text-format-popup button.popup-item.active i {
+.floating-text-format-popup button.popup-item.active .format {
   opacity: 1;
 }
 
@@ -102,6 +100,7 @@
 
 .floating-text-format-popup .popup-item .icon {
   display: flex;
+  align-items: center;
   width: 20px;
   height: 20px;
   user-select: none;
@@ -110,7 +109,7 @@
   background-size: contain;
 }
 
-.floating-text-format-popup i.chevron-down {
+.floating-text-format-popup .chevron-down {
   margin-top: 3px;
   width: 16px;
   height: 16px;
@@ -118,7 +117,7 @@
   user-select: none;
 }
 
-.floating-text-format-popup i.chevron-down.inside {
+.floating-text-format-popup .chevron-down.inside {
   width: 16px;
   height: 16px;
   display: flex;
