@@ -6,10 +6,12 @@
  *
  */
 
-import './fontSize.css';
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { $patchStyleText } from '@lexical/selection';
 import { $getSelection } from 'lexical';
+import { Minus, Plus } from 'lucide-react';
 import * as React from 'react';
 
 const MIN_ALLOWED_FONT_SIZE = 8;
@@ -182,8 +184,8 @@ export default function FontSize({
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         disabled={
           disabled ||
           (selectionFontSize !== '' &&
@@ -191,14 +193,13 @@ export default function FontSize({
         }
         onClick={() => handleButtonClick(updateFontSizeType.decrement)}
         className="toolbar-item font-decrement">
-        <i className="format minus-icon" />
-      </button>
+        <Minus size={12} />
+      </Button>
 
-      <input
-        type="number"
+      <Input
         value={inputValue}
         disabled={disabled}
-        className="toolbar-item font-size-input"
+        className="w-8 text-center p-0.5"
         min={MIN_ALLOWED_FONT_SIZE}
         max={MAX_ALLOWED_FONT_SIZE}
         onChange={(e) => setInputValue(e.target.value)}
@@ -206,8 +207,8 @@ export default function FontSize({
         onBlur={handleInputBlur}
       />
 
-      <button
-        type="button"
+      <Button
+        variant="ghost"
         disabled={
           disabled ||
           (selectionFontSize !== '' &&
@@ -215,8 +216,8 @@ export default function FontSize({
         }
         onClick={() => handleButtonClick(updateFontSizeType.increment)}
         className="toolbar-item font-increment">
-        <i className="format add-icon" />
-      </button>
+        <Plus size={12} />
+      </Button>
     </>
   );
 }

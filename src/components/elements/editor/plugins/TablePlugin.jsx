@@ -20,9 +20,6 @@ import {
   createCommand,
 } from 'lexical';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import invariant from 'shared/invariant';
-
-
 
 
 export const INSERT_NEW_TABLE_COMMAND =
@@ -121,7 +118,11 @@ export function TablePlugin({
 
   useEffect(() => {
     if (!editor.hasNodes([TableNode])) {
-      invariant(false, 'TablePlugin: TableNode is not registered on editor');
+      throw new Error(
+        'Internal Lexical error: invariant() is meant to be replaced at compile ' +
+        'time. There is no runtime version. Error: ' +
+        'TablePlugin: TableNode is not registered on editor',
+      );
     }
 
     cellContext.set(cellEditorConfig, children);

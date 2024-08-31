@@ -1,11 +1,3 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
 import '../../nodes/InlineImageNode/InlineImageNode.css';
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
@@ -25,58 +17,43 @@ import {
   DRAGOVER_COMMAND,
   DRAGSTART_COMMAND,
   DROP_COMMAND,
-  LexicalCommand,
-  LexicalEditor,
 } from 'lexical';
-import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { CAN_USE_DOM } from 'shared/canUseDOM';
 
 import {
   $createInlineImageNode,
   $isInlineImageNode,
   InlineImageNode,
-  InlineImagePayload,
 } from '../../nodes/InlineImageNode/InlineImageNode';
-import Button from '../../ui/Button';
-import { DialogActions } from '../../ui/Dialog';
-import FileInput from '../../ui/FileInput';
-import Select from '../../ui/Select';
-import TextInput from '../../ui/TextInput';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { isBrowser } from 'environment';
 
-export type InsertInlineImagePayload = Readonly<InlineImagePayload>;
+const getDOMSelection = (targetWindow) =>
+  isBrowser ? (targetWindow || window).getSelection() : null;
 
-const getDOMSelection = (targetWindow: Window | null): Selection | null =>
-  CAN_USE_DOM ? (targetWindow || window).getSelection() : null;
+export const INSERT_INLINE_IMAGE_COMMAND = createCommand('INSERT_INLINE_IMAGE_COMMAND');
 
-export const INSERT_INLINE_IMAGE_COMMAND: LexicalCommand<InlineImagePayload> =
-  createCommand('INSERT_INLINE_IMAGE_COMMAND');
-
-export function InsertInlineImageDialog({
-  activeEditor,
-  onClose,
-}: {
-  activeEditor: LexicalEditor;
-  onClose: () => void;
-}): JSX.Element {
+export function InsertInlineImageDialog({ activeEditor, onClose }) {
   const hasModifier = useRef(false);
 
   const [src, setSrc] = useState('');
   const [altText, setAltText] = useState('');
   const [showCaption, setShowCaption] = useState(false);
-  const [position, setPosition] = useState < Position > ('left');
+  const [position, setPosition] = useState('left');
 
   const isDisabled = src === '';
 
-  const handleShowCaptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleShowCaptionChange = (e) => {
     setShowCaption(e.target.checked);
   };
 
-  const handlePositionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPosition(e.target.value as Position);
+  const handlePositionChange = (e) => {
+    setPosition(e.target.value);
   };
 
-  const loadImage = (files: FileList | null) => {
+  const loadImage = (files) => {
     const reader = new FileReader();
     reader.onload = function () {
       if (typeof reader.result === 'string') {
@@ -91,7 +68,7 @@ export function InsertInlineImageDialog({
 
   useEffect(() => {
     hasModifier.current = false;
-    const handler = (e: KeyboardEvent) => {
+    const handler = (e) => {
       hasModifier.current = e.altKey;
     };
     document.addEventListener('keydown', handler);
@@ -109,7 +86,8 @@ export function InsertInlineImageDialog({
   return (
     <>
       <div style={{ marginBottom: '1em' }}>
-        <FileInput
+        <Input
+          type="file"
           label="Image Upload"
           onChange={loadImage}
           accept="image/*"
@@ -117,7 +95,7 @@ export function InsertInlineImageDialog({
         />
       </div>
       <div style={{ marginBottom: '1em' }}>
-        <TextInput
+        <Input
           label="Alt Text"
           placeholder="Descriptive alternative text"
           onChange={setAltText}
@@ -148,19 +126,19 @@ export function InsertInlineImageDialog({
         <label htmlFor="caption">Show Caption</label>
       </div>
 
-      <DialogActions>
-        <Button
-          data-test-id="image-modal-file-upload-btn"
-          disabled={isDisabled}
-          onClick={() => handleOnClick()}>
-          Confirm
-        </Button>
-      </DialogActions>
+
+      <Button
+        data-test-id="image-modal-file-upload-btn"
+        disabled={isDisabled}
+        onClick={() => handleOnClick()}>
+        Confirm
+      </Button>
+
     </>
   );
 }
 
-export default function InlineImagePlugin(): JSX.Element | null {
+export default function InlineImagePlugin() {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
@@ -169,7 +147,7 @@ export default function InlineImagePlugin(): JSX.Element | null {
     }
 
     return mergeRegister(
-      editor.registerCommand < InsertInlineImagePayload > (
+      editor.registerCommand(
         INSERT_INLINE_IMAGE_COMMAND,
         (payload) => {
           const imageNode = $createInlineImageNode(payload);
@@ -182,21 +160,21 @@ export default function InlineImagePlugin(): JSX.Element | null {
         },
         COMMAND_PRIORITY_EDITOR,
       ),
-      editor.registerCommand < DragEvent > (
+      editor.registerCommand(
         DRAGSTART_COMMAND,
         (event) => {
           return $onDragStart(event);
         },
         COMMAND_PRIORITY_HIGH,
       ),
-      editor.registerCommand < DragEvent > (
+      editor.registerCommand(
         DRAGOVER_COMMAND,
         (event) => {
           return $onDragover(event);
         },
         COMMAND_PRIORITY_LOW,
       ),
-      editor.registerCommand < DragEvent > (
+      editor.registerCommand(
         DROP_COMMAND,
         (event) => {
           return $onDrop(event, editor);
@@ -214,7 +192,7 @@ const TRANSPARENT_IMAGE =
 const img = document.createElement('img');
 img.src = TRANSPARENT_IMAGE;
 
-function $onDragStart(event: DragEvent): boolean {
+function $onDragStart(event) {
   const node = $getImageNodeInSelection();
   if (!node) {
     return false;
@@ -244,7 +222,7 @@ function $onDragStart(event: DragEvent): boolean {
   return true;
 }
 
-function $onDragover(event: DragEvent): boolean {
+function $onDragover(event) {
   const node = $getImageNodeInSelection();
   if (!node) {
     return false;
@@ -255,7 +233,7 @@ function $onDragover(event: DragEvent): boolean {
   return true;
 }
 
-function $onDrop(event: DragEvent, editor: LexicalEditor): boolean {
+function $onDrop(event, editor) {
   const node = $getImageNodeInSelection();
   if (!node) {
     return false;
@@ -278,7 +256,7 @@ function $onDrop(event: DragEvent, editor: LexicalEditor): boolean {
   return true;
 }
 
-function $getImageNodeInSelection(): InlineImageNode | null {
+function $getImageNodeInSelection() {
   const selection = $getSelection();
   if (!$isNodeSelection(selection)) {
     return null;
@@ -288,7 +266,7 @@ function $getImageNodeInSelection(): InlineImageNode | null {
   return $isInlineImageNode(node) ? node : null;
 }
 
-function getDragImageData(event: DragEvent): null | InsertInlineImagePayload {
+function getDragImageData(event) {
   const dragData = event.dataTransfer?.getData('application/x-lexical-drag');
   if (!dragData) {
     return null;
@@ -301,14 +279,7 @@ function getDragImageData(event: DragEvent): null | InsertInlineImagePayload {
   return data;
 }
 
-declare global {
-  interface DragEvent {
-    rangeOffset?: number;
-    rangeParent?: Node;
-  }
-}
-
-function canDropImage(event: DragEvent): boolean {
+function canDropImage(event) {
   const target = event.target;
   return !!(
     target &&
@@ -319,15 +290,15 @@ function canDropImage(event: DragEvent): boolean {
   );
 }
 
-function getDragSelection(event: DragEvent): Range | null | undefined {
+function getDragSelection(event) {
   let range;
-  const target = event.target as null | Element | Document;
+  const target = event.target;
   const targetWindow =
     target == null
       ? null
       : target.nodeType === 9
-        ? (target as Document).defaultView
-        : (target as Element).ownerDocument.defaultView;
+        ? target.defaultView
+        : target.ownerDocument.defaultView;
   const domSelection = getDOMSelection(targetWindow);
   if (document.caretRangeFromPoint) {
     range = document.caretRangeFromPoint(event.clientX, event.clientY);

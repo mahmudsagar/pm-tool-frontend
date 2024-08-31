@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { SidebarMenu } from "./SidebarMenu";
 import { NavItems } from "./constants/side-nav";
 import { useSidebar } from "@/stores/store";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
