@@ -81,7 +81,7 @@ import { useModal } from '@/components/elements/modal/useModal';
 import Modal from '@/components/elements/modal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { AlignCenter, AlignEndHorizontal, AlignJustify, AlignLeft, AlignRight, AlignStartHorizontal, Bold, BookA, CheckSquare, ChevronDown, Code, Heading1, Heading2, Heading3, Indent, Italic, List, ListOrdered, NotepadText, Outdent, Plus, Quote, Redo, Text, Undo } from 'lucide-react';
+import { AlignCenter, AlignEndHorizontal, AlignJustify, AlignLeft, AlignRight, AlignStartHorizontal, Baseline, Bold, BookA, CheckSquare, ChevronDown, Code, Heading1, Heading2, Heading3, Indent, Italic, Link, List, ListOrdered, NotepadText, Outdent, PaintBucket, Plus, Quote, Redo, Text, Underline, Undo } from 'lucide-react';
 import DropdownColorPicker from '../../ui/colorpicker/DropdownColorPicker';
 const commonToolbarItemProps = {
   variant: 'ghost',
@@ -415,7 +415,7 @@ function ElementFormatDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button disabled={disabled} {...commonToolbarItemProps} aria-label='Formatting options for text alignment' disabled={disabled}>
+        <Button disabled={disabled} {...commonToolbarItemProps} aria-label='Formatting options for text alignment'>
           <ActiveIcon size={20} />
           {formatOption.name}
           <ChevronDown size={18} />
@@ -906,86 +906,76 @@ export default function ToolbarPlugin({
             disabled={!isEditable}
           />
           <Divider />
-          <button
+          <Button
             disabled={!isEditable}
             onClick={() => {
               activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
             }}
-            className={'toolbar-item spaced ' + (isBold ? 'active' : '')}
+            className={isBold ? 'bg-slate-200' : ''}
             title={isMacOs ? 'Bold (⌘B)' : 'Bold (Ctrl+B)'}
-            type="button"
+            variant="ghost"
+            size="icon"
             aria-label={`Format text as bold. Shortcut: ${isMacOs ? '⌘B' : 'Ctrl+B'
               }`}>
-            <Bold size={18} />
-          </button>
-          <button
+            <Bold size={18} opacity={isBold ? 1 : 0.6} />
+          </Button>
+          <Button
             disabled={!isEditable}
             onClick={() => {
               activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
             }}
-            className={'toolbar-item spaced ' + (isItalic ? 'active' : '')}
+            className={isItalic ? 'bg-slate-200' : ''}
             title={isMacOs ? 'Italic (⌘I)' : 'Italic (Ctrl+I)'}
-            type="button"
+            variant="ghost"
+            size="icon"
             aria-label={`Format text as italics. Shortcut: ${isMacOs ? '⌘I' : 'Ctrl+I'
               }`}>
-            <Italic size={18} />
-          </button>
-          <button
+            <Italic size={18} opacity={isItalic ? 1 : 0.6} />
+          </Button>
+          <Button
             disabled={!isEditable}
             onClick={() => {
               activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
             }}
-            className={'toolbar-item spaced ' + (isUnderline ? 'active' : '')}
+            className={isUnderline ? 'bg-slate-200' : ''}
             title={isMacOs ? 'Underline (⌘U)' : 'Underline (Ctrl+U)'}
-            type="button"
+            variant="ghost" size="icon"
             aria-label={`Format text to underlined. Shortcut: ${isMacOs ? '⌘U' : 'Ctrl+U'
               }`}>
-            <i className="format underline" />
-          </button>
+            <Underline size={18} opacity={isUnderline ? 1 : 0.6} />
+          </Button>
           {canViewerSeeInsertCodeButton && (
-            <button
+            <Button
               disabled={!isEditable}
               onClick={() => {
                 activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
               }}
-              className={'toolbar-item spaced ' + (isCode ? 'active' : '')}
+              className={isCode ? 'bg-slate-200' : ''}
               title="Insert code block"
-              type="button"
+              variant="ghost" size="icon"
               aria-label="Insert code block">
-              <i className="format code" />
-            </button>
+              <Code size={18} opacity={isCode ? 1 : 0.6} />
+            </Button>
           )}
-          <button
+          <Button
             disabled={!isEditable}
             onClick={insertLink}
-            className={'toolbar-item spaced ' + (isLink ? 'active' : '')}
+            className={isLink ? 'bg-slate-200' : ''}
             aria-label="Insert link"
             title="Insert link"
-            type="button">
-            <i className="format link" />
-          </button>
+            size="icon" variant="ghost">
+            <Link size={18} opacity={isLink ? 1 : 0.6} />
+          </Button>
+
           <DropdownColorPicker
-            disabled={!isEditable}
-            className="toolbar-item color-picker"
-            buttonAriaLabel="Formatting text color"
-            buttonIconClassName="icon font-color"
             color={fontColor}
             onChange={onFontColorSelect}
             title="text color"
+            icon={<Baseline size={18} opacity={0.6} />}
           />
-
-          {/* <DropdownColorPicker
-            color="rgba(70,80,90,0.5)"
-            icon={<Font />}
-            onChange={(color) => {
-              // todo
-            }}
-          /> */}
           <DropdownColorPicker
             disabled={!isEditable}
-            buttonClassName="toolbar-item color-picker"
-            buttonAriaLabel="Formatting background color"
-            buttonIconClassName="icon bg-color"
+            icon={<PaintBucket size={18} opacity={0.6} />}
             color={bgColor}
             onChange={onBgColorSelect}
             title="bg color"

@@ -6,6 +6,7 @@
  *
  */
 
+import { Button } from '@/components/ui/button';
 import ColorPicker from './ColorPicker';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -19,11 +20,11 @@ export default function DropdownColorPicker({
 }) {
   return (
     <Popover>
-      <PopoverTrigger {...rest}>
-        <>
+      <PopoverTrigger asChild {...rest}>
+        <Button variant="ghost" size="icon">
           {icon}
           {label && <span>{label}</span>}
-        </>
+        </Button>
       </PopoverTrigger>
       <PopoverContent>
         <ColorPicker color={color} onChange={onChange} />

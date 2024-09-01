@@ -186,13 +186,14 @@ export default function FontSize({
     <>
       <Button
         variant="ghost"
+        size="icon"
         disabled={
           disabled ||
           (selectionFontSize !== '' &&
             Number(inputValue) <= MIN_ALLOWED_FONT_SIZE)
         }
         onClick={() => handleButtonClick(updateFontSizeType.decrement)}
-        className="toolbar-item font-decrement">
+        className="">
         <Minus size={12} />
       </Button>
 
@@ -209,13 +210,14 @@ export default function FontSize({
 
       <Button
         variant="ghost"
+        size="icon"
         disabled={
           disabled ||
           (selectionFontSize !== '' &&
             Number(inputValue) >= MAX_ALLOWED_FONT_SIZE)
         }
         onClick={() => handleButtonClick(updateFontSizeType.increment)}
-        className="toolbar-item font-increment">
+        className="">
         <Plus size={12} />
       </Button>
     </>
