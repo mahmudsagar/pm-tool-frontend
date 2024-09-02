@@ -18,10 +18,9 @@ const MIN_ALLOWED_FONT_SIZE = 8;
 const MAX_ALLOWED_FONT_SIZE = 72;
 const DEFAULT_FONT_SIZE = 15;
 
-// eslint-disable-next-line no-shadow
 const updateFontSizeType = {
   increment: 1,
-  decrement: 1,
+  decrement: -1,
 }
 export default function FontSize({
   selectionFontSize,
@@ -183,7 +182,7 @@ export default function FontSize({
   }, [selectionFontSize]);
 
   return (
-    <>
+    <div className='flex gap-1'>
       <Button
         variant="ghost"
         size="icon"
@@ -193,14 +192,14 @@ export default function FontSize({
             Number(inputValue) <= MIN_ALLOWED_FONT_SIZE)
         }
         onClick={() => handleButtonClick(updateFontSizeType.decrement)}
-        className="">
+        className="w-5">
         <Minus size={12} />
       </Button>
 
       <Input
         value={inputValue}
         disabled={disabled}
-        className="w-8 text-center p-0.5"
+        className="w-8 text-center p-0.5 dark:text-slate-200"
         min={MIN_ALLOWED_FONT_SIZE}
         max={MAX_ALLOWED_FONT_SIZE}
         onChange={(e) => setInputValue(e.target.value)}
@@ -217,9 +216,9 @@ export default function FontSize({
             Number(inputValue) >= MAX_ALLOWED_FONT_SIZE)
         }
         onClick={() => handleButtonClick(updateFontSizeType.increment)}
-        className="">
+        className="w-5">
         <Plus size={12} />
       </Button>
-    </>
+    </div>
   );
 }
