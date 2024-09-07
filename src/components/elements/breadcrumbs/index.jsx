@@ -1,6 +1,6 @@
 import Link from "@/BetterRouter/Link";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import { useMatches } from "react-router-dom";
 
 const DynamicBreadCrumb = () => {
@@ -16,6 +16,11 @@ const DynamicBreadCrumb = () => {
     const title = path.replace(/\//g, '-').replace(/^-|-$/g, '')
     return title.charAt(0).toUpperCase() + title.slice(1);
   }
+
+  /** set title from last item */
+  useEffect(() => {
+    document.title = makeTitleFromPath(matches[matches.length - 1].pathname);
+  }, [matches]);
   return (
     <div>
       <Breadcrumb>

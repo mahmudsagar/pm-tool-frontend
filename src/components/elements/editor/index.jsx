@@ -20,6 +20,7 @@ import FloatingLinkEditorPlugin from './plugins/FloatingLinkEditorPlugin';
 import FloatingTextFormatToolbarPlugin from './plugins/FloatingTextFormatToolbarPlugin';
 import { useEffect, useState } from 'react';
 import Modal from '../modal';
+import DynamicInput from './dynamicInput';
 
 const placeholder = 'Enter some rich text...';
 
@@ -72,6 +73,7 @@ export default function Editor() {
           <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />
           <HistoryPlugin />
           <div className="editor-inner min-h-screen" ref={onRef}>
+
             <RichTextPlugin
               contentEditable={
 
@@ -79,6 +81,7 @@ export default function Editor() {
                   <div className="editor" ref={onRef}>
                     <ContentEditable className="editor-input"
                       aria-placeholder={placeholder} placeholder={placeholder} />
+                    <DynamicInput />
                   </div>
                 </div>
               }

@@ -837,7 +837,7 @@ export default function ToolbarPlugin({
     activeEditor.dispatchCommand(INSERT_IMAGE_COMMAND, payload);
   };
 
-  const canViewerSeeInsertDropdown = !isImageCaption;
+  const canViewerSeeInsertDropdown = false;
   const canViewerSeeInsertCodeButton = !isImageCaption;
 
   return (
