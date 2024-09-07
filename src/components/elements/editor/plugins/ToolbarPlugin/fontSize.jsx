@@ -18,10 +18,10 @@ const MIN_ALLOWED_FONT_SIZE = 8;
 const MAX_ALLOWED_FONT_SIZE = 72;
 const DEFAULT_FONT_SIZE = 15;
 
-const updateFontSizeType = {
+const updateFontSizeType = Object.freeze({
   increment: 1,
-  decrement: -1,
-}
+  decrement: 2
+});
 export default function FontSize({
   selectionFontSize,
   disabled,

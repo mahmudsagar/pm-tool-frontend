@@ -75,21 +75,8 @@ html.dark {
     position: relative;
     tab-size: 1;
     outline: 0;
-    padding: 15px 10px 15px 24px;
+    padding: 24px 10px 15px 24px;
     caret-color: #444;
-  }
-
-  .editor-placeholder {
-    color: #999;
-    overflow: hidden;
-    position: absolute;
-    text-overflow: ellipsis;
-    top: 15px;
-    left: 10px;
-    font-size: 15px;
-    user-select: none;
-    display: inline-block;
-    pointer-events: none;
   }
 
   .editor-text-bold {

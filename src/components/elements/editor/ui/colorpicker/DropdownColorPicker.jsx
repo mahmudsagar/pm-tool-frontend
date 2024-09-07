@@ -19,14 +19,14 @@ export default function DropdownColorPicker({
   ...rest
 }) {
   return (
-    <Popover>
+    <Popover modal>
       <PopoverTrigger asChild {...rest}>
         <Button variant="ghost" size="icon">
           {icon}
           {label && <span>{label}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent>
+      <PopoverContent className="w-auto">
         <ColorPicker color={color} onChange={onChange} />
       </PopoverContent>
     </Popover>

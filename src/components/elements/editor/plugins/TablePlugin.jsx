@@ -7,7 +7,9 @@
  */
 
 import { Button } from '@/components/ui/button';
+import { DialogClose, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $createTableNodeWithDimensions,
@@ -84,27 +86,35 @@ export function InsertTableDialog({
 
   return (
     <>
-      <Input
-        placeholder={'# of rows (1-500)'}
-        label="Rows"
-        onChange={setRows}
-        value={rows}
-        data-test-id="table-modal-rows"
-        type="number"
-      />
-      <Input
-        placeholder={'# of columns (1-50)'}
-        label="Columns"
-        onChange={setColumns}
-        value={columns}
-        data-test-id="table-modal-columns"
-        type="number"
-      />
-      {/* <DialogActions data-test-id="table-model-confirm-insert">
-        <Button disabled={isDisabled} onClick={onClick}>
-          Confirm
-        </Button>
-      </DialogActions> */}
+      <DialogHeader>
+        <DialogTitle>Insert Table</DialogTitle>
+      </DialogHeader>
+      <div>
+        <Label>Rows:</Label>
+        <Input
+          placeholder={'# of rows (1-500)'}
+          onChange={e => setRows(e.target.value)}
+          value={rows}
+          data-test-id="table-modal-rows"
+          type="number"
+        />
+        <Label>Columns:</Label>
+        <Input
+          placeholder={'# of columns (1-50)'}
+          onChange={e => setColumns(e.target.value)}
+          value={columns}
+          data-test-id="table-modal-columns"
+          type="number"
+        />
+      </div>
+
+      <DialogFooter className="sm:justify-start">
+        <DialogClose asChild>
+          <Button disabled={isDisabled} onClick={onClick}>
+            Confirm
+          </Button>
+        </DialogClose>
+      </DialogFooter>
     </>
   );
 }

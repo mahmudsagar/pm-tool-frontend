@@ -80,6 +80,7 @@ export default function ColorPicker({
   useEffect(() => {
     // Check if the dropdown is actually active
     if (innerDivRef.current !== null && onChange) {
+      console.log(innerDivRef.current, onChange);
       onChange(selfColor.hex, skipAddingToHistoryStack);
       setInputColor(selfColor.hex);
     }

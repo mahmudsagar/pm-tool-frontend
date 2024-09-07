@@ -81,8 +81,10 @@ import { useModal } from '@/components/elements/modal/useModal';
 import Modal from '@/components/elements/modal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { AlignCenter, AlignEndHorizontal, AlignJustify, AlignLeft, AlignRight, AlignStartHorizontal, Baseline, Bold, BookA, CheckSquare, ChevronDown, Code, Heading1, Heading2, Heading3, Indent, Italic, Link, List, ListOrdered, NotepadText, Outdent, PaintBucket, Plus, Quote, Redo, Text, Underline, Undo } from 'lucide-react';
+import { AArrowDown, ALargeSmall, AlignCenter, AlignEndHorizontal, AlignJustify, AlignLeft, AlignRight, AlignStartHorizontal, Baseline, Bold, BookA, CheckSquare, ChevronDown, Code, FoldVertical, Heading1, Heading2, Heading3, Image, ImagePlay, Indent, Italic, Link, List, ListOrdered, NotepadText, Outdent, PaintBucket, Plus, Quote, Redo, Strikethrough, Subscript, Superscript, Table, Text, Trash2, Underline, Undo } from 'lucide-react';
 import DropdownColorPicker from '../../ui/colorpicker/DropdownColorPicker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import ColorPicker from '../../ui/colorpicker/ColorPicker';
 const commonToolbarItemProps = {
   variant: 'ghost',
   className: 'gap-1 px-1.5 truncate',
@@ -982,10 +984,9 @@ export default function ToolbarPlugin({
           />
 
           <DropdownMenu>
-            <DropdownMenuTrigger asChild disabled={!isEditable} className="toolbar-item spaced" aria-label="Formatting options for additional text styles">
-              <Button variant="ghost" size="icon w-8">
-                <ChevronDown />
-                <span className="sr-only">More</span>
+            <DropdownMenuTrigger asChild disabled={!isEditable} aria-label="Formatting options for additional text styles">
+              <Button variant="ghost" size="icon">
+                <ALargeSmall opacity={0.6} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -999,7 +1000,7 @@ export default function ToolbarPlugin({
                 className={'item ' + dropDownActiveClass(isStrikethrough)}
                 title="Strikethrough"
                 aria-label="Format text with a strikethrough">
-                <i className="icon strikethrough" />
+                <Strikethrough size={16} />
                 <span className="text">Strikethrough</span>
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -1009,7 +1010,7 @@ export default function ToolbarPlugin({
                 className={'item ' + dropDownActiveClass(isSubscript)}
                 title="Subscript"
                 aria-label="Format text with a subscript">
-                <i className="icon subscript" />
+                <Subscript size={16} />
                 <span className="text">Subscript</span>
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -1022,7 +1023,7 @@ export default function ToolbarPlugin({
                 className={'item ' + dropDownActiveClass(isSuperscript)}
                 title="Superscript"
                 aria-label="Format text with a superscript">
-                <i className="icon superscript" />
+                <Superscript size={16} />
                 <span className="text">Superscript</span>
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -1030,7 +1031,7 @@ export default function ToolbarPlugin({
                 className="item"
                 title="Clear text formatting"
                 aria-label="Clear all text formatting">
-                <i className="icon clear" />
+                <Trash2 size={16} className='mr-0.5' />
                 <span className="text">Clear Formatting</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -1038,11 +1039,11 @@ export default function ToolbarPlugin({
           {canViewerSeeInsertDropdown && (
             <>
               <Divider />
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild disabled={!isEditable} className="toolbar-item spaced" aria-label="Insert specialized editor node">
-                  <Button variant="ghost" size="icon w-8">
-                    <Plus />
-                    <span className="sr-only">More</span>
+                  <Button variant="ghost" className="px-1">
+                    <Plus size={18} />
+                    <span className="text">Insert</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -1053,15 +1054,15 @@ export default function ToolbarPlugin({
                         undefined,
                       );
                     }}
-                    className="item">
-                    <i className="icon horizontal-rule" />
-                    <span className="text">Horizontal Rule</span>
+                    className="cursor-pointer">
+                    <FoldVertical size={16} />
+                    <span className="ml-1">Horizontal Rule</span>
                   </DropdownMenuItem>
                   {/* <DropdownMenuItem
                   onClick={() => {
                     activeEditor.dispatchCommand(INSERT_PAGE_BREAK, undefined);
                   }}
-                  className="item">
+                  className="cursor-pointer">
                   <i className="icon page-break" />
                   <span className="text">Page Break</span>
                 </DropdownMenuItem> */}
@@ -1074,9 +1075,9 @@ export default function ToolbarPlugin({
                         />
                       });
                     }}
-                    className="item">
-                    <i className="icon image" />
-                    <span className="text">Image</span>
+                    className="cursor-pointer">
+                    <Image size={16} />
+                    <span className="ml-1">Image</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
@@ -1087,9 +1088,9 @@ export default function ToolbarPlugin({
                         />
                       });
                     }}
-                    className="item">
-                    <i className="icon image" />
-                    <span className="text">Inline Image</span>
+                    className="cursor-pointer">
+                    <Image size={16} />
+                    <span className="ml-1">Inline Image</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() =>
@@ -1098,9 +1099,9 @@ export default function ToolbarPlugin({
                         src: 'catTypingGif',
                       })
                     }
-                    className="item">
-                    <i className="icon gif" />
-                    <span className="text">GIF</span>
+                    className="cursor-pointer">
+                    <ImagePlay size={16} />
+                    <span className="ml-1">GIF</span>
                   </DropdownMenuItem>
                   {/* <DropdownMenuItem
                   onClick={() => {
@@ -1109,7 +1110,7 @@ export default function ToolbarPlugin({
                       undefined,
                     );
                   }}
-                  className="item">
+                  className="cursor-pointer">
                   <i className="icon diagram-2" />
                   <span className="text">Excalidraw</span>
                 </DropdownMenuItem> */}
@@ -1121,10 +1122,11 @@ export default function ToolbarPlugin({
                           onClose={closeModal}
                         />
                       });
+
                     }}
-                    className="item">
-                    <i className="icon table" />
-                    <span className="text">Table</span>
+                    className="cursor-pointer">
+                    <Table size={16} />
+                    <span className="ml-1">Table</span>
                   </DropdownMenuItem>
                   {/* <DropdownMenuItem
                   onClick={() => {
@@ -1136,7 +1138,7 @@ export default function ToolbarPlugin({
                       />
                     });
                   }}
-                  className="item">
+                  className="cursor-pointer">
                   <i className="icon poll" />
                   <span className="text">Poll</span>
                 </DropdownMenuItem> */}
@@ -1149,7 +1151,7 @@ export default function ToolbarPlugin({
                       />
                     });
                   }}
-                  className="item">
+                  className="cursor-pointer">
                   <i className="icon columns" />
                   <span className="text">Columns Layout</span>
                 </DropdownMenuItem> */}
@@ -1163,7 +1165,7 @@ export default function ToolbarPlugin({
                       />
                     });
                   }}
-                  className="item">
+                  className="cursor-pointer">
                   <i className="icon equation" />
                   <span className="text">Equation</span>
                 </DropdownMenuItem> */}
@@ -1175,7 +1177,7 @@ export default function ToolbarPlugin({
                       root.append(stickyNode);
                     });
                   }}
-                  className="item">
+                  className="cursor-pointer">
                   <i className="icon sticky" />
                   <span className="text">Sticky Note</span>
                 </DropdownMenuItem> */}
@@ -1186,7 +1188,7 @@ export default function ToolbarPlugin({
                       undefined,
                     );
                   }}
-                  className="item">
+                  className="cursor-pointer">
                   <i className="icon caret-right" />
                   <span className="text">Collapsible container</span>
                 </DropdownMenuItem> */}
@@ -1199,15 +1201,16 @@ export default function ToolbarPlugin({
                         embedConfig.type,
                       );
                     }}
-                    className="item">
+                    className="cursor-pointer">
                     {embedConfig.icon}
                     <span className="text">{embedConfig.contentName}</span>
                   </DropdownMenuItem>
                 ))} */}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </DropdownMenuContent >
+              </DropdownMenu >
             </>
-          )}
+          )
+          }
         </>
       )}
       <Divider />
@@ -1217,8 +1220,6 @@ export default function ToolbarPlugin({
         editor={activeEditor}
         isRTL={isRTL}
       />
-
-      <Modal />
-    </div>
+    </div >
   );
 }

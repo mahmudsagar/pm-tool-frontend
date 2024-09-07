@@ -19,6 +19,7 @@ import DraggableBlockPlugin from './plugins/DraggableBlockPlugin';
 import FloatingLinkEditorPlugin from './plugins/FloatingLinkEditorPlugin';
 import FloatingTextFormatToolbarPlugin from './plugins/FloatingTextFormatToolbarPlugin';
 import { useEffect, useState } from 'react';
+import Modal from '../modal';
 
 const placeholder = 'Enter some rich text...';
 
@@ -111,6 +112,7 @@ export default function Editor() {
           </div>
         </div>
       </LexicalComposer>
+      <Modal />
     </div>
   );
 }
