@@ -21,6 +21,9 @@ import FloatingTextFormatToolbarPlugin from './plugins/FloatingTextFormatToolbar
 import { useEffect, useState } from 'react';
 import Modal from '../modal';
 import DynamicInput from './dynamicInput';
+import { Tooltip } from '../tooltip';
+import { Button } from '@/components/ui/button';
+import { Image } from 'lucide-react';
 
 const placeholder = 'Enter some rich text...';
 
@@ -68,8 +71,29 @@ export default function Editor() {
   }, [isSmallWidthViewport]);
   return (
     <div className='lexical-editor'>
+
       <LexicalComposer initialConfig={editorConfig}>
         <div className="editor-container border">
+
+          <div className="min-h-6 py-2 px-3 shadow">
+            asdas
+          </div>
+
+          <div className='py-2 px-6 my-5'>
+            <div className='h-10 opacity-0 hover:opacity-100'>
+              <Button variant="secondary" className="opacity-60 ">
+                <Image size={15} className='mr-1' />
+                Add a cover
+              </Button>
+            </div>
+
+            <div className="" style={{ color: 'rgba(255, 255, 255, 0.81)', fontWeight: 700, lineHeight: 1.2, fontSize: '32px', cursor: 'text' }}>
+              <h1 className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0" spellCheck="true" data-content-editable-leaf="true" contentEditable="true" style={{ maxWidth: '100%', width: '100%', whiteSpace: 'pre-wrap', wordBreak: 'break-word', paddingTop: '3px', paddingLeft: '2px', paddingRight: '2px', fontSize: '1em' }}>Comment &amp; Reactions SRS</h1>
+            </div>
+
+            <DynamicInput />
+
+          </div>
           <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />
           <HistoryPlugin />
           <div className="editor-inner min-h-screen" ref={onRef}>
@@ -81,7 +105,6 @@ export default function Editor() {
                   <div className="editor" ref={onRef}>
                     <ContentEditable className="editor-input"
                       aria-placeholder={placeholder} placeholder={placeholder} />
-                    <DynamicInput />
                   </div>
                 </div>
               }

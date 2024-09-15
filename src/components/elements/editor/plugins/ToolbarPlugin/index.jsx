@@ -841,7 +841,7 @@ export default function ToolbarPlugin({
   const canViewerSeeInsertCodeButton = !isImageCaption;
 
   return (
-    <div className="toolbar">
+    <div className="toolbar shadow">
       <Button
         disabled={!canUndo || !isEditable}
         onClick={() => {

@@ -22,7 +22,6 @@ export default function DraggableBlockPlugin({
 }) {
   const menuRef = useRef(null);
   const targetLineRef = useRef(null);
-  console.log('DraggableBlockPlugin', menuRef, targetLineRef);
   return (
     <DraggableBlockPlugin_EXPERIMENTAL
       anchorElem={anchorElem}

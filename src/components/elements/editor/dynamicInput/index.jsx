@@ -190,19 +190,19 @@ const DynamicInput = () => {
   }
 
   return (
-    <div className='ml-2'>
+    <div className=''>
       <div className="">
         {fields.map((field, index) => (
-          <div className="grid w-full max-w-sm items-center gap-1.5 mt-2" key={index}>
-            <Label htmlFor={field.label} className="cursor-pointer text-blue-500"
+          <div className="flex w-full max-w-sm items-center gap-1.5 mt-2" key={index}>
+            <Button variant="ghost" className="text-blue-500 w-[150px] justify-start"
               onClick={() => {
                 openModal({
                   content: <EditFieldPopup {...field} onConfirm={({ ...rest }) => {
                     handleEditField({ id: field.id, ...rest });
                   }} />
                 });
-              }}>{field.label}</Label>
-            <field.component {...field} />
+              }}>{field.label}</Button>
+            <field.component className="outline-none w-auto" {...field} />
           </div>
         ))}
       </div>
