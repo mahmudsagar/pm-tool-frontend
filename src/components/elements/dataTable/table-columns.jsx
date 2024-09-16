@@ -61,7 +61,7 @@ export default [
     header: ({ column }) => {
       return (
         <div className="w-10 flex items-center justify-center">
-          <FileText className='w-5 h-5' />
+          <FileText className='w-5 h-5 dark:text-white' />
         </div>
       )
     },
@@ -77,7 +77,7 @@ export default [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="font-medium flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
+            <button className="font-medium dark:text-white flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
               Name
               <ChevronDown className='w-4 h-4' />
             </button>
@@ -206,7 +206,7 @@ export default [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="font-medium flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
+            <button className="font-medium dark:text-white flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
               Modified
               <ChevronDown className='w-4 h-4' />
             </button>
@@ -215,7 +215,7 @@ export default [
       );
     },
     cell: ({ row }) => (
-      <div className='text-slate-500'>{row.getValue("modified")}</div>
+      <div className='text-slate-500 dark:text-white'>{row.getValue("modified")}</div>
     ),
   },
   {
@@ -224,7 +224,7 @@ export default [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="font-medium flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
+            <button className="font-medium dark:text-white flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
               Modified By
               <ChevronDown className='w-4 h-4' />
             </button>
@@ -233,7 +233,7 @@ export default [
       );
     },
     cell: ({ row }) => (
-      <div className='text-slate-500'>{row.getValue("modifiedBy")}</div>
+      <div className='text-slate-500 dark:text-white'>{row.getValue("modifiedBy")}</div>
     ),
   },
   {
@@ -242,7 +242,7 @@ export default [
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="font-medium flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
+            <button className="font-medium dark:text-white flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
               File Size
               <ChevronDown className='w-4 h-4' />
             </button>
@@ -251,21 +251,21 @@ export default [
       );
     },
     cell: ({ row }) => (
-      <div className='text-slate-500'>{row.getValue("fileSize")}</div>
+      <div className='text-slate-500 dark:text-white'>{row.getValue("fileSize")}</div>
     ),
   },
   {
     accessorKey: "sharing",
-    header: "Sharing",
+    header: ({ column }) => <p className='dark:text-white'>Sharing</p>,
     cell: ({ row }) => (
-      <div className='text-slate-500'>{row.getValue("sharing")}</div>
+      <div className='text-slate-500 dark:text-white'>{row.getValue("sharing")}</div>
     ),
   },
   {
     accessorKey: "activity",
-    header: "Activity",
+    header: ({ column }) => <p className='dark:text-white'>Activity</p>,
     cell: ({ row }) => (
-      <div className='text-slate-500'>{row.getValue("activity")}</div>
+      <div className='text-slate-500 dark:text-white'>{row.getValue("activity")}</div>
     ),
   },
   // {

@@ -1,10 +1,10 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from "vite";
 
-import react from '@vitejs/plugin-react-swc'
-import alias from '@rollup/plugin-alias'
+import react from "@vitejs/plugin-react-swc";
+import alias from "@rollup/plugin-alias";
 
-import { fileURLToPath, URL } from 'url'
-import { univerPlugin } from '@univerjs/vite-plugin';
+import { fileURLToPath, URL } from "url";
+import { univerPlugin } from "@univerjs/vite-plugin";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -12,16 +12,19 @@ export default defineConfig({
     react(),
     alias({
       entries: [
-        { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
+        {
+          find: "@",
+          replacement: fileURLToPath(new URL("./src", import.meta.url)),
+        },
         // Add more aliases as needed
-      ]
+      ],
     }),
-    univerPlugin()
+    univerPlugin(),
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
       // Add more aliases as needed
-    }
-  }
+    },
+  },
 });

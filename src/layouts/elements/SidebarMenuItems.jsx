@@ -1,21 +1,35 @@
 
-import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "./subnav-accordion";
-import { ChevronDownIcon, MoreVertical } from "lucide-react";
 import Link from "@/BetterRouter/Link";
 import { useEffect, useState } from "react";
 import { useSidebar } from "@/stores/store";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Button,
+  buttonVariants
+} from "@/components/ui/button";
+import {
+  ChevronDownIcon,
+  MoreVertical
+} from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./subnav-accordion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import useFolderStore from "@/stores/folderStore";
+
 const SidebarMenuItems = ({ items, className, setOpen }) => {
   const path = useLocation().pathname;
+  const { folderData, spaceData, loading, error } = useFolderStore();
 
   const { isOpen } = useSidebar();
   const [openItem, setOpenItem] = useState("");
@@ -29,6 +43,10 @@ const SidebarMenuItems = ({ items, className, setOpen }) => {
       setOpenItem("");
     }
   }, [isOpen]);
+
+  console.log(`Folder Data: ${folderData}`, `Space Data: ${spaceData}`);
+
+
   return (
     <>
       {items.map((item, index) =>
