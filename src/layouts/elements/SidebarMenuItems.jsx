@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/button";
 import {
   ChevronDownIcon,
+  LogOut,
   MoreVertical
 } from "lucide-react";
 import {
@@ -29,11 +30,10 @@ import useFolderStore from "@/stores/folderStore";
 
 const SidebarMenuItems = ({ items, className, setOpen }) => {
   const path = useLocation().pathname;
-  const { folderData, spaceData, loading, error } = useFolderStore();
-
   const { isOpen } = useSidebar();
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
+  const { folderData, spaceData, loading, error } = useFolderStore(state => state);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,8 +43,6 @@ const SidebarMenuItems = ({ items, className, setOpen }) => {
       setOpenItem("");
     }
   }, [isOpen]);
-
-  console.log(`Folder Data: ${folderData}`, `Space Data: ${spaceData}`);
 
 
   return (
