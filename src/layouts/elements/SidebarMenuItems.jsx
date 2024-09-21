@@ -11,8 +11,6 @@ import {
 } from "@/components/ui/button";
 import {
   ChevronDownIcon,
-  LogOut,
-  MoreVertical
 } from "lucide-react";
 import {
   Accordion,
