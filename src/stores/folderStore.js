@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-const useDataStore = create((set) => ({
+const useDataStore = create((set, get) => ({
   folderData: null,
   spaceData: null,
   loading: { folder: false, space: false },
@@ -20,9 +20,8 @@ const useDataStore = create((set) => ({
         throw new Error("Failed to fetch folder data");
       }
       const result = await response.json();
-      console.log("Folder Data:", result); // Debugging
       set((state) => ({
-        folderData: result.data, // Use `result.data` to access the array
+        folderData: result.data,
         loading: { ...state.loading, folder: false },
       }));
     } catch (error) {
@@ -47,9 +46,8 @@ const useDataStore = create((set) => ({
         throw new Error("Failed to fetch space data");
       }
       const result = await response.json();
-      console.log("Space Data:", result); // Debugging
       set((state) => ({
-        spaceData: result.data, // Use `result.data` to access the array
+        spaceData: result?.data?.sort((a, b) => b.is_private - a.is_private),
         loading: { ...state.loading, space: false },
       }));
     } catch (error) {
@@ -58,6 +56,14 @@ const useDataStore = create((set) => ({
         loading: { ...state.loading, space: false },
       }));
     }
+  },
+
+  // Get Folder Using Space Id
+  getFolderSpaceId: (spaceID) => {
+    const data = get().folderData;
+    if (!data) return [];
+
+    return data.filter((folder) => folder.space_id === spaceID);
   },
 }));
 

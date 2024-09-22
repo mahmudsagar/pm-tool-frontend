@@ -16,7 +16,6 @@ export default function Sidebar({ className }) {
   const [status, setStatus] = useState(false);
   const { fetchFolderData, fetchSpaceData } = useFolderStore(state => state);
 
-
   const handleToggle = () => {
     setStatus(true);
     toggle();
@@ -26,9 +25,7 @@ export default function Sidebar({ className }) {
   useEffect(() => {
     fetchSpaceData();
     fetchFolderData();
-  }, [])
-
-
+  }, []);
 
   return (
     <nav
