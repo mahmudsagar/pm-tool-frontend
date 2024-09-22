@@ -45,6 +45,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownOpenStates, setDropdownOpenStates] = useState({});
   const { spaceData, getFolderSpaceId, loading, error } = useFolderStore(state => state);
 
   useEffect(() => {
@@ -55,6 +56,13 @@ const SidebarMenuItems = ({ className, setOpen }) => {
       setOpenItem("");
     }
   }, [isOpen]);
+
+  const handleDropdownToggle = (id) => {
+    setDropdownOpenStates((prevState) => ({
+      ...prevState,
+      [id]: !prevState[id],
+    }));
+  };
 
   return (
     <>
@@ -127,12 +135,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
                         )}
                       />
 
-                      <div
-                        className={cn(
-                          'absolute left-10 text-sm duration-200',
-                          !isOpen && className,
-                        )}
-                      >
+                      <div className={cn('absolute left-10 text-sm duration-200', !isOpen && className,)}>
                         {folderItem.name}
                       </div>
                     </div>
@@ -155,14 +158,19 @@ const SidebarMenuItems = ({ className, setOpen }) => {
                             </DialogHeader>
                           </DialogContent>
                         </Dialog>
-
-                        <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+                        <DropdownMenu open={dropdownOpenStates[folderItem._id]} onOpenChange={() => handleDropdownToggle(folderItem._id)}>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="hover:bg-slate-300 w-6 h-6">
-                              <EllipsisVertical size={16} className="text-slate-500 hover:text-black dark:text-white dark:hover:text-black" />
+                            <Button variant="ghost" size="icon" className="hover:bg-slate-300 w-6 h-6" onClick={(e) => e.stopPropagation()}>
+                              <EllipsisVertical
+                                size={16}
+                                className={cn(
+                                  'text-slate-500 hover:text-black dark:text-white dark:hover:text-black',
+                                  dropdownOpenStates[folderItem._id] ? 'opacity-100' : ''
+                                )}
+                              />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()} >
                             <DropdownMenuItem>
                               <Link>fdgdfg</Link>
                             </DropdownMenuItem>
