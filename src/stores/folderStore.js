@@ -63,7 +63,15 @@ const useDataStore = create((set, get) => ({
     const data = get().folderData;
     if (!data) return [];
 
-    return data.filter((folder) => folder.space_id === spaceID);
+    const filteredFolders = data.filter(
+      (folder) => folder.space_id === spaceID
+    );
+
+    if (filteredFolders.length === 0) {
+      return "Empty";
+    }
+
+    return filteredFolders;
   },
 }));
 
