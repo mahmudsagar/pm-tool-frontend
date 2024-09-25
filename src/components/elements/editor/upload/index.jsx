@@ -18,7 +18,7 @@ const Upload = ({ onChange, value, children }) => {
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <ImageUpload />
+          <ImageUpload onChange={onChange} />
         </div>
       </DialogContent>
     </Dialog>
