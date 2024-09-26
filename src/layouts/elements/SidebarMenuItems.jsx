@@ -162,7 +162,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
                       </div>
 
                       {/* Always render Plus and EllipsisVertical icons, but control their visibility */}
-                      <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folderItem._id ? 'opacity-100' : ''}`}>
+                      <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folderItem._id || dropdownOpenStates[folderItem._id] ? 'opacity-100' : ''}`}>
                         <div className="flex gap-1">
                           <Dialog>
                             <DialogTrigger>
