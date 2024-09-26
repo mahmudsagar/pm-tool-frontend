@@ -27,6 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import Upload from './upload';
 import ImageUpload from './upload/image';
 import Cropper from 'react-easy-crop';
+import Moveable from "react-moveable";
 
 const placeholder = 'Enter some rich text...';
 
@@ -80,11 +81,8 @@ export default function Editor() {
     setCoverImage(files[0]);
   }
 
-  const [crop, setCrop] = useState({ x: 0, y: 0 })
-  const [zoom, setZoom] = useState(1)
-
-  const onCropComplete = (croppedArea, croppedAreaPixels) => {
-    console.log(croppedArea, croppedAreaPixels)
+  const handleCoverRemove = () => {
+    setCoverImage(null);
   }
 
   return (
@@ -105,35 +103,40 @@ export default function Editor() {
                 <Star size={15} />
               </Button>
             </div>
+
+
           </div> */}
 
+
+          {coverImage &&
+            <div
+              className="relative h-52 cover-image-container group"
+              style={{
+                backgroundImage: `url(${URL.createObjectURL(coverImage.File)})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
+            >
+              <Button onClick={handleCoverRemove} variant="outline" className="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-70">
+                Remove cover
+              </Button>
+            </div>
+
+          }
+
           <div className='py-2 px-6 mb-4'>
-            <div className='h-10 opacity-0 hover:opacity-100'>
+
+
+
+            {!coverImage && <div className='h-10 opacity-0 hover:opacity-100'>
               <ImageUpload onChange={coverImageUploadHandler} >
                 <Button variant="secondary" className="opacity-60 ">
                   <Image size={15} className='mr-1' />
                   Add a cover
                 </Button>
               </ImageUpload>
-            </div>
-            {coverImage && (
-              // <div className='h-40 bg-gray-200 rounded-lg overflow-hidden mt-2'>
-              //   <img src={URL.createObjectURL(coverImage.File)} alt="cover" className='w-full h-full object-cover' />
-              // </div>
-              <div className="relative h-10">
-                <Cropper
-                  image={URL.createObjectURL(coverImage.File)}
-                  crop={crop}
-                  zoom={zoom}
-                  aspect={5 / 3}
-                  onCropChange={setCrop}
-                  onCropComplete={onCropComplete}
-                  onZoomChange={setZoom}
-                  objectFit="horizontal-cover"
-                />
-              </div>
-            )}
-
+            </div>}
 
             <div className="" style={{ color: 'rgba(255, 255, 255, 0.81)', fontWeight: 700, lineHeight: 1.2, fontSize: '32px', cursor: 'text' }}>
               <h1 className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0" spellCheck="true" data-content-editable-leaf="true" contentEditable="true" style={{ maxWidth: '100%', width: '100%', whiteSpace: 'pre-wrap', wordBreak: 'break-word', paddingTop: '3px', paddingLeft: '2px', paddingRight: '2px', fontSize: '1em' }}>Document title</h1>
