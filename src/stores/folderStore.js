@@ -1,77 +1,104 @@
 import { create } from "zustand";
 
+// Base API URL
+const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
+
+// Helper function to handle API fetch
+const apiFetch = async (url, method = "GET") => {
+  const options = { method };
+  const response = await fetch(url, options);
+
+  if (!response.ok) {
+    const errorMsg = `Failed to ${
+      method === "DELETE" ? "delete" : "fetch"
+    } data`;
+    throw new Error(errorMsg);
+  }
+
+  return await response.json();
+};
+
+// Zustand Store
 const useDataStore = create((set, get) => ({
   folderData: null,
   spaceData: null,
-  loading: { folder: false, space: false },
-  error: { folder: null, space: null },
+  loading: { folder: false, space: false, delete: false },
+  error: { folder: null, space: null, delete: null },
+
+  // Set loading and error states
+  setLoadingAndError: (type, isLoading, error = null) => {
+    set((state) => ({
+      loading: { ...state.loading, [type]: isLoading },
+      error: { ...state.error, [type]: error },
+    }));
+  },
 
   // Fetch folder data
   fetchFolderData: async () => {
-    set((state) => ({
-      loading: { ...state.loading, folder: true },
-      error: { ...state.error, folder: null },
-    }));
+    const setLoadingAndError = get().setLoadingAndError;
+    setLoadingAndError("folder", true);
+
     try {
-      const response = await fetch(
-        "https://better-notion-api-server.onrender.com/v1/folder?user_id=66cda5dac6886719e3345c19"
+      const result = await apiFetch(
+        `${API_BASE_URL}/folder?user_id=66cda5dac6886719e3345c19`
       );
-      if (!response.ok) {
-        throw new Error("Failed to fetch folder data");
-      }
-      const result = await response.json();
       set((state) => ({
         folderData: result.data,
         loading: { ...state.loading, folder: false },
       }));
     } catch (error) {
-      set((state) => ({
-        error: { ...state.error, folder: error.message },
-        loading: { ...state.loading, folder: false },
-      }));
+      setLoadingAndError("folder", false, error.message);
     }
   },
 
   // Fetch space data
   fetchSpaceData: async () => {
-    set((state) => ({
-      loading: { ...state.loading, space: true },
-      error: { ...state.error, space: null },
-    }));
+    const setLoadingAndError = get().setLoadingAndError;
+    setLoadingAndError("space", true);
+
     try {
-      const response = await fetch(
-        "https://better-notion-api-server.onrender.com/v1/space?user_id=66cda5dac6886719e3345c19"
+      const result = await apiFetch(
+        `${API_BASE_URL}/space?user_id=66cda5dac6886719e3345c19`
       );
-      if (!response.ok) {
-        throw new Error("Failed to fetch space data");
-      }
-      const result = await response.json();
       set((state) => ({
-        spaceData: result?.data?.sort((a, b) => b.is_private - a.is_private),
+        spaceData: result.data.sort((a, b) => b.is_private - a.is_private),
         loading: { ...state.loading, space: false },
       }));
     } catch (error) {
-      set((state) => ({
-        error: { ...state.error, space: error.message },
-        loading: { ...state.loading, space: false },
-      }));
+      setLoadingAndError("space", false, error.message);
     }
   },
 
-  // Get Folder Using Space Id
+  // Get folders by space ID
   getFolderSpaceId: (spaceID) => {
-    const data = get().folderData;
-    if (!data) return [];
+    const folderData = get().folderData;
+    if (!folderData) return "Empty";
 
-    const filteredFolders = data.filter(
+    const filteredFolders = folderData.filter(
       (folder) => folder.space_id === spaceID
     );
 
-    if (filteredFolders.length === 0) {
-      return "Empty";
-    }
+    return filteredFolders.length ? filteredFolders : "Empty";
+  },
 
-    return filteredFolders;
+  // Delete folder or space
+  deleteItem: async (type, id) => {
+    const setLoadingAndError = get().setLoadingAndError;
+    const itemType = type === "folder" ? "folderData" : "spaceData";
+
+    setLoadingAndError("delete", true);
+
+    try {
+      await apiFetch(`${API_BASE_URL}/${type}?id=${id}`, "DELETE");
+
+      // Update state after deletion
+      set((state) => ({
+        [itemType]: state[itemType].filter((item) => item.id !== id),
+        loading: { ...state.loading, delete: false },
+      }));
+    } catch (error) {
+      setLoadingAndError("delete", false, error.message);
+    }
   },
 }));
 

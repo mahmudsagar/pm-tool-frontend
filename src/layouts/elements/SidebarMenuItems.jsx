@@ -1,14 +1,10 @@
-
 import Link from "@/BetterRouter/Link";
 import { useEffect, useState } from "react";
 import { useSidebar } from "@/stores/store";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
-import {
-  Button,
-  buttonVariants
-} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   ChevronDownIcon,
   ShieldCheck,
@@ -33,21 +29,26 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+  DialogDescription,
+} from "@/components/ui/dialog";
 import useFolderStore from "@/stores/folderStore";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SidebarMenuItems = ({ className, setOpen }) => {
+  const form = useForm();
   const path = useLocation().pathname;
   const { isOpen } = useSidebar();
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
-  const { spaceData, getFolderSpaceId, loading, error } = useFolderStore(state => state);
+  const { spaceData, getFolderSpaceId, loading, error, deleteItem } = useFolderStore(state => state);
 
   useEffect(() => {
     if (isOpen) {
@@ -63,6 +64,12 @@ const SidebarMenuItems = ({ className, setOpen }) => {
       ...prevState,
       [id]: !prevState[id],
     }));
+  };
+
+  const onSubmit = (data) => {
+    // Handle form submission
+    console.log(data);
+    // Add your form submission logic here
   };
 
   return (
@@ -105,13 +112,57 @@ const SidebarMenuItems = ({ className, setOpen }) => {
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Are you absolutely sure?</DialogTitle>
-                    <DialogDescription>
-                      This action cannot be undone. This will permanently delete your account
-                      and remove your data from our servers.
-                    </DialogDescription>
-                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                      <DialogHeader>
+                        <DialogTitle>Create New Folder</DialogTitle>
+                        <DialogDescription>
+                          Please provide the necessary details to create a new folder.
+                        </DialogDescription>
+                      </DialogHeader>
+                      {/* Form Fields Moved Outside of DialogDescription */}
+                      <div className="py-3">
+                        <FormField
+                          control={form.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Folder Name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="categories"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Select Categories</FormLabel>
+                              <FormControl>
+                                <Select>
+                                  <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Theme" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="light">Light</SelectItem>
+                                    <SelectItem value="dark">Dark</SelectItem>
+                                    <SelectItem value="system">System</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button type="submit">Submit</Button>
+                      </div>
+                    </form>
+                  </Form>
                 </DialogContent>
               </Dialog>
               <DropdownMenu>
@@ -131,7 +182,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
           </div>
           {Array.isArray(getFolderSpaceId(space._id)) && getFolderSpaceId(space._id).length > 0 ?
             getFolderSpaceId(space._id).map((folderItem, index) => (
-              <div key={index} className="pl-2">
+              <Link to={`/file-manager/${folderItem._id}`} key={index}>
                 <Accordion
                   type="single"
                   collapsible
@@ -156,7 +207,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
                           )}
                         />
 
-                        <div className={cn('absolute left-10 text-sm duration-200', !isOpen && className,)}>
+                        <div className={cn('absolute left-10 text-sm duration-200', !isOpen && className)}>
                           {folderItem.name}
                         </div>
                       </div>
@@ -177,6 +228,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
                                   This action cannot be undone. This will permanently delete your account and remove your data from our servers.
                                 </DialogDescription>
                               </DialogHeader>
+                              {/* If you have actions for this dialog, include them here */}
                             </DialogContent>
                           </Dialog>
                           <DropdownMenu open={dropdownOpenStates[folderItem._id]} onOpenChange={() => handleDropdownToggle(folderItem._id)}>
@@ -192,9 +244,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()} >
-                              <DropdownMenuItem>
-                                <Link>Delete</Link>
-                              </DropdownMenuItem>
+                              <DropdownMenuItem className="cursor-pointer" onClick={() => deleteItem('folder', folderItem._id)} >Delete</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -205,7 +255,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
-              </div>
+              </Link>
             )) :
             <div className="flex items-center justify-center flex-col gap-2 py-5">
               <FolderOpen className="text-gray-400 dark:text-white" />

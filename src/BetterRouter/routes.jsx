@@ -21,7 +21,7 @@ export const routes = [
         element: <Check />
       },
       {
-        path: '/file-manager',
+        path: '/file-manager/:id',
         element: <FileManager />
       },
       {
