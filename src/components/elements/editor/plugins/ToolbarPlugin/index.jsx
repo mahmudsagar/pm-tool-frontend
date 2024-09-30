@@ -193,7 +193,7 @@ const ELEMENT_FORMAT_OPTIONS = {
 
 function dropDownActiveClass(active) {
   if (active) {
-    return 'bg-slate-200 gap-1 cursor-pointer';
+    return 'bg-slate-200 dark:bg-slate-800 gap-1 cursor-pointer';
   } else {
     return 'gap-1 cursor-pointer';
   }
@@ -841,7 +841,7 @@ export default function ToolbarPlugin({
   const canViewerSeeInsertCodeButton = !isImageCaption;
 
   return (
-    <div className="toolbar shadow">
+    <div className="toolbar z-10 bg-stone-50 dark:bg-slate-950 shadow shadow-slate-200 dark:shadow-slate-800 sticky top-16">
       <Button
         disabled={!canUndo || !isEditable}
         onClick={() => {
@@ -913,7 +913,7 @@ export default function ToolbarPlugin({
             onClick={() => {
               activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
             }}
-            className={isBold ? 'bg-slate-200' : ''}
+            className={isBold ? 'bg-slate-200 dark:bg-slate-800' : ''}
             title={isMacOs ? 'Bold (⌘B)' : 'Bold (Ctrl+B)'}
             variant="ghost"
             size="icon"
@@ -926,7 +926,7 @@ export default function ToolbarPlugin({
             onClick={() => {
               activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
             }}
-            className={isItalic ? 'bg-slate-200' : ''}
+            className={isItalic ? 'bg-slate-200 dark:bg-slate-800' : ''}
             title={isMacOs ? 'Italic (⌘I)' : 'Italic (Ctrl+I)'}
             variant="ghost"
             size="icon"
@@ -939,7 +939,7 @@ export default function ToolbarPlugin({
             onClick={() => {
               activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
             }}
-            className={isUnderline ? 'bg-slate-200' : ''}
+            className={isUnderline ? 'bg-slate-200 dark:bg-slate-800' : ''}
             title={isMacOs ? 'Underline (⌘U)' : 'Underline (Ctrl+U)'}
             variant="ghost" size="icon"
             aria-label={`Format text to underlined. Shortcut: ${isMacOs ? '⌘U' : 'Ctrl+U'
@@ -952,7 +952,7 @@ export default function ToolbarPlugin({
               onClick={() => {
                 activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
               }}
-              className={isCode ? 'bg-slate-200' : ''}
+              className={isCode ? 'bg-slate-200 dark:bg-slate-800' : ''}
               title="Insert code block"
               variant="ghost" size="icon"
               aria-label="Insert code block">
@@ -962,7 +962,7 @@ export default function ToolbarPlugin({
           <Button
             disabled={!isEditable}
             onClick={insertLink}
-            className={isLink ? 'bg-slate-200' : ''}
+            className={isLink ? 'bg-slate-200 dark:bg-slate-800' : ''}
             aria-label="Insert link"
             title="Insert link"
             size="icon" variant="ghost">

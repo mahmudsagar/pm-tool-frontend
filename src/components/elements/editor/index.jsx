@@ -86,7 +86,7 @@ export default function Editor() {
     <div className='lexical-editor'>
 
       <LexicalComposer initialConfig={editorConfig}>
-        <div className="editor-container border">
+        <div className="editor-container relative">
 
           {/* <div className="min-h-6 py-2 px-3 shadow">
             <div className="flex gap-1 justify-end">
@@ -121,10 +121,7 @@ export default function Editor() {
             </div>
 
           }
-
           <div className='py-2 px-6 mb-4'>
-
-
 
             {!coverImage && <div className='h-10 opacity-0 hover:opacity-100'>
               <ImageUpload onChange={coverImageUploadHandler} >
@@ -135,7 +132,7 @@ export default function Editor() {
               </ImageUpload>
             </div>}
 
-            <div className="" style={{ color: 'rgba(255, 255, 255, 0.81)', fontWeight: 700, lineHeight: 1.2, fontSize: '32px', cursor: 'text' }}>
+            <div className="" style={{ fontWeight: 700, lineHeight: 1.2, fontSize: '32px', cursor: 'text' }}>
               <h1 className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0" spellCheck="true" data-content-editable-leaf="true" contentEditable="true" style={{ maxWidth: '100%', width: '100%', whiteSpace: 'pre-wrap', wordBreak: 'break-word', paddingTop: '3px', paddingLeft: '2px', paddingRight: '2px', fontSize: '1em' }}>Document title</h1>
             </div>
 

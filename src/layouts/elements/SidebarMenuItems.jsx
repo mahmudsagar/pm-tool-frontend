@@ -118,7 +118,7 @@ const SidebarMenuItems = ({ items, className, setOpen }) => {
                       <child.icon size={16} />
                       <div
                         className={cn(
-                          'absolute left-10 text-xs duration-200',
+                          'absolute left-10 duration-200',
                           !isOpen && className,
                         )}
                       >

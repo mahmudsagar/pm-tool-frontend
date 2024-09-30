@@ -8,7 +8,6 @@
 
 .floating-text-format-popup {
   display: flex;
-  background: #fff;
   padding: 4px;
   vertical-align: middle;
   position: absolute;
@@ -59,10 +58,6 @@
 
 .floating-text-format-popup button.popup-item.active .format {
   opacity: 1;
-}
-
-.floating-text-format-popup .popup-item:hover:not([disabled]) {
-  background-color: #eee;
 }
 
 .floating-text-format-popup select.popup-item {
