@@ -24,10 +24,7 @@ import DynamicInput from './dynamicInput';
 import { Button } from '@/components/ui/button';
 import { Image } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import Upload from './upload';
 import ImageUpload from './upload/image';
-import Cropper from 'react-easy-crop';
-import Moveable from "react-moveable";
 
 const placeholder = 'Enter some rich text...';
 
