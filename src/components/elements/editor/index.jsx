@@ -29,7 +29,7 @@ import ImageUpload from './upload/image';
 const placeholder = 'Enter some rich text...';
 
 const editorConfig = {
-  namespace: 'React.js Demo',
+  namespace: 'BetterNotion Demo',
   nodes: [],
   // Handling of errors during update
   onError(error) {

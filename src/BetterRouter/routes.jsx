@@ -5,6 +5,7 @@ import Document from "@/pages/document";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
 import Sheet from "@/pages/sheet";
+import NotFound from "./NotFound";
 
 export const routes = [
   {
@@ -26,6 +27,10 @@ export const routes = [
       {
         path: '/document/*',
         element: <Document />
+      },
+      {
+        path: "/sheet/*",
+        element: <Sheet />
       }
     ]
   },
@@ -51,13 +56,10 @@ export const routes = [
       },
     ]
   },
-  {
-    path: "/sheet",
-    element: <Sheet />
-  },
+
   {
     path: "*",
-    element: <h1>404</h1>
+    element: <NotFound />
   }
 ]
 
