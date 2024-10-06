@@ -1,11 +1,10 @@
-import { useRoutes } from "react-router-dom";
-import { routes } from "./config";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { routes } from "./routes";
 
 const BetterRouter = () => {
-  const allRoutes = useRoutes(routes);
   return (
     <>
-      {allRoutes}
+      <RouterProvider router={createBrowserRouter(routes)} />
     </>
   );
 };

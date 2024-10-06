@@ -83,7 +83,10 @@ const ProfileForm = () => {
   }
 
   return (
-    <div className="p-5 bg-slate-100">
+    <div className="p-5">
+      <Link to="/check" target="_sidebar">
+        <Button className="py-2 px-3 mb-4 rounded">Nested page</Button>
+      </Link>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField

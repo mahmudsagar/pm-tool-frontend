@@ -1,8 +1,9 @@
 
 import { matchRoutes, useSearchParams } from "react-router-dom";
 import React from "react";
-import Drawer from "./Drawer";
-import { routes } from "./config";
+import Drawer from "../Drawer";
+import { routes } from "../routes";
+import Header from "@/layouts/elements/header";
 
 
 const ParallelRoutePage = ({ path, target }) => {
@@ -11,6 +12,8 @@ const ParallelRoutePage = ({ path, target }) => {
 
   /** will implement modal later */
   const Container = target === '_popup' ? Drawer : Drawer;
+
+
 
   const onClose = (state) => {
     if (state) {
@@ -24,6 +27,13 @@ const ParallelRoutePage = ({ path, target }) => {
     }
   };
 
+  const containerProps = {
+    open,
+    onOpenChange: onClose,
+    contentClassName: 'p-0',
+    header: <Header showPageTitle={false} />
+  };
+
   /** finding similar routes based on current path */
   const matchedRoutes = matchRoutes(routes, path) || [];
   /** getting the last matched route, as first one can be root route */
@@ -33,7 +43,7 @@ const ParallelRoutePage = ({ path, target }) => {
   if (!route?.element) {
     return '';
   }
-  return <Container open={open} onOpenChange={onClose}>
+  return <Container {...containerProps}>
     {route.element}
   </Container>
 }

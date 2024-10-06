@@ -1,17 +1,13 @@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
-const Drawer = ({ children, ...props }) => {
+const Drawer = ({ children, header = '', contentClassName = '', ...props }) => {
 
 
   return <Sheet {...props}>
-    <SheetContent className="w-[400px] sm:w-[540px] lg:max-w-screen-lg overflow-y-scroll max-h-screen">
+    <SheetContent className={cn("w-[500px] sm:w-[640px] lg:max-w-screen-lg overflow-y-scroll max-h-screen", contentClassName)}>
       <SheetHeader>
-        {/* <SheetTitle>A parallel route page</SheetTitle> */}
-        {/* <SheetDescription>
-          This action cannot be undone. This will permanently delete your account
-          and remove your data from our servers.
-          
-        </SheetDescription> */}
+        {header}
       </SheetHeader>
       {children}
     </SheetContent>
