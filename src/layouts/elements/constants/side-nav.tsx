@@ -21,16 +21,19 @@ export const NavItems = [
         title: "Dashboard",
         icon: ShieldQuestion,
         href: "/",
+        target: "_self",
       },
       {
         title: "Check",
         icon: UserRoundCheck,
         href: "/check",
+        target: "_self",
       },
       {
         title: "Form",
         icon: FormInput,
         href: "/form/1",
+        target: "_self",
       },
       {
         title: "File Manager",
@@ -48,12 +51,19 @@ export const NavItems = [
         title: "Sheet",
         icon: Sheet,
         href: "/sheet",
-        target: "_blank",
+        target: "_self",
       },
       {
         title: "Document",
         icon: DockIcon,
         href: "/document",
+        target: "_self"
+      },
+      {
+        title: "Document In Drawer",
+        icon: DockIcon,
+        href: "/document",
+        target: "_sidebar"
       },
       {
         title: "Form in Drawer",
