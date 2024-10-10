@@ -1,4 +1,16 @@
-import { BookOpenCheck, Component, DockIcon, FormInput, LayoutDashboard, MoreVertical, Plus, Sheet, ShieldQuestion, UserRoundCheck } from "lucide-react";
+import {
+  BookOpenCheck,
+  Component,
+  DockIcon,
+  FormInput,
+  LayoutDashboard,
+  MoreVertical,
+  Plus,
+  Sheet,
+  ShieldQuestion,
+  UserRoundCheck,
+  File,
+} from "lucide-react";
 export const NavItems = [
   {
     title: "Main",
@@ -22,6 +34,11 @@ export const NavItems = [
         icon: FormInput,
         href: "/form/1",
         target: "_self",
+      },
+      {
+        title: "File Manager",
+        icon: File,
+        href: "/file-manager",
       },
     ],
   },
@@ -76,7 +93,7 @@ export const NavItems = [
             icon: BookOpenCheck,
             href: "#",
           },
-        ]
+        ],
       },
       {
         icon: MoreVertical,
@@ -91,8 +108,8 @@ export const NavItems = [
             icon: BookOpenCheck,
             href: "#",
           },
-        ]
-      }
+        ],
+      },
     ],
     children: [
       {
@@ -101,5 +118,5 @@ export const NavItems = [
         href: "/settings/check",
       },
     ],
-  }
+  },
 ];
