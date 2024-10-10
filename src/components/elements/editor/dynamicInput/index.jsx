@@ -1,17 +1,16 @@
-import { useState } from 'react';
-
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useModal } from '../../modal/useModal';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Modal from '../../modal';
 import { DialogClose, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { DatePicker } from './datepicker';
 import { DatePickerWithRange } from './daterangepicker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const InputNumber = () => {
   return <Input type="number" />;
@@ -103,61 +102,78 @@ const CreateFieldPopup = ({ type, hasOptions, onConfirm }) => {
   </>
 };
 
-const EditFieldPopup = ({ onConfirm, ...props }) => {
-  const [label, setLabel] = useState(props.label);
-  return <>
-    <DialogHeader>
-      <DialogTitle>Edit this field</DialogTitle>
-    </DialogHeader>
-    <div className="grid w-72 items-center gap-1.5">
-      <Label htmlFor="field-label-input">Label</Label>
-      <Input
-        id="field-label-input"
-        placeholder="Enter label"
-        onChange={e => setLabel(e.target.value)}
-        value={label}
-      />
-    </div>
-    <DialogFooter className="sm:justify-start">
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button size="icon" variant="destructive">
-            <Trash size={16} />
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This field will be permanently deleted. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <DialogClose asChild>
-              <AlertDialogAction onClick={() => onConfirm({ actionType: 'delete' })}>Continue</AlertDialogAction>
-            </DialogClose>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <DialogClose asChild>
-        <Button variant="outline">
-          Cancel
-        </Button>
-      </DialogClose>
-      <DialogClose asChild>
-        <Button disabled={!label} onClick={() => onConfirm({ label })}>
-          Confirm
-        </Button>
-      </DialogClose>
-    </DialogFooter>
-  </>
-};
+const Field = ({ field, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState(field.label);
+
+  useEffect(() => {
+    if (!field.initialized) {
+      setOpen(true);
+    }
+  }, [])
+  return <div className="flex w-full max-w-sm items-center gap-1.5 mt-2">
+    <DropdownMenu open={open} onOpenChange={state => {
+      setOpen(state);
+      if (!state) {
+        onChange({ ...field, label, initialized: true });
+      }
+    }}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="text-blue-500 w-[150px] justify-start">{field.label}</Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent >
+        <DropdownMenuLabel>
+          <Input
+            id="field-label-input"
+            placeholder="Enter label"
+            onChange={e => setLabel(e.target.value)}
+            value={label}
+          />
+        </DropdownMenuLabel>
+        <div className="grid items-center gap-1.5">
+          <Label htmlFor="field-label-input">Label</Label>
+
+        </div>
+
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+
+                <>
+                  <Trash size={12} /> Delete property
+                </>
+
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This field will be permanently deleted. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onChange({ actionType: 'delete', ...field })}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+
+
+
+      </DropdownMenuContent>
+    </DropdownMenu>
+    <field.component className="outline-none w-auto" {...field} />
+  </div>
+}
 
 
 const DynamicInput = () => {
   const [fields, setFields] = useState([]); // List of added fields
-  const { openModal } = useModal();
 
   const [searchValue, setSearchValue] = useState('');
 
@@ -168,6 +184,7 @@ const DynamicInput = () => {
       id: Math.random().toString(10).substring(7),
       component: fieldTypes.find(field => field.type === type).component,
       type,
+      initialized: false,
       ...rest
     };
 
@@ -192,19 +209,7 @@ const DynamicInput = () => {
   return (
     <div className=''>
       <div className="">
-        {fields.map((field, index) => (
-          <div className="flex w-full max-w-sm items-center gap-1.5 mt-2" key={index}>
-            <Button variant="ghost" className="text-blue-500 w-[150px] justify-start"
-              onClick={() => {
-                openModal({
-                  content: <EditFieldPopup {...field} onConfirm={({ ...rest }) => {
-                    handleEditField({ id: field.id, ...rest });
-                  }} />
-                });
-              }}>{field.label}</Button>
-            <field.component className="outline-none w-auto" {...field} />
-          </div>
-        ))}
+        {fields.map((field, index) => <Field key={index} field={field} onChange={handleEditField} />)}
       </div>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
@@ -222,11 +227,7 @@ const DynamicInput = () => {
           {fieldTypes.filter(field => field.label.toLowerCase().includes(searchValue.toLowerCase()))
             .map((field, index) => (
               <DropdownMenuItem key={index} className="cursor-pointer" onClick={() => {
-                openModal({
-                  content: <CreateFieldPopup {...field} onConfirm={({ ...rest }) => {
-                    handleCreateField({ ...field, ...rest });
-                  }} />
-                });
+                handleCreateField(field);
               }}>
                 {field.label}
               </DropdownMenuItem>
