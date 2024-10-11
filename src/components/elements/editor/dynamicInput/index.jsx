@@ -131,35 +131,17 @@ const Field = ({ field, onChange }) => {
             value={label}
           />
         </DropdownMenuLabel>
-        <div className="grid items-center gap-1.5">
+        {/* <div className="grid items-center gap-1.5">
           <Label htmlFor="field-label-input">Label</Label>
 
-        </div>
+        </div> */}
 
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-
-                <>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => onChange({ actionType: 'delete', ...field })}>
+            <div className='flex items-center gap-1'>
                   <Trash size={12} /> Delete property
-                </>
-
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This field will be permanently deleted. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onChange({ actionType: 'delete', ...field })}>Continue</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                </div>              
           </DropdownMenuItem>
         </DropdownMenuGroup>
 
@@ -193,6 +175,7 @@ const DynamicInput = () => {
 
   const handleEditField = ({ id, label, actionType, ...rest }) => {
     if (actionType === 'delete') {
+      console.log(id, rest)
       setFields(fields.filter(field => field.id !== id));
     } else {
       const updatedFields = fields.map(field => {
@@ -205,6 +188,7 @@ const DynamicInput = () => {
       setFields(updatedFields);
     }
   }
+  console.log(fields)
 
   return (
     <div className=''>
