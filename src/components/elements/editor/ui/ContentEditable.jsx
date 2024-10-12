@@ -15,6 +15,7 @@ export default function LexicalContentEditable({
   className,
   placeholder,
   placeholderClassName,
+  ...props
 }) {
   return (
     <ContentEditable
@@ -25,6 +26,7 @@ export default function LexicalContentEditable({
           {placeholder}
         </div>
       }
+      {...props}
     />
   );
 }

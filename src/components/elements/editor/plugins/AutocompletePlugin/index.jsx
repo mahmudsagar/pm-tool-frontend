@@ -59,8 +59,8 @@ function $search(selection) {
 }
 
 // TODO query should be custom
-function useQuery(): (searchText: string) => SearchPromise {
-  return useCallback((searchText: string) => {
+function useQuery() {
+  return useCallback((searchText) => {
     const server = new AutocompleteServer();
     console.time('query');
     const response = server.query(searchText);
@@ -69,16 +69,16 @@ function useQuery(): (searchText: string) => SearchPromise {
   }, []);
 }
 
-export default function AutocompletePlugin(): JSX.Element | null {
+export default function AutocompletePlugin() {
   const [editor] = useLexicalComposerContext();
   const [, setSuggestion] = useSharedAutocompleteContext();
   const query = useQuery();
 
   useEffect(() => {
-    let autocompleteNodeKey: null | NodeKey = null;
-    let lastMatch: null | string = null;
-    let lastSuggestion: null | string = null;
-    let searchPromise: null | SearchPromise = null;
+    let autocompleteNodeKey = null;
+    let lastMatch = null;
+    let lastSuggestion= null;
+    let searchPromise = null;
     function $clearSuggestion() {
       const autocompleteNode =
         autocompleteNodeKey !== null
@@ -97,8 +97,8 @@ export default function AutocompletePlugin(): JSX.Element | null {
       setSuggestion(null);
     }
     function updateAsyncSuggestion(
-      refSearchPromise: SearchPromise,
-      newSuggestion: null | string,
+      refSearchPromise,
+      newSuggestion,
     ) {
       if (searchPromise !== refSearchPromise || newSuggestion === null) {
         // Outdated or no suggestion
@@ -236,7 +236,7 @@ class AutocompleteServer {
     const dismiss = () => {
       isDismissed = true;
     };
-    const promise: Promise<null | string> = new Promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       setTimeout(() => {
         if (isDismissed) {
           // TODO cache result
