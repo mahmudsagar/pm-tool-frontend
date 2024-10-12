@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Image } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import ImageUpload from './upload/image';
+import ComponentPickerMenuPlugin from './plugins/ComponentPickerPlugin';
 
 const placeholder = 'Enter some rich text...';
 
@@ -157,7 +158,7 @@ export default function Editor() {
             />
             <HistoryPlugin />
             <AutoFocusPlugin />
-            {/* <TreeViewPlugin /> */}
+            <ComponentPickerMenuPlugin />
 
             <>
               {floatingAnchorElem && !isSmallWidthViewport && (
