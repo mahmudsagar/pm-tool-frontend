@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { MoreVertical } from "lucide-react";
 import { SidebarMenu } from "./SidebarMenu";
@@ -8,17 +8,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
+import useFolderStore from "@/stores/folderStore";
 
 
 export default function Sidebar({ className }) {
   const { isOpen, toggle } = useSidebar();
   const [status, setStatus] = useState(false);
+  const { fetchFolderData, fetchSpaceData } = useFolderStore(state => state);
 
   const handleToggle = () => {
     setStatus(true);
     toggle();
     setTimeout(() => setStatus(false), 500);
   };
+
+  useEffect(() => {
+    fetchSpaceData();
+    fetchFolderData();
+  }, []);
+
   return (
     <nav
       className={cn(
