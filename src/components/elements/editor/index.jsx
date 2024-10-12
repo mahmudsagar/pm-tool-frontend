@@ -26,12 +26,16 @@ import { Image } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import ImageUpload from './upload/image';
 import ComponentPickerMenuPlugin from './plugins/ComponentPickerPlugin';
+import AutoEmbedPlugin from './plugins/AutoEmbedPlugin';
+import LexicalAutoLinkPlugin from './plugins/AutoLinkPlugin';
+import LinkPlugin from './plugins/LinkPlugin';
+import PlaygroundNodes from './nodes/PlaygroundNodes';
 
 const placeholder = 'Enter some rich text...';
 
 const editorConfig = {
   namespace: 'BetterNotion Demo',
-  nodes: [],
+  nodes: [...PlaygroundNodes],
   // Handling of errors during update
   onError(error) {
     throw error;
@@ -87,24 +91,6 @@ export default function Editor() {
 
       <LexicalComposer initialConfig={editorConfig}>
         <div className="editor-container relative">
-
-          {/* <div className="min-h-6 py-2 px-3 shadow">
-            <div className="flex gap-1 justify-end">
-              <Button variant="ghost" size="icon">
-                <History size={15} />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <MessageSquareMore size={15} />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Star size={15} />
-              </Button>
-            </div>
-
-
-          </div> */}
-
-
           {coverImage &&
             <div
               className="relative h-52 cover-image-container group"
@@ -141,7 +127,6 @@ export default function Editor() {
           </div>
           <Separator />
           <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />
-          <HistoryPlugin />
           <div className="editor-inner min-h-screen">
 
             <RichTextPlugin
@@ -159,7 +144,9 @@ export default function Editor() {
             <HistoryPlugin />
             <AutoFocusPlugin />
             <ComponentPickerMenuPlugin />
-
+            <AutoEmbedPlugin />
+            <LexicalAutoLinkPlugin />
+            <LinkPlugin />
             <>
               {floatingAnchorElem && !isSmallWidthViewport && (
                 <>

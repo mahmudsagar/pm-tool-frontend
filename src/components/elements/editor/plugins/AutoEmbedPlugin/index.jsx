@@ -252,6 +252,7 @@ export function AutoEmbedDialog({
 }
 
 export default function AutoEmbedPlugin() {
+  
   const { openModal, closeModal } = useModal();
 
   const openEmbedModal = (embedConfig) => {
