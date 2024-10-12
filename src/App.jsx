@@ -11,7 +11,6 @@ const App = () => {
   const setCurrentRoute = useStore((state) => state.setCurrentRoute);
 
   useEffect(() => {
-    console.log('current page', currentRoute, setCurrentRoute);
     try {
       if (search.includes('_sidebar') || search.includes('_popup')) {
         const activePath = (search.split('&').findLast(item => item.includes("_sidebar") || item.includes("_popup")) || pathname).replace('?', '').replace(/%2F/g, "/");

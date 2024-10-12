@@ -6,8 +6,6 @@
  *
  */
 
-import type {ElementNode, RangeSelection} from 'lexical';
-
 import {$getListDepth, $isListItemNode, $isListNode} from '@lexical/list';
 import {useLexicalComposerContext} from '@lexical/react/LexicalComposerContext';
 import {
@@ -20,8 +18,8 @@ import {
 import {useEffect} from 'react';
 
 function getElementNodesInSelection(
-  selection: RangeSelection,
-): Set<ElementNode> {
+  selection,
+) {
   const nodesInSelection = selection.getNodes();
 
   if (nodesInSelection.length === 0) {
@@ -36,14 +34,14 @@ function getElementNodesInSelection(
   );
 }
 
-function $shouldPreventIndent(maxDepth: number): boolean {
+function $shouldPreventIndent(maxDepth) {
   const selection = $getSelection();
 
   if (!$isRangeSelection(selection)) {
     return false;
   }
 
-  const elementNodesInSelection: Set<ElementNode> =
+  const elementNodesInSelection =
     getElementNodesInSelection(selection);
 
   let totalDepth = 0;
@@ -69,9 +67,7 @@ function $shouldPreventIndent(maxDepth: number): boolean {
 
 export default function ListMaxIndentLevelPlugin({
   maxDepth = 7,
-}: {
-  maxDepth?: number;
-}): null {
+}) {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {

@@ -23,7 +23,6 @@ import {
 //   $isImageNode,
 //   ImageNode,
 // } from '../../nodes/ImageNode';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const getDOMSelection = (targetWindow) =>

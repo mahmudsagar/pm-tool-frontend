@@ -50,7 +50,6 @@ export default function Editor() {
   const [coverImage, setCoverImage] = useState(null);
 
   const onRef = (_floatingAnchorElem) => {
-    console.log('onRef', _floatingAnchorElem);
     if (_floatingAnchorElem !== null) {
       setFloatingAnchorElem(_floatingAnchorElem);
     }
@@ -133,7 +132,7 @@ export default function Editor() {
             </div>}
 
             <div className="" style={{ fontWeight: 700, lineHeight: 1.2, fontSize: '32px', cursor: 'text' }}>
-              <h1 className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0" spellCheck="true" data-content-editable-leaf="true" contentEditable="true" style={{ maxWidth: '100%', width: '100%', whiteSpace: 'pre-wrap', wordBreak: 'break-word', paddingTop: '3px', paddingLeft: '2px', paddingRight: '2px', fontSize: '1em' }}>Document title</h1>
+              <h1 className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0 max-w-full w-full whitespace-pre-wrap break-words pt-[3px] pl-[2px] pr-[2px]" spellCheck="true" data-content-editable-leaf="true" suppressContentEditableWarning={true} contentEditable="true">Document title</h1>
             </div>
 
             <DynamicInput />
@@ -142,7 +141,7 @@ export default function Editor() {
           <Separator />
           <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />
           <HistoryPlugin />
-          <div className="editor-inner min-h-screen" ref={onRef}>
+          <div className="editor-inner min-h-screen">
 
             <RichTextPlugin
               contentEditable={
