@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
-
+import './index.scss';
 import {$createCodeNode} from '@lexical/code';
 import {
   INSERT_CHECK_LIST_COMMAND,
@@ -35,7 +35,6 @@ import * as ReactDOM from 'react-dom';
 
 import {INSERT_PAGE_BREAK} from '../PageBreakPlugin';
 import { EmbedConfigs } from '../AutoEmbedPlugin';
-import { DropdownMenuContent } from '@/components/ui/dropdown-menu';
 
 class ComponentPickerOption extends MenuOption {
   // What shows up in the editor
@@ -74,7 +73,7 @@ function ComponentPickerMenuItem({
     className += ' selected';
   }
   return (
-    <Dropdownmenuite
+    <li
       key={option.key}
       tabIndex={-1}
       className={className}
@@ -86,7 +85,7 @@ function ComponentPickerMenuItem({
       onClick={onClick}>
       {option.icon}
       <span className="text">{option.title}</span>
-    </Dropdownmenuite>
+    </li>
   );
 }
 
@@ -348,7 +347,7 @@ export default function ComponentPickerMenuPlugin() {
           anchorElementRef.current && options.length
             ? ReactDOM.createPortal(
                 <div className="typeahead-popover component-picker-menu">
-                  <DropdownMenuContent>
+                  <ul>
                     {options.map((option, i) => (
                       <ComponentPickerMenuItem
                         index={i}
@@ -364,7 +363,7 @@ export default function ComponentPickerMenuPlugin() {
                         option={option}
                       />
                     ))}
-                  </DropdownMenuContent>
+                  </ul>
                 </div>,
                 anchorElementRef.current,
               )
