@@ -1,47 +1,22 @@
-import Link from "@/BetterRouter/Link";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  ChevronDownIcon,
-  Plus,
-  EllipsisVertical,
-  File,
-} from "lucide-react";
+import Link from "@/BetterRouter/Link";
+import { useSidebar } from "@/stores/store";
+import { ChevronDownIcon, File } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "../subnav-accordion";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
-import { useSidebar } from "@/stores/store";
-import { useEffect, useState } from "react";
-import useFolderStore from "@/stores/folderStore";
+import AddFileDialog from "./AddFileDialog";
+import FileDropdownMenu from "./FileDropdownMenu";
 
-const MenuItemFolder = ({ folder }) => {
-  const form = useForm();
+const MenuItemFolder = ({ folder, className }) => {  
   const { isOpen } = useSidebar();
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
-  const { deleteItem } = useFolderStore(state => state);
 
   useEffect(() => {
     if (isOpen) {
@@ -57,12 +32,6 @@ const MenuItemFolder = ({ folder }) => {
       ...prevState,
       [id]: !prevState[id],
     }));
-  };
-
-  const onSubmit = (data) => {
-    // Handle form submission
-    console.log(data);
-    // Add your form submission logic here
   };
 
   return (
@@ -97,82 +66,12 @@ const MenuItemFolder = ({ folder }) => {
             </div>
             <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folder._id || dropdownOpenStates[folder._id] ? 'opacity-100' : ''}`}>
               <div className="flex gap-1">
-              <Dialog>
-                <DialogTrigger>
-                  <Button variant="ghost" size="icon" className="group hover:bg-slate-300 w-6 h-6">
-                    <Plus size={16} className="text-slate-500 hover:text-black dark:text-white dark:hover:text-black" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)}>
-                      <DialogHeader>
-                        <DialogTitle>Create New File</DialogTitle>
-                        <DialogDescription>
-                          Please provide the necessary details to create a new file.
-                        </DialogDescription>
-                      </DialogHeader>
-                      {/* Form Fields Moved Outside of DialogDescription */}
-                      <div className="py-3">
-                        <FormField
-                          control={form.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem className="mb-3">
-                              <FormLabel>File Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="File Name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="categories"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Select File Type</FormLabel>
-                              <FormControl>
-                                <Select>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="File Format" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="png">png</SelectItem>
-                                    <SelectItem value="jpg">jpg</SelectItem>
-                                    <SelectItem value="pdf">pdf</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <div className="flex justify-end space-x-2">
-                        <Button type="submit">Create</Button>
-                      </div>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-                <DropdownMenu open={dropdownOpenStates[folder._id]} onOpenChange={() => handleDropdownToggle(folder._id)}>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="hover:bg-slate-300 w-6 h-6" onClick={(e) => e.stopPropagation()}>
-                      <EllipsisVertical
-                        size={16}
-                        className={cn(
-                          'text-slate-500 hover:text-black dark:text-white dark:hover:text-black',
-                          dropdownOpenStates[folder._id] ? 'opacity-100' : 'opacity-100'
-                        )}
-                      />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()} >
-                    <DropdownMenuItem className="cursor-pointer" onClick={() => deleteItem('folder', folder._id)} >Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <AddFileDialog folderId={folder._id} />
+                <FileDropdownMenu
+                  isOpen={dropdownOpenStates}
+                  onToggle={(id) => handleDropdownToggle(id)}
+                  folderId={folder._id}
+                />
               </div>
             </div>
           </AccordionTrigger>

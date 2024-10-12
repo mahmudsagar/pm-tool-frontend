@@ -4,7 +4,7 @@ import MenuItemFolder from "./MenuItemFolder";
 import AddFolderDialog from "./AddFolderDialog";
 import FolderDropdownMenu from "./FolderDropdownMenu";
 
-const MenuItemSpace = ({ space }) => {
+const MenuItemSpace = ({ space, className }) => {
   const { getFolderSpaceId } = useFolderStore(state => state);
   const folders = getFolderSpaceId(space._id);
   
@@ -28,7 +28,7 @@ const MenuItemSpace = ({ space }) => {
       </div>
       {Array.isArray(folders) && folders.length > 0 ?
         folders.map(folder => (
-          <MenuItemFolder key={folder._id} folder={folder} />
+          <MenuItemFolder key={folder._id} folder={folder} className={className} />
         )) :
         <div className="flex items-center justify-center flex-col gap-2 py-5">
           <FolderOpen className="text-gray-400 dark:text-white" />
