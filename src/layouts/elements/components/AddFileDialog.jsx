@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react';
 import { Plus } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import useFolderStore from "@/stores/folderStore";
 import {
   Dialog,
@@ -29,17 +29,30 @@ import {
 } from "@/components/ui/select";
 
 const AddFileDialog = ({ folderId }) => {
-  const form = useForm();
   const { addFile } = useFolderStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const form = useForm({
+    defaultValues: {
+      fileName: "",      
+      fileType: "", 
+    }
+  });  
 
   const onSubmit = (data) => {
-    console.log(data);
+    console.log("Form Data:", data);
+    setIsOpen(false);
+    form.reset();
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger>
-        <Button variant="ghost" size="icon" className="group hover:bg-slate-300 w-6 h-6">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="group hover:bg-slate-300 w-6 h-6"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Plus size={16} className="text-slate-500 hover:text-black dark:text-white dark:hover:text-black" />
         </Button>
       </DialogTrigger>
@@ -52,38 +65,55 @@ const AddFileDialog = ({ folderId }) => {
                 Please provide the necessary details to create a new file.
               </DialogDescription>
             </DialogHeader>
-            {/* Form Fields Moved Outside of DialogDescription */}
             <div className="py-3">
+              {/* File Name Field */}
               <FormField
                 control={form.control}
-                name="username"
+                name="fileName"
                 render={({ field }) => (
                   <FormItem className="mb-3">
                     <FormLabel>File Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="File Name" {...field} />
+                      <Input 
+                        placeholder="File Name" 
+                        {...field} 
+                        // Ensure the input is fully controlled
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              
+              {/* File Type Field using Controller */}
               <FormField
                 control={form.control}
-                name="categories"
+                name="fileType"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Select File Type</FormLabel>
                     <FormControl>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="File Format" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="png">png</SelectItem>
-                          <SelectItem value="jpg">jpg</SelectItem>
-                          <SelectItem value="pdf">pdf</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Controller
+                        name="fileType"
+                        control={form.control}
+                        render={({ field }) => (
+                          <Select
+                            onValueChange={(value) => field.onChange(value)}
+                            value={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="File Format" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="png">PNG</SelectItem>
+                              <SelectItem value="jpg">JPG</SelectItem>
+                              <SelectItem value="pdf">PDF</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -97,7 +127,7 @@ const AddFileDialog = ({ folderId }) => {
         </Form>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default AddFileDialog
+export default AddFileDialog;

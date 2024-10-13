@@ -34,54 +34,61 @@ const MenuItemFolder = ({ folder, className }) => {
     }));
   };
 
+  const handleFolderClick = (e) => {
+    e.preventDefault(); 
+
+    setOpenItem((prev) => (prev === folder._id ? "" : folder._id));
+  };
+
   return (
-    <Link to={`/file-manager/${folder._id}`}>
-      <Accordion
-        type="single"
-        collapsible
-        className="space-y-2"
-        value={openItem}
-        onValueChange={setOpenItem}
-      >
-        <AccordionItem value={folder._id} className="border-none ">
-          <AccordionTrigger
-            className={cn(
-              'group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
-            )}
-          >
-            <div className="flex justify-between items-center">
-              <File size={18} className={cn('inline group-hover:hidden group-data-[state=open]:hidden')} />
-              <ChevronDownIcon
-                strokeWidth={2.5}
-                size={20}
-                className={cn(
-                  'hidden group-hover:inline group-data-[state=open]:inline shrink-0 transition-transform duration-200',
-                  { 'inline': openItem === folder._id }
-                )}
+    <Accordion
+      type="single"
+      collapsible
+      className="space-y-2"
+      value={openItem}
+      onValueChange={setOpenItem}
+    >
+      <AccordionItem value={folder._id} className="border-none ">
+        <AccordionTrigger
+          className={cn(
+            'group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
+          )}
+        >
+          <div className="flex justify-between items-center">
+            <File size={18} className={cn('inline group-hover:hidden group-data-[state=open]:hidden')} />
+            <ChevronDownIcon
+              strokeWidth={2.5}
+              size={20}
+              className={cn(
+                'hidden group-hover:inline group-data-[state=open]:inline shrink-0 transition-transform duration-200',
+                { 'inline': openItem === folder._id }
+              )}
+            />
+            <Link 
+              to={`/file-manager/${folder._id}`} 
+              className={cn('absolute left-10 text-sm duration-200', !isOpen && className)}
+              onClick={handleFolderClick}
+            >
+              {folder.name}
+            </Link>
+          </div>
+          <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folder._id || dropdownOpenStates[folder._id] ? 'opacity-100' : ''}`}>
+            <div className="flex gap-1">
+              <AddFileDialog folderId={folder._id} />
+              <FileDropdownMenu
+                isOpen={dropdownOpenStates}
+                onToggle={(id) => handleDropdownToggle(id)}
+                folderId={folder._id}
               />
-
-              <div className={cn('absolute left-10 text-sm duration-200', !isOpen && className)}>
-                {folder.name}
-              </div>
             </div>
-            <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folder._id || dropdownOpenStates[folder._id] ? 'opacity-100' : ''}`}>
-              <div className="flex gap-1">
-                <AddFileDialog folderId={folder._id} />
-                <FileDropdownMenu
-                  isOpen={dropdownOpenStates}
-                  onToggle={(id) => handleDropdownToggle(id)}
-                  folderId={folder._id}
-                />
-              </div>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="space-y-2 pl-6 py-3">
-            <p className="text-center">Empty</p>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </Link>
-  )
-}
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-2 pl-6 py-3">
+          <p className="text-center">Empty</p>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+};
 
-export default MenuItemFolder
+export default MenuItemFolder;
