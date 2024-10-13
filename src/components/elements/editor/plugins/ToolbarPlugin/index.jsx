@@ -480,7 +480,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignLeft size={16} />
           <span>Left Align</span>
@@ -489,7 +489,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignCenter size={16} />
           <span>Center Align</span>
@@ -498,7 +498,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignRight size={16} />
           <span>Right Align</span>
@@ -507,7 +507,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignJustify size={16} />
           <span>Justify Align</span>
@@ -516,7 +516,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "start");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignStartHorizontal size={16} />
           <span>Start Align</span>
@@ -525,7 +525,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "end");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignEndHorizontal size={16} />
           <span>End Align</span>
@@ -535,7 +535,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <Outdent size={16} />
           <span>Outdent</span>
@@ -544,7 +544,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined);
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <Indent size={16} />
           <span>Indent</span>
@@ -1105,7 +1105,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={clearFormatting}
-                className="item"
+                className="item cursor-pointer"
                 title="Clear text formatting"
                 aria-label="Clear all text formatting"
               >
