@@ -1,39 +1,19 @@
-import { useState } from 'react';
-import { Button } from '@excalidraw/excalidraw';
+import { Sidebar } from '@excalidraw/excalidraw'
 
-import { Fullscreen, Minimize } from 'lucide-react';
-
-const ExcalidrawSideMenubar = () => {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const toggleFullscreen = () => {
-    if (!isFullscreen) {
-      document.documentElement.requestFullscreen?.() ||
-        document.documentElement.webkitRequestFullscreen?.() || // Safari
-        document.documentElement.mozRequestFullScreen?.() || // Firefox
-        document.documentElement.msRequestFullscreen?.(); // IE/Edge
-    } else {
-      document.exitFullscreen?.() ||
-        document.webkitExitFullscreen?.() || // Safari
-        document.mozCancelFullScreen?.() || // Firefox
-        document.msExitFullscreen?.(); // IE/Edge
-    }
-    setIsFullscreen(!isFullscreen);
-  };
-
+export default function CustomLibrary() {
   return (
-    <ul className='absolute right-0 top-20 bg-slate-100 border-slate-100 shadow-lg z-[999] rounded-l-lg divide-y'>
-      <li>
-        <Button onClick={toggleFullscreen} className='grid place-items-center h-8 w-8' as="li">
-          {isFullscreen ? (
-            <Minimize title="Exit Fullscreen" size={18} />
-          ) : (
-            <Fullscreen title="Go Fullscreen" size={18} />
-          )}
-        </Button>
-      </li>
-    </ul>
-  );
-};
-
-export default ExcalidrawSideMenubar;
+    <Sidebar name="custom-library" docked={true}>
+      <Sidebar.Header className="text-[var(--color-primary)] text-lg font-bold text-ellipsis whitespace-nowrap pe-4">
+        Custom Library
+      </Sidebar.Header>
+      <Sidebar.Tabs style={{ padding: "0.5rem" }}>
+        <Sidebar.Tab tab="one">Personal!</Sidebar.Tab>
+        <Sidebar.Tab tab="two">Professional!</Sidebar.Tab>
+        <Sidebar.TabTriggers>
+          <Sidebar.TabTrigger tab="one">Personal</Sidebar.TabTrigger>
+          <Sidebar.TabTrigger tab="two">Professional</Sidebar.TabTrigger                >
+        </Sidebar.TabTriggers>
+      </Sidebar.Tabs>
+    </Sidebar>
+  )
+}

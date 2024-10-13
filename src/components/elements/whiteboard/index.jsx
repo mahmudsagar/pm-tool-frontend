@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Excalidraw,
   getNonDeletedElements,
@@ -10,8 +10,10 @@ import {
 
 import useSyncStore from '@/stores/useSyncStore';
 import { ComponentIcon, SunIcon } from "lucide-react";
-import WhiteboardSidebar from "./side-toolbar";
-import ExcalidrawSideMenubar from "./custom-library";
+import CustomLibrary from "./custom-library";
+import SideToolbar from "./sidebar";
+
+import { STICKY_NOTE } from '@/lib/constants';
 
 /**
  * 
@@ -19,6 +21,8 @@ import ExcalidrawSideMenubar from "./custom-library";
  * @returns 
  */
 export default function ExcalidrawRender({ viewId }) {
+  const wrapperRef = useRef(null);
+
   const [excalidrawAPI, setExcalidrawAPI] = useState(null);
   // store data
   const { viewData, setViewData } = useSyncStore()
@@ -33,25 +37,9 @@ export default function ExcalidrawRender({ viewId }) {
     const { scrollX, scrollY } = excalidrawAPI.getAppState();
     const newStickyNote = convertToExcalidrawElements([
       {
-        type: "rectangle",
+        ...STICKY_NOTE,
         x: -scrollX + 200,
         y: -scrollY + 200,
-        width: 200,
-        height: 200,
-        opacity: 100,
-        roughness: 1,
-        strokeWidth: 2,
-        strokeStyle: "solid",
-        strokeColor: "#c2255c",
-        fillStyle: "solid",
-        backgroundColor: "transparent",
-        locked: false,
-        label: {
-          text: "New Sticky Note",
-          textAlign: "left",
-          verticalAlign: "top",
-          fontSize: 20,
-        },
       }
     ]);
 
@@ -103,7 +91,7 @@ export default function ExcalidrawRender({ viewId }) {
   }
 
   return (
-    <div className='h-full relative'>
+    <div className='h-full relative' ref={wrapperRef}>
       <Excalidraw
         excalidrawAPI={(api) => setExcalidrawAPI(api)}
         initialData={{
@@ -119,7 +107,7 @@ export default function ExcalidrawRender({ viewId }) {
         renderTopRightUI={() => {
           return (
             <Sidebar.Trigger
-              name="custom"
+              name="custom-library"
               tab="one"
               icon={<ComponentIcon />}
             >
@@ -144,9 +132,12 @@ export default function ExcalidrawRender({ viewId }) {
             Insert Sticky
           </MainMenu.Item>
         </MainMenu>
-        <WhiteboardSidebar />
+        <CustomLibrary />
       </Excalidraw>
-      <ExcalidrawSideMenubar />
+      <SideToolbar
+        id={wrapperRef.current}
+        wrapperRef={wrapperRef}
+      />
       {/* json data view */}
       {/* <pre className="text-start text-xs overflow-y-scroll h-screen p-4 bg-green-200">
           {JSON.stringify(viewData[viewId]?.data, null, 2)}
