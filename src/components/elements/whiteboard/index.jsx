@@ -1,21 +1,23 @@
 import { useState, useRef } from "react";
 import {
   Excalidraw,
-  getNonDeletedElements,
-  getSceneVersion,
   MainMenu,
   Sidebar,
+  Footer,
   convertToExcalidrawElements,
-  Footer
+  getNonDeletedElements,
+  getSceneVersion,
 } from "@excalidraw/excalidraw";
 
+import { BookIcon, StickyNote } from "lucide-react";
+
 import useSyncStore from '@/stores/useSyncStore';
-import { ComponentIcon, SunIcon } from "lucide-react";
+import { useTheme } from "@/components/theme-provider";
 
 import FooterMenu from "./footer-menu";
-import CustomLibrary from "./custom-library";
+// import CustomLibrary from "./custom-library";
 
-import { STICKY_NOTE } from '@/lib/constants';
+import { STICKY_NOTE } from './constants';
 
 /**
  * 
@@ -23,6 +25,7 @@ import { STICKY_NOTE } from '@/lib/constants';
  * @returns 
  */
 export default function ExcalidrawRender({ viewId }) {
+  const { theme } = useTheme();
   const wrapperRef = useRef(null);
 
   const [excalidrawAPI, setExcalidrawAPI] = useState(null);
@@ -105,19 +108,19 @@ export default function ExcalidrawRender({ viewId }) {
             currentChartType: 'line'
           }
         }}
-        // theme={}
+        theme={theme}
         onChange={handleChange}
-        renderTopRightUI={() => {
-          return (
-            <Sidebar.Trigger
-              name="custom-library"
-              tab="one"
-              icon={<ComponentIcon />}
-            >
-              Custom Library
-            </Sidebar.Trigger>
-          );
-        }}
+        // renderTopRightUI={() => {
+        //   return (
+        //     <Sidebar.Trigger
+        //       name="custom-library"
+        //       tab="one"
+        //       icon={<BookIcon />}
+        //     >
+        //       Library
+        //     </Sidebar.Trigger>
+        //   );
+        // }}
       >
         <MainMenu>
           {/* <MainMenu.DefaultItems.LoadScene /> */}
@@ -129,17 +132,15 @@ export default function ExcalidrawRender({ viewId }) {
           <MainMenu.DefaultItems.ChangeCanvasBackground />
           <hr className="my-2" />
           <MainMenu.Item
-            icon={<SunIcon />}
+            icon={<StickyNote />}
             onSelect={() => createStickyNote()}
           >
-            Insert Sticky
+            Insert Sticky Note
           </MainMenu.Item>
         </MainMenu>
-        <CustomLibrary />
+        {/* <CustomLibrary excalidrawAPI={excalidrawAPI} /> */}
         <Footer>
-          <FooterMenu
-            wrapperRef={wrapperRef}
-          />
+          <FooterMenu wrapperRef={wrapperRef} />
         </Footer>
       </Excalidraw>
       {/* json data view */}
