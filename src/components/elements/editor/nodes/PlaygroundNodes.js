@@ -21,7 +21,6 @@ import {KeywordNode} from './KeywordNode';
 import {LayoutContainerNode} from './LayoutContainerNode';
 import {LayoutItemNode} from './LayoutItemNode';
 import {PageBreakNode} from './PageBreakNode';
-import {StickyNode} from './StickyNode';
 import {YouTubeNode} from './YouTubeNode';
 
 const PlaygroundNodes = [
@@ -38,7 +37,6 @@ const PlaygroundNodes = [
   AutoLinkNode,
   LinkNode,
   OverflowNode,
-  StickyNode,
   ImageNode,
   KeywordNode,
   HorizontalRuleNode,
