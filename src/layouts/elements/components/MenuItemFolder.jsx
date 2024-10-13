@@ -11,6 +11,7 @@ import {
 } from "../subnav-accordion";
 import AddFileDialog from "./AddFileDialog";
 import FileDropdownMenu from "./FileDropdownMenu";
+import { Navigate, redirect } from "react-router-dom";
 
 const MenuItemFolder = ({ folder, className }) => {  
   const { isOpen } = useSidebar();
@@ -27,17 +28,15 @@ const MenuItemFolder = ({ folder, className }) => {
     }
   }, [isOpen]);
 
-  const handleDropdownToggle = (id) => {
+  const handleDropdownToggle = (id, isOpenState = null) => {
     setDropdownOpenStates((prevState) => ({
       ...prevState,
-      [id]: !prevState[id],
+      [id]: isOpenState !== null ? isOpenState : !prevState[id],
     }));
-  };
+  };  
 
-  const handleFolderClick = (e) => {
-    e.preventDefault(); 
-
-    setOpenItem((prev) => (prev === folder._id ? "" : folder._id));
+  const handleFolderClick = () => {
+    setOpenItem(openItem === folder._id ? "" : folder._id);
   };
 
   return (

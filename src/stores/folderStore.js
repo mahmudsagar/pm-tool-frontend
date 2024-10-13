@@ -1,103 +1,114 @@
 import { create } from "zustand";
 
-// Base API URL
-const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
-
-// Helper function to handle API fetch
-const apiFetch = async (url, method = "GET") => {
-  const options = { method };
-  const response = await fetch(url, options);
-
-  if (!response.ok) {
-    const errorMsg = `Failed to ${
-      method === "DELETE" ? "delete" : "fetch"
-    } data`;
-    throw new Error(errorMsg);
-  }
-
-  return await response.json();
-};
-
-// Zustand Store
 const useDataStore = create((set, get) => ({
   folderData: null,
   spaceData: null,
   loading: { folder: false, space: false, delete: false },
   error: { folder: null, space: null, delete: null },
 
-  // Set loading and error states
-  setLoadingAndError: (type, isLoading, error = null) => {
-    set((state) => ({
-      loading: { ...state.loading, [type]: isLoading },
-      error: { ...state.error, [type]: error },
-    }));
-  },
-
   // Fetch folder data
   fetchFolderData: async () => {
-    const setLoadingAndError = get().setLoadingAndError;
-    setLoadingAndError("folder", true);
-
+    set((state) => ({
+      loading: { ...state.loading, folder: true },
+      error: { ...state.error, folder: null },
+    }));
     try {
-      const result = await apiFetch(
-        `${API_BASE_URL}/folder?user_id=66cda5dac6886719e3345c19`
+      const response = await fetch(
+        "https://better-notion-api-server.onrender.com/v1/folder?user_id=66cda5dac6886719e3345c19"
       );
+      if (!response.ok) {
+        throw new Error("Failed to fetch folder data");
+      }
+      const result = await response.json();
       set((state) => ({
         folderData: result.data,
         loading: { ...state.loading, folder: false },
       }));
     } catch (error) {
-      setLoadingAndError("folder", false, error.message);
+      set((state) => ({
+        error: { ...state.error, folder: error.message },
+        loading: { ...state.loading, folder: false },
+      }));
     }
   },
 
   // Fetch space data
   fetchSpaceData: async () => {
-    const setLoadingAndError = get().setLoadingAndError;
-    setLoadingAndError("space", true);
-
+    set((state) => ({
+      loading: { ...state.loading, space: true },
+      error: { ...state.error, space: null },
+    }));
     try {
-      const result = await apiFetch(
-        `${API_BASE_URL}/space?user_id=66cda5dac6886719e3345c19`
+      const response = await fetch(
+        "https://better-notion-api-server.onrender.com/v1/space?user_id=66cda5dac6886719e3345c19"
       );
+      if (!response.ok) {
+        throw new Error("Failed to fetch space data");
+      }
+      const result = await response.json();
       set((state) => ({
-        spaceData: result.data.sort((a, b) => b.is_private - a.is_private),
+        spaceData: result?.data?.sort((a, b) => b.is_private - a.is_private),
         loading: { ...state.loading, space: false },
       }));
     } catch (error) {
-      setLoadingAndError("space", false, error.message);
+      set((state) => ({
+        error: { ...state.error, space: error.message },
+        loading: { ...state.loading, space: false },
+      }));
     }
   },
 
-  // Get folders by space ID
+  // Get Folder Using Space Id
   getFolderSpaceId: (spaceID) => {
-    const folderData = get().folderData;
-    if (!folderData) return "Empty";
+    const data = get().folderData;
+    if (!data) return "Empty";
 
-    const filteredFolders = folderData.filter(
+    const filteredFolders = data.filter(
       (folder) => folder.space_id === spaceID
     );
 
-    return filteredFolders.length ? filteredFolders : "Empty";
+    if (filteredFolders.length === 0) return "Empty";
+    return filteredFolders;
   },
 
   // Delete folder or space
   deleteItem: async (type, id) => {
-    const setLoadingAndError = get().setLoadingAndError;
-    const itemType = type === "folder" ? "folderData" : "spaceData";
-
-    setLoadingAndError("delete", true);
-
+    set((state) => ({
+      loading: { ...state.loading, delete: true },
+      error: { ...state.error, delete: null },
+    }));
     try {
-      await apiFetch(`${API_BASE_URL}/${type}?id=${id}`, "DELETE");
+      const response = await fetch(
+        `https://better-notion-api-server.onrender.com/v1/${type}/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to delete ${type}`);
+      }
 
-      // Update state after deletion
+      // Update state based on type
+      set((state) => {
+        const updatedState =
+          type === "folder"
+            ? {
+                folderData: state.folderData?.filter((item) => item.id !== id),
+              }
+            : {
+                spaceData: state.spaceData?.filter((item) => item.id !== id),
+              };
+
+        return {
+          ...updatedState,
+          loading: { ...state.loading, delete: false },
+        };
+      });
+    } catch (error) {
       set((state) => ({
-        [itemType]: state[itemType].filter((item) => item.id !== id),
+        error: { ...state.error, delete: error.message },
         loading: { ...state.loading, delete: false },
       }));
-    } catch (error) {
-      setLoadingAndError("delete", false, error.message);
     }
   },
 }));

@@ -19,13 +19,6 @@ import {
   FormLabel, 
   FormMessage 
 } from "@/components/ui/form";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 
 const AddFolderDialog = ({ spaceId }) => {
   const form = useForm();
@@ -68,31 +61,9 @@ const AddFolderDialog = ({ spaceId }) => {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="categories"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Select Categories</FormLabel>
-                    <FormControl>
-                      <Select>
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Theme" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="light">Light</SelectItem>
-                          <SelectItem value="dark">Dark</SelectItem>
-                          <SelectItem value="system">System</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
             <div className="flex justify-end space-x-2">
-              <Button type="submit">Submit</Button>
+              <Button type="submit">Create</Button>
             </div>
           </form>
         </Form>

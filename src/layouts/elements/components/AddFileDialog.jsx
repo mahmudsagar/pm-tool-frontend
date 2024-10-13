@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import useFolderStore from "@/stores/folderStore";
@@ -33,10 +33,21 @@ const AddFileDialog = ({ folderId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const form = useForm({
     defaultValues: {
-      fileName: "",      
-      fileType: "", 
+      fileName: "",
+      fileType: "",
     }
-  });  
+  });
+
+  useEffect(() => {
+    const mainContent = document.getElementById('main-content'); // Assuming your main content has this ID
+    if (mainContent) {  // Check if element exists
+      if (isOpen) {
+        mainContent.setAttribute('inert', ''); // Add inert attribute
+      } else {
+        mainContent.removeAttribute('inert'); // Remove inert attribute
+      }
+    }
+  }, [isOpen]);
 
   const onSubmit = (data) => {
     console.log("Form Data:", data);
@@ -107,9 +118,9 @@ const AddFileDialog = ({ folderId }) => {
                               <SelectValue placeholder="File Format" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="png">PNG</SelectItem>
-                              <SelectItem value="jpg">JPG</SelectItem>
-                              <SelectItem value="pdf">PDF</SelectItem>
+                              <SelectItem value="doc">Document</SelectItem>
+                              <SelectItem value="sh">Sheet</SelectItem>
+                              <SelectItem value="wb">Whiteboard</SelectItem>
                             </SelectContent>
                           </Select>
                         )}
