@@ -3,7 +3,7 @@ import { Button } from '@excalidraw/excalidraw';
 
 import { FullscreenIcon, MinimizeIcon } from 'lucide-react';
 
-const SideToolbar = ({wrapperRef = null}) => {
+const FooterMenu = ({ wrapperRef = null }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = () => {
@@ -50,18 +50,17 @@ const SideToolbar = ({wrapperRef = null}) => {
 
 
   return (
-    <ul className='absolute right-0 top-20 bg-slate-100 border-slate-100 shadow-lg z-[999] rounded-l-lg divide-y'>
-      <li>
-        <Button onClick={toggleFullscreen} className='grid place-items-center h-8 w-8 text-gray-700' as="li">
-          {isFullscreen ? (
-            <MinimizeIcon title="Exit Fullscreen" size={18} />
-          ) : (
-            <FullscreenIcon title="Go Fullscreen" size={18} />
-          )}
-        </Button>
-      </li>
-    </ul>
+    <div className='flex gap-3 px-3'>
+      <Button onClick={toggleFullscreen} className='grid place-items-center help-icon'>
+        {isFullscreen ? (
+          <MinimizeIcon title="Exit Fullscreen" size={18} />
+        ) : (
+          <FullscreenIcon title="Go Fullscreen" size={18} />
+        )}
+      </Button>
+    </div>
   );
 };
 
-export default SideToolbar;
+export default FooterMenu;
+  

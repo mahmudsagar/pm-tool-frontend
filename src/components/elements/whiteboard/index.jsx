@@ -5,13 +5,15 @@ import {
   getSceneVersion,
   MainMenu,
   Sidebar,
-  convertToExcalidrawElements
+  convertToExcalidrawElements,
+  Footer
 } from "@excalidraw/excalidraw";
 
 import useSyncStore from '@/stores/useSyncStore';
 import { ComponentIcon, SunIcon } from "lucide-react";
+
+import FooterMenu from "./footer-menu";
 import CustomLibrary from "./custom-library";
-import SideToolbar from "./sidebar";
 
 import { STICKY_NOTE } from '@/lib/constants';
 
@@ -103,6 +105,7 @@ export default function ExcalidrawRender({ viewId }) {
             currentChartType: 'line'
           }
         }}
+        // theme={}
         onChange={handleChange}
         renderTopRightUI={() => {
           return (
@@ -133,11 +136,12 @@ export default function ExcalidrawRender({ viewId }) {
           </MainMenu.Item>
         </MainMenu>
         <CustomLibrary />
+        <Footer>
+          <FooterMenu
+            wrapperRef={wrapperRef}
+          />
+        </Footer>
       </Excalidraw>
-      <SideToolbar
-        id={wrapperRef.current}
-        wrapperRef={wrapperRef}
-      />
       {/* json data view */}
       {/* <pre className="text-start text-xs overflow-y-scroll h-screen p-4 bg-green-200">
           {JSON.stringify(viewData[viewId]?.data, null, 2)}
