@@ -1,6 +1,6 @@
 {
   "editor.tabSize": 2,
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "files.autoSave": "onFocusChange",
   "eslint.alwaysShowStatus": true,
@@ -10,8 +10,8 @@
   },
   "emmet.triggerExpansionOnTab": true,
   "emmet.syntaxProfiles": {
-      "javascript": "jsx",
-      "typescript": "tsx"
+    "javascript": "jsx",
+    "typescript": "tsx"
   },
   "tailwindCSS.includeLanguages": {
     "typescript": "javascript",
@@ -20,5 +20,11 @@
   "tailwindCSS.emmetCompletions": true,
   "css.validate": false,
   "scss.validate": false,
-  "less.validate": false
+  "less.validate": false,
+  "[scss]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }
