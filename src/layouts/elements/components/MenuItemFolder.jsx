@@ -53,6 +53,7 @@ const MenuItemFolder = ({ folder, className }) => {
           className={cn(
             'group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
           )}
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center">
             <File size={18} className={cn('inline group-hover:hidden group-data-[state=open]:hidden')} />

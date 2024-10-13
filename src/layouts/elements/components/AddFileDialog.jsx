@@ -51,12 +51,15 @@ const AddFileDialog = ({ folderId }) => {
           variant="ghost" 
           size="icon" 
           className="group hover:bg-slate-300 w-6 h-6"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(true);
+          }}
         >
           <Plus size={16} className="text-slate-500 hover:text-black dark:text-white dark:hover:text-black" />
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent onClick={(e) => e.stopPropagation()}>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
@@ -66,7 +69,6 @@ const AddFileDialog = ({ folderId }) => {
               </DialogDescription>
             </DialogHeader>
             <div className="py-3">
-              {/* File Name Field */}
               <FormField
                 control={form.control}
                 name="fileName"
@@ -77,7 +79,6 @@ const AddFileDialog = ({ folderId }) => {
                       <Input 
                         placeholder="File Name" 
                         {...field} 
-                        // Ensure the input is fully controlled
                         value={field.value}
                         onChange={field.onChange}
                       />
@@ -87,7 +88,6 @@ const AddFileDialog = ({ folderId }) => {
                 )}
               />
               
-              {/* File Type Field using Controller */}
               <FormField
                 control={form.control}
                 name="fileType"
