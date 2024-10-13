@@ -1,16 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Excalidraw,
   getNonDeletedElements,
   getSceneVersion,
-  restoreElements,
   MainMenu,
-  THEME,
+  Sidebar,
+  convertToExcalidrawElements
 } from "@excalidraw/excalidraw";
-import { } from "@excalidraw/excalidraw";
 
 import useSyncStore from '@/stores/useSyncStore';
-import { MoonIcon, SunIcon } from "lucide-react";
+import { ComponentIcon, SunIcon } from "lucide-react";
+import WhiteboardSidebar from "./WhiteboardSidebar";
+import ExcalidrawSideMenubar from "./ExcalidrawSideMenubar";
 
 /**
  * 
@@ -18,8 +19,7 @@ import { MoonIcon, SunIcon } from "lucide-react";
  * @returns 
  */
 export default function Whiteboard({ viewId }) {
-  const [isLightTheme, setIsLightTheme] = useState(true);
-
+  const [excalidrawAPI, setExcalidrawAPI] = useState(null);
   // store data
   const { viewData, setViewData } = useSyncStore()
 
@@ -29,6 +29,40 @@ export default function Whiteboard({ viewId }) {
   })
 
   const [previousSceneVersion, setPreviousSceneVersion] = useState(0);
+  const createStickyNote = () => {
+    const { scrollX, scrollY } = excalidrawAPI.getAppState();
+    const newStickyNote = convertToExcalidrawElements([
+      {
+        type: "rectangle",
+        x: -scrollX + 200,
+        y: -scrollY + 200,
+        width: 200,
+        height: 200,
+        opacity: 100,
+        roughness: 1,
+        strokeWidth: 2,
+        strokeStyle: "solid",
+        strokeColor: "#c2255c",
+        fillStyle: "solid",
+        backgroundColor: "transparent",
+        locked: false,
+        label: {
+          text: "New Sticky Note",
+          textAlign: "left",
+          verticalAlign: "top",
+          fontSize: 20,
+        },
+      }
+    ]);
+
+    // Update the scene with the new element
+    const elements = [
+      ...excalidrawAPI.getSceneElements(),
+      ...newStickyNote
+    ]
+
+    excalidrawAPI.updateScene({ elements });
+  };
 
   /**
    * Handle drawing element changes
@@ -56,49 +90,67 @@ export default function Whiteboard({ viewId }) {
 
       // Maintaining scene version so data does not update on each state
       const sceneVersion = getSceneVersion(elements);
-      // console.log({ sceneVersion, previousSceneVersion, logic: sceneVersion > 0 && sceneVersion !== previousSceneVersion });
       if (sceneVersion > 0 && sceneVersion !== previousSceneVersion) {
         setPreviousSceneVersion(sceneVersion);
 
         // Send non deleted elements to store state
-        setViewData(viewId, getNonDeletedElements(elements));
+        setViewData(viewId, {
+          data: getNonDeletedElements(elements),
+          // clientId: clientId
+        });
       }
     }
   }
 
   return (
-    <div className='h-full flex-1 flex flex-col'>
-      {/* <div className='flex flex-row gap-4 justify-center py-4'>
-          <Button onClick={() => setViewModeEnabled(!viewModeEnabled)}>
-            Toggle View Mode
-          </Button>
-          <Button onClick={() => setZenModeEnabled(!zenModeEnabled)}>
-            Toggle Zen Mode
-          </Button>
-          <Button onClick={() => setGridModeEnabled(!gridModeEnabled)}>
-            Toggle Grid Mode
-          </Button>
-        </div> */}
-      <div className='h-screen'>
-        <Excalidraw
-          theme={isLightTheme ? THEME.LIGHT : THEME.DARK}
-          key={viewData[viewId]}
-          initialData={{
-            elements: viewData?.[viewId]
-            // appState: { viewModeEnabled }
-          }}
-          onChange={handleChange}
-        >
-          <MainMenu>
-            <MainMenu.Item
-              icon={isLightTheme ? <MoonIcon /> : <SunIcon />}
-              onSelect={() => setIsLightTheme(prev => !prev)}
+    <div className='h-screen relative'>
+      <Excalidraw
+        excalidrawAPI={(api) => setExcalidrawAPI(api)}
+        initialData={{
+          elements: viewData?.[viewId]?.data || [],
+          appState: {
+            currentItemRoughness: 0,
+            currentItemRoundness: 'round',
+            currentItemEndArrowhead: 'triangle',
+            currentChartType: 'line'
+          }
+        }}
+        onChange={handleChange}
+        renderTopRightUI={() => {
+          return (
+            <Sidebar.Trigger
+              name="custom"
+              tab="one"
+              icon={<ComponentIcon />}
             >
-              {isLightTheme ? 'Dark' : 'Light'} Mode
-            </MainMenu.Item>
-          </MainMenu>
-        </Excalidraw>
-      </div>
+              Custom Library
+            </Sidebar.Trigger>
+          );
+        }}
+      >
+        <MainMenu>
+          {/* <MainMenu.DefaultItems.LoadScene /> */}
+          <MainMenu.DefaultItems.Export />
+          <MainMenu.DefaultItems.SaveAsImage />
+          <MainMenu.DefaultItems.ClearCanvas />
+          <MainMenu.DefaultItems.ToggleTheme />
+          <hr className="my-2" />
+          <MainMenu.DefaultItems.ChangeCanvasBackground />
+          <hr className="my-2" />
+          <MainMenu.Item
+            icon={<SunIcon />}
+            onSelect={() => createStickyNote()}
+          >
+            Insert Sticky
+          </MainMenu.Item>
+        </MainMenu>
+        <WhiteboardSidebar />
+      </Excalidraw>
+      <ExcalidrawSideMenubar />
+      {/* json data view */}
+      {/* <pre className="text-start text-xs overflow-y-scroll h-screen p-4 bg-green-200">
+          {JSON.stringify(viewData[viewId]?.data, null, 2)}
+        </pre> */}
     </div>
   );
 }

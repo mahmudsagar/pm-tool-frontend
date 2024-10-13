@@ -8,7 +8,7 @@ import useStore from './store';
 
 const useSyncStore = () => {
   const [, setWorker] = useState(null);
-  const [, setClientId] = useState(null);
+  const [clientId, setClientId] = useState(null); // unique id for each tab opened in the browser
 
   const { viewData, setViewData, count, increment, decrement } = useStore(
     (state) => ({
@@ -80,7 +80,7 @@ const useSyncStore = () => {
     };
   }, []);
 
-  return { viewData, setViewData, count, increment, decrement };
+  return { clientId, viewData, setViewData, count, increment, decrement };
 };
 
 export default useSyncStore;
