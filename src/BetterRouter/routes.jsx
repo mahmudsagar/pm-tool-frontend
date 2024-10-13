@@ -6,6 +6,7 @@ import FileManager from "@/pages/FileManager";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
 import Sheet from "@/pages/sheet";
+import Whiteboard from "@/pages/Whiteboard";
 import NotFound from "./NotFound";
 
 export const routes = [
@@ -36,6 +37,10 @@ export const routes = [
       {
         path: "/sheet/*",
         element: <Sheet />
+      },
+      {
+        path: "/whiteboard/*",
+        element: <Whiteboard />
       }
     ]
   },

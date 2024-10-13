@@ -27,27 +27,10 @@ const App = () => {
     }
   }, [href, pathname, search]);
   return (
-    <div className='bg-slate-200 w-screen flex flex-col h-full min-h-screen'>
-      <nav>
-        <ul className='flex items-center justify-center py-4 gap-8 uppercase'>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/check">Check</Link>
-          </li>
-          <li>
-            <Link to="/form/1">Form</Link>
-          </li>
-          <li>
-            <Link to="/form/1" target="_sidebar">Form in Drawer</Link>
-          </li>
-        </ul>
-      </nav>
-      <Outlet />
-
-      {paramObject.map(([path, target], index) => <Fragment key={index}><ParallelRoutePage path={path} target={target} /></Fragment>)}
-    </div>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <BetterRouter />
+      <Toaster />
+    </ThemeProvider>
   );
 };
 

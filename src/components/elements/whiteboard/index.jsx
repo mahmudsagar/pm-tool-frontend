@@ -10,15 +10,15 @@ import {
 
 import useSyncStore from '@/stores/useSyncStore';
 import { ComponentIcon, SunIcon } from "lucide-react";
-import WhiteboardSidebar from "./WhiteboardSidebar";
-import ExcalidrawSideMenubar from "./ExcalidrawSideMenubar";
+import WhiteboardSidebar from "./side-toolbar";
+import ExcalidrawSideMenubar from "./custom-library";
 
 /**
  * 
  * @param {viewId} viewId of the current page
  * @returns 
  */
-export default function Whiteboard({ viewId }) {
+export default function ExcalidrawRender({ viewId }) {
   const [excalidrawAPI, setExcalidrawAPI] = useState(null);
   // store data
   const { viewData, setViewData } = useSyncStore()
@@ -103,7 +103,7 @@ export default function Whiteboard({ viewId }) {
   }
 
   return (
-    <div className='h-screen relative'>
+    <div className='h-full relative'>
       <Excalidraw
         excalidrawAPI={(api) => setExcalidrawAPI(api)}
         initialData={{
