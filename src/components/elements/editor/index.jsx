@@ -30,6 +30,7 @@ import AutoEmbedPlugin from './plugins/AutoEmbedPlugin';
 import LexicalAutoLinkPlugin from './plugins/AutoLinkPlugin';
 import LinkPlugin from './plugins/LinkPlugin';
 import PlaygroundNodes from './nodes/PlaygroundNodes';
+import YouTubePlugin from './plugins/YouTubePlugin';
 
 const placeholder = 'Enter some rich text...';
 
@@ -147,6 +148,7 @@ export default function Editor() {
             <AutoEmbedPlugin />
             <LexicalAutoLinkPlugin />
             <LinkPlugin />
+            <YouTubePlugin />
             <>
               {floatingAnchorElem && !isSmallWidthViewport && (
                 <>

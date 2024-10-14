@@ -130,6 +130,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import ColorPicker from "../../ui/colorpicker/ColorPicker";
+import { EmbedConfigs } from "../AutoEmbedPlugin";
+import { INSERT_EMBED_COMMAND } from "@lexical/react/LexicalAutoEmbedPlugin";
 const commonToolbarItemProps = {
   variant: "ghost",
   className: "gap-1 px-1.5 truncate",
@@ -887,7 +889,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
     activeEditor.dispatchCommand(INSERT_IMAGE_COMMAND, payload);
   };
 
-  const canViewerSeeInsertDropdown = false;
+  const canViewerSeeInsertDropdown = !isImageCaption;
   const canViewerSeeInsertCodeButton = !isImageCaption;
 
   return (
@@ -1288,7 +1290,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   <i className="icon caret-right" />
                   <span className="text">Collapsible container</span>
                 </DropdownMenuItem> */}
-                  {/* {EmbedConfigs.map((embedConfig) => (
+                  {EmbedConfigs.map((embedConfig) => (
                   <DropdownMenuItem
                     key={embedConfig.type}
                     onClick={() => {
@@ -1301,7 +1303,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                     {embedConfig.icon}
                     <span className="text">{embedConfig.contentName}</span>
                   </DropdownMenuItem>
-                ))} */}
+                ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
