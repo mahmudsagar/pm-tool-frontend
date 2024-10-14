@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
-import useFolderStore from "@/stores/folderStore";
+import useFolderStore from "@/stores/useFolderStore";
 import { Button } from "@/components/ui/button";
 import { EllipsisVertical } from "lucide-react";
 import {

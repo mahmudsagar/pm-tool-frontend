@@ -2,7 +2,7 @@ import { Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import useFolderStore from "@/stores/folderStore";
+import useFolderStore from "@/stores/useFolderStore";
 import { 
   Dialog, 
   DialogContent, 

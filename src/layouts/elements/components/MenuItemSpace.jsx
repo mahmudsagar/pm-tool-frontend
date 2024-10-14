@@ -1,5 +1,9 @@
-import useFolderStore from "@/stores/folderStore";
-import { ShieldCheck, FolderClosed, FolderOpen } from "lucide-react";
+import useFolderStore from "@/stores/useFolderStore";
+import { 
+  ShieldCheck, 
+  FolderClosed, 
+  FolderOpen 
+} from "lucide-react";
 import MenuItemFolder from "./MenuItemFolder";
 import AddFolderDialog from "./AddFolderDialog";
 import FolderDropdownMenu from "./FolderDropdownMenu";

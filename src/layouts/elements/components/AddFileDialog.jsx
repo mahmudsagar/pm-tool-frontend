@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
-import useFolderStore from "@/stores/folderStore";
+import useFolderStore from "@/stores/useFolderStore";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 
 const AddFileDialog = ({ folderId }) => {
-  const { addFile } = useFolderStore();
+  const { addFile } = useFolderStore(state => state);
   const [isOpen, setIsOpen] = useState(false);
   const form = useForm({
     defaultValues: {

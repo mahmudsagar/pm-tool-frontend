@@ -29,7 +29,7 @@ const sidebarTopLinks = [
   },
 ];
 
-export function SidebarMenu({ items, setOpen, className }) {
+export function SidebarMenu({ setOpen, className }) {
   const path = useLocation().pathname;
   const { isOpen } = useSidebar();
   const [openItem, setOpenItem] = useState("");

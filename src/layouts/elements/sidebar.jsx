@@ -2,19 +2,20 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { MoreVertical } from "lucide-react";
 import { SidebarMenu } from "./SidebarMenu";
-import { NavItems } from "./constants/side-nav";
 import { useSidebar } from "@/stores/store";
+import useFolderStore from "@/stores/useFolderStore";
+import useSpaceStore from "@/stores/useSpaceStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
-import useFolderStore from "@/stores/folderStore";
 
 
 export default function Sidebar({ className }) {
   const { isOpen, toggle } = useSidebar();
   const [status, setStatus] = useState(false);
-  const { fetchFolderData, fetchSpaceData } = useFolderStore(state => state);
+  const { fetchFolderData } = useFolderStore(state => state);
+  const { fetchSpaceData } = useSpaceStore(state => state);
 
   const handleToggle = () => {
     setStatus(true);
@@ -48,7 +49,6 @@ export default function Sidebar({ className }) {
           <div className="font-inter h-5/6">
             <SidebarMenu
               className="h-full text-background opacity-0 transition-all duration-300 group-hover:z-50 group-hover:ml-4 group-hover:rounded group-hover:bg-foreground group-hover:p-2 group-hover:opacity-100"
-              items={NavItems}
             />
           </div>
           <div className="border-t pt-2">
