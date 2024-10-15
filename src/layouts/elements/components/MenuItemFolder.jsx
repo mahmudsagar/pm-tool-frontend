@@ -11,7 +11,7 @@ import {
 } from "../subnav-accordion";
 import AddFileDialog from "./AddFileDialog";
 import FileDropdownMenu from "./FileDropdownMenu";
-import { Navigate, redirect } from "react-router-dom";
+import folderIcon from '@/assets/images/folder.svg';
 
 const MenuItemFolder = ({ folder, className }) => {  
   const { isOpen } = useSidebar();
@@ -55,7 +55,12 @@ const MenuItemFolder = ({ folder, className }) => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center">
-            <File size={18} className={cn('inline group-hover:hidden group-data-[state=open]:hidden')} />
+            <img
+              src={folderIcon}
+              alt="Folder Icon"
+              width={18}
+              className={cn('inline group-hover:hidden group-data-[state=open]:hidden')}
+            />
             <ChevronDownIcon
               strokeWidth={2.5}
               size={20}

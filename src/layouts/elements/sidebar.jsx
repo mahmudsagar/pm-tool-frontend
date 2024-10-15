@@ -3,10 +3,16 @@ import { cn } from "@/lib/utils";
 import { MoreVertical } from "lucide-react";
 import { SidebarMenu } from "./SidebarMenu";
 import { useSidebar } from "@/stores/store";
-import useFolderStore from "@/stores/useFolderStore";
+import useGroupStore from "@/stores/useGroupStore";
 import useSpaceStore from "@/stores/useSpaceStore";
+import useFolderStore from "@/stores/useFolderStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
 
@@ -14,9 +20,10 @@ import Link from "@/BetterRouter/Link";
 export default function Sidebar({ className }) {
   const { isOpen, toggle } = useSidebar();
   const [status, setStatus] = useState(false);
-  const { fetchFolderData } = useFolderStore(state => state);
   const { fetchSpaceData } = useSpaceStore(state => state);
-
+  const { fetchGroupData } = useGroupStore(state => state);
+  const { fetchFolderData } = useFolderStore(state => state);
+  
   const handleToggle = () => {
     setStatus(true);
     toggle();
@@ -25,6 +32,7 @@ export default function Sidebar({ className }) {
 
   useEffect(() => {
     fetchSpaceData();
+    fetchGroupData();
     fetchFolderData();
   }, []);
 
