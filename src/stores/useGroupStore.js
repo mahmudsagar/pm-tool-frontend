@@ -1,7 +1,7 @@
 import { createWithEqualityFn } from "zustand/traditional";
 
 const useGroupStore = createWithEqualityFn((set, get) => ({
-  groupData: null,
+  groupData: [],
   loading: { group: false, delete: false },
   error: { group: null, delete: null },
 

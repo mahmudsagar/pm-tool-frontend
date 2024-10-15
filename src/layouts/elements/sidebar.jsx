@@ -31,10 +31,18 @@ export default function Sidebar({ className }) {
   };
 
   useEffect(() => {
-    fetchSpaceData();
-    fetchGroupData();
-    fetchFolderData();
-  }, []);
+    const fetchData = async () => {
+      try {
+        await fetchSpaceData();
+
+        await Promise.all([fetchGroupData(), fetchFolderData()]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [fetchSpaceData, fetchGroupData, fetchFolderData]);
 
   return (
     <nav
@@ -45,13 +53,6 @@ export default function Sidebar({ className }) {
         className
       )}
     >
-      {/* <ArrowLeft
-        className={cn(
-          "absolute -right-3 top-20 cursor-pointer rounded-full border bg-background text-3xl text-foreground",
-          !isOpen && "rotate-180"
-        )}
-        onClick={handleToggle}
-      /> */}
       <div className="py-4 h-full">
         <div className="px-4 h-full flex flex-col justify-between">
           <div className="font-inter h-5/6">
@@ -60,7 +61,6 @@ export default function Sidebar({ className }) {
             />
           </div>
           <div className="border-t pt-2">
-            {/* <Separator className="my-4" /> */}
             <div className="flex justify-between">
               <div className="flex gap-1.5">
                 <div className="w-12 flex flex-row-reverse justify-end items-center relative transform translate-z-0">
