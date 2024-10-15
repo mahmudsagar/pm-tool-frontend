@@ -6,6 +6,7 @@ import { useSidebar } from "@/stores/store";
 import useGroupStore from "@/stores/useGroupStore";
 import useSpaceStore from "@/stores/useSpaceStore";
 import useFolderStore from "@/stores/useFolderStore";
+import useDocumentStore from "@/stores/useDocumentStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
@@ -23,6 +24,7 @@ export default function Sidebar({ className }) {
   const { fetchSpaceData } = useSpaceStore(state => state);
   const { fetchGroupData } = useGroupStore(state => state);
   const { fetchFolderData } = useFolderStore(state => state);
+  const { fetchDocumentData } = useDocumentStore(state => state);
   
   const handleToggle = () => {
     setStatus(true);
@@ -34,15 +36,15 @@ export default function Sidebar({ className }) {
     const fetchData = async () => {
       try {
         await fetchSpaceData();
-
-        await Promise.all([fetchGroupData(), fetchFolderData()]);
+        
+        await Promise.all([fetchGroupData(), fetchFolderData(), fetchDocumentData()]);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
 
     fetchData();
-  }, [fetchSpaceData, fetchGroupData, fetchFolderData]);
+  }, [fetchSpaceData, fetchGroupData, fetchFolderData, fetchDocumentData]);
 
   return (
     <nav

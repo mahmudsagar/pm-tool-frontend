@@ -17,7 +17,7 @@ const MenuItemSpace = ({ space, className }) => {
   const groups = getGroupSpaceId(space._id) || [];
   const folders = getFolderSpaceId(space._id) || [];
 
-  const isLoading = groupLoading || folderLoading;  
+  const isLoading = groupLoading || folderLoading;
 
   return (
     <>

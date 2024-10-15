@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "@/BetterRouter/Link";
 import { useSidebar } from "@/stores/store";
-import { ChevronDownIcon, File } from "lucide-react";
+import { ChevronDownIcon } from "lucide-react";
+import useDocumentStore from "@/stores/useDocumentStore";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "../subnav-accordion";
+import { FileSpreadsheet } from 'lucide-react';
 import AddFileDialog from "./AddFileDialog";
 import FileDropdownMenu from "./FileDropdownMenu";
 import folderIcon from '@/assets/images/folder.svg';
@@ -18,6 +20,9 @@ const MenuItemFolder = ({ folder, className }) => {
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
+  const { getDocumentByIds } = useDocumentStore(state => state);
+
+  const documents = useMemo(() => getDocumentByIds('66cda5dac6886719e3345c19', folder._id) || [], [folder._id]);
 
   useEffect(() => {
     if (isOpen) {
@@ -38,6 +43,17 @@ const MenuItemFolder = ({ folder, className }) => {
   const handleFolderClick = () => {
     setOpenItem(openItem === folder._id ? "" : folder._id);
   };
+
+  const handleDocumentIcons = (type) => {
+    switch (type) {
+      case 'sheet':
+        return <FileSpreadsheet size={20} />;
+      break;
+    
+      default:
+        break;
+    }
+  }
 
   return (
     <Accordion
@@ -89,7 +105,21 @@ const MenuItemFolder = ({ folder, className }) => {
           </div>
         </AccordionTrigger>
         <AccordionContent className="space-y-2 pl-6 py-3">
-          <p className="text-center">Empty</p>
+          { Array.isArray(documents) && documents.length > 0 ? 
+            documents.map( document => 
+              <Link 
+                key={document._id} 
+                to={`/single/${document.pageMeta._id}`}
+                className="ml-5 flex items-center gap-2"
+              >
+                {handleDocumentIcons(document.pageMeta.page_types)}
+                <span>{document.pageMeta.title}</span>
+              </Link>
+            )
+          : (<>
+            <p className="text-center">{documents}</p>
+          </>) 
+          }
         </AccordionContent>
       </AccordionItem>
     </Accordion>
