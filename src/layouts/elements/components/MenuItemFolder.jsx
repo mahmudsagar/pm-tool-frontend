@@ -2,8 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "@/BetterRouter/Link";
 import { useSidebar } from "@/stores/store";
-import { ChevronDownIcon } from "lucide-react";
 import useDocumentStore from "@/stores/useDocumentStore";
+import { 
+  ChevronDownIcon, 
+  FileText, 
+  CircuitBoard 
+} from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -22,7 +26,7 @@ const MenuItemFolder = ({ folder, className }) => {
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
   const { getDocumentByIds } = useDocumentStore(state => state);
 
-  const documents = useMemo(() => getDocumentByIds('66cda5dac6886719e3345c19', folder._id) || [], [folder._id]);
+  const documents = getDocumentByIds('66cda5dac6886719e3345c19', folder._id) || [];
 
   useEffect(() => {
     if (isOpen) {
@@ -48,6 +52,12 @@ const MenuItemFolder = ({ folder, className }) => {
     switch (type) {
       case 'sheet':
         return <FileSpreadsheet size={20} />;
+      break;
+      case 'doc':
+        return <FileText size={20} />;
+      break;
+      case 'wb':
+        return <CircuitBoard size={20} />;
       break;
     
       default:
@@ -113,7 +123,7 @@ const MenuItemFolder = ({ folder, className }) => {
                 className="ml-5 flex items-center gap-2"
               >
                 {handleDocumentIcons(document.pageMeta.page_types)}
-                <span>{document.pageMeta.title}</span>
+                <span>{`${document.pageMeta.title}.${document.pageMeta.page_types}`}</span>
               </Link>
             )
           : (<>

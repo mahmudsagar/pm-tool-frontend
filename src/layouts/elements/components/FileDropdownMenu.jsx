@@ -17,21 +17,23 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import MenuItemLoading from './MenuItemLoading';
 
 const FileDropdownMenu = ({ isOpen = {}, onToggle = () => {}, folderId }) => {
-  const folderStore = useFolderStore(state => state);
+  const { deleteFolder, loading, error } = useFolderStore(state => state);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const deleteItem = folderStore?.deleteItem;
 
   const handleDeleteClick = () => {
     setIsDialogOpen(true);
-  };
+  };  
 
   const confirmDelete = () => {
-    if (deleteItem && folderId) {
-      deleteItem('folder', folderId);
+    if (deleteFolder && folderId) {
+      deleteFolder(folderId);
+      if (!loading) {
+        setIsDialogOpen(false); 
+      }
     }
-    setIsDialogOpen(false); 
   };
 
   const handleCloseDialog = () => {
@@ -78,7 +80,7 @@ const FileDropdownMenu = ({ isOpen = {}, onToggle = () => {}, folderId }) => {
               Cancel
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
-              Delete
+              {loading.delete ? <MenuItemLoading text='Deleting' flex='row' />:'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

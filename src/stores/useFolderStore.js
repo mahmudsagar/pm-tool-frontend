@@ -52,7 +52,7 @@ const useFolderStore = createWithEqualityFn((set, get) => ({
     }));
     try {
       const response = await fetch(
-        `https://better-notion-api-server.onrender.com/v1/folder/${id}`,
+        `https://better-notion-api-server.onrender.com/v1/folder?id=${id}`,
         {
           method: "DELETE",
         }

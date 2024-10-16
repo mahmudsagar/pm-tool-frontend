@@ -21,8 +21,13 @@ import {
 } from "@/components/ui/form";
 
 const AddFolderDialog = ({ spaceId }) => {
-  const form = useForm();
   const { addFolder } = useFolderStore();
+
+  const form = useForm({
+    defaultValues: {
+      folderName: ""
+    }
+  });
 
   const onSubmit = (data) => {
     // Handle form submission
@@ -50,7 +55,7 @@ const AddFolderDialog = ({ spaceId }) => {
             <div className="py-3">
               <FormField
                 control={form.control}
-                name="username"
+                name="folderName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Name</FormLabel>
