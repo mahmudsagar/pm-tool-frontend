@@ -2,14 +2,13 @@ import { useState, useRef } from "react";
 import {
   Excalidraw,
   MainMenu,
-  Sidebar,
   Footer,
   convertToExcalidrawElements,
   getNonDeletedElements,
   getSceneVersion,
-} from "@excalidraw/excalidraw";
+} from "@betternotion/excalidraw";
 
-import { BookIcon, StickyNote } from "lucide-react";
+import { StickyNote } from "lucide-react";
 
 import useSyncStore from '@/stores/useSyncStore';
 import { useTheme } from "@/components/theme-provider";
