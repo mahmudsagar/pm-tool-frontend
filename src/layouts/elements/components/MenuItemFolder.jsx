@@ -53,15 +53,18 @@ const MenuItemFolder = ({ folder, className }) => {
       case 'sheet':
         return <FileSpreadsheet size={20} />;
       break;
+      
       case 'doc':
         return <FileText size={20} />;
       break;
+
       case 'wb':
         return <CircuitBoard size={20} />;
       break;
-    
+
       default:
-        break;
+        return <FileSpreadsheet size={20} />;
+      break;
     }
   }
 

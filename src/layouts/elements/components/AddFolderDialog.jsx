@@ -3,6 +3,10 @@ import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import useFolderStore from "@/stores/useFolderStore";
+import useUserStore from "@/stores/useUserStore";
+import useTeamStore from "@/stores/useTeamStore";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   Dialog, 
   DialogContent, 
@@ -19,13 +23,43 @@ import {
   FormLabel, 
   FormMessage 
 } from "@/components/ui/form";
+import { useEffect } from "react";
 
 const AddFolderDialog = ({ spaceId }) => {
-  const { addFolder } = useFolderStore();
+  const { addFolder } = useFolderStore(state => state);
+  const { 
+    userData, 
+    loading: userLoading, 
+    error: userError, 
+    fetchUserData 
+  } = useUserStore(state => state);
+  const { 
+    teamData, 
+    loading: teamLoading, 
+    error: teamError, 
+    fetchTeamData 
+  } = useTeamStore(state => state);
+
+  console.log(teamData);
+  
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await Promise.all([fetchUserData(), fetchTeamData()]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [fetchUserData, fetchTeamData]);
+  
 
   const form = useForm({
     defaultValues: {
-      folderName: ""
+      type : '',
+      name: ''
     }
   });
 
@@ -51,16 +85,38 @@ const AddFolderDialog = ({ spaceId }) => {
                 Please provide the necessary details to create a new folder.
               </DialogDescription>
             </DialogHeader>
-            {/* Form Fields Moved Outside of DialogDescription */}
+            {/* Form Fields */}
             <div className="py-3">
               <FormField
                 control={form.control}
-                name="folderName"
+                name="type"
                 render={({ field }) => (
-                  <FormItem>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormLabel>Type</FormLabel>
+                    <div className="flex items-center gap-3 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="option-one" id="option-one" />
+                        <Label htmlFor="option-one">Group</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="option-two" id="option-two" />
+                        <Label htmlFor="option-two">Folder</Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="my-3">
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Folder Name" {...field} />
+                      <Input placeholder="New Folder" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
