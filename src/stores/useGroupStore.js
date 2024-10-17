@@ -31,15 +31,25 @@ const useGroupStore = createWithEqualityFn((set, get) => ({
     }
   },
 
+  // Get Group Using Id
+  getGroupId: (id) => {
+    const data = get().groupData;
+    if (!data) return false;
+
+    const filteredGroups = data.filter((group) => group._id === id);
+    if (filteredGroups.length === 0) {
+      return false;
+    }else {
+      return true;
+    }
+  },
+
   // Get Group Using Space Id
   getGroupSpaceId: (spaceID) => {
     const data = get().groupData;
     if (!data) return "Empty";
 
-    const filteredGroups = data.filter(
-      (group) => group.space_id === spaceID
-    );
-
+    const filteredGroups = data.filter((group) => group.space_id === spaceID);
     if (filteredGroups.length === 0) return "Empty";
     return filteredGroups;
   },

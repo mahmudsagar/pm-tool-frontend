@@ -24,7 +24,7 @@ const MenuItemFolder = ({ folder, className }) => {
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
-  const { getDocumentByIds } = useDocumentStore(state => state);
+  const { getDocumentByIds } = useDocumentStore(state => state);  
 
   const documents = getDocumentByIds('66cda5dac6886719e3345c19', folder._id) || [];
 
@@ -108,7 +108,7 @@ const MenuItemFolder = ({ folder, className }) => {
           </div>
           <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folder._id || dropdownOpenStates[folder._id] ? 'opacity-100' : ''}`}>
             <div className="flex gap-1">
-              <AddFileDialog folderId={folder._id} />
+              <AddFileDialog id={folder._id} />
               <FileDropdownMenu
                 isOpen={dropdownOpenStates}
                 onToggle={(id) => handleDropdownToggle(id)}

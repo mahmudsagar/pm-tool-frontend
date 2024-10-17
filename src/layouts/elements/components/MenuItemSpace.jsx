@@ -39,7 +39,7 @@ const MenuItemSpace = ({ space, className }) => {
       </div>
 
       {isLoading?.group ? (
-        <MenuItemLoading text='Loading...' flex='col'/>
+        <MenuItemLoading text='Loading' flex='col'/>
       ) : (
         <>
           {Array.isArray(folders) && folders.length > 0 ? (

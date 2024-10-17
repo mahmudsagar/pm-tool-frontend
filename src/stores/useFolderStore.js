@@ -36,10 +36,7 @@ const useFolderStore = createWithEqualityFn((set, get) => ({
     const data = get().folderData;
     if (!data) return "Empty";
 
-    const filteredFolders = data.filter(
-      (folder) => folder.space_id === spaceID
-    );
-
+    const filteredFolders = data.filter((folder) => folder.space_id === spaceID);
     if (filteredFolders.length === 0) return "Empty";
     return filteredFolders;
   },
