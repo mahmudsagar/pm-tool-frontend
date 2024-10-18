@@ -17,7 +17,9 @@ import * as ReactDOM from 'react-dom';
 import useModal from '@/components/elements/modal/useModal';
 import { INSERT_YOUTUBE_COMMAND } from '../YouTubePlugin';
 import { Button } from '@/components/ui/button';
-import { DialogTrigger } from '@/components/ui/dialog';
+import { DialogFooter } from '@/components/ui/dialog';
+import { PlaySquare } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 
 export const YoutubeEmbedConfig = {
@@ -26,7 +28,7 @@ export const YoutubeEmbedConfig = {
   exampleUrl: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
 
   // Icon for display.
-  icon: <i className="icon youtube" />,
+  icon: <PlaySquare size={16} />,
 
   insertNode: (editor, result) => {
     editor.dispatchCommand(INSERT_YOUTUBE_COMMAND, result.id);
@@ -224,29 +226,28 @@ export function AutoEmbedDialog({
   };
 
   return (
-    <div style={{ width: '600px' }}>
-      <div className="Input__wrapper">
-        <input
-          type="text"
-          className="Input__input"
-          placeholder={embedConfig.exampleUrl}
-          value={text}
-          data-test-id={`${embedConfig.type}-embed-modal-url`}
-          onChange={(e) => {
-            const { value } = e.target;
-            setText(value);
-            validateText(value);
-          }}
-        />
-      </div>
-      <DialogTrigger>
+    <div className='w-96'>
+      <Input
+        type="text"
+        className="h-8 mb-3"
+        placeholder={embedConfig.exampleUrl}
+        value={text}
+        data-test-id={`${embedConfig.type}-embed-modal-url`}
+        onChange={(e) => {
+          const { value } = e.target;
+          setText(value);
+          validateText(value);
+        }}
+      />
+
+      <DialogFooter>
         <Button
           disabled={!embedResult}
           onClick={onClick}
           data-test-id={`${embedConfig.type}-embed-modal-submit-btn`}>
           Embed
         </Button>
-      </DialogTrigger>
+      </DialogFooter>
     </div>
   );
 }

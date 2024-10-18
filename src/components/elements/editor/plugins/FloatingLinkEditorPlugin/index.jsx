@@ -32,6 +32,10 @@ import { createPortal } from 'react-dom';
 import { getSelectedNode } from '../../utils/getSelectedNode';
 import { setFloatingElemPositionForLinkEditor } from '../../utils/setFloatingElemPositionForLinkEditor';
 import { sanitizeUrl } from '../../utils/url';
+import { Check, Pencil, Trash, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import Link from '@/BetterRouter/Link';
 
 function FloatingLinkEditor({
   editor,
@@ -205,12 +209,12 @@ function FloatingLinkEditor({
   };
 
   return (
-    <div ref={editorRef} className="link-editor">
+    <div ref={editorRef} className="link-editor bg-slate-50 dark:bg-slate-900">
       {!isLink ? null : isLinkEditMode ? (
         <>
-          <input
+          <Input
             ref={inputRef}
-            className="link-input"
+            className="h-8 link-input"
             value={editedLinkUrl}
             onChange={(event) => {
               setEditedLinkUrl(event.target.value);
@@ -219,54 +223,43 @@ function FloatingLinkEditor({
               monitorInputInteraction(event);
             }}
           />
-          <div>
-            <div
-              className="link-cancel"
-              role="button"
-              tabIndex={0}
-              onMouseDown={(event) => event.preventDefault()}
+          <div className='flex gap-2'>
+            <Button tabIndex={0} size="icon" className="h-6 w-6" onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
                 setIsLinkEditMode(false);
-              }}
-            />
-
-            <div
-              className="link-confirm"
-              role="button"
-              tabIndex={0}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={handleLinkSubmission}
-            />
+              }}>
+              <X size={18}  />
+            </Button>
+            <Button size="icon" tabIndex={0} className="h-6 w-6" onMouseDown={(event) => event.preventDefault()} onClick={handleLinkSubmission}>
+              <Check size={18}  />
+            </Button>
           </div>
         </>
       ) : (
-        <div className="link-view">
-          <a
+        <>
+          <Link
             href={sanitizeUrl(linkUrl)}
             target="_blank"
             rel="noopener noreferrer">
             {linkUrl}
-          </a>
-          <div
-            className="link-edit"
-            role="button"
-            tabIndex={0}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => {
-              setEditedLinkUrl(linkUrl);
-              setIsLinkEditMode(true);
-            }}
-          />
-          <div
-            className="link-trash"
-            role="button"
-            tabIndex={0}
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => {
-              editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-            }}
-          />
-        </div>
+          </Link>
+          <div className='flex gap-2'>
+            <Button size="icon" tabIndex={0} className="h-6 w-6"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                setEditedLinkUrl(linkUrl);
+                setIsLinkEditMode(true);
+              }}>
+              <Pencil size={18}  />
+            </Button>
+            <Button size="icon" tabIndex={0} className="h-6 w-6" onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
+              }}>
+              <Trash size={18} />
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );

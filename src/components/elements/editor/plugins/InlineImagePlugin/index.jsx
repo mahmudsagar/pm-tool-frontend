@@ -104,7 +104,7 @@ export function InsertInlineImageDialog({
         <Input
           type="file"
           label="Image Upload"
-          onChange={loadImage}
+          onChange={e => loadImage(e.target.files)}
           accept="image/*"
           data-test-id="image-modal-file-upload"
         />

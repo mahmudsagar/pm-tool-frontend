@@ -170,7 +170,7 @@ function TextFormatFloatingToolbar({
   }, [editor, $updateTextFormatFloatingToolbar]);
 
   return (
-    <div ref={popupCharStylesEditorRef} className="floating-text-format-popup">
+    <div ref={popupCharStylesEditorRef} className="floating-text-format-popup bg-slate-50 dark:bg-slate-900">
       {editor.isEditable() && (
         <>
           <button

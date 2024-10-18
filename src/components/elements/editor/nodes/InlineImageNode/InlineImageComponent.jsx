@@ -31,14 +31,14 @@ import {
 } from 'lexical';
 import {Suspense, useCallback, useEffect, useRef, useState} from 'react';
 
-import useModal from '../../hooks/useModal';
 import LinkPlugin from '../../plugins/LinkPlugin';
-import Button from '../../ui/Button';
 import ContentEditable from '../../ui/ContentEditable';
-import {DialogActions} from '../../ui/Dialog';
-import Select from '../../ui/Select';
-import TextInput from '../../ui/TextInput';
 import {$isInlineImageNode} from './InlineImageNode';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import useModal from '@/components/elements/modal/useModal';
 
 const imageCache = new Set();
 
@@ -116,7 +116,7 @@ export function UpdateInlineImageDialog({
   return (
     <>
       <div style={{marginBottom: '1em'}}>
-        <TextInput
+        <Input
           label="Alt Text"
           placeholder="Descriptive alternative text"
           onChange={setAltText}
@@ -147,13 +147,13 @@ export function UpdateInlineImageDialog({
         <label htmlFor="caption">Show Caption</label>
       </div>
 
-      <DialogActions>
+      <DialogFooter>
         <Button
           data-test-id="image-modal-file-upload-btn"
           onClick={() => handleOnConfirm()}>
           Confirm
         </Button>
-      </DialogActions>
+      </DialogFooter>
     </>
   );
 }

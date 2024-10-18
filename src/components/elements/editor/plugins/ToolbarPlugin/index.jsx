@@ -131,6 +131,7 @@ import ColorPicker from "../../ui/colorpicker/ColorPicker";
 import { EmbedConfigs } from "../AutoEmbedPlugin";
 import { INSERT_EMBED_COMMAND } from "@lexical/react/LexicalAutoEmbedPlugin";
 import useModal from "@/components/elements/modal/useModal";
+import { InsertInlineImageDialog } from "../InlineImagePlugin";
 const commonToolbarItemProps = {
   variant: "ghost",
   className: "gap-1 px-1.5 truncate",
@@ -1163,22 +1164,21 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   </DropdownMenuItem>
                   {/* <DropdownMenuItem
                     onClick={() => {
-                      openModal({
-                        title: "Insert Inline Image",
-                        content: (
+                      showModal("Insert Inline Image",
+                        (onClose) => (
                           <InsertInlineImageDialog
                             activeEditor={activeEditor}
-                            onClose={closeModal}
+                            onClose={onClose}
                           />
                         ),
-                      });
+                      );
                     }}
                     className="cursor-pointer"
                   >
                     <Image size={16} />
                     <span className="ml-1">Inline Image</span>
                   </DropdownMenuItem> */}
-                  <DropdownMenuItem
+                  {/* <DropdownMenuItem
                     onClick={() =>
                       insertGifOnClick({
                         altText: "Cat typing on a laptop",
@@ -1189,7 +1189,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   >
                     <ImagePlay size={16} />
                     <span className="ml-1">GIF</span>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   {/* <DropdownMenuItem
                   onClick={() => {
                     activeEditor.dispatchCommand(
@@ -1290,7 +1290,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                       }}
                       className="cursor-pointer">
                       {embedConfig.icon}
-                      <span className="text">{embedConfig.contentName}</span>
+                      <span className="text ml-1">{embedConfig.contentName}</span>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>

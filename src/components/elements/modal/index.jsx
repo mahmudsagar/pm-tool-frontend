@@ -6,14 +6,16 @@ const Modal = ({ title, onClose, open, children, ...props }) => {
       onClose();
     }
   };
-  return <Dialog onOpenChange={onOpenChange} open={open} modal={true} {...props}>
-    <DialogHeader>
-      <DialogTitle className="text-2xl font-bold">{title}</DialogTitle>
-      <DialogDescription className="d-none">
-        
-      </DialogDescription>
-    </DialogHeader>
+  console.log(title, props)
+  return <Dialog onOpenChange={onOpenChange} open={open} {...props}>
+
     <DialogContent className="w-auto">
+      <DialogHeader>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogDescription className="d-none">
+
+        </DialogDescription>
+      </DialogHeader>
       {children}
     </DialogContent>
   </Dialog>

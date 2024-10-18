@@ -11,6 +11,7 @@ import ContentEditable from './ui/ContentEditable';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
+import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin';
 
 import ToolbarPlugin from './plugins/ToolbarPlugin/index';
 import { defaultTheme } from './theme/default';
@@ -155,6 +156,7 @@ export default function Editor() {
             <InlineImagePlugin />
             <LinkPlugin />
             <YouTubePlugin />
+            <HorizontalRulePlugin />
             <>
               {floatingAnchorElem && !isSmallWidthViewport && (
                 <>
