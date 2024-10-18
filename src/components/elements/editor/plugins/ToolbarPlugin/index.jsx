@@ -95,6 +95,7 @@ import {
   CheckSquare,
   ChevronDown,
   Code,
+  Columns,
   FoldVertical,
   Heading1,
   Heading2,
@@ -132,6 +133,7 @@ import { EmbedConfigs } from "../AutoEmbedPlugin";
 import { INSERT_EMBED_COMMAND } from "@lexical/react/LexicalAutoEmbedPlugin";
 import useModal from "@/components/elements/modal/useModal";
 import { InsertInlineImageDialog } from "../InlineImagePlugin";
+import InsertLayoutDialog from "../LayoutPlugin/InsertLayoutDialog";
 const commonToolbarItemProps = {
   variant: "ghost",
   className: "gap-1 px-1.5 truncate",
@@ -884,9 +886,6 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
     },
     [activeEditor, selectedElementKey]
   );
-  const insertGifOnClick = (payload) => {
-    activeEditor.dispatchCommand(INSERT_IMAGE_COMMAND, payload);
-  };
 
   const canViewerSeeInsertDropdown = !isImageCaption;
   const canViewerSeeInsertCodeButton = !isImageCaption;
@@ -1155,7 +1154,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                           activeEditor={activeEditor}
                           onClose={onClose}
                         />
-                      ))
+                      ), false)
                     }}
                     className="cursor-pointer"
                   >
@@ -1208,7 +1207,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                           activeEditor={activeEditor}
                           onClose={onClose}
                         />
-                      ))
+                      ), false)
                     }}
                     className="cursor-pointer"
                   >
@@ -1229,19 +1228,17 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   <i className="icon poll" />
                   <span className="text">Poll</span>
                 </DropdownMenuItem> */}
-                  {/* <DropdownMenuItem
-                  onClick={() => {
-                    openModal({
-                      title: 'Insert Columns Layout', content: <InsertLayoutDialog
+                  <DropdownMenuItem
+                    onClick={() => {
+                      showModal('Insert Columns Layout', (onClose) => (<InsertLayoutDialog
                         activeEditor={activeEditor}
-                        onClose={closeModal}
-                      />
-                    });
-                  }}
-                  className="cursor-pointer">
-                  <i className="icon columns" />
-                  <span className="text">Columns Layout</span>
-                </DropdownMenuItem> */}
+                        onClose={onClose}
+                      />), false);
+                    }}
+                    className="cursor-pointer">
+                   <Columns size={16} />
+                    <span className="ml-1">Columns Layout</span>
+                  </DropdownMenuItem>
 
                   {/* <DropdownMenuItem
                   onClick={() => {

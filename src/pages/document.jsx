@@ -1,10 +1,10 @@
 
-import Editor from "@/components/elements/editor";
+import { EditorComponent } from "@/components/elements/editor";
 
 const Document = () => {
 
   return (
-    <Editor />
+    <EditorComponent />
   );
 };
 

@@ -1,15 +1,18 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const Modal = ({ title, onClose, open, children, ...props }) => {
+const Modal = ({ title, onClose, open, children, closeOnClickOutside, ...props }) => {
   const onOpenChange = (open) => {
     if (!open && onClose) {
       onClose();
     }
   };
-  console.log(title, props)
-  return <Dialog onOpenChange={onOpenChange} open={open} {...props}>
 
-    <DialogContent className="w-auto">
+  return <Dialog onOpenChange={onOpenChange} open={open} {...props}>
+    <DialogContent className="w-auto" onInteractOutside={(e) => {
+      if (!closeOnClickOutside) {
+        e.preventDefault();
+      }
+    }}>
       <DialogHeader>
         <DialogTitle>{title}</DialogTitle>
         <DialogDescription className="d-none">
