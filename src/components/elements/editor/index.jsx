@@ -31,6 +31,9 @@ import LexicalAutoLinkPlugin from './plugins/AutoLinkPlugin';
 import LinkPlugin from './plugins/LinkPlugin';
 import PlaygroundNodes from './nodes/PlaygroundNodes';
 import YouTubePlugin from './plugins/YouTubePlugin';
+import DragDropPaste from './plugins/DragDropPastePlugin';
+import ImagesPlugin from './plugins/ImagesPlugin';
+import InlineImagePlugin from './plugins/InlineImagePlugin';
 
 const placeholder = 'Enter some rich text...';
 
@@ -142,11 +145,15 @@ export default function Editor() {
               }
               ErrorBoundary={LexicalErrorBoundary}
             />
-            <HistoryPlugin />
+            <DragDropPaste />
             <AutoFocusPlugin />
             <ComponentPickerMenuPlugin />
             <AutoEmbedPlugin />
+            <HistoryPlugin />
+            <AutoFocusPlugin />
             <LexicalAutoLinkPlugin />
+            <ImagesPlugin />
+            <InlineImagePlugin />
             <LinkPlugin />
             <YouTubePlugin />
             <>

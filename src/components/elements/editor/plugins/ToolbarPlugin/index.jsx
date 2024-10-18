@@ -73,8 +73,6 @@ import { INSERT_IMAGE_COMMAND, InsertImageDialog } from "../ImagesPlugin";
 import { InsertTableDialog } from "../TablePlugin";
 import FontSize from "./fontSize";
 import { isMacOs } from "environment";
-import { useModal } from "@/components/elements/modal/useModal";
-import Modal from "@/components/elements/modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -132,6 +130,7 @@ import {
 import ColorPicker from "../../ui/colorpicker/ColorPicker";
 import { EmbedConfigs } from "../AutoEmbedPlugin";
 import { INSERT_EMBED_COMMAND } from "@lexical/react/LexicalAutoEmbedPlugin";
+import useModal from "@/components/elements/modal/useModal";
 const commonToolbarItemProps = {
   variant: "ghost",
   className: "gap-1 px-1.5 truncate",
@@ -446,9 +445,8 @@ function FontDropDown({ editor, value, style, disabled = false }) {
           : FONT_SIZE_OPTIONS
         ).map(([option, text]) => (
           <DropdownMenuItem
-            className={`item ${dropDownActiveClass(value === option)} ${
-              style === "font-size" ? "fontsize-item" : ""
-            }`}
+            className={`item ${dropDownActiveClass(value === option)} ${style === "font-size" ? "fontsize-item" : ""
+              }`}
             onClick={() => handleClick(option)}
             key={option}
           >
@@ -577,7 +575,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
   const [isCode, setIsCode] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
-  const { openModal, closeModal } = useModal();
+  const [modal, showModal] = useModal();
   const [isRTL, setIsRTL] = useState(false);
   const [codeLanguage, setCodeLanguage] = useState("");
   const [isEditable, setIsEditable] = useState(() => editor.isEditable());
@@ -602,9 +600,9 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
         anchorNode.getKey() === "root"
           ? anchorNode
           : $findMatchingParent(anchorNode, (e) => {
-              const parent = e.getParent();
-              return parent !== null && $isRootOrShadowRoot(parent);
-            });
+            const parent = e.getParent();
+            return parent !== null && $isRootOrShadowRoot(parent);
+          });
 
       if (element === null) {
         element = anchorNode.getTopLevelElementOrThrow();
@@ -691,8 +689,8 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
         $isElementNode(matchingParent)
           ? matchingParent.getFormatType()
           : $isElementNode(node)
-          ? node.getFormatType()
-          : parent?.getFormatType() || "left"
+            ? node.getFormatType()
+            : parent?.getFormatType() || "left"
       );
     }
     if ($isRangeSelection(selection) || $isTableSelection(selection)) {
@@ -975,9 +973,8 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
             title={isMacOs ? "Bold (⌘B)" : "Bold (Ctrl+B)"}
             variant="ghost"
             size="icon"
-            aria-label={`Format text as bold. Shortcut: ${
-              isMacOs ? "⌘B" : "Ctrl+B"
-            }`}
+            aria-label={`Format text as bold. Shortcut: ${isMacOs ? "⌘B" : "Ctrl+B"
+              }`}
           >
             <Bold size={18} opacity={isBold ? 1 : 0.6} />
           </Button>
@@ -990,9 +987,8 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
             title={isMacOs ? "Italic (⌘I)" : "Italic (Ctrl+I)"}
             variant="ghost"
             size="icon"
-            aria-label={`Format text as italics. Shortcut: ${
-              isMacOs ? "⌘I" : "Ctrl+I"
-            }`}
+            aria-label={`Format text as italics. Shortcut: ${isMacOs ? "⌘I" : "Ctrl+I"
+              }`}
           >
             <Italic size={18} opacity={isItalic ? 1 : 0.6} />
           </Button>
@@ -1005,9 +1001,8 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
             title={isMacOs ? "Underline (⌘U)" : "Underline (Ctrl+U)"}
             variant="ghost"
             size="icon"
-            aria-label={`Format text to underlined. Shortcut: ${
-              isMacOs ? "⌘U" : "Ctrl+U"
-            }`}
+            aria-label={`Format text to underlined. Shortcut: ${isMacOs ? "⌘U" : "Ctrl+U"
+              }`}
           >
             <Underline size={18} opacity={isUnderline ? 1 : 0.6} />
           </Button>
@@ -1154,15 +1149,12 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                 </DropdownMenuItem> */}
                   <DropdownMenuItem
                     onClick={() => {
-                      openModal({
-                        title: "Insert Image",
-                        content: (
-                          <InsertImageDialog
-                            activeEditor={activeEditor}
-                            onClose={closeModal}
-                          />
-                        ),
-                      });
+                      showModal("Insert Image", (onClose) => (
+                        <InsertImageDialog
+                          activeEditor={activeEditor}
+                          onClose={onClose}
+                        />
+                      ))
                     }}
                     className="cursor-pointer"
                   >
@@ -1211,15 +1203,12 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                 </DropdownMenuItem> */}
                   <DropdownMenuItem
                     onClick={() => {
-                      openModal({
-                        title: "Insert Table",
-                        content: (
-                          <InsertTableDialog
-                            activeEditor={activeEditor}
-                            onClose={closeModal}
-                          />
-                        ),
-                      });
+                      showModal("Insert Table", (onClose) => (
+                        <InsertTableDialog
+                          activeEditor={activeEditor}
+                          onClose={onClose}
+                        />
+                      ))
                     }}
                     className="cursor-pointer"
                   >
@@ -1291,19 +1280,19 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   <span className="text">Collapsible container</span>
                 </DropdownMenuItem> */}
                   {EmbedConfigs.map((embedConfig) => (
-                  <DropdownMenuItem
-                    key={embedConfig.type}
-                    onClick={() => {
-                      activeEditor.dispatchCommand(
-                        INSERT_EMBED_COMMAND,
-                        embedConfig.type,
-                      );
-                    }}
-                    className="cursor-pointer">
-                    {embedConfig.icon}
-                    <span className="text">{embedConfig.contentName}</span>
-                  </DropdownMenuItem>
-                ))}
+                    <DropdownMenuItem
+                      key={embedConfig.type}
+                      onClick={() => {
+                        activeEditor.dispatchCommand(
+                          INSERT_EMBED_COMMAND,
+                          embedConfig.type,
+                        );
+                      }}
+                      className="cursor-pointer">
+                      {embedConfig.icon}
+                      <span className="text">{embedConfig.contentName}</span>
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
@@ -1317,6 +1306,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
         editor={activeEditor}
         isRTL={isRTL}
       />
+      {modal}
     </div>
   );
 }

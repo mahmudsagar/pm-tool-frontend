@@ -14,7 +14,7 @@ import {
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { useMemo, useState } from 'react';
 import * as ReactDOM from 'react-dom';
-import { useModal } from '@/components/elements/modal/useModal';
+import useModal from '@/components/elements/modal/useModal';
 import { INSERT_YOUTUBE_COMMAND } from '../YouTubePlugin';
 import { Button } from '@/components/ui/button';
 import { DialogTrigger } from '@/components/ui/dialog';
@@ -252,14 +252,13 @@ export function AutoEmbedDialog({
 }
 
 export default function AutoEmbedPlugin() {
-  
-  const { openModal, closeModal } = useModal();
+
+  const [modal, showModal] = useModal();
 
   const openEmbedModal = (embedConfig) => {
-    openModal({
-      title: `Embed ${embedConfig.contentName}`,
-      content: <AutoEmbedDialog embedConfig={embedConfig} onClose={closeModal} />,
-    });
+    showModal(`Embed ${embedConfig.contentName}`,
+      (onClose) => (<AutoEmbedDialog embedConfig={embedConfig} onClose={onClose} />),
+    );
   };
 
   const getMenuOptions = (
@@ -315,6 +314,7 @@ export default function AutoEmbedPlugin() {
             : null
         }
       />
+      {modal}
     </>
   );
 }

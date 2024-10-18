@@ -4,6 +4,8 @@ import Header from "./elements/header";
 import Sidebar from "./elements/sidebar";
 
 const Default = ({ children }) => {
+
+    
     return (
         <>
             <div className="flex h-screen border-collapse overflow-hidden">
