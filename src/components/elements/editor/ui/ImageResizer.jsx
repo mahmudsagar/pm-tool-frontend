@@ -6,6 +6,7 @@
  *
  */
 
+import { Button } from '@/components/ui/button';
 import {calculateZoomLevel} from '@lexical/utils';
 import {useRef} from 'react';
 
@@ -231,14 +232,14 @@ export default function ImageResizer({
   return (
     <div ref={controlWrapperRef}>
       {!showCaption && captionsEnabled && (
-        <button
+        <Button
           className="image-caption-button"
           ref={buttonRef}
           onClick={() => {
             setShowCaption(!showCaption);
           }}>
           Add Caption
-        </button>
+        </Button>
       )}
       <div
         className="image-resizer image-resizer-n"
