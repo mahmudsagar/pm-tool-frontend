@@ -1200,7 +1200,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   <i className="icon diagram-2" />
                   <span className="text">Excalidraw</span>
                 </DropdownMenuItem> */}
-                  <DropdownMenuItem
+                  {/* <DropdownMenuItem
                     onClick={() => {
                       showModal("Insert Table", (onClose) => (
                         <InsertTableDialog
@@ -1213,7 +1213,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   >
                     <Table size={16} />
                     <span className="ml-1">Table</span>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   {/* <DropdownMenuItem
                   onClick={() => {
                     openModal({
