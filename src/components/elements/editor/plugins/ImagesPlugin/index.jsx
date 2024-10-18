@@ -33,7 +33,6 @@ export function InsertImageUriDialogBody({ onClick }) {
   const [altText, setAltText] = useState('');
 
   const isDisabled = src === '';
-
   return (
     <>
       <Input
@@ -86,7 +85,7 @@ export function InsertImageUploadedDialogBody({ onClick }) {
     <>
       <Input
         label="Image Upload"
-        onChange={loadImage}
+        onChange={(e) => loadImage(e.target.files)}
         accept="image/*"
         type="file"
         data-test-id="image-modal-file-upload"

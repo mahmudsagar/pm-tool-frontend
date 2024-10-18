@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const Modal = ({ title, onClose, open, children, ...props }) => {
   const onOpenChange = (open) => {
@@ -7,7 +7,12 @@ const Modal = ({ title, onClose, open, children, ...props }) => {
     }
   };
   return <Dialog onOpenChange={onOpenChange} open={open} modal={true} {...props}>
-    {title && <h2 className="text-2xl font-bold">{title}</h2>}
+    <DialogHeader>
+      <DialogTitle className="text-2xl font-bold">{title}</DialogTitle>
+      <DialogDescription className="d-none">
+        
+      </DialogDescription>
+    </DialogHeader>
     <DialogContent className="w-auto">
       {children}
     </DialogContent>

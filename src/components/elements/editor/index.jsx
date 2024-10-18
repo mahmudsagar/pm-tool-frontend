@@ -150,7 +150,6 @@ export default function Editor() {
             <ComponentPickerMenuPlugin />
             <AutoEmbedPlugin />
             <HistoryPlugin />
-            <AutoFocusPlugin />
             <LexicalAutoLinkPlugin />
             <ImagesPlugin />
             <InlineImagePlugin />
