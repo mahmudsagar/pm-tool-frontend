@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
 import { useForm, Controller } from "react-hook-form";
 import useUserStore from "@/stores/useUserStore";
 import useTeamStore from "@/stores/useTeamStore";
 import useFolderStore from "@/stores/useFolderStore";
 import useGroupStore from "@/stores/useGroupStore";
-import { CheckIcon, ChevronsUpDown, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,21 +30,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from '@/components/ui/popover';
-import { 
-  Command, 
-  CommandEmpty, 
-  CommandGroup, 
-  CommandInput, 
-  CommandItem, 
-  CommandList 
-} from '@/components/ui/command';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const AddFileDialog = ({ id }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,8 +40,16 @@ const AddFileDialog = ({ id }) => {
 
   const { userData } = useUserStore(state => state);
   const { teamData } = useTeamStore(state => state);
-  const { addFile } = useFolderStore(state => state);
   const { getGroupId } = useGroupStore(state => state);  
+  const { addNewDocument, loading } = useFolderStore(state => state);
+
+  const frameworksList = [
+    { value: "react", label: "React" },
+    { value: "angular", label: "Angular"},
+    { value: "vue", label: "Vue"},
+    { value: "svelte", label: "Svelte"},
+    { value: "ember", label: "Ember"},
+  ];
 
   const form = useForm({
     defaultValues: {
@@ -79,6 +74,7 @@ const AddFileDialog = ({ id }) => {
 
   const onSubmit = (data) => {
     console.log("Form Data:", data);
+    // addNewDocument(data, id)
     setIsOpen(false);
     form.reset();
   };    
@@ -191,70 +187,16 @@ const AddFileDialog = ({ id }) => {
                 control={form.control}
                 name="shared_members"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col w-full">
+                  <FormItem className='w-full'>
                     <FormLabel>Shared Member</FormLabel>
-                    <Popover
-                      modal
-                      onOpenChange={(open) => {
-                        if (open) {
-                          setTimeout(() => {
-                            const input = document.querySelector("#command-input");
-                            if (input) input.focus();
-                          }, 0); // Ensure the input gets focused after the popover renders
-                        }
-                      }}
-                    >
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={true}
-                            className={cn(
-                              "justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? userData.find((user) => user._id === field.value)?.full_name
-                              : "Select a Member"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className="w-[320px] p-0"
-                        side="top"
-                        align="center"
-                      >
-                        <Command>
-                          <CommandInput placeholder="Search Member..."/>
-                          <CommandList>
-                            <CommandEmpty>No Member found.</CommandEmpty>
-                            <CommandGroup>
-                              {userData.map((user) => (
-                                <CommandItem
-                                  value={user._id}
-                                  key={user._id}
-                                  onSelect={() => {
-                                    form.setValue("shared_members", user._id);
-                                  }}
-                                >
-                                  <CheckIcon
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      user._id === field.value ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  {user.full_name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
+                    <MultiSelect
+                      options={frameworksList}
+                      onValueChange={(value) => field.onChange(value)}
+                      placeholder="Select frameworks"
+                      variant="inverted"
+                      animation={2}
+                      maxCount={3}
+                    />
                   </FormItem>
                 )}
               />
@@ -262,70 +204,16 @@ const AddFileDialog = ({ id }) => {
                 control={form.control}
                 name="shared_teams"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col w-full">
+                  <FormItem className='w-full'>
                     <FormLabel>Shared Team</FormLabel>
-                    <Popover
-                      modal
-                      onOpenChange={(open) => {
-                        if (open) {
-                          setTimeout(() => {
-                            const input = document.querySelector("#command-input");
-                            if (input) input.focus();
-                          }, 0); // Ensure the input gets focused after the popover renders
-                        }
-                      }}
-                    >
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={true}
-                            className={cn(
-                              "justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? teamData.find((team) => team._id === field.value)?.name
-                              : "Select a Team"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className="w-[320px] p-0"
-                        side="top"
-                        align="center"
-                      >
-                        <Command>
-                          <CommandInput placeholder="Search Team..."/>
-                          <CommandList>
-                            <CommandEmpty>No Team found.</CommandEmpty>
-                            <CommandGroup>
-                              {teamData.map((team) => (
-                                <CommandItem
-                                  value={team._id}
-                                  key={team._id}
-                                  onSelect={() => {
-                                    form.setValue("shared_teams", team._id);
-                                  }}
-                                >
-                                  <CheckIcon
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      team._id === field.value ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  {team.name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
+                    <MultiSelect
+                      options={frameworksList}
+                      onValueChange={(value) => field.onChange(value)}
+                      placeholder="Select frameworks"
+                      variant="inverted"
+                      animation={2}
+                      maxCount={3}
+                    />
                   </FormItem>
                 )}
               />
