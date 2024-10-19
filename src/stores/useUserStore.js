@@ -34,6 +34,17 @@ const useUserStore = createWithEqualityFn((set, get) => ({
     const data = get().userData;
     return data?.find((user) => user._id === userId) || null;
   },
+
+  // Format user data for dropdown or other use cases
+  formattedUserData: () => {
+    const userData = get().userData;
+    if (!userData) return [];
+
+    return userData.map((user) => ({
+      value: user._id,
+      label: user.full_name,
+    }));
+  },
 }));
 
 export default useUserStore;

@@ -33,8 +33,8 @@ import { MultiSelect } from "@/components/ui/multi-select";
 const AddFolderDialog = ({ spaceId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { addNewFolder, loading } = useFolderStore(state => state);
-  const { userData, fetchUserData } = useUserStore(state => state);
-  const { teamData, fetchTeamData } = useTeamStore(state => state);
+  const { formattedUserData, fetchUserData } = useUserStore(state => state);
+  const { formattedTeamData, fetchTeamData } = useTeamStore(state => state);
   
   const form = useForm({
     defaultValues: {
@@ -46,13 +46,6 @@ const AddFolderDialog = ({ spaceId }) => {
   });
   
   const { formState: { errors } } = form;
-  const frameworksList = [
-    { value: "react", label: "React" },
-    { value: "angular", label: "Angular"},
-    { value: "vue", label: "Vue"},
-    { value: "svelte", label: "Svelte"},
-    { value: "ember", label: "Ember"},
-  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -139,7 +132,7 @@ const AddFolderDialog = ({ spaceId }) => {
                   <FormItem className='w-full'>
                     <FormLabel>Shared Member</FormLabel>
                     <MultiSelect
-                      options={frameworksList}
+                      options={formattedUserData()}
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select frameworks"
                       variant="inverted"
@@ -156,7 +149,7 @@ const AddFolderDialog = ({ spaceId }) => {
                   <FormItem className='w-full'>
                     <FormLabel>Shared Team</FormLabel>
                     <MultiSelect
-                      options={frameworksList}
+                      options={formattedTeamData()}
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select frameworks"
                       variant="inverted"

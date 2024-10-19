@@ -37,32 +37,15 @@ const useTeamStore = createWithEqualityFn((set, get) => ({
     return data?.find((team) => team._id === teamId) || null;
   },
 
-  // Delete team
-  deleteTeam: async (id) => {
-    set((state) => ({
-      loading: { ...state.loading, delete: true },
-      error: { ...state.error, delete: null },
-    }));
-    try {
-      const response = await fetch(
-        `https://better-notion-api-server.onrender.com/v1/team/${id}`,
-        { method: "DELETE" }
-      );
-      if (!response.ok) {
-        throw new Error(`Failed to delete team`);
-      }
+  // Format user data for dropdown or other use cases
+  formattedTeamData: () => {
+    const userData = get().teamData;
+    if (!userData) return [];
 
-      // Update state
-      set((state) => ({
-        teamData: state.teamData?.filter((item) => item._id !== id),
-        loading: { ...state.loading, delete: false },
-      }));
-    } catch (error) {
-      set((state) => ({
-        error: { ...state.error, delete: error.message },
-        loading: { ...state.loading, delete: false },
-      }));
-    }
+    return userData.map((user) => ({
+      value: user._id,
+      label: user.name,
+    }));
   },
 }));
 

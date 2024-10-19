@@ -69,7 +69,7 @@ export const MultiSelect = React.forwardRef(
     },
     ref
   ) => {
-
+    console.log('options', options);
     const [selectedValues, setSelectedValues] = React.useState(defaultValue);
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
     const [isAnimating, setIsAnimating] = React.useState(false);
@@ -121,7 +121,7 @@ export const MultiSelect = React.forwardRef(
     return (
       <Popover
         open={isPopoverOpen}
-        onOpenChange={(open) => setIsPopoverOpen(open)}
+        onOpenChange={setIsPopoverOpen}
         modal={modalPopover}
       >
         <PopoverTrigger asChild>
@@ -209,7 +209,7 @@ export const MultiSelect = React.forwardRef(
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto p-0 z-50 pointer-events-auto"
+          className="w-auto p-0 z-50 pointer-events-none"
           align="start"
           onEscapeKeyDown={() => setIsPopoverOpen(false)}
         >
@@ -223,10 +223,7 @@ export const MultiSelect = React.forwardRef(
               <CommandGroup>
                 <CommandItem
                   key="all"
-                  onSelect={() => {
-                    toggleAll();
-                    setIsPopoverOpen(true); // Keep popover open
-                  }}
+                  onSelect={toggleAll}
                   className="cursor-pointer"
                 >
                   <div
@@ -246,10 +243,7 @@ export const MultiSelect = React.forwardRef(
                   return (
                     <CommandItem
                       key={option.value}
-                      onSelect={() => {
-                        toggleOption(option.value);
-                        setIsPopoverOpen(true); // Keep popover open
-                      }}
+                      onSelect={() => toggleOption(option.value)}
                       className="cursor-pointer"
                     >
                       <div
@@ -288,7 +282,7 @@ export const MultiSelect = React.forwardRef(
                     </>
                   )}
                   <CommandItem
-                    onSelect={() => setIsPopoverOpen(false)} // Close only on explicit close
+                    onSelect={() => setIsPopoverOpen(false)}
                     className="flex-1 justify-center cursor-pointer max-w-full"
                   >
                     Close
@@ -308,8 +302,6 @@ export const MultiSelect = React.forwardRef(
           />
         )}
       </Popover>
-
-
     );
   }
 );

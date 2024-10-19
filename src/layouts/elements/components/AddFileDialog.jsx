@@ -38,18 +38,10 @@ const AddFileDialog = ({ id }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFile, setIsFile] = useState('folder');
 
-  const { userData } = useUserStore(state => state);
-  const { teamData } = useTeamStore(state => state);
+  const { formattedUserData } = useUserStore(state => state);
+  const { formattedTeamData } = useTeamStore(state => state);
   const { getGroupId } = useGroupStore(state => state);  
   const { addNewDocument, loading } = useFolderStore(state => state);
-
-  const frameworksList = [
-    { value: "react", label: "React" },
-    { value: "angular", label: "Angular"},
-    { value: "vue", label: "Vue"},
-    { value: "svelte", label: "Svelte"},
-    { value: "ember", label: "Ember"},
-  ];
 
   const form = useForm({
     defaultValues: {
@@ -190,7 +182,7 @@ const AddFileDialog = ({ id }) => {
                   <FormItem className='w-full'>
                     <FormLabel>Shared Member</FormLabel>
                     <MultiSelect
-                      options={frameworksList}
+                      options={formattedUserData()}
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select frameworks"
                       variant="inverted"
@@ -207,7 +199,7 @@ const AddFileDialog = ({ id }) => {
                   <FormItem className='w-full'>
                     <FormLabel>Shared Team</FormLabel>
                     <MultiSelect
-                      options={frameworksList}
+                      options={formattedTeamData()}
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select frameworks"
                       variant="inverted"
