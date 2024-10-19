@@ -22,6 +22,7 @@ import {LayoutContainerNode} from './LayoutContainerNode';
 import {LayoutItemNode} from './LayoutItemNode';
 import {PageBreakNode} from './PageBreakNode';
 import {YouTubeNode} from './YouTubeNode';
+import { InlineImageNode } from './InlineImageNode/InlineImageNode';
 
 const PlaygroundNodes = [
   HeadingNode,
@@ -38,6 +39,7 @@ const PlaygroundNodes = [
   LinkNode,
   OverflowNode,
   ImageNode,
+  InlineImageNode,
   KeywordNode,
   HorizontalRuleNode,
   YouTubeNode,

@@ -36,6 +36,47 @@
   display: inline-block;
   pointer-events: none;
 }
+
+.editor-image{
+  cursor: default;
+  display: inline-block;
+  position: relative;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* .image-caption-container{
+  display: block;
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  width: 30%;
+  padding: 10px;
+  margin: 0 auto;
+ background-color: #fff;
+  border-radius: 5px;
+  min-width: 100px;
+  color: #fff;
+}
+
+ .editor-image .image-caption-button {
+  display: block;
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  width: 30%;
+  padding: 10px;
+  margin: 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.5);
+  min-width: 100px;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+} */
 @media (max-width: 1025px) {
   .ContentEditable__placeholder {
     left: 8px;

@@ -18,12 +18,10 @@ import {
   DROP_COMMAND,
 } from 'lexical';
 
-// import {
-//   $createImageNode,
-//   $isImageNode,
-//   ImageNode,
-// } from '../../nodes/ImageNode';
 import { Input } from '@/components/ui/input';
+import { DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { $createImageNode, $isImageNode, ImageNode } from '../../nodes/ImageNode';
 
 const getDOMSelection = (targetWindow) =>
   (targetWindow || window).getSelection();
@@ -35,7 +33,6 @@ export function InsertImageUriDialogBody({ onClick }) {
   const [altText, setAltText] = useState('');
 
   const isDisabled = src === '';
-
   return (
     <>
       <Input
@@ -45,14 +42,14 @@ export function InsertImageUriDialogBody({ onClick }) {
         value={src}
         data-test-id="image-modal-url-input"
       />
-      {/* <TextInput
+      <Input
         label="Alt Text"
         placeholder="Random unsplash image"
         onChange={setAltText}
         value={altText}
         data-test-id="image-modal-alt-text-input"
-      /> */}
-      {/* <DialogActions>
+      /> 
+       <DialogFooter>
         <Button
           data-test-id="image-modal-confirm-btn"
           disabled={isDisabled}
@@ -60,7 +57,7 @@ export function InsertImageUriDialogBody({ onClick }) {
         >
           Confirm
         </Button>
-      </DialogActions> */}
+      </DialogFooter>
     </>
   );
 }
@@ -86,21 +83,21 @@ export function InsertImageUploadedDialogBody({ onClick }) {
 
   return (
     <>
-      jh,v,jh
-      {/* <FileInput
+      <Input
         label="Image Upload"
-        onChange={loadImage}
+        onChange={(e) => loadImage(e.target.files)}
         accept="image/*"
+        type="file"
         data-test-id="image-modal-file-upload"
       />
-      <TextInput
+      <Input
         label="Alt Text"
         placeholder="Descriptive alternative text"
         onChange={setAltText}
         value={altText}
         data-test-id="image-modal-alt-text-input"
-      /> */}
-      {/* <DialogActions>
+      />
+      <DialogFooter>
         <Button
           data-test-id="image-modal-file-upload-btn"
           disabled={isDisabled}
@@ -108,7 +105,7 @@ export function InsertImageUploadedDialogBody({ onClick }) {
         >
           Confirm
         </Button>
-      </DialogActions> */}
+      </DialogFooter>
     </>
   );
 }
@@ -135,8 +132,8 @@ export function InsertImageDialog({ activeEditor, onClose }) {
 
   return (
     <>
-      {/* {!mode && (
-        <DialogButtonsList>
+      {!mode && (
+        <DialogFooter>
           <Button
             data-test-id="image-modal-option-sample"
             onClick={() =>
@@ -168,8 +165,8 @@ export function InsertImageDialog({ activeEditor, onClose }) {
           >
             File
           </Button>
-        </DialogButtonsList>
-      )} */}
+        </DialogFooter>
+      )}
       {mode === 'url' && <InsertImageUriDialogBody onClick={onClick} />}
       {mode === 'file' && <InsertImageUploadedDialogBody onClick={onClick} />}
     </>

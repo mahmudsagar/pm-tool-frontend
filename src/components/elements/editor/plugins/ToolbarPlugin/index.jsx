@@ -73,8 +73,6 @@ import { INSERT_IMAGE_COMMAND, InsertImageDialog } from "../ImagesPlugin";
 import { InsertTableDialog } from "../TablePlugin";
 import FontSize from "./fontSize";
 import { isMacOs } from "environment";
-import { useModal } from "@/components/elements/modal/useModal";
-import Modal from "@/components/elements/modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,6 +95,7 @@ import {
   CheckSquare,
   ChevronDown,
   Code,
+  Columns,
   FoldVertical,
   Heading1,
   Heading2,
@@ -130,6 +129,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import ColorPicker from "../../ui/colorpicker/ColorPicker";
+import { EmbedConfigs } from "../AutoEmbedPlugin";
+import { INSERT_EMBED_COMMAND } from "@lexical/react/LexicalAutoEmbedPlugin";
+import useModal from "@/components/elements/modal/useModal";
+import { InsertInlineImageDialog } from "../InlineImagePlugin";
+import InsertLayoutDialog from "../LayoutPlugin/InsertLayoutDialog";
 const commonToolbarItemProps = {
   variant: "ghost",
   className: "gap-1 px-1.5 truncate",
@@ -444,9 +448,8 @@ function FontDropDown({ editor, value, style, disabled = false }) {
           : FONT_SIZE_OPTIONS
         ).map(([option, text]) => (
           <DropdownMenuItem
-            className={`item ${dropDownActiveClass(value === option)} ${
-              style === "font-size" ? "fontsize-item" : ""
-            }`}
+            className={`item ${dropDownActiveClass(value === option)} ${style === "font-size" ? "fontsize-item" : ""
+              }`}
             onClick={() => handleClick(option)}
             key={option}
           >
@@ -480,7 +483,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "left");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignLeft size={16} />
           <span>Left Align</span>
@@ -489,7 +492,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "center");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignCenter size={16} />
           <span>Center Align</span>
@@ -498,7 +501,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "right");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignRight size={16} />
           <span>Right Align</span>
@@ -507,7 +510,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "justify");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignJustify size={16} />
           <span>Justify Align</span>
@@ -516,7 +519,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "start");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignStartHorizontal size={16} />
           <span>Start Align</span>
@@ -525,7 +528,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, "end");
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <AlignEndHorizontal size={16} />
           <span>End Align</span>
@@ -535,7 +538,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <Outdent size={16} />
           <span>Outdent</span>
@@ -544,7 +547,7 @@ function ElementFormatDropdown({ editor, value, isRTL, disabled = false }) {
           onClick={() => {
             editor.dispatchCommand(INDENT_CONTENT_COMMAND, undefined);
           }}
-          className="gap-1"
+          className="gap-1 cursor-pointer"
         >
           <Indent size={16} />
           <span>Indent</span>
@@ -575,7 +578,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
   const [isCode, setIsCode] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
-  const { openModal, closeModal } = useModal();
+  const [modal, showModal] = useModal();
   const [isRTL, setIsRTL] = useState(false);
   const [codeLanguage, setCodeLanguage] = useState("");
   const [isEditable, setIsEditable] = useState(() => editor.isEditable());
@@ -600,9 +603,9 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
         anchorNode.getKey() === "root"
           ? anchorNode
           : $findMatchingParent(anchorNode, (e) => {
-              const parent = e.getParent();
-              return parent !== null && $isRootOrShadowRoot(parent);
-            });
+            const parent = e.getParent();
+            return parent !== null && $isRootOrShadowRoot(parent);
+          });
 
       if (element === null) {
         element = anchorNode.getTopLevelElementOrThrow();
@@ -689,8 +692,8 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
         $isElementNode(matchingParent)
           ? matchingParent.getFormatType()
           : $isElementNode(node)
-          ? node.getFormatType()
-          : parent?.getFormatType() || "left"
+            ? node.getFormatType()
+            : parent?.getFormatType() || "left"
       );
     }
     if ($isRangeSelection(selection) || $isTableSelection(selection)) {
@@ -883,11 +886,8 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
     },
     [activeEditor, selectedElementKey]
   );
-  const insertGifOnClick = (payload) => {
-    activeEditor.dispatchCommand(INSERT_IMAGE_COMMAND, payload);
-  };
 
-  const canViewerSeeInsertDropdown = false;
+  const canViewerSeeInsertDropdown = !isImageCaption;
   const canViewerSeeInsertCodeButton = !isImageCaption;
 
   return (
@@ -973,9 +973,8 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
             title={isMacOs ? "Bold (⌘B)" : "Bold (Ctrl+B)"}
             variant="ghost"
             size="icon"
-            aria-label={`Format text as bold. Shortcut: ${
-              isMacOs ? "⌘B" : "Ctrl+B"
-            }`}
+            aria-label={`Format text as bold. Shortcut: ${isMacOs ? "⌘B" : "Ctrl+B"
+              }`}
           >
             <Bold size={18} opacity={isBold ? 1 : 0.6} />
           </Button>
@@ -988,9 +987,8 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
             title={isMacOs ? "Italic (⌘I)" : "Italic (Ctrl+I)"}
             variant="ghost"
             size="icon"
-            aria-label={`Format text as italics. Shortcut: ${
-              isMacOs ? "⌘I" : "Ctrl+I"
-            }`}
+            aria-label={`Format text as italics. Shortcut: ${isMacOs ? "⌘I" : "Ctrl+I"
+              }`}
           >
             <Italic size={18} opacity={isItalic ? 1 : 0.6} />
           </Button>
@@ -1003,9 +1001,8 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
             title={isMacOs ? "Underline (⌘U)" : "Underline (Ctrl+U)"}
             variant="ghost"
             size="icon"
-            aria-label={`Format text to underlined. Shortcut: ${
-              isMacOs ? "⌘U" : "Ctrl+U"
-            }`}
+            aria-label={`Format text to underlined. Shortcut: ${isMacOs ? "⌘U" : "Ctrl+U"
+              }`}
           >
             <Underline size={18} opacity={isUnderline ? 1 : 0.6} />
           </Button>
@@ -1105,7 +1102,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={clearFormatting}
-                className="item"
+                className="item cursor-pointer"
                 title="Clear text formatting"
                 aria-label="Clear all text formatting"
               >
@@ -1152,15 +1149,12 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                 </DropdownMenuItem> */}
                   <DropdownMenuItem
                     onClick={() => {
-                      openModal({
-                        title: "Insert Image",
-                        content: (
-                          <InsertImageDialog
-                            activeEditor={activeEditor}
-                            onClose={closeModal}
-                          />
-                        ),
-                      });
+                      showModal("Insert Image", (onClose) => (
+                        <InsertImageDialog
+                          activeEditor={activeEditor}
+                          onClose={onClose}
+                        />
+                      ), false)
                     }}
                     className="cursor-pointer"
                   >
@@ -1169,22 +1163,21 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   </DropdownMenuItem>
                   {/* <DropdownMenuItem
                     onClick={() => {
-                      openModal({
-                        title: "Insert Inline Image",
-                        content: (
+                      showModal("Insert Inline Image",
+                        (onClose) => (
                           <InsertInlineImageDialog
                             activeEditor={activeEditor}
-                            onClose={closeModal}
+                            onClose={onClose}
                           />
                         ),
-                      });
+                      );
                     }}
                     className="cursor-pointer"
                   >
                     <Image size={16} />
                     <span className="ml-1">Inline Image</span>
                   </DropdownMenuItem> */}
-                  <DropdownMenuItem
+                  {/* <DropdownMenuItem
                     onClick={() =>
                       insertGifOnClick({
                         altText: "Cat typing on a laptop",
@@ -1195,7 +1188,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   >
                     <ImagePlay size={16} />
                     <span className="ml-1">GIF</span>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   {/* <DropdownMenuItem
                   onClick={() => {
                     activeEditor.dispatchCommand(
@@ -1207,23 +1200,20 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   <i className="icon diagram-2" />
                   <span className="text">Excalidraw</span>
                 </DropdownMenuItem> */}
-                  <DropdownMenuItem
+                  {/* <DropdownMenuItem
                     onClick={() => {
-                      openModal({
-                        title: "Insert Table",
-                        content: (
-                          <InsertTableDialog
-                            activeEditor={activeEditor}
-                            onClose={closeModal}
-                          />
-                        ),
-                      });
+                      showModal("Insert Table", (onClose) => (
+                        <InsertTableDialog
+                          activeEditor={activeEditor}
+                          onClose={onClose}
+                        />
+                      ), false)
                     }}
                     className="cursor-pointer"
                   >
                     <Table size={16} />
                     <span className="ml-1">Table</span>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   {/* <DropdownMenuItem
                   onClick={() => {
                     openModal({
@@ -1238,19 +1228,17 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   <i className="icon poll" />
                   <span className="text">Poll</span>
                 </DropdownMenuItem> */}
-                  {/* <DropdownMenuItem
-                  onClick={() => {
-                    openModal({
-                      title: 'Insert Columns Layout', content: <InsertLayoutDialog
+                  <DropdownMenuItem
+                    onClick={() => {
+                      showModal('Insert Columns Layout', (onClose) => (<InsertLayoutDialog
                         activeEditor={activeEditor}
-                        onClose={closeModal}
-                      />
-                    });
-                  }}
-                  className="cursor-pointer">
-                  <i className="icon columns" />
-                  <span className="text">Columns Layout</span>
-                </DropdownMenuItem> */}
+                        onClose={onClose}
+                      />), false);
+                    }}
+                    className="cursor-pointer">
+                   <Columns size={16} />
+                    <span className="ml-1">Columns Layout</span>
+                  </DropdownMenuItem>
 
                   {/* <DropdownMenuItem
                   onClick={() => {
@@ -1288,20 +1276,20 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   <i className="icon caret-right" />
                   <span className="text">Collapsible container</span>
                 </DropdownMenuItem> */}
-                  {/* {EmbedConfigs.map((embedConfig) => (
-                  <DropdownMenuItem
-                    key={embedConfig.type}
-                    onClick={() => {
-                      activeEditor.dispatchCommand(
-                        INSERT_EMBED_COMMAND,
-                        embedConfig.type,
-                      );
-                    }}
-                    className="cursor-pointer">
-                    {embedConfig.icon}
-                    <span className="text">{embedConfig.contentName}</span>
-                  </DropdownMenuItem>
-                ))} */}
+                  {EmbedConfigs.map((embedConfig) => (
+                    <DropdownMenuItem
+                      key={embedConfig.type}
+                      onClick={() => {
+                        activeEditor.dispatchCommand(
+                          INSERT_EMBED_COMMAND,
+                          embedConfig.type,
+                        );
+                      }}
+                      className="cursor-pointer">
+                      {embedConfig.icon}
+                      <span className="text ml-1">{embedConfig.contentName}</span>
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
@@ -1315,6 +1303,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
         editor={activeEditor}
         isRTL={isRTL}
       />
+      {modal}
     </div>
   );
 }

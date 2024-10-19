@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import Modal from '../../modal';
 import { DatePicker } from './datepicker';
 import { DatePickerWithRange } from './daterangepicker';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const InputNumber = ({ ...props }) => {
   return <Input type="number" {...props} />;
@@ -20,7 +21,7 @@ const SelectField = ({ options, ...props }) => {
     <SelectContent>
       <SelectGroup>
         {options?.map((option, index) => (
-          <SelectItem key={index} value={option}>{option}</SelectItem>
+          <SelectItem key={index} value={option?.value}>{option?.label}</SelectItem>
         ))}
       </SelectGroup>
     </SelectContent>
@@ -32,6 +33,7 @@ const fieldTypes = [
   { type: 'input', label: 'Input', component: Input, hasOptions: false },
   { type: 'number', label: 'Number', component: InputNumber, hasOptions: false },
   { type: 'select', label: 'Select', component: SelectField, hasOptions: true },
+  { type: 'multi-select', label: 'Multi Select', component: MultiSelect, hasOptions: true },
   { type: 'date', label: 'Date', component: DatePicker, hasOptions: false },
   { type: 'daterange', label: 'Date Range', component: DatePickerWithRange, hasOptions: false },
 ];
@@ -56,7 +58,11 @@ const Field = ({ field, onChange }) => {
         setOpen(state);
         if (!state) {
           setShowFieldList(false);
-          onChange({ ...field, label, actionType, initialized: true, options: options.filter(Boolean), ...(changedField ? { ...changedField } : {}) });
+          onChange({
+            ...field, label, actionType, initialized: true,
+            options: options.filter(Boolean).map((option) => ({ value: option, label: option })),
+            ...(changedField ? { ...changedField } : {})
+          });
         }
       }}>
         <DropdownMenuTrigger asChild>

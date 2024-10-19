@@ -1,12 +1,25 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useModal } from "./useModal";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
+const Modal = ({ title, onClose, open, children, closeOnClickOutside, ...props }) => {
+  const onOpenChange = (open) => {
+    if (!open && onClose) {
+      onClose();
+    }
+  };
 
-const Modal = ({ ...props }) => {
-  const { isOpen, content, closeModal } = useModal();
-  return <Dialog onOpenChange={closeModal} open={isOpen} modal={true} defaultOpen={isOpen} {...props}>
-    <DialogContent className="w-auto">
-      {content}
+  return <Dialog onOpenChange={onOpenChange} open={open} {...props}>
+    <DialogContent className="w-auto" onInteractOutside={(e) => {
+      if (!closeOnClickOutside) {
+        e.preventDefault();
+      }
+    }}>
+      <DialogHeader>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogDescription className="d-none">
+
+        </DialogDescription>
+      </DialogHeader>
+      {children}
     </DialogContent>
   </Dialog>
 }
