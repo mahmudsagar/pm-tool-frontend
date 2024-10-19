@@ -8,6 +8,9 @@ import { univerPlugin } from "@univerjs/vite-plugin";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    "process.env.IS_PREACT": JSON.stringify("true"),
+  },
   plugins: [
     react(),
     alias({
