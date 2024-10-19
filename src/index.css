@@ -126,3 +126,10 @@ body,
 .better-scrollbar::-webkit-scrollbar-thumb:active {
   background: rgb(104, 104, 104);
 }
+
+
+
+/* Whiteboard styles */
+.excalidraw .HelpDialog__header {
+  @apply !hidden;
+}
