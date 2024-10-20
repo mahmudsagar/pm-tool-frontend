@@ -1,5 +1,3 @@
-// src/components/multi-select.tsx
-
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import {
@@ -71,15 +69,12 @@ export const MultiSelect = React.forwardRef(
     },
     ref
   ) => {
-    console.log('options', options);
-    const [selectedValues, setSelectedValues] =
-      React.useState(defaultValue);
+
+    const [selectedValues, setSelectedValues] = React.useState(defaultValue);
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
     const [isAnimating, setIsAnimating] = React.useState(false);
+    const handleInputKeyDown = (event) => {
 
-    const handleInputKeyDown = (
-      event
-    ) => {
       if (event.key === "Enter") {
         setIsPopoverOpen(true);
       } else if (event.key === "Backspace" && !event.currentTarget.value) {
@@ -214,7 +209,7 @@ export const MultiSelect = React.forwardRef(
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto p-0"
+          className="w-auto p-0 z-50 pointer-events-none"
           align="start"
           onEscapeKeyDown={() => setIsPopoverOpen(false)}
         >
