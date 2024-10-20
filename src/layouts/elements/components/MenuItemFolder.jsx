@@ -1,22 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "@/BetterRouter/Link";
 import { useSidebar } from "@/stores/store";
-import { ChevronDownIcon, File } from "lucide-react";
+import useDocumentStore from "@/stores/useDocumentStore";
+import { 
+  ChevronDownIcon, 
+  FileText, 
+  CircuitBoard 
+} from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "../subnav-accordion";
+import { FileSpreadsheet } from 'lucide-react';
 import AddFileDialog from "./AddFileDialog";
 import FileDropdownMenu from "./FileDropdownMenu";
+import folderIcon from '@/assets/images/folder.svg';
 
 const MenuItemFolder = ({ folder, className }) => {  
   const { isOpen } = useSidebar();
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
+  const { getDocumentByIds } = useDocumentStore(state => state);  
+
+  const documents = getDocumentByIds('66cda5dac6886719e3345c19', folder._id) || [];
 
   useEffect(() => {
     if (isOpen) {
@@ -27,18 +37,36 @@ const MenuItemFolder = ({ folder, className }) => {
     }
   }, [isOpen]);
 
-  const handleDropdownToggle = (id) => {
+  const handleDropdownToggle = (id, isOpenState = null) => {
     setDropdownOpenStates((prevState) => ({
       ...prevState,
-      [id]: !prevState[id],
+      [id]: isOpenState !== null ? isOpenState : !prevState[id],
     }));
+  };  
+
+  const handleFolderClick = () => {
+    setOpenItem(openItem === folder._id ? "" : folder._id);
   };
 
-  const handleFolderClick = (e) => {
-    e.preventDefault(); 
+  const handleDocumentIcons = (type) => {
+    switch (type) {
+      case 'sheet':
+        return <FileSpreadsheet size={20} />;
+      break;
+      
+      case 'doc':
+        return <FileText size={20} />;
+      break;
 
-    setOpenItem((prev) => (prev === folder._id ? "" : folder._id));
-  };
+      case 'wb':
+        return <CircuitBoard size={20} />;
+      break;
+
+      default:
+        return <FileSpreadsheet size={20} />;
+      break;
+    }
+  }
 
   return (
     <Accordion
@@ -56,7 +84,12 @@ const MenuItemFolder = ({ folder, className }) => {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center">
-            <File size={18} className={cn('inline group-hover:hidden group-data-[state=open]:hidden')} />
+            <img
+              src={folderIcon}
+              alt="Folder Icon"
+              width={18}
+              className={cn('inline group-hover:hidden group-data-[state=open]:hidden')}
+            />
             <ChevronDownIcon
               strokeWidth={2.5}
               size={20}
@@ -75,7 +108,7 @@ const MenuItemFolder = ({ folder, className }) => {
           </div>
           <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folder._id || dropdownOpenStates[folder._id] ? 'opacity-100' : ''}`}>
             <div className="flex gap-1">
-              <AddFileDialog folderId={folder._id} />
+              <AddFileDialog id={folder._id} />
               <FileDropdownMenu
                 isOpen={dropdownOpenStates}
                 onToggle={(id) => handleDropdownToggle(id)}
@@ -85,7 +118,21 @@ const MenuItemFolder = ({ folder, className }) => {
           </div>
         </AccordionTrigger>
         <AccordionContent className="space-y-2 pl-6 py-3">
-          <p className="text-center">Empty</p>
+          { Array.isArray(documents) && documents.length > 0 ? 
+            documents.map( document => 
+              <Link 
+                key={document._id} 
+                to={`/single/${document.pageMeta._id}`}
+                className="ml-5 flex items-center gap-2"
+              >
+                {handleDocumentIcons(document.pageMeta.page_types)}
+                <span>{`${document.pageMeta.title}.${document.pageMeta.page_types}`}</span>
+              </Link>
+            )
+          : (<>
+            <p className="text-center">{documents}</p>
+          </>) 
+          }
         </AccordionContent>
       </AccordionItem>
     </Accordion>
