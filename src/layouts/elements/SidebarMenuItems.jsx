@@ -1,13 +1,13 @@
 import { Separator } from "@/components/ui/separator";
-import useFolderStore from "@/stores/folderStore";
-import MenuItemSkeleton from "./components/MenuItemSkeleton";
+import useSpaceStore from "@/stores/useSpaceStore";
+import MenuItemLoading from "./components/MenuItemLoading";
 import MenuItemSpace from "./components/MenuItemSpace";
 
 const SidebarMenuItems = ({ className, setOpen }) => {
-  const { spaceData, loading } = useFolderStore(state => state);
+  const { spaceData, loading } = useSpaceStore(state => state);
 
   if (loading.space) {
-    return <MenuItemSkeleton />;
+    return <MenuItemLoading text='Loading' flex='col' />;
   }
 
   return (

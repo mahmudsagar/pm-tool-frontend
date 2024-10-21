@@ -2,20 +2,30 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { MoreVertical } from "lucide-react";
 import { SidebarMenu } from "./SidebarMenu";
-import { NavItems } from "./constants/side-nav";
 import { useSidebar } from "@/stores/store";
+import useGroupStore from "@/stores/useGroupStore";
+import useSpaceStore from "@/stores/useSpaceStore";
+import useFolderStore from "@/stores/useFolderStore";
+import useDocumentStore from "@/stores/useDocumentStore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
-import useFolderStore from "@/stores/folderStore";
 
 
 export default function Sidebar({ className }) {
   const { isOpen, toggle } = useSidebar();
   const [status, setStatus] = useState(false);
-  const { fetchFolderData, fetchSpaceData } = useFolderStore(state => state);
-
+  const { fetchSpaceData } = useSpaceStore(state => state);
+  const { fetchGroupData } = useGroupStore(state => state);
+  const { fetchFolderData } = useFolderStore(state => state);
+  const { fetchDocumentData } = useDocumentStore(state => state);
+  
   const handleToggle = () => {
     setStatus(true);
     toggle();
@@ -23,9 +33,18 @@ export default function Sidebar({ className }) {
   };
 
   useEffect(() => {
-    fetchSpaceData();
-    fetchFolderData();
-  }, []);
+    const fetchData = async () => {
+      try {
+        await fetchSpaceData();
+        
+        await Promise.all([fetchGroupData(), fetchFolderData(), fetchDocumentData()]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [fetchSpaceData, fetchGroupData, fetchFolderData, fetchDocumentData]);
 
   return (
     <nav
@@ -36,23 +55,14 @@ export default function Sidebar({ className }) {
         className
       )}
     >
-      {/* <ArrowLeft
-        className={cn(
-          "absolute -right-3 top-20 cursor-pointer rounded-full border bg-background text-3xl text-foreground",
-          !isOpen && "rotate-180"
-        )}
-        onClick={handleToggle}
-      /> */}
       <div className="py-4 h-full">
         <div className="px-4 h-full flex flex-col justify-between">
           <div className="font-inter h-5/6">
             <SidebarMenu
               className="h-full text-background opacity-0 transition-all duration-300 group-hover:z-50 group-hover:ml-4 group-hover:rounded group-hover:bg-foreground group-hover:p-2 group-hover:opacity-100"
-              items={NavItems}
             />
           </div>
           <div className="border-t pt-2">
-            {/* <Separator className="my-4" /> */}
             <div className="flex justify-between">
               <div className="flex gap-1.5">
                 <div className="w-12 flex flex-row-reverse justify-end items-center relative transform translate-z-0">
