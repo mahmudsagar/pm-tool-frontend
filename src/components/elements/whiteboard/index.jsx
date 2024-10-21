@@ -12,8 +12,6 @@ import { StickyNote } from "lucide-react";
 
 import useSyncStore from '@/stores/useSyncStore';
 import { useTheme } from "@/components/theme-provider";
-
-import FooterMenu from "./footer-menu";
 // import CustomLibrary from "./custom-library";
 
 import { STICKY_NOTE } from './constants';
@@ -138,9 +136,6 @@ export default function ExcalidrawRender({ viewId }) {
           </MainMenu.Item>
         </MainMenu>
         {/* <CustomLibrary excalidrawAPI={excalidrawAPI} /> */}
-        <Footer>
-          <FooterMenu wrapperRef={wrapperRef} />
-        </Footer>
       </Excalidraw>
       {/* json data view */}
       {/* <pre className="text-start text-xs overflow-y-scroll h-screen p-4 bg-green-200">
