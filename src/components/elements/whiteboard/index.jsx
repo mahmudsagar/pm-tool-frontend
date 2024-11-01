@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import {
   Excalidraw,
   MainMenu,
-  Footer,
   convertToExcalidrawElements,
   getNonDeletedElements,
   getSceneVersion,

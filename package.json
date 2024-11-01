@@ -12,7 +12,7 @@
     "analyze": "npx vite-bundle-visualizer"
   },
   "dependencies": {
-    "@betternotion/excalidraw": "^0.1.1",
+    "@betternotion/excalidraw": "^1.0.0-ae0eea1e",
     "@excalidraw/excalidraw": "^0.17.6",
     "@fontsource/inter": "^5.0.18",
     "@hookform/resolvers": "^3.9.0",
