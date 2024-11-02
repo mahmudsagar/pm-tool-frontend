@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Sidebar, convertToExcalidrawElements, exportToBlob, exportToSvg } from '@excalidraw/excalidraw';
+import { Sidebar, convertToExcalidrawElements, exportToBlob, exportToSvg } from '@betternotion/excalidraw';
 
 import { Button } from '@/components/ui/button';
 import { STICKY_NOTE } from './constants';

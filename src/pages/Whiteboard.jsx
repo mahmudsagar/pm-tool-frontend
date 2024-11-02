@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 
 import ExcalidrawRender from "@/components/elements/whiteboard";
+import "@betternotion/excalidraw/index.css";
 
 export default function Whiteboard() {
   let { viewId } = useParams();
