@@ -13,8 +13,8 @@ import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { HorizontalRulePlugin } from '@lexical/react/LexicalHorizontalRulePlugin';
 import { ClickableLinkPlugin } from '@lexical/react/LexicalClickableLinkPlugin';
 import { useLexicalEditable } from '@lexical/react/useLexicalEditable';
-import {CheckListPlugin} from '@lexical/react/LexicalCheckListPlugin';
-import {ListPlugin} from '@lexical/react/LexicalListPlugin';
+import { CheckListPlugin } from '@lexical/react/LexicalCheckListPlugin';
+import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import ToolbarPlugin from './plugins/ToolbarPlugin/index';
 import './style.scss';
 import DraggableBlockPlugin from './plugins/DraggableBlockPlugin';
@@ -38,12 +38,13 @@ import ImagesPlugin from './plugins/ImagesPlugin';
 import InlineImagePlugin from './plugins/InlineImagePlugin';
 import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
+import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 
 const placeholder = 'Enter some rich text...';
 
 
 
-export default function Editor() {
+export default function Editor({ onChange }) {
 
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState(null);
@@ -152,6 +153,7 @@ export default function Editor() {
         <ClickableLinkPlugin disabled={isEditable} />
         <HorizontalRulePlugin />
         <LayoutPlugin />
+        <OnChangePlugin onChange={onChange} />
         <>
           {floatingAnchorElem && !isSmallWidthViewport && (
             <>
