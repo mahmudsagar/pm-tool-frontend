@@ -39,7 +39,7 @@ const useDocumentStore = createWithEqualityFn((set, get) => ({
     const filteredDocuments = data.filter(
       (document) =>
         document.user_id === user_id &&
-        document.pageMeta.folder_id === folder_id
+        document.pageMeta?.folder_id === folder_id
     );
 
     if (filteredDocuments.length === 0) return "Empty";

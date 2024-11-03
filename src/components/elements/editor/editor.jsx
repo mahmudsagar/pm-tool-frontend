@@ -153,7 +153,13 @@ export default function Editor({ onChange }) {
         <ClickableLinkPlugin disabled={isEditable} />
         <HorizontalRulePlugin />
         <LayoutPlugin />
-        <OnChangePlugin onChange={onChange} />
+        <OnChangePlugin onChange={editorState => {
+          editorState.read(() => {
+            // write to database, local storage, etc.
+            const value = JSON.stringify(editorState); // or JSON.stringify(editorState.toJSON())
+            onChange(value);
+          });
+        }} />
         <>
           {floatingAnchorElem && !isSmallWidthViewport && (
             <>
