@@ -103,7 +103,7 @@ const MenuItemFolder = ({ folder, className }) => {
               className={cn('absolute left-10 text-sm duration-200', !isOpen && className)}
               onClick={handleFolderClick}
             >
-              {folder.name}
+              {folder.name ? folder.name : 'Untitle'}
             </Link>
           </div>
           <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folder._id || dropdownOpenStates[folder._id] ? 'opacity-100' : ''}`}>

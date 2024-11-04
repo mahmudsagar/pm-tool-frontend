@@ -1,21 +1,21 @@
 import { Separator } from "@/components/ui/separator";
-import useSpaceStore from "@/stores/useSpaceStore";
+import useFileManagerStore from "@/stores/useFileManagerStore";
 import MenuItemLoading from "./components/MenuItemLoading";
 import MenuItemSpace from "./components/MenuItemSpace";
 
 const SidebarMenuItems = ({ className, setOpen }) => {
-  const { spaceData, loading } = useSpaceStore(state => state);
+  const { spaces, loading } = useFileManagerStore(state => state);  
 
-  if (loading.space) {
+  if (loading) {
     return <MenuItemLoading text='Loading' flex='col' />;
   }
 
   return (
     <>
-      {!loading.space && spaceData?.map((space, index) => (
+      {!loading && spaces?.map((space, index) => (
         <div key={index} className="block mb-5">
           <MenuItemSpace space={space} className={className} />
-          {index !== spaceData.length - 1 && <Separator className="my-4" />}
+          {index !== spaces.length - 1 && <Separator className="my-4" />}
         </div>
       ))}
     </>
