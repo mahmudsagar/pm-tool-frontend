@@ -1,0 +1,1 @@
+export const baseUrl = import.meta.env.BN_BASE_URL;
