@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { useLocation, useOutletContext, useParams } from 'react-router-dom';
 import { baseUrl } from '@/utils/constants';
 import { sanitize } from '@/utils/helper';
+import Spinner from '../spinner';
 const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
@@ -51,17 +52,16 @@ export const Document = () => {
       })
     }, 2000)
   }
-  if (loading) {
-    return <div>Loading...</div>
-  }
 
-  if (!data) {
+  if (!loading && !data) {
     return <div>Not found</div>
   }
-  console.log('data', data)
-  return <div className='lexical-editor'>
-    <LexicalComposer initialConfig={editorConfig}>
-      <Editor onChange={onChange} content={data.content} {...sanitize(pageMeta)} />
-    </LexicalComposer>
+  return <div className='lexical-editor relative h-full'>
+    {loading ?
+      <Spinner />
+      :
+      <LexicalComposer initialConfig={editorConfig}>
+        <Editor onChange={onChange} content={data.content} {...sanitize(pageMeta)} />
+      </LexicalComposer>}
   </div>
 }

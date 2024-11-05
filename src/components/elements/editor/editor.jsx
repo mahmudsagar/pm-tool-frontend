@@ -56,6 +56,7 @@ export default function Editor({ title, content, onChange }) {
 
   const [currentTitle, setCurrentTitle] = useState(title);
   const [currentEditorState, setCurrentEditorState] = useState(content);
+  const [currentCustomFields, setCurrentCustomFields] = useState([]);
 
   const onRef = (_floatingAnchorElem) => {
     if (_floatingAnchorElem !== null) {
@@ -75,8 +76,8 @@ export default function Editor({ title, content, onChange }) {
   useEffect(() => {
     if (!onChange) return;
 
-    onChange({ title: currentTitle, content: currentEditorState });
-  }, [currentTitle, currentEditorState, onChange]);
+    onChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields });
+  }, [currentTitle, currentEditorState, currentCustomFields, onChange]);
 
   useEffect(() => {
     const updateViewPortWidth = () => {
@@ -137,7 +138,7 @@ export default function Editor({ title, content, onChange }) {
             {title || "Document title"}
           </h1>
         </div>
-        <DynamicInput />
+        <DynamicInput onChange={setCurrentCustomFields} />
 
       </div>
       <Separator />
