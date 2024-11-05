@@ -3,8 +3,8 @@ import useFileManagerStore from "@/stores/useFileManagerStore";
 import MenuItemLoading from "./components/MenuItemLoading";
 import MenuItemSpace from "./components/MenuItemSpace";
 
-const SidebarMenuItems = ({ className, setOpen }) => {
-  const { spaces, loading } = useFileManagerStore(state => state);  
+const SidebarMenuItems = ({ className, setOpen, loading }) => {
+  const { spaces } = useFileManagerStore(state => state);  
 
   if (loading) {
     return <MenuItemLoading text='Loading' flex='col' />;

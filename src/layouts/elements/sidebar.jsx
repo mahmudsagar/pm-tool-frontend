@@ -3,10 +3,7 @@ import { cn } from "@/lib/utils";
 import { MoreVertical } from "lucide-react";
 import { SidebarMenu } from "./SidebarMenu";
 import { useSidebar } from "@/stores/store";
-import useGroupStore from "@/stores/useGroupStore";
-import useFolderStore from "@/stores/useFolderStore";
-import useDocumentStore from "@/stores/useDocumentStore";
-import useFileManagerStore from "@/stores/useFileManagerStore";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   DropdownMenu, 
@@ -20,42 +17,13 @@ import Link from "@/BetterRouter/Link";
 
 export default function Sidebar({ className }) {
   const { isOpen, toggle } = useSidebar();
-  const [status, setStatus] = useState(false);
-  const { fetchGroupData } = useGroupStore(state => state);
-  const { fetchFolderData } = useFolderStore(state => state);
-  const { fetchDocumentData } = useDocumentStore(state => state);
-  const { fetchSpace } = useFileManagerStore(state => state);
+  const [status, setStatus] = useState(false);  
   
   const handleToggle = () => {
     setStatus(true);
     toggle();
     setTimeout(() => setStatus(false), 500);
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await Promise.all([fetchGroupData(), fetchFolderData(), fetchDocumentData()]);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, [fetchGroupData, fetchFolderData, fetchDocumentData]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await fetchSpace();        
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-      }
-    };
-
-    fetchData();
-  }, [fetchSpace]);
-  
 
   return (
     <nav

@@ -5,7 +5,6 @@ import FolderDropdownMenu from "./FolderDropdownMenu";
 import spaceIcon from '@/assets/images/space.svg';
 
 const MenuItemSpace = ({ space, className }) => {
-
   return (
     <>
       <div className="flex items-center justify-between mb-3">
