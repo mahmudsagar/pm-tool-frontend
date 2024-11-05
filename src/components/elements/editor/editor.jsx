@@ -76,7 +76,7 @@ export default function Editor({ title, content, onChange }) {
   useEffect(() => {
     if (!onChange) return;
 
-    onChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields });
+    onChange({ title: currentTitle, content: currentEditorState });
   }, [currentTitle, currentEditorState, currentCustomFields, onChange]);
 
   useEffect(() => {
