@@ -6,7 +6,8 @@ import useFileManagerStore from "@/stores/useFileManagerStore";
 import { 
   ChevronDownIcon, 
   FileText, 
-  CircuitBoard 
+  CircuitBoard,
+  FolderOpen
 } from "lucide-react";
 import {
   Accordion,
@@ -44,17 +45,19 @@ const MenuItemFolder = ({ folder, className }) => {
     }));
   };  
 
-  const handleFolderClick = async () => {
-    setOpenItem(openItem === folder._id ? "" : folder._id);
-    // setLoading(true);
-      
-    // try {
-    //   await fatchDocument(folder._id);
-    //   setLoading(false);      
-    // } catch (error) {
-    //   console.error("Error fetching data: ", error);
-    //   setLoading(false);
-    // }
+  const handleFolderClick = async (id) => {
+    setOpenItem(openItem === id ? "" : id);
+
+    if (!openItem) {      
+      setLoading(true);
+      try {        
+        await fatchDocument(id);
+        setLoading(false);      
+      } catch (error) {
+        console.error("Error fetching data: ", error);
+        setLoading(false);
+      }
+    }
   };
 
   const handleDocumentIcons = (type) => {    
@@ -85,14 +88,17 @@ const MenuItemFolder = ({ folder, className }) => {
           collapsible
           className="space-y-2"
           value={openItem}
-          onValueChange={setOpenItem}
+          onValueChange={(value) => setOpenItem(value)}
         >
           <AccordionItem value={folder._id} className="border-none ">
             <AccordionTrigger
               className={cn(
                 'group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
               )}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFolderClick(folder._id); // Call handleFolderClick with the folder ID
+              }}
             >
               <div className="flex justify-between items-center">
                 <img
@@ -112,7 +118,7 @@ const MenuItemFolder = ({ folder, className }) => {
                 <Link 
                   to={`/file-manager/${folder._id}`} 
                   className={cn('absolute left-10 text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
-                  onClick={handleFolderClick}
+                  // onClick={handleFolderClick}
                 >
                   {folder.name}
                 </Link>
@@ -130,20 +136,26 @@ const MenuItemFolder = ({ folder, className }) => {
             </AccordionTrigger>
             <AccordionContent className="space-y-2 pl-6 py-3">
               { loading && <MenuItemLoading text='Loading...' flex='col' /> }
-              { !loading && Array.isArray(documents) && documents.length > 0 ? 
-                documents.map( document => 
-                  <Link 
-                    key={document._id} 
-                    to={`/document/${document.pageMeta._id}`}
-                    className="ml-5 flex items-center gap-2"
-                  >
-                    {handleDocumentIcons(document.pageMeta.page_type)}
-                    <span>{`${document.pageMeta.title}.${document.pageMeta.page_type}`}</span>
-                  </Link>
-                )
-              : (
-                <p className="text-center">No Files Available.</p>
+              { !loading && (
+                Array.isArray(documents) && documents.length > 0 ? 
+                  documents.map( document => 
+                    <Link 
+                      key={document._id} 
+                      to={`/document/${document.pageMeta._id}`}
+                      className="ml-5 flex items-center gap-2"
+                    >
+                      { handleDocumentIcons(document.pageMeta.page_type) }
+                      <span>{`${document.pageMeta.title}.${document.pageMeta.page_type}`}</span>
+                    </Link>
+                  ) : 
+                  ( 
+                    <div className="flex items-center justify-center flex-col gap-2 py-2">
+                      <FolderOpen/>
+                      <p className="text-center">No Files Available.</p> 
+                    </div>
+                  )
               )}
+             
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -155,7 +167,6 @@ const MenuItemFolder = ({ folder, className }) => {
             <Link 
               to={`/document/${folder?.pageMeta[0]?._id}`} 
               className={cn('absolute left-10 text-sm duration-200 w-[165px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
-              onClick={handleFolderClick}
             >
               { `${folder?.pageMeta[0]?.title}.${folder?.pageMeta[0]?.page_type}` }
             </Link>

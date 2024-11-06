@@ -49,15 +49,15 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   },
 
   // Get Document Data
-  fatchDocument: async (folder_id) => {
+  fatchDocument: async (id) => {
     const { data, error } = await get().apiRequest(`${API_BASE_URL}/page/document?user_id=${BASE_USER_ID}`, 'GET');
     if (error) {
       set({ error });
     } else {
-      console.log(data, folder_id);
       
-      const result = data.filter((document) => document?.user_id === BASE_USER_ID && document?.folder_id === folder_id);
-      set({ spaces: result });
+      const result = data.filter((document) => document?.folder_id === id || document?.group_id === id );
+      console.log(id, result);
+      set({ documents: result });
     }
   },
 
