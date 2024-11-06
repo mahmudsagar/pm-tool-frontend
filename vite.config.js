@@ -11,6 +11,7 @@ export default defineConfig({
   define: {
     "process.env.IS_PREACT": JSON.stringify("true"),
   },
+  envPrefix: 'BN_',
   plugins: [
     react(),
     alias({

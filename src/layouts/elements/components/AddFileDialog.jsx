@@ -15,24 +15,25 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
 } from "@/components/ui/form";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { MultiSelect } from '@/components/ui/multi-select';
+import useApi from '@/lib/dataFetcher';
 
 const AddFileDialog = ({ id }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -40,9 +41,8 @@ const AddFileDialog = ({ id }) => {
 
   const { formattedUserData } = useUserStore(state => state);
   const { formattedTeamData } = useTeamStore(state => state);
-  const { getGroupId } = useGroupStore(state => state);  
-  const { addNewDocument, loading } = useFolderStore(state => state);
-
+  const { getGroupId } = useGroupStore(state => state);
+  const { loading, callApi, data } = useApi();
   const form = useForm({
     defaultValues: {
       type: "",
@@ -55,28 +55,60 @@ const AddFileDialog = ({ id }) => {
 
   useEffect(() => {
     const mainContent = document.getElementById('main-content');
-    if (mainContent) { 
+    if (mainContent) {
       if (isOpen) {
-        mainContent.setAttribute('inert', ''); 
+        mainContent.setAttribute('inert', '');
       } else {
         mainContent.removeAttribute('inert');
       }
     }
   }, [isOpen]);
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     console.log("Form Data:", data);
-    // addNewDocument(data, id)
+
+    const newDocumentData = {
+      user_id: "66cda5dac6886719e3345c19",
+      content: {
+        text: "This is the document content"
+      },
+      summary: "This is the document summary",
+      page_type: data.fileType,
+      title: "Sample Page Title",
+      folder_id: "66e404cf089aef7c495015f4",
+      custom_meta: {
+        author: "John Doe",
+        keywords: ["sample", "page", "meta"]
+      },
+      shared_teams: [
+        "66cda5dac6886719e3345c19",
+        "66e404cf089aef7c495015f4"
+      ],
+      shared_members: [
+        "66cda5dac6886719e3345c19",
+        "66e404cf089aef7c495015f4"
+      ],
+      space_id: "66e4064f658c25f499aa9d63",
+      group_id: "66e4064f658c25f499aa9d63",
+      attachments: "attachment_url"
+    }
+    callApi('https://api-server-1lmd.onrender.com/v1/page/document?id=' + id, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(newDocumentData)
+    })
     setIsOpen(false);
     form.reset();
-  };    
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="group hover:bg-slate-300 w-6 h-6"
           onClick={(e) => {
             e.stopPropagation();
@@ -96,7 +128,7 @@ const AddFileDialog = ({ id }) => {
               </DialogDescription>
             </DialogHeader>
             <div className="py-3 w-full flex items-start flex-col gap-4">
-              { getGroupId(id) &&
+              {getGroupId(id) &&
                 <FormField
                   control={form.control}
                   name="type"
@@ -131,9 +163,9 @@ const AddFileDialog = ({ id }) => {
                   <FormItem className="w-full">
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="File Name" 
-                        {...field} 
+                      <Input
+                        placeholder="File Name"
+                        {...field}
                         value={field.value}
                         onChange={field.onChange}
                       />
@@ -142,7 +174,7 @@ const AddFileDialog = ({ id }) => {
                   </FormItem>
                 )}
               />
-              { isFile !== 'folder' || getGroupId(id) === false &&
+              {isFile !== 'folder' || getGroupId(id) === false &&
                 <FormField
                   control={form.control}
                   name="fileType"

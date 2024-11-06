@@ -1,13 +1,13 @@
 import Default from "@/layouts/Default";
 import Settings from "@/layouts/Settings";
 import Check from "@/pages/Check";
-import Document from "@/pages/document";
 import FileManager from "@/pages/FileManager";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
 import Sheet from "@/pages/sheet";
 import Whiteboard from "@/pages/Whiteboard";
 import NotFound from "./NotFound";
+import { Document } from "@/components/elements/editor";
 
 export const routes = [
   {
@@ -31,11 +31,15 @@ export const routes = [
         element: <Form />
       },
       {
-        path: '/document/*',
+        path: '/document/:id',
         element: <Document />
       },
       {
-        path: "/sheet/*",
+        path: '/single/:id',
+        element: <Document />
+      },
+      {
+        path: "/sheet/:id",
         element: <Sheet />
       },
       {

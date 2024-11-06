@@ -31,7 +31,6 @@ import ComponentPickerMenuPlugin from './plugins/ComponentPickerPlugin';
 import AutoEmbedPlugin from './plugins/AutoEmbedPlugin';
 import LexicalAutoLinkPlugin from './plugins/AutoLinkPlugin';
 import LinkPlugin from './plugins/LinkPlugin';
-
 import YouTubePlugin from './plugins/YouTubePlugin';
 import DragDropPaste from './plugins/DragDropPastePlugin';
 import ImagesPlugin from './plugins/ImagesPlugin';
@@ -39,12 +38,12 @@ import InlineImagePlugin from './plugins/InlineImagePlugin';
 import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
 const placeholder = 'Enter some rich text...';
 
-
-
-export default function Editor({ onChange }) {
+export default function Editor({ title, content, onChange }) {
+  const [editor] = useLexicalComposerContext()
 
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState(null);
@@ -55,11 +54,30 @@ export default function Editor({ onChange }) {
   const [coverImage, setCoverImage] = useState(null);
   const isEditable = useLexicalEditable();
 
+  const [currentTitle, setCurrentTitle] = useState(title);
+  const [currentEditorState, setCurrentEditorState] = useState(content);
+  const [currentCustomFields, setCurrentCustomFields] = useState([]);
+
   const onRef = (_floatingAnchorElem) => {
     if (_floatingAnchorElem !== null) {
       setFloatingAnchorElem(_floatingAnchorElem);
     }
   };
+
+  useEffect(() => {
+    const state = editor.parseEditorState(
+      currentEditorState || editor.getEditorState()
+    )
+    editor.setEditorState(state)
+  }, [editor])
+
+
+  /** call onchange method if any of the field is changed */
+  useEffect(() => {
+    if (!onChange) return;
+
+    onChange({ title: currentTitle, content: currentEditorState });
+  }, [currentTitle, currentEditorState, currentCustomFields, onChange]);
 
   useEffect(() => {
     const updateViewPortWidth = () => {
@@ -88,7 +106,6 @@ export default function Editor({ onChange }) {
   }
 
   return (
-
     <div className="editor-container relative">
       {coverImage &&
         <div
@@ -104,7 +121,6 @@ export default function Editor({ onChange }) {
             Remove cover
           </Button>
         </div>
-
       }
       <div className='py-2 px-6 mb-4'>
 
@@ -118,9 +134,11 @@ export default function Editor({ onChange }) {
         </div>}
 
         <div className="" style={{ fontWeight: 700, lineHeight: 1.2, fontSize: '32px', cursor: 'text' }}>
-          <h1 className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0 max-w-full w-full whitespace-pre-wrap break-words pt-[3px] pl-[2px] pr-[2px]" spellCheck="true" data-content-editable-leaf="true" suppressContentEditableWarning={true} contentEditable="true">Document title</h1>
+          <h1 onInput={e => setCurrentTitle(e.target.textContent)} className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0 max-w-full w-full whitespace-pre-wrap break-words pt-[3px] pl-[2px] pr-[2px]" spellCheck="true" data-content-editable-leaf="true" suppressContentEditableWarning={true} contentEditable="true">
+            {title || "Document title"}
+          </h1>
         </div>
-        <DynamicInput />
+        <DynamicInput onChange={setCurrentCustomFields} />
 
       </div>
       <Separator />
@@ -153,7 +171,12 @@ export default function Editor({ onChange }) {
         <ClickableLinkPlugin disabled={isEditable} />
         <HorizontalRulePlugin />
         <LayoutPlugin />
-        <OnChangePlugin onChange={onChange} />
+        <OnChangePlugin onChange={editorState => {
+          editorState.read(() => {
+            const value = JSON.stringify(editorState);
+            setCurrentEditorState(value);
+          });
+        }} />
         <>
           {floatingAnchorElem && !isSmallWidthViewport && (
             <>

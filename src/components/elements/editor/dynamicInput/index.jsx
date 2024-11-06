@@ -8,13 +8,15 @@ import Modal from '../../modal';
 import { DatePicker } from './datepicker';
 import { DatePickerWithRange } from './daterangepicker';
 import { MultiSelect } from '@/components/ui/multi-select';
+import { useForm } from 'react-hook-form';
+import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 
 const InputNumber = ({ ...props }) => {
   return <Input type="number" {...props} />;
 };
 
-const SelectField = ({ options, ...props }) => {
-  return <Select>
+const SelectField = ({ options,onChange, ...props }) => {
+  return <Select onValueChange={onChange}>
     <SelectTrigger {...props}>
       <SelectValue />
     </SelectTrigger>
@@ -38,7 +40,7 @@ const fieldTypes = [
   { type: 'daterange', label: 'Date Range', component: DatePickerWithRange, hasOptions: false },
 ];
 
-const Field = ({ field, onChange }) => {
+const Field = ({ field, control, onChange }) => {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState(field.label);
   const [actionType, setActionType] = useState('edit');
@@ -46,6 +48,7 @@ const Field = ({ field, onChange }) => {
   const [options, setOptions] = useState([]);
   const [showFieldList, setShowFieldList] = useState(false);
   const [changedField, setChangedField] = useState({});
+  const [currentValue, setCurrentValue] = useState(field.value);
 
   useEffect(() => {
     if (!field.initialized) {
@@ -59,7 +62,7 @@ const Field = ({ field, onChange }) => {
         if (!state) {
           setShowFieldList(false);
           onChange({
-            ...field, label, actionType, initialized: true,
+            ...field, label, actionType, initialized: true, value: currentValue,
             options: options.filter(Boolean).map((option) => ({ value: option, label: option })),
             ...(changedField ? { ...changedField } : {})
           });
@@ -151,7 +154,17 @@ const Field = ({ field, onChange }) => {
       </DropdownMenu>
     </td>
     <td>
-      <field.component className="outline-none w-full h-8" {...field} />
+      <FormField
+        control={control}
+        name={field.name}
+        render={({ field: formField }) => (
+          <FormItem>
+            <FormControl>
+              <field.component className="outline-none w-full h-8" {...field} onChange={setCurrentValue} {...formField} />
+            </FormControl>
+          </FormItem>
+        )}
+      />
     </td>
   </tr>
 }
@@ -175,66 +188,76 @@ const FieldList = ({ handleCreateField }) => {
 }
 
 
-const DynamicInput = () => {
-  const [fields, setFields] = useState([]); // List of added fields
+const DynamicInput = ({ onChange }) => {
+  const [customFields, setCustomFields] = useState([]); // List of added fields
+  const form = useForm()
+  useEffect(() => {
+    onChange(customFields);
+  }, [customFields]);
 
-  const handleCreateField = ({ type, ...rest }) => {
+  const handleCreateField = ({ type, label, ...rest }) => {
     /** store the new field in the list by a random id */
     const newField = {
       id: Math.random().toString(10).substring(7),
       component: fieldTypes.find(field => field.type === type).component,
       type,
       initialized: false,
+      label,
+      name: Math.random().toString(36).substring(7),
       ...rest
     };
 
-    setFields([...fields, newField]); // Add the new field to the list
+    setCustomFields([...customFields, newField]); // Add the new field to the list
   };
 
   const handleEditField = ({ id, label, actionType, ...rest }) => {
     if (actionType === 'delete') {
-      setFields(fields.filter(field => field.id !== id));
+      setCustomFields(customFields.filter(field => field.id !== id));
     }
     else if (actionType === 'duplicate') {
-      const field = fields.find(field => field.id === id);
+      const field = customFields.find(field => field.id === id);
       const newField = {
         ...field,
         id: Math.random().toString(10).substring(7),
         initialized: false
       }
-      setFields([...fields, newField]);
+      setCustomFields([...customFields, newField]);
     }
     else {
-      const updatedFields = fields.map(field => {
+      const updatedFields = customFields.map(field => {
         if (field.id === id) {
           return { ...field, label, ...rest };
         }
         return field;
       })
 
-      setFields(updatedFields);
+      setCustomFields(updatedFields);
     }
   }
 
   return (
-    <div className=''>
-      <table className='w-full mt-3'>
-        <tbody>
-          {fields.map((field, index) => <Field key={index} field={field} onChange={handleEditField} />)}
-        </tbody>
-      </table>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="opacity-60">
-            <Plus size={16} className='mr-1' />
-            Add a property</Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56">
-          <FieldList handleCreateField={handleCreateField} />
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <Modal />
-    </div >
+
+    <Form {...form}>
+      <form onChange={() => console.log(form.getValues(),customFields)} >
+        <table className='w-full mt-3'>
+          <tbody>
+            {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} />
+            )}
+          </tbody>
+        </table>
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="opacity-60">
+              <Plus size={16} className='mr-1' />
+              Add a property</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
+            <FieldList handleCreateField={handleCreateField} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Modal />
+      </form >
+    </Form >
   );
 };
 
