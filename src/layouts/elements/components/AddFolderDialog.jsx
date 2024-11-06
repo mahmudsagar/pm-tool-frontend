@@ -48,7 +48,7 @@ const AddFolderDialog = ({ spaceId }) => {
   const { formState: { errors } } = form;
 
   useEffect(() => {
-    const fetchData = async () => {
+    const callApi = async () => {
       try {
         await Promise.all([fetchUserData(), fetchTeamData()]);
       } catch (error) {
@@ -56,7 +56,7 @@ const AddFolderDialog = ({ spaceId }) => {
       }
     };
 
-    fetchData();
+    callApi();
   }, [fetchUserData, fetchTeamData]);  
 
   const onSubmit = async (data) => {

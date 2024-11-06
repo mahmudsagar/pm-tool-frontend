@@ -33,7 +33,7 @@ export default function Sidebar({ className }) {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const callApi = async () => {
       try {
         await fetchSpaceData();
         
@@ -43,7 +43,7 @@ export default function Sidebar({ className }) {
       }
     };
 
-    fetchData();
+    callApi();
   }, [fetchSpaceData, fetchGroupData, fetchFolderData, fetchDocumentData]);
 
   return (
