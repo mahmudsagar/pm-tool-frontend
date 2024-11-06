@@ -39,10 +39,11 @@ import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+const EMPTY_CONTENT =
+  '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
-
-export default function Editor({ title, content, onChange }) {
+export default function Editor({ title, content, custom_meta, onChange }) {
   const [editor] = useLexicalComposerContext()
 
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -55,8 +56,8 @@ export default function Editor({ title, content, onChange }) {
   const isEditable = useLexicalEditable();
 
   const [currentTitle, setCurrentTitle] = useState(title);
-  const [currentEditorState, setCurrentEditorState] = useState(content);
-  const [currentCustomFields, setCurrentCustomFields] = useState([]);
+  const [currentEditorState, setCurrentEditorState] = useState(typeof content === 'string' ? content : EMPTY_CONTENT);
+  const [currentCustomFields, setCurrentCustomFields] = useState(custom_meta);
 
   const onRef = (_floatingAnchorElem) => {
     if (_floatingAnchorElem !== null) {
@@ -73,11 +74,19 @@ export default function Editor({ title, content, onChange }) {
 
 
   /** call onchange method if any of the field is changed */
-  useEffect(() => {
-    if (!onChange) return;
+  // useEffect(() => {
+  //   if (!onChange) return;
 
-    onChange({ title: currentTitle, content: currentEditorState });
-  }, [currentTitle, currentEditorState, currentCustomFields, onChange]);
+  //   if (firstLoad) {
+  //     firstLoad = false;
+  //     return;
+  //   }
+  //   onChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields });
+  // }, [currentTitle, currentEditorState, currentCustomFields, onChange]);
+
+  const handleOnChange = ({ title, content, custom_meta }) => {
+    onChange({ title, content, custom_meta });
+  }
 
   useEffect(() => {
     const updateViewPortWidth = () => {
@@ -124,21 +133,28 @@ export default function Editor({ title, content, onChange }) {
       }
       <div className='py-2 px-6 mb-4'>
 
-        {!coverImage && <div className='h-10 opacity-0 hover:opacity-100'>
+        {/* {!coverImage && <div className='h-10 opacity-0 hover:opacity-100'>
           <ImageUpload onChange={coverImageUploadHandler} >
             <Button variant="secondary" className="opacity-60 ">
               <Image size={15} className='mr-1' />
               Add a cover
             </Button>
           </ImageUpload>
-        </div>}
+        </div>} */}
 
         <div className="" style={{ fontWeight: 700, lineHeight: 1.2, fontSize: '32px', cursor: 'text' }}>
-          <h1 onInput={e => setCurrentTitle(e.target.textContent)} className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0 max-w-full w-full whitespace-pre-wrap break-words pt-[3px] pl-[2px] pr-[2px]" spellCheck="true" data-content-editable-leaf="true" suppressContentEditableWarning={true} contentEditable="true">
+          <h1 onInput={e => {
+            const title = e.target.innerText;
+            setCurrentTitle(title);
+            handleOnChange({ title, content: currentEditorState, custom_meta: currentCustomFields });
+          }} className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0 max-w-full w-full whitespace-pre-wrap break-words pt-[3px] pl-[2px] pr-[2px]" spellCheck="true" data-content-editable-leaf="true" suppressContentEditableWarning={true} contentEditable="true">
             {title || "Document title"}
           </h1>
         </div>
-        <DynamicInput onChange={setCurrentCustomFields} />
+        <DynamicInput initialData={custom_meta} onChange={(custom_meta) => {
+          setCurrentCustomFields(custom_meta);
+          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta });
+        }} />
 
       </div>
       <Separator />
@@ -173,8 +189,9 @@ export default function Editor({ title, content, onChange }) {
         <LayoutPlugin />
         <OnChangePlugin onChange={editorState => {
           editorState.read(() => {
-            const value = JSON.stringify(editorState);
-            setCurrentEditorState(value);
+            const content = JSON.stringify(editorState);
+            setCurrentEditorState(content);
+            handleOnChange({ title: currentTitle, content, custom_meta: currentCustomFields });
           });
         }} />
         <>
