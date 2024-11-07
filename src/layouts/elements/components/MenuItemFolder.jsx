@@ -38,27 +38,30 @@ const MenuItemFolder = ({ folder, className }) => {
     }
   }, [isOpen]);
 
-  const handleDropdownToggle = (id, isOpenState = null) => {
-    setDropdownOpenStates((prevState) => ({
+  const handleDropdownToggle = (id) => {
+    setDropdownOpenStates(prevState => ({
       ...prevState,
-      [id]: isOpenState !== null ? isOpenState : !prevState[id],
+      [id]: !prevState[id]
     }));
   };  
 
   const handleFolderClick = async (id) => {
     setOpenItem(openItem === id ? "" : id);
 
-    if (!openItem) {      
+    if (!documents[id]) {
       setLoading(true);
-      try {        
+      try {
         await fatchDocument(id);
-        setLoading(false);      
       } catch (error) {
         console.error("Error fetching data: ", error);
+      } finally {
         setLoading(false);
       }
     }
-  };
+  }; 
+  
+  console.log(documents);
+  
 
   const handleDocumentIcons = (type) => {    
     switch (type) {
@@ -137,15 +140,15 @@ const MenuItemFolder = ({ folder, className }) => {
             <AccordionContent className="space-y-2 pl-6 py-3">
               { loading && <MenuItemLoading text='Loading...' flex='col' /> }
               { !loading && (
-                Array.isArray(documents) && documents.length > 0 ? 
-                  documents.map( document => 
+                Array.isArray(documents[folder?._id]) && documents[folder?._id]?.length > 0 ? 
+                  documents[folder?._id].map( document => 
                     <Link 
                       key={document._id} 
-                      to={`/document/${document.pageMeta._id}`}
+                      to={`/document/${document?.pageMeta?._id}`}
                       className="ml-5 flex items-center gap-2"
                     >
-                      { handleDocumentIcons(document.pageMeta.page_type) }
-                      <span>{`${document.pageMeta.title}.${document.pageMeta.page_type}`}</span>
+                      { handleDocumentIcons(document?.pageMeta?.page_type) }
+                      <span>{`${document?.pageMeta?.title}.${document?.pageMeta?.page_type}`}</span>
                     </Link>
                   ) : 
                   ( 
@@ -154,8 +157,7 @@ const MenuItemFolder = ({ folder, className }) => {
                       <p className="text-center">No Files Available.</p> 
                     </div>
                   )
-              )}
-             
+              )}             
             </AccordionContent>
           </AccordionItem>
         </Accordion>

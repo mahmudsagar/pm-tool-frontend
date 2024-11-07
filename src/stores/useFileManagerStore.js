@@ -6,7 +6,7 @@ const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
 const useFileManagerStore = createWithEqualityFn((set, get) => ({
   error: null,
   spaces: null, // store space api data
-  documents: null, // store document api data
+  documents: {}, // store document api data
 
   // Define the reusable apiRequest function with direct access to set and get
   apiRequest: async (url, method = 'GET', data = null) => {
@@ -26,14 +26,14 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || 'Something went wrong!');
+            throw new Error(errorData?.message || 'Something went wrong!');
         }
 
         const responseData = await response.json();
                 
-        return { data: responseData.data, error: null };
+        return { data: responseData?.data, error: null };
     } catch (error) {
-        return { data: null, error: error.message };
+        return { data: null, error: error?.message };
     }
   },
 
@@ -54,10 +54,13 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     if (error) {
       set({ error });
     } else {
-      
       const result = data.filter((document) => document?.folder_id === id || document?.group_id === id );
-      console.log(id, result);
-      set({ documents: result });
+      set((state) => ({
+        documents: {
+          ...state.documents,
+          [id]: result,
+        }
+      }));
     }
   },
 
