@@ -10,7 +10,7 @@ import { UniverSheetsPlugin } from '@univerjs/sheets';
 import { UniverSheetsFormulaPlugin } from '@univerjs/sheets-formula';
 import { UniverSheetsUIPlugin } from '@univerjs/sheets-ui';
 import { UniverUIPlugin } from '@univerjs/ui';
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react';
 import './index.css';
 import { zhCN, enUS } from 'univer:locales'
 
@@ -94,4 +94,4 @@ const UniverSheet = forwardRef(({ data }, ref) => {
   return <div ref={containerRef} className="univer-container" />;
 });
 
-export default UniverSheet;
+export default memo(UniverSheet);

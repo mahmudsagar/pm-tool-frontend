@@ -12,11 +12,12 @@ import { baseUrl } from '@/utils/constants';
 import Spinner from '@/components/elements/spinner';
 import NotFound from '@/BetterRouter/NotFound';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { debounce } from '@/utils/helper';
 
 const Sheet = () => {
   const univerRef = useRef();
   const { toast } = useToast();
-  const { loading, data, callApi } = useApi();
+  const { loading, data, callApi, error } = useApi();
   const [topMenu, setTopMenu] = useOutletContext();
   const { pathname } = useLocation()
   const { id } = useParams();
@@ -39,12 +40,14 @@ const Sheet = () => {
     })
   }
 
-  useEffect(() => {
+  useEffect(debounce(() => {
+
     callApi(baseUrl + '/v1/page/document?id=' + id)
-  }, [pathname, id])
+
+  }, 1000), [pathname, id])
 
   const handleDelete = () => {
-    fetch(baseUrl + '/v1/page/document?id=' + id,
+    callApi(baseUrl + '/v1/page/document?id=' + id,
       {
         method: 'DELETE',
       });
@@ -69,7 +72,7 @@ const Sheet = () => {
           <Trash size={12} /> Delete this sheet
         </div>
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={handleSaveData}>
+      <DropdownMenuItem onClick={handleSaveData} className="cursor-pointer">
         <div className='flex items-center gap-1'>
           <Save size={12} /> Save
         </div>
@@ -96,15 +99,17 @@ const Sheet = () => {
     })
   }, [data]);
 
-  if (!loading && !data) {
+  if (error) {
     return <NotFound />
   }
+
+  console.log('data', data?.content)
   return (
     <div className='relative h-full'>
       {loading ?
         <Spinner />
         :
-        <UniverSheet style={{ flex: 1 }} ref={univerRef} data={data.content} />
+        data?.content && <UniverSheet style={{ flex: 1 }} ref={univerRef} data={data.content} />
       }
       <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <AlertDialogContent>
@@ -112,7 +117,7 @@ const Sheet = () => {
             <AlertDialogTitle>Are you sure to proceed?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete this
-              document.
+              sheet.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
