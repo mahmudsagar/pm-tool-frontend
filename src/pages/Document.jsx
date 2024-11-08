@@ -27,7 +27,7 @@ const editorConfig = {
 };
 let firstLoad = true;
 export const Document = () => {
-  const { loading, data, callApi } = useApi();
+  const { loading, data, callApi, error } = useApi();
   const [topMenu, setTopMenu] = useOutletContext();
   const { pathname } = useLocation()
   const { id } = useParams();
@@ -104,7 +104,7 @@ export const Document = () => {
     });
   }, 4000);
 
-  if (!loading && !data) {
+  if (error) {
     return <NotFound />
   }
   return <div className='lexical-editor relative h-full'>
