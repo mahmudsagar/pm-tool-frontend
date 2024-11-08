@@ -1,13 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import Link from "@/BetterRouter/Link";
+import { Link } from "react-router-dom";
 import { useSidebar } from "@/stores/store";
 import useFileManagerStore from "@/stores/useFileManagerStore";
+import folderIcon from '@/assets/images/folder.svg';
+import AddFileDialog from "./AddFileDialog";
+import DocumentsList from "./FolderDocument";
+import MenuSpaceFile from "./MenuSpaceFile";
+import FileDropdownMenu from "./FileDropdownMenu";
 import { 
-  ChevronDownIcon, 
   FileText, 
   CircuitBoard,
-  FolderOpen
+  ChevronDownIcon,
+  FileSpreadsheet
 } from "lucide-react";
 import {
   Accordion,
@@ -15,11 +20,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../subnav-accordion";
-import { FileSpreadsheet } from 'lucide-react';
-import AddFileDialog from "./AddFileDialog";
-import FileDropdownMenu from "./FileDropdownMenu";
-import folderIcon from '@/assets/images/folder.svg';
-import MenuItemLoading from "./MenuItemLoading";
 
 const MenuItemFolder = ({ folder, className }) => {  
   const { isOpen } = useSidebar();
@@ -58,28 +58,21 @@ const MenuItemFolder = ({ folder, className }) => {
         setLoading(false);
       }
     }
-  }; 
-  
-  console.log(documents);
-  
+  };  
 
   const handleDocumentIcons = (type) => {    
     switch (type) {
       case 'sheet':
         return <FileSpreadsheet size={20} />;
-      break;
       
       case 'document':
         return <FileText size={20} />;
-      break;
 
       case 'wb':
         return <CircuitBoard size={20} />;
-      break;
 
       default:
         return <FileSpreadsheet size={20} />;
-      break;
     }
   }
 
@@ -100,7 +93,7 @@ const MenuItemFolder = ({ folder, className }) => {
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                handleFolderClick(folder._id); // Call handleFolderClick with the folder ID
+                handleFolderClick(folder._id);
               }}
             >
               <div className="flex justify-between items-center">
@@ -121,7 +114,6 @@ const MenuItemFolder = ({ folder, className }) => {
                 <Link 
                   to={`/file-manager/${folder._id}`} 
                   className={cn('absolute left-10 text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
-                  // onClick={handleFolderClick}
                 >
                   {folder.name}
                 </Link>
@@ -137,52 +129,29 @@ const MenuItemFolder = ({ folder, className }) => {
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="space-y-2 pl-6 py-3">
-              { loading && <MenuItemLoading text='Loading...' flex='col' /> }
-              { !loading && (
-                Array.isArray(documents[folder?._id]) && documents[folder?._id]?.length > 0 ? 
-                  documents[folder?._id].map( document => 
-                    <Link 
-                      key={document._id} 
-                      to={`/document/${document?.pageMeta?._id}`}
-                      className="ml-5 flex items-center gap-2"
-                    >
-                      { handleDocumentIcons(document?.pageMeta?.page_type) }
-                      <span>{`${document?.pageMeta?.title}.${document?.pageMeta?.page_type}`}</span>
-                    </Link>
-                  ) : 
-                  ( 
-                    <div className="flex items-center justify-center flex-col gap-2 py-2">
-                      <FolderOpen/>
-                      <p className="text-center">No Files Available.</p> 
-                    </div>
-                  )
-              )}             
+            <AccordionContent className="space-y-2 pl-3 py-3">
+              <DocumentsList 
+                isOpen={isOpen}
+                className={className}
+                loading ={loading}
+                dropdownOpenStates={dropdownOpenStates}
+                documents={documents[folder._id] || []}
+                handleDocumentIcons={handleDocumentIcons} 
+                handleDropdownToggle={handleDropdownToggle}
+              />        
             </AccordionContent>
           </AccordionItem>
         </Accordion>
       ) : 
       (
-        <div className="group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline">
-          <div className="flex justify-between items-center">
-            { handleDocumentIcons(folder?.pageMeta[0]?.page_type) }
-            <Link 
-              to={`/document/${folder?.pageMeta[0]?._id}`} 
-              className={cn('absolute left-10 text-sm duration-200 w-[165px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
-            >
-              { `${folder?.pageMeta[0]?.title}.${folder?.pageMeta[0]?.page_type}` }
-            </Link>
-          </div>
-          <div className='opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-            <div className="flex gap-1">
-              <FileDropdownMenu
-                isOpen={dropdownOpenStates}
-                onToggle={(id) => handleDropdownToggle(id)}
-                folderId={folder?.pageMeta[0]?._id}
-              />
-            </div>
-          </div>
-        </div>
+        <MenuSpaceFile
+          isOpen={isOpen}
+          className={className}
+          data={folder?.pageMeta[0]}
+          dropdownOpenStates={dropdownOpenStates}
+          handleDocumentIcons={handleDocumentIcons}
+          handleDropdownToggle={handleDropdownToggle}
+        />
       )}      
     </>
   );

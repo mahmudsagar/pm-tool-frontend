@@ -53,7 +53,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     const { data, error } = await get().apiRequest(`${API_BASE_URL}/page/document?user_id=${BASE_USER_ID}`, 'GET');
     if (error) {
       set({ error });
-    } else {
+    } else {      
       const result = data.filter((document) => document?.folder_id === id || document?.group_id === id );
       set((state) => ({
         documents: {

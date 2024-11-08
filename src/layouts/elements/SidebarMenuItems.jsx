@@ -7,7 +7,7 @@ const SidebarMenuItems = ({ className, setOpen, loading }) => {
   const { spaces } = useFileManagerStore(state => state);  
 
   if (loading) {
-    return <MenuItemLoading text='Loading' flex='col' />;
+    return <MenuItemLoading text='Loading...' flex='col' />;
   }
 
   return (
