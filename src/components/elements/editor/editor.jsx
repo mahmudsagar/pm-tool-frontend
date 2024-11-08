@@ -99,9 +99,11 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
     console.log('coverImageUploadHandler', files);
     const file = files[0];
     const formData = new FormData()
-    formData.append('media_type', 'cover')
+    formData.append('media_type', 'cover_photo')
     formData.append('reference_id', page_content_id)
-    formData.append('file', file)
+    formData.append('caption', ' ')
+
+    formData.append('file', file.File)
     if (file) {
       uploadImage(baseUrl + '/v1/upload/media', {
         method: 'POST',
