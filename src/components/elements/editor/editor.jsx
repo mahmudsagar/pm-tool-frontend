@@ -104,7 +104,7 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
 
     formData.append('file', file.File)
     if (file) {
-      uploadImage('https://bd14-103-180-245-249.ngrok-free.app/v1/upload/media', {
+      uploadImage(baseUrl + '/v1/upload/media', {
         method: 'POST',
         body: formData
       })
