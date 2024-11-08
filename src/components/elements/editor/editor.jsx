@@ -96,7 +96,6 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
   }, [isSmallWidthViewport]);
 
   const coverImageUploadHandler = (files) => {
-    console.log('coverImageUploadHandler', files);
     const file = files[0];
     const formData = new FormData()
     formData.append('media_type', 'cover_photo')
@@ -105,7 +104,7 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
 
     formData.append('file', file.File)
     if (file) {
-      uploadImage(baseUrl + '/v1/upload/media', {
+      uploadImage('https://bd14-103-180-245-249.ngrok-free.app/v1/upload/media', {
         method: 'POST',
         body: formData
       })
@@ -118,7 +117,7 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
 
   return (
     <div className="editor-container relative">
-      {coverImage &&
+      {imageData?.url &&
         <div
           className="relative h-52 cover-image-container group"
           style={{
@@ -135,7 +134,7 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
       }
       <div className='py-2 px-6 mb-4'>
 
-        {!coverImage && <div className='h-10 opacity-0 hover:opacity-100'>
+        {!imageData?.url && <div className='h-10 opacity-0 hover:opacity-100'>
           <ImageUpload onChange={coverImageUploadHandler} >
             <Button variant="secondary" className="opacity-60 ">
               <Image size={15} className='mr-1' />
