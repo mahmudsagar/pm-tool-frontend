@@ -39,13 +39,15 @@ import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import useApi from '@/lib/dataFetcher';
+import { baseUrl } from '@/utils/constants';
 const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
-export default function Editor({ title, content, custom_meta, onChange }) {
+export default function Editor({ title, content, page_content_id, custom_meta, onChange }) {
   const [editor] = useLexicalComposerContext()
-
+  const { loading: imageUploading, data:imageData, callApi:uploadImage } = useApi();
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState(null);
   const [isSmallWidthViewport, setIsSmallWidthViewport] =
@@ -72,18 +74,6 @@ export default function Editor({ title, content, custom_meta, onChange }) {
     editor.setEditorState(state)
   }, [editor])
 
-
-  /** call onchange method if any of the field is changed */
-  // useEffect(() => {
-  //   if (!onChange) return;
-
-  //   if (firstLoad) {
-  //     firstLoad = false;
-  //     return;
-  //   }
-  //   onChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields });
-  // }, [currentTitle, currentEditorState, currentCustomFields, onChange]);
-
   const handleOnChange = ({ title, content, custom_meta }) => {
     onChange({ title, content, custom_meta });
   }
@@ -107,7 +97,17 @@ export default function Editor({ title, content, custom_meta, onChange }) {
 
   const coverImageUploadHandler = (files) => {
     console.log('coverImageUploadHandler', files);
-    setCoverImage(files[0]);
+    const file = files[0];
+    const formData = new FormData()
+    formData.append('media_type', 'cover')
+    formData.append('reference_id', page_content_id)
+    formData.append('file', file)
+    if (file) {
+      uploadImage(baseUrl + '/v1/upload/media', {
+        method: 'POST',
+        body: formData
+      })
+    }
   }
 
   const handleCoverRemove = () => {
@@ -120,7 +120,7 @@ export default function Editor({ title, content, custom_meta, onChange }) {
         <div
           className="relative h-52 cover-image-container group"
           style={{
-            backgroundImage: `url(${URL.createObjectURL(coverImage.File)})`,
+            backgroundImage: `url(${imageData?.url})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
@@ -133,14 +133,15 @@ export default function Editor({ title, content, custom_meta, onChange }) {
       }
       <div className='py-2 px-6 mb-4'>
 
-        {/* {!coverImage && <div className='h-10 opacity-0 hover:opacity-100'>
+        {!coverImage && <div className='h-10 opacity-0 hover:opacity-100'>
           <ImageUpload onChange={coverImageUploadHandler} >
             <Button variant="secondary" className="opacity-60 ">
               <Image size={15} className='mr-1' />
               Add a cover
             </Button>
           </ImageUpload>
-        </div>} */}
+        </div>
+        }
 
         <div className="" style={{ fontWeight: 700, lineHeight: 1.2, fontSize: '32px', cursor: 'text' }}>
           <h1 onInput={e => {

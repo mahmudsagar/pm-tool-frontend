@@ -1,19 +1,19 @@
-import PlaygroundNodes from './nodes/PlaygroundNodes';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import Editor from './editor';
-import PlaygroundEditorTheme from './themes/PlaygroundEditorTheme';
 import useApi from '@/lib/dataFetcher';
 import { useEffect, useState } from 'react';
 import { useLocation, useOutletContext, useParams } from 'react-router-dom';
 import { baseUrl } from '@/utils/constants';
 import { debounce, sanitize } from '@/utils/helper';
-import Spinner from '../spinner';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import Link from '@/BetterRouter/Link';
 import { Copy, History, MessageSquareMore, Share, Trash } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import NotFound from '@/BetterRouter/NotFound';
 import { Button } from '@/components/ui/button';
+import PlaygroundNodes from '@/components/elements/editor/nodes/PlaygroundNodes';
+import PlaygroundEditorTheme from '@/components/elements/editor/themes/PlaygroundEditorTheme';
+import Editor from '@/components/elements/editor/editor';
+import Spinner from '@/components/elements/spinner';
 
 const editorConfig = {
   namespace: 'BetterNotion Demo',
@@ -72,7 +72,7 @@ export const Document = () => {
       dropdownContent,
       inlineContent
     })
-  }, []);
+  }, [data]);
 
   const handleDelete = () => {
     fetch(baseUrl + '/v1/page/document?id=' + id,

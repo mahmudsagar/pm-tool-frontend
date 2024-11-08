@@ -7,7 +7,7 @@ import Home from "@/pages/Home";
 import Sheet from "@/pages/sheet";
 import Whiteboard from "@/pages/Whiteboard";
 import NotFound from "./NotFound";
-import { Document } from "@/components/elements/editor";
+import { Document } from "@/pages/Document";
 
 export const routes = [
   {
