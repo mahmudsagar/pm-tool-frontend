@@ -16,8 +16,12 @@ const DocumentsList = ({ loading, documents, handleDocumentIcons, isOpen, classN
       );
     }
 
+    console.log(documents);
+    
+
     return documents.map((document) => (
       <MenuSpaceFile
+        key={document._id}
         isOpen={isOpen}
         className={className}
         data={document?.pageMeta}

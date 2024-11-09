@@ -120,11 +120,14 @@ const MenuItemFolder = ({ folder, className }) => {
               </div>
               <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folder._id || dropdownOpenStates[folder._id] ? 'opacity-100' : ''}`}>
                 <div className="flex gap-1">
-                  <AddFileDialog id={folder._id} />
+                  <AddFileDialog 
+                    id={folder?._id} 
+                    type={folder?.entity_type} 
+                  />
                   <FileDropdownMenu
                     isOpen={dropdownOpenStates}
                     onToggle={(id) => handleDropdownToggle(id)}
-                    folderId={folder._id}
+                    folderId={folder?._id}
                   />
                 </div>
               </div>

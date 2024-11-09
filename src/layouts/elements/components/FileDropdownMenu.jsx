@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
 import useFolderStore from "@/stores/useFolderStore";
 import { Button } from "@/components/ui/button";
-import { EllipsisVertical } from "lucide-react";
+import { 
+  Trash2,
+  EllipsisVertical 
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +21,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import MenuItemLoading from './MenuItemLoading';
+import ItemDelete from './DropdownMenuItems/ItemDelete';
 
 const FileDropdownMenu = ({ isOpen = {}, onToggle = () => {}, folderId }) => {
   const { deleteFolder, loading, error } = useFolderStore(state => state);
@@ -61,9 +65,18 @@ const FileDropdownMenu = ({ isOpen = {}, onToggle = () => {}, folderId }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-          <DropdownMenuItem className="cursor-pointer" onClick={handleDeleteClick}>
-            Delete
+           <DropdownMenuItem className="cursor-pointer flex items-center gap-2" onClick={handleDeleteClick}>
+            <Trash2 className="w-4 h-4" />
+            <span>Delete</span>
           </DropdownMenuItem>
+          <ItemDelete
+            onDelete={deleteFolder}
+            loading={loading.delete}
+            folderId={folderId}
+            onToggle={onToggle}
+            isOpen={isOpen[folderId]}
+          />
+          {/* <ItemDelete handleCloseDialog={handleCloseDialog}/> */}
         </DropdownMenuContent>
       </DropdownMenu>
 

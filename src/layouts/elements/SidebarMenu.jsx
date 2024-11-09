@@ -36,7 +36,8 @@ export function SidebarMenu({ setOpen, className }) {
   const [openItem, setOpenItem] = useState("");
   const [loading, setLoading] = useState(false);
   const [lastOpenItem, setLastOpenItem] = useState("");
-  const { fetchSpace } = useFileManagerStore(state => state);
+  const { fetchSpace, spaces } = useFileManagerStore(state => state);
+  
 
   useEffect(() => {
     if (isOpen) {
@@ -61,7 +62,7 @@ export function SidebarMenu({ setOpen, className }) {
     };
 
     fetchData();
-  }, [fetchSpace]);  
+  }, [fetchSpace, spaces]);  
 
 
   return (

@@ -1,8 +1,8 @@
 import { ShieldCheck, FolderOpen } from "lucide-react";
 import MenuItemFolder from "./MenuItemFolder";
-import AddFolderDialog from "./AddFolderDialog";
 import FolderDropdownMenu from "./FolderDropdownMenu";
 import spaceIcon from '@/assets/images/space.svg';
+import AddFileDialog from "./AddFileDialog";
 
 const MenuItemSpace = ({ space, className }) => {
   return (
@@ -19,7 +19,7 @@ const MenuItemSpace = ({ space, className }) => {
           </h4>
         </div>
         <div className="flex gap-2">
-          <AddFolderDialog spaceId={space._id} />
+          <AddFileDialog id={space?._id} type={space?.entity_type} />
           <FolderDropdownMenu />
         </div>
       </div>

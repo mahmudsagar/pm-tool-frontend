@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useForm, Controller } from "react-hook-form";
-import useUserStore from "@/stores/useUserStore";
-import useTeamStore from "@/stores/useTeamStore";
-import useFolderStore from "@/stores/useFolderStore";
-import useGroupStore from "@/stores/useGroupStore";
 import { Plus } from "lucide-react";
+import { Label } from '@/components/ui/label';
+import { useForm, Controller } from "react-hook-form";
+import { MultiSelect } from '@/components/ui/multi-select';
+import useFileManagerStore from "@/stores/useFileManagerStore";
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Dialog,
   DialogContent,
@@ -30,77 +30,61 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { MultiSelect } from '@/components/ui/multi-select';
-import useApi from '@/lib/dataFetcher';
+import MenuItemLoading from './MenuItemLoading';
 
-const AddFileDialog = ({ id }) => {
+const AddFileDialog = ({ id, type }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isFile, setIsFile] = useState('folder');
-
-  const { formattedUserData } = useUserStore(state => state);
-  const { formattedTeamData } = useTeamStore(state => state);
-  const { getGroupId } = useGroupStore(state => state);
-  const { loading, callApi, data } = useApi();
+  const [isFile, setIsFile] = useState('file');
+  const [loading, setLoading] = useState(false);
+  
+  const {
+    fetchUsers, 
+    fetchTeams, 
+    postDocument,
+    formatUserInput, 
+    formatTeamInput,
+  } = useFileManagerStore(state => state); // Store area
+  
   const form = useForm({
     defaultValues: {
-      type: "",
-      fileName: "",
-      fileType: "",
-      shared_teams: "",
-      shared_members: "",
+      title: '',
+      filetype: 'file',
+      page_type: '',
+      shared_members: [],
+      shared_teams: []
     }
   });
+  
+  useEffect(() => {    
+    document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
 
-  useEffect(() => {
-    const mainContent = document.getElementById('main-content');
-    if (mainContent) {
-      if (isOpen) {
-        mainContent.setAttribute('inert', '');
-      } else {
-        mainContent.removeAttribute('inert');
-      }
+    if (isOpen) {
+      (async () => {
+        try {
+          await fetchUsers();
+          await fetchTeams();
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      })();
     }
   }, [isOpen]);
 
   const onSubmit = async (data) => {
-    console.log("Form Data:", data);
+    setLoading(true);
+    const newDocument = { id, type, ...data };
+    
+    console.log("Form Data:", newDocument);
 
-    const newDocumentData = {
-      user_id: "66cda5dac6886719e3345c19",
-      content: {
-        text: "This is the document content"
-      },
-      summary: "This is the document summary",
-      page_type: data.fileType,
-      title: "Sample Page Title",
-      folder_id: "66e404cf089aef7c495015f4",
-      custom_meta: {
-        author: "John Doe",
-        keywords: ["sample", "page", "meta"]
-      },
-      shared_teams: [
-        "66cda5dac6886719e3345c19",
-        "66e404cf089aef7c495015f4"
-      ],
-      shared_members: [
-        "66cda5dac6886719e3345c19",
-        "66e404cf089aef7c495015f4"
-      ],
-      space_id: "66e4064f658c25f499aa9d63",
-      group_id: "66e4064f658c25f499aa9d63",
-      attachments: "attachment_url"
+    try {
+      await postDocument(newDocument);
+      setLoading(false)
+      setIsOpen(false);
+      form.reset();  
+    } catch (error) {
+      setLoading(false)
+      console.error("Error fetching data: ", error);
     }
-    callApi('https://api-server-1lmd.onrender.com/v1/page/document?id=' + id, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(newDocumentData)
-    })
-    setIsOpen(false);
-    form.reset();
   };
 
   return (
@@ -122,43 +106,49 @@ const AddFileDialog = ({ id }) => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>Create New File</DialogTitle>
+              <DialogTitle>Create</DialogTitle>
               <DialogDescription>
-                Please provide the necessary details to create a new file.
+                Please provide the necessary details to create.
               </DialogDescription>
             </DialogHeader>
             <div className="py-3 w-full flex items-start flex-col gap-4">
-              {getGroupId(id) &&
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <RadioGroup
-                      onValueChange={(value) => {
-                        field.onChange(value); // Update form value
-                        setIsFile(value);      // Update local state
-                      }}
-                      defaultValue='folder'
-                      className="w-full"
-                    >
-                      <FormLabel>Type</FormLabel>
-                      <div className="flex items-center gap-3 mt-2">
+              <FormField
+                control={form.control}
+                name="filetype"
+                render={({ field }) => (
+                  <RadioGroup
+                    onValueChange={(value) => {                      
+                      field.onChange(value); // Update form value
+                      setIsFile(value);      // Update local state
+                    }}
+                    defaultValue={isFile}
+                    className="w-full"
+                  >
+                    <FormLabel>Type</FormLabel>
+                    <div className="flex items-center gap-3 mt-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="file" id="file" />
+                        <Label htmlFor="file" className="cursor-pointer">File</Label>
+                      </div>
+                      { type === 'folder' || type !== 'group' && 
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="group" id="group" />
+                          <Label htmlFor="group" className="cursor-pointer">Group</Label>
+                        </div>
+                      }
+                      { type !== 'folder' && 
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="folder" id="folder" />
                           <Label htmlFor="folder" className="cursor-pointer">Folder</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="file" id="file" />
-                          <Label htmlFor="file" className="cursor-pointer">File</Label>
-                        </div>
-                      </div>
-                    </RadioGroup>
-                  )}
-                />
-              }
+                        </div> 
+                      }
+                    </div>
+                  </RadioGroup>
+                )}
+              />
               <FormField
                 control={form.control}
-                name="fileName"
+                name="title"
                 render={({ field }) => (
                   <FormItem className="w-full">
                     <FormLabel>Name</FormLabel>
@@ -166,7 +156,7 @@ const AddFileDialog = ({ id }) => {
                       <Input
                         placeholder="File Name"
                         {...field}
-                        value={field.value}
+                        value={field.value ?? ''}
                         onChange={field.onChange}
                       />
                     </FormControl>
@@ -174,16 +164,16 @@ const AddFileDialog = ({ id }) => {
                   </FormItem>
                 )}
               />
-              {isFile !== 'folder' || getGroupId(id) === false &&
+              {isFile === 'file' &&
                 <FormField
                   control={form.control}
-                  name="fileType"
+                  name="page_type"
                   render={({ field }) => (
                     <FormItem className="w-full">
                       <FormLabel>Type</FormLabel>
                       <FormControl>
                         <Controller
-                          name="fileType"
+                          name="page_type"
                           control={form.control}
                           render={({ field }) => (
                             <Select
@@ -193,10 +183,10 @@ const AddFileDialog = ({ id }) => {
                               <SelectTrigger>
                                 <SelectValue placeholder="File Format" />
                               </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="doc">Document</SelectItem>
-                                <SelectItem value="sh">Sheet</SelectItem>
-                                <SelectItem value="wb">Whiteboard</SelectItem>
+                              <SelectContent>                                                              
+                                <SelectItem value="document">Document</SelectItem>
+                                <SelectItem value="sheet">Sheet</SelectItem>
+                                <SelectItem value="whiteboard">Whiteboard</SelectItem>                                  
                               </SelectContent>
                             </Select>
                           )}
@@ -214,7 +204,7 @@ const AddFileDialog = ({ id }) => {
                   <FormItem className='w-full'>
                     <FormLabel>Shared Member</FormLabel>
                     <MultiSelect
-                      options={formattedUserData()}
+                      options={formatUserInput()}
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select frameworks"
                       variant="inverted"
@@ -231,7 +221,7 @@ const AddFileDialog = ({ id }) => {
                   <FormItem className='w-full'>
                     <FormLabel>Shared Team</FormLabel>
                     <MultiSelect
-                      options={formattedTeamData()}
+                      options={formatTeamInput()}
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select frameworks"
                       variant="inverted"
@@ -243,7 +233,7 @@ const AddFileDialog = ({ id }) => {
               />
             </div>
             <div className="flex justify-end space-x-2">
-              <Button type="submit">Create</Button>
+              <Button type="submit">{loading ? <MenuItemLoading text='Creating...' flex='row' btn={true} /> : "Create"}</Button>
             </div>
           </form>
         </Form>
