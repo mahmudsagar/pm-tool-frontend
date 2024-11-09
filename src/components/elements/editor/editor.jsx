@@ -41,13 +41,14 @@ import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import useApi from '@/lib/dataFetcher';
 import { baseUrl } from '@/utils/constants';
+import Spinner from '../spinner';
 const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
 export default function Editor({ title, content, page_content_id, custom_meta, onChange }) {
   const [editor] = useLexicalComposerContext()
-  const { loading: imageUploading, data:imageData, callApi:uploadImage } = useApi();
+  const { loading: imageLoading, data: imageData, callApi: uploadImage } = useApi();
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState(null);
   const [isSmallWidthViewport, setIsSmallWidthViewport] =
@@ -101,6 +102,7 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
     formData.append('media_type', 'cover_photo')
     formData.append('reference_id', page_content_id)
     formData.append('caption', ' ')
+    formData.append('reference_for', 'page')
 
     formData.append('file', file.File)
     if (file) {
@@ -112,8 +114,13 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
   }
 
   const handleCoverRemove = () => {
-    setCoverImage(null);
+    uploadImage(baseUrl + '/v1/upload/media?id=' + imageData?._id + '&reference_for=page',
+      {
+        method: 'DELETE'
+      })
   }
+
+  console.log('imageData', imageData)
 
   return (
     <div className="editor-container relative">
@@ -127,20 +134,25 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
             backgroundRepeat: "no-repeat",
           }}
         >
-          <Button onClick={handleCoverRemove} variant="outline" className="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-70">
-            Remove cover
-          </Button>
+          {imageLoading ?
+            <Spinner className="absolute inset-0" />
+            :
+            <Button onClick={handleCoverRemove} variant="outline" className="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-70">
+              Remove cover
+            </Button>}
         </div>
       }
-      <div className='py-2 px-6 mb-4'>
-
+      <div className='py-2 px-6 mb-4 relative'>
         {!imageData?.url && <div className='h-10 opacity-0 hover:opacity-100'>
-          <ImageUpload onChange={coverImageUploadHandler} >
-            <Button variant="secondary" className="opacity-60 ">
-              <Image size={15} className='mr-1' />
-              Add a cover
-            </Button>
-          </ImageUpload>
+          {imageLoading ?
+            <Spinner className="absolute inset-0" />
+            :
+            <ImageUpload onChange={coverImageUploadHandler} >
+              <Button variant="secondary" className="opacity-60 ">
+                <Image size={15} className='mr-1' />
+                Add a cover
+              </Button>
+            </ImageUpload>}
         </div>
         }
 

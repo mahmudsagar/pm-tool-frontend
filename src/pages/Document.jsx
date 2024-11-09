@@ -81,11 +81,10 @@ export const Document = () => {
       });
   }
 
-  useEffect(() => {
-    debounce(() => {
-      callApi(baseUrl + '/v1/page/document?id=' + id)
-    }, 1000)();
-  }, [pathname, id])
+  useEffect(debounce(() => {
+    callApi(baseUrl + '/v1/page/document?id=' + id)
+
+  }, 1000), [pathname, id])
 
   const onChange = debounce((value) => {
     console.log('onChange', value);
