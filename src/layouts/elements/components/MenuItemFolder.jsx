@@ -127,13 +127,15 @@ const MenuItemFolder = ({ folder, className }) => {
                   <FileDropdownMenu
                     isOpen={dropdownOpenStates}
                     onToggle={(id) => handleDropdownToggle(id)}
-                    folderId={folder?._id}
+                    id={folder?._id}
+                    type={folder?.entity_type}
                   />
                 </div>
               </div>
             </AccordionTrigger>
             <AccordionContent className="space-y-2 pl-3 py-3">
               <DocumentsList 
+                key={folder?._id}
                 isOpen={isOpen}
                 className={className}
                 loading ={loading}

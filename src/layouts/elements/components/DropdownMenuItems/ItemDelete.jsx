@@ -12,26 +12,37 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import MenuItemLoading from '../MenuItemLoading';
+import useFileManagerStore from "@/stores/useFileManagerStore";
 
-const ItemDelete = ({ onDelete, folderId, loading, onToggle, isOpen }) => {
+const ItemDelete = ({ fileId, fileType, onToggle }) => {
+  
+  const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleDeleteClick = () => {
+  const { removeData } = useFileManagerStore(state => state);
+
+  const handleDeleteClick = (e) => {
+    e.preventDefault();
     setIsDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (onDelete && folderId) {
-      onDelete(folderId);
-      if (!loading) {
-        setIsDialogOpen(false);
-      }
-    }
+  const confirmDelete = async () => {
+    setLoading(true);
+
+    try {
+      await removeData(fileId, fileType);
+      setLoading(false)
+      setIsDialogOpen(false);
+    } catch (error) {
+      setLoading(false)
+      console.error("Error fetching data: ", error);
+    }    
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
-    onToggle(folderId, false);
+    onToggle(fileId, false);
   };
 
   return (
@@ -57,7 +68,7 @@ const ItemDelete = ({ onDelete, folderId, loading, onToggle, isOpen }) => {
               Cancel
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
-              {loading ? 'Deleting...' : 'Delete'}
+              {loading ? <MenuItemLoading text='Deleting...' flex='row' /> : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

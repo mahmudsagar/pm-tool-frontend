@@ -68,8 +68,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
 
   // Add Document Data
   postDocument: async (data) => {
-    console.log(data.filetype);
-    
     let endpoint, newDocumentData;
 
     if (data.filetype === "file") {
@@ -110,11 +108,11 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
 
     try {
       const { data: responseData, error } = await get().apiRequest(`${API_BASE_URL}${endpoint}`, 'POST', newDocumentData);
-  
+
       if (error) {
         return { error };
       }
-  
+
       // Update the appropriate state based on filetype
       set((state) => {
         if (data.filetype === "file") {
@@ -133,10 +131,61 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
             }
             return space;
           });
-      
+
           return { spaces: updatedSpaces }; // Set directly updated array
         }
       });
+
+      return { error: null };
+
+    } catch (error) {
+      return { error: error.message };
+    }
+  },
+
+  // Delete Folder, File, and Group
+  removeData: async (id, type) => {
+    console.log(id, type);
+    
+    let endPoint;
+    if (type === "document") {
+      endPoint = `/page/document?id=${id}`;
+    } else if (type === "folder"){
+      endPoint = `/folder?id=${id}`;
+    } else if (type === "group"){
+      endPoint = `/group?id=${id}`;      
+    } else {
+      return { error: "Invalid filetype specified" };
+    }
+
+    try {
+      const { data: responseData, error } = await get().apiRequest(`${API_BASE_URL}${endPoint}`, 'DELETE');
+  
+      if (error) {
+        return { error };
+      }
+
+      set((state) => {
+        // Update documents state
+        let updatedDocuments = { ...state.documents };
+        if (type === "document") {
+            Object.keys(updatedDocuments).forEach((key) => {
+                updatedDocuments[key] = updatedDocuments[key].filter((doc) => doc._id !== id);
+            });
+        }
+
+        // Update spaces state
+        let updatedSpaces = state.spaces.map((space) => {
+            const updatedChilds = space.childs.filter((child) => child._id !== id);
+            return { ...space, childs: updatedChilds };
+        });
+
+        return {
+            documents: updatedDocuments,
+            spaces: updatedSpaces
+        };
+      });
+
   
       return { error: null };
   

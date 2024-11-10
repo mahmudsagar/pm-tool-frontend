@@ -5,7 +5,7 @@ import { FolderOpen } from "lucide-react";
 import MenuItemLoading from "./MenuItemLoading";
 import MenuSpaceFile from "./MenuSpaceFile";
 
-const DocumentsList = ({ loading, documents, handleDocumentIcons, isOpen, className, dropdownOpenStates, handleDropdownToggle }) => {
+const DocumentsList = ({ key, loading, documents, handleDocumentIcons, isOpen, className, dropdownOpenStates, handleDropdownToggle }) => {
   const renderedDocuments = useMemo(() => {
     if (!documents || documents.length === 0) {
       return (
@@ -15,9 +15,6 @@ const DocumentsList = ({ loading, documents, handleDocumentIcons, isOpen, classN
         </div>
       );
     }
-
-    console.log(documents);
-    
 
     return documents.map((document) => (
       <MenuSpaceFile
@@ -35,6 +32,9 @@ const DocumentsList = ({ loading, documents, handleDocumentIcons, isOpen, classN
   if (loading) {
     return <MenuItemLoading text='Loading...' flex='col' />;
   }
+
+  console.log(documents);
+  
 
   return <>{!loading && renderedDocuments}</>;
 };
