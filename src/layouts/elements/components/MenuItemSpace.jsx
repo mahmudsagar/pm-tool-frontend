@@ -1,10 +1,26 @@
+import { useEffect, useState } from "react";
 import { ShieldCheck, FolderOpen } from "lucide-react";
 import MenuItemFolder from "./MenuItemFolder";
 import FolderDropdownMenu from "./FolderDropdownMenu";
 import spaceIcon from '@/assets/images/space.svg';
 import AddFileDialog from "./AddFileDialog";
+import useFileManagerStore from "@/stores/useFileManagerStore";
+import MenuItemLoading from "./MenuItemLoading";
 
 const MenuItemSpace = ({ space, className }) => {
+  const [loading, setLoading] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(true);
+  const spaces = useFileManagerStore((state) => state.spaces);
+
+  useEffect(() => {
+    if (firstLoad) {
+      setFirstLoad(false); 
+    } else {
+      setLoading(true); 
+      const timeoutId = setTimeout(() => setLoading(false), 500); 
+      return () => clearTimeout(timeoutId); 
+    }
+  }, [spaces]);
   return (
     <>
       <div className="flex items-center justify-between mb-3">
@@ -24,12 +40,12 @@ const MenuItemSpace = ({ space, className }) => {
         </div>
       </div>
 
-      { Array.isArray(space?.childs) && space?.childs.length > 0 ? (
-        <>
-          {space?.childs.map(child => (
-            <MenuItemFolder key={child._id} folder={child} className={className} />
-          ))}
-        </>
+      {loading ? (
+        <MenuItemLoading text='Loading...' flex='row'/>
+      ) : Array.isArray(space?.childs) && space?.childs.length > 0 ? (
+        space.childs.map(child => (
+          <MenuItemFolder key={child._id} folder={child} className={className} />
+        ))
       ) : (
         <div className="flex items-center justify-center flex-col gap-2 py-5">
           <FolderOpen className="text-gray-400 dark:text-white" />
@@ -37,7 +53,7 @@ const MenuItemSpace = ({ space, className }) => {
         </div>
       )}
     </>
-  )
-}
+  );
+};
 
 export default MenuItemSpace;
