@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from 'react';
 import {
   Excalidraw,
   MainMenu,
@@ -10,28 +10,22 @@ import {
 
 import { StickyNote } from "lucide-react";
 
-import useSyncStore from '@/stores/useSyncStore';
 import { useTheme } from "@/components/theme-provider";
 // import CustomLibrary from "./custom-library";
 
 import { PAGE_EMBED, STICKY_NOTE } from './constants';
 import PageEmbed from "./PageEmbed";
-import useDocumentStore from "@/stores/useDocumentStore";
 
 /**
  * 
  * @param {viewId} viewId of the current page
  * @returns 
  */
-export default function ExcalidrawRender({ viewId }) {
-  const { documentData, loading } = useDocumentStore(state => state);
-
+export default function ExcalidrawRender({ content, onChange }) {
   const { theme } = useTheme();
   const wrapperRef = useRef(null);
 
   const [excalidrawAPI, setExcalidrawAPI] = useState(null);
-  // store data
-  const { viewData, setViewData } = useSyncStore()
 
   const [flags, setFlags] = useState({
     justLoaded: true,
@@ -76,6 +70,7 @@ export default function ExcalidrawRender({ viewId }) {
     ]
 
     excalidrawAPI.updateScene({ elements });
+    onChange({ content: { elements } })
   }
 
   /**
@@ -105,18 +100,11 @@ export default function ExcalidrawRender({ viewId }) {
       if (sceneVersion > 0 && sceneVersion !== previousSceneVersion) {
         setPreviousSceneVersion(sceneVersion);
 
-        console.log('is saving!');
         // Send non deleted elements to store state
-        setViewData(viewId, {
-          data: getNonDeletedElements(elements),
-          // clientId: clientId
-        });
+
+        onChange({ content: { elements: getNonDeletedElements(elements) } })
       }
     }
-  }
-
-  if(loading.document) {
-    return null
   }
 
   return (
@@ -127,7 +115,7 @@ export default function ExcalidrawRender({ viewId }) {
       <Excalidraw
         excalidrawAPI={(api) => setExcalidrawAPI(api)}
         initialData={{
-          elements: documentData?.[viewId]?.data || [],
+          elements: Array.isArray(content?.elements) ? content?.elements : [],
           appState: {
             currentItemRoughness: 0,
             currentItemRoundness: 'round',

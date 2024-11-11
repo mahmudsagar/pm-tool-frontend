@@ -43,7 +43,7 @@ export const routes = [
         element: <Sheet />
       },
       {
-        path: "/whiteboard/*",
+        path: "/whiteboard/:id",
         element: <Whiteboard />
       }
     ]

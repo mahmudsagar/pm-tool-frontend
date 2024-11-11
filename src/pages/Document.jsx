@@ -111,7 +111,7 @@ export const Document = () => {
       <Spinner />
       :
       <LexicalComposer initialConfig={editorConfig}>
-        {data?.content && <Editor onChange={onChange} content={data.content} {...sanitize(pageMeta)} />}
+        {data?.content && <Editor onChange={onChange} content={JSON.parse(data.content)} {...sanitize(pageMeta)} />}
       </LexicalComposer>}
 
     <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
