@@ -3,12 +3,11 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileSidebar } from "./mobile-sidebar";
 import DynamicBreadCrumb from "@/components/elements/breadcrumbs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Link from "@/BetterRouter/Link";
-import { History, MessageSquareMore, MoreVertical } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-export default function Header({ showPageTitle = true, closeBtn='' }) {
+export default function Header({ showPageTitle = true, closeBtn='', topMenu }) {
 
     return (
         <div className="supports-backdrop-blur:bg-background/60 sticky left-0 right-0 top-0 z-20 border-b bg-background/95 backdrop-blur">
@@ -26,7 +25,7 @@ export default function Header({ showPageTitle = true, closeBtn='' }) {
                 <div className="flex items-center gap-3">
 
 
-                    <div className="max-w-20 flex mr-3.5 flex-row-reverse justify-end items-center relative transform translate-z-0">
+                    {/* <div className="max-w-20 flex mr-3.5 flex-row-reverse justify-end items-center relative transform translate-z-0">
                         <Avatar className="w-8 h-8 relative -mr-3.5">
                             <AvatarImage src="https://avatars.githubusercontent.com/u/124598.png" alt="@shadcn" />
                             <AvatarFallback>PP</AvatarFallback>
@@ -39,21 +38,12 @@ export default function Header({ showPageTitle = true, closeBtn='' }) {
                             <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
                             <AvatarFallback>user</AvatarFallback>
                         </Avatar>
-                    </div>
+                    </div> */}
 
                     <div className="flex gap-0 items-center justify-between">
-                        <Link href="#" className="text-sm font-medium text-primary">
-                            <Button variant="ghost" size="icon">
-                                <History size={20} />
-                            </Button>
-                        </Link>
-                        <Link href="#" className="text-sm font-medium text-primary">
-                            <Button variant="ghost" size="icon">
-                                <MessageSquareMore size={20} />
-                            </Button>
-                        </Link>
+                       {topMenu?.inlineContent}
                         <ThemeToggle />
-                        <DropdownMenu>
+                       {topMenu?.dropdownContent && <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="w-6">
                                     <MoreVertical className="h-4 w-4" />
@@ -61,12 +51,9 @@ export default function Header({ showPageTitle = true, closeBtn='' }) {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                    <Link href="#">Profile</Link>
-                                </DropdownMenuItem>
-
+                                {topMenu?.dropdownContent}
                             </DropdownMenuContent>
-                        </DropdownMenu>
+                        </DropdownMenu>}
 
                     </div>
                 </div>

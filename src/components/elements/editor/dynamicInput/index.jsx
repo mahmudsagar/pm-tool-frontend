@@ -10,12 +10,13 @@ import { DatePickerWithRange } from './daterangepicker';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
+import { debounce, sanitize } from '@/utils/helper';
 
 const InputNumber = ({ ...props }) => {
   return <Input type="number" {...props} />;
 };
 
-const SelectField = ({ options,onChange, ...props }) => {
+const SelectField = ({ options, onChange, ...props }) => {
   return <Select onValueChange={onChange}>
     <SelectTrigger {...props}>
       <SelectValue />
@@ -32,13 +33,22 @@ const SelectField = ({ options,onChange, ...props }) => {
 
 
 const fieldTypes = [
-  { type: 'input', label: 'Input', component: Input, hasOptions: false },
-  { type: 'number', label: 'Number', component: InputNumber, hasOptions: false },
-  { type: 'select', label: 'Select', component: SelectField, hasOptions: true },
-  { type: 'multi-select', label: 'Multi Select', component: MultiSelect, hasOptions: true },
-  { type: 'date', label: 'Date', component: DatePicker, hasOptions: false },
-  { type: 'daterange', label: 'Date Range', component: DatePickerWithRange, hasOptions: false },
+  { type: 'input', label: 'Input', hasOptions: false },
+  { type: 'number', label: 'Number', hasOptions: false },
+  { type: 'select', label: 'Select', hasOptions: true },
+  { type: 'multi-select', label: 'Multi Select', hasOptions: true },
+  { type: 'date', label: 'Date', hasOptions: false },
+  { type: 'daterange', label: 'Date Range', hasOptions: false },
 ];
+
+const fields = {
+  input: Input,
+  number: InputNumber,
+  select: SelectField,
+  multiSelect: MultiSelect,
+  date: DatePicker,
+  daterange: DatePickerWithRange
+}
 
 const Field = ({ field, control, onChange }) => {
   const [open, setOpen] = useState(false);
@@ -48,7 +58,8 @@ const Field = ({ field, control, onChange }) => {
   const [options, setOptions] = useState([]);
   const [showFieldList, setShowFieldList] = useState(false);
   const [changedField, setChangedField] = useState({});
-  const [currentValue, setCurrentValue] = useState(field.value);
+
+  const Component = fields[field.type] || Input;
 
   useEffect(() => {
     if (!field.initialized) {
@@ -62,8 +73,9 @@ const Field = ({ field, control, onChange }) => {
         if (!state) {
           setShowFieldList(false);
           onChange({
-            ...field, label, actionType, initialized: true, value: currentValue,
-            options: options.filter(Boolean).map((option) => ({ value: option, label: option })),
+            ...field, label, actionType, initialized: true,
+            ...(field.hasOptions ?
+              { options: options.filter(Boolean).map((option) => ({ value: option, label: option })) } : {}),
             ...(changedField ? { ...changedField } : {})
           });
         }
@@ -160,7 +172,7 @@ const Field = ({ field, control, onChange }) => {
         render={({ field: formField }) => (
           <FormItem>
             <FormControl>
-              <field.component className="outline-none w-full h-8" {...field} onChange={setCurrentValue} {...formField} />
+              <Component className="outline-none w-full h-8" {...field} {...formField} />
             </FormControl>
           </FormItem>
         )}
@@ -188,18 +200,16 @@ const FieldList = ({ handleCreateField }) => {
 }
 
 
-const DynamicInput = ({ onChange }) => {
-  const [customFields, setCustomFields] = useState([]); // List of added fields
-  const form = useForm()
-  useEffect(() => {
-    onChange(customFields);
-  }, [customFields]);
+const DynamicInput = ({ initialData, onChange }) => {
+  const { fields = [], values = {} } = sanitize(initialData);
+  const [customFields, setCustomFields] = useState(fields); // List of added fields
+  const form = useForm({
+    defaultValues: values
+  })
 
   const handleCreateField = ({ type, label, ...rest }) => {
     /** store the new field in the list by a random id */
     const newField = {
-      id: Math.random().toString(10).substring(7),
-      component: fieldTypes.find(field => field.type === type).component,
       type,
       initialized: false,
       label,
@@ -210,22 +220,22 @@ const DynamicInput = ({ onChange }) => {
     setCustomFields([...customFields, newField]); // Add the new field to the list
   };
 
-  const handleEditField = ({ id, label, actionType, ...rest }) => {
+  const handleEditField = ({ name, label, actionType, ...rest }) => {
     if (actionType === 'delete') {
-      setCustomFields(customFields.filter(field => field.id !== id));
+      setCustomFields(customFields.filter(field => field.name !== name));
     }
     else if (actionType === 'duplicate') {
-      const field = customFields.find(field => field.id === id);
+      const field = customFields.find(field => field.name === name);
       const newField = {
         ...field,
-        id: Math.random().toString(10).substring(7),
+        name: Math.random().toString(10).substring(7),
         initialized: false
       }
       setCustomFields([...customFields, newField]);
     }
     else {
       const updatedFields = customFields.map(field => {
-        if (field.id === id) {
+        if (field.name === name) {
           return { ...field, label, ...rest };
         }
         return field;
@@ -235,10 +245,16 @@ const DynamicInput = ({ onChange }) => {
     }
   }
 
+  const handleFormChange = debounce(() => {
+    const values = form.getValues();
+    const fields = customFields.map(({...rest }) => ({ ...rest }));
+    onChange({ values, fields });
+  }, 1000);
+
   return (
 
     <Form {...form}>
-      <form onChange={() => console.log(form.getValues(),customFields)} >
+      <form onChange={handleFormChange} >
         <table className='w-full mt-3'>
           <tbody>
             {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} />
@@ -249,7 +265,8 @@ const DynamicInput = ({ onChange }) => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="opacity-60">
               <Plus size={16} className='mr-1' />
-              Add a property</Button>
+              Add a property
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56">
             <FieldList handleCreateField={handleCreateField} />

@@ -5,7 +5,10 @@ import Sidebar from "./elements/sidebar";
 import { useState } from "react";
 
 const Default = ({ children }) => {
-    const [topMenu, setTopMenu] = useState('')
+    const [topMenu, setTopMenu] = useState({
+        dropdownContent: null,
+        inlineContent: null
+    })
 
     return (
         <>
