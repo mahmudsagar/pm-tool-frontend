@@ -9,9 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ItemDelete from './DropdownMenuItems/ItemDelete';
 
-const FileDropdownMenu = ({ isOpen = {}, onToggle = () => {}, id, type }) => {
-  console.log(id);
-  
+const FileDropdownMenu = ({ isOpen = {}, onToggle = () => {}, id, type }) => { 
 
   return (
     <>

@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom'
 import FileDropdownMenu from './FileDropdownMenu'
 import { cn } from '@/lib/utils'
 
-const MenuSpaceFile = ({ data, handleDocumentIcons, dropdownOpenStates, handleDropdownToggle, isOpen, className }) => {
-  console.log(data);
-    
+const MenuSpaceFile = ({ data, handleDocumentIcons, dropdownOpenStates, handleDropdownToggle, isOpen, className }) => {      
   return (
     <div className="group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline">
       <div className="flex justify-between items-center">
@@ -23,7 +21,7 @@ const MenuSpaceFile = ({ data, handleDocumentIcons, dropdownOpenStates, handleDr
             isOpen={dropdownOpenStates}
             onToggle={(id) => handleDropdownToggle(id)}
             id={data?._id}
-            type={data?.page_type}
+            type={data?.entity_type}
           />
         </div>
       </div>

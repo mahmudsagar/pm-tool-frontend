@@ -144,11 +144,9 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   },
 
   // Delete Folder, File, and Group
-  removeData: async (id, type) => {
-    console.log(id, type);
-    
+  removeData: async (id, type) => {    
     let endPoint;
-    if (type === "document") {
+    if (type === "page") {
       endPoint = `/page/document?id=${id}`;
     } else if (type === "folder"){
       endPoint = `/folder?id=${id}`;

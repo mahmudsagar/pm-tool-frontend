@@ -6,7 +6,6 @@ import useFileManagerStore from "@/stores/useFileManagerStore";
 import folderIcon from '@/assets/images/folder.svg';
 import AddFileDialog from "./AddFileDialog";
 import DocumentsList from "./FolderDocument";
-import MenuSpaceFile from "./MenuSpaceFile";
 import FileDropdownMenu from "./FileDropdownMenu";
 import { 
   FileText, 
@@ -27,7 +26,7 @@ const MenuItemFolder = ({ folder, className }) => {
   const [loading, setLoading] = useState(false);
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
-  const { fatchDocument, documents } = useFileManagerStore(state => state);  
+  const { fatchDocument, documents } = useFileManagerStore(state => state);    
 
   useEffect(() => {
     if (isOpen) {
@@ -149,14 +148,27 @@ const MenuItemFolder = ({ folder, className }) => {
         </Accordion>
       ) : 
       (
-        <MenuSpaceFile
-          isOpen={isOpen}
-          className={className}
-          data={folder?.pageMeta[0]}
-          dropdownOpenStates={dropdownOpenStates}
-          handleDocumentIcons={handleDocumentIcons}
-          handleDropdownToggle={handleDropdownToggle}
-        />
+        <div className="group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline">
+          <div className="flex justify-between items-center">
+            { handleDocumentIcons(folder?.page_type) }
+            <Link 
+              to={`/document/${folder?._id}`} 
+              className={cn('absolute left-10 text-sm duration-200 w-[155px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
+            >
+              { `${folder?.title}.${folder?.page_type}` }
+            </Link>
+          </div>
+          <div className='opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+            <div className="flex gap-1">
+              <FileDropdownMenu
+                isOpen={dropdownOpenStates}
+                onToggle={(id) => handleDropdownToggle(id)}
+                id={folder?._id}
+                type={folder?.entity_type}
+              />
+            </div>
+          </div>
+        </div>
       )}      
     </>
   );

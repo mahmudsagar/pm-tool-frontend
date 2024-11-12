@@ -42,7 +42,7 @@ const MenuItemSpace = ({ space, className }) => {
 
       {loading ? (
         <MenuItemLoading text='Loading...' flex='row'/>
-      ) : Array.isArray(space?.childs) && space?.childs.length > 0 ? (
+      ) : Array.isArray(space?.childs) && space?.childs?.length > 0 ? (
         space.childs.map(child => (
           <MenuItemFolder key={child._id} folder={child} className={className} />
         ))
