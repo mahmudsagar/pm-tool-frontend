@@ -9,7 +9,7 @@ import NotFound from '@/BetterRouter/NotFound';
 import Link from '@/BetterRouter/Link';
 
 import ExcalidrawRender from "@/components/elements/whiteboard";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 import { Copy, History, MessageSquareMore, Share, Trash } from 'lucide-react';
@@ -24,7 +24,7 @@ export default function Whiteboard() {
   const { pathname } = useLocation()
   const { loading, data, callApi, error } = useApi()
   const { pageMeta, ...restData } = data || {}
-  const [topMenu, setTopMenu] = useOutletContext()
+  const [, setTopMenu] = useOutletContext()
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
@@ -77,7 +77,6 @@ export default function Whiteboard() {
   }, [pathname, id])
 
   const onChange = debounce((value) => {
-    console.log("changing", { ...restData, id: data?._id, ...sanitize(value) });
     if (!data) {
       return;
     }
