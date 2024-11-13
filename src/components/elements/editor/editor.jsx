@@ -40,13 +40,15 @@ import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import useApi from '@/lib/dataFetcher';
-import { baseUrl } from '@/utils/constants';
+import { baseUrl, mediaBaseUrl } from '@/utils/constants';
 import Spinner from '../spinner';
+import { sanitize } from '@/utils/helper';
+import { cn } from '@/lib/utils';
 const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
-export default function Editor({ title, content, page_content_id, custom_meta, onChange }) {
+export default function Editor({ title, content, page_id, custom_meta, mediaAttachments, onChange }) {
   const [editor] = useLexicalComposerContext()
   const { loading: imageLoading, data: imageData, callApi: uploadImage } = useApi();
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -55,7 +57,7 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
     useState(false);
   const [isLinkEditMode, setIsLinkEditMode] = useState(false);
 
-  const [coverImage, setCoverImage] = useState(null);
+  const [coverImage, setCoverImage] = useState(sanitize(mediaAttachments, 'array').find(media => media.media_type === 'cover_photo'));
   const isEditable = useLexicalEditable();
 
   const [currentTitle, setCurrentTitle] = useState(title);
@@ -100,23 +102,32 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
     const file = files[0];
     const formData = new FormData()
     formData.append('media_type', 'cover_photo')
-    formData.append('reference_id', page_content_id)
+    formData.append('reference_id', page_id)
     formData.append('caption', ' ')
     formData.append('reference_for', 'page')
 
     formData.append('file', file.File)
     if (file) {
-      uploadImage(baseUrl + '/v1/upload/media', {
+      uploadImage(mediaBaseUrl, {
         method: 'POST',
         body: formData
       })
     }
   }
 
+  useEffect(() => {
+    if (imageData?.url) {
+      setCoverImage(imageData)
+    }
+  }, [imageData])
+
   const handleCoverRemove = () => {
-    uploadImage(baseUrl + '/v1/upload/media?id=' + imageData?._id + '&reference_for=page',
+    uploadImage(mediaBaseUrl + '?id=' + coverImage?._id + '&reference_for=page',
       {
         method: 'DELETE'
+      }, () => {
+
+        setCoverImage(null)
       })
   }
 
@@ -124,11 +135,11 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
 
   return (
     <div className="editor-container relative">
-      {imageData?.url &&
+      {coverImage?.url &&
         <div
           className="relative h-52 cover-image-container group"
           style={{
-            backgroundImage: `url(${imageData?.url})`,
+            backgroundImage: `url(${coverImage?.url})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
@@ -143,7 +154,7 @@ export default function Editor({ title, content, page_content_id, custom_meta, o
         </div>
       }
       <div className='py-2 px-6 mb-4 relative'>
-        {!imageData?.url && <div className='h-10 opacity-0 hover:opacity-100'>
+        {!coverImage?.url && <div className={cn('h-10', imageLoading ? '' : 'opacity-0 hover:opacity-100')}>
           {imageLoading ?
             <Spinner className="absolute inset-0" />
             :
