@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useOutletContext, useParams } from 'react-router-dom';
 
 // utils
+import { documentBaseUrl } from '@/utils/constants';
 import useApi from '@/lib/dataFetcher';
-import { baseUrl } from '@/utils/constants';
 import { debounce, sanitize } from '@/utils/helper';
 import NotFound from '@/BetterRouter/NotFound';
 import Link from '@/BetterRouter/Link';
@@ -18,19 +18,14 @@ import "@betternotion/excalidraw/index.css";
 import Spinner from '@/components/elements/spinner';
 import { Button } from '@/components/ui/button';
 
-let firstLoad = true;
 export default function Whiteboard() {
   const { id } = useParams()
   const { pathname } = useLocation()
-  const { loading, data, callApi, error } = useApi()
+  const { data, loading, error, callApi } = useApi();
   const { pageMeta, ...restData } = data || {}
   const [, setTopMenu] = useOutletContext()
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-
-  const handleDelete = () => {
-    fetch(baseUrl + '/v1/page/document?id=' + id, { method: 'DELETE', });
-  }
 
   useEffect(() => {
     if (!data) return;
@@ -71,24 +66,29 @@ export default function Whiteboard() {
     })
   }, [data]);
 
+
+  // fetch page data via api handler
+  
   useEffect(() => {
-    console.log({url: baseUrl + '/v1/page/document?id=' + id});
-    callApi(baseUrl + '/v1/page/document?id=' + id)
+    callApi(documentBaseUrl + '?id=' + id)
   }, [pathname, id])
+
+  // delete page via api handler
+  const handleDelete = () => {
+    callApi(documentBaseUrl + '?id=' + id,
+      {
+        method: 'DELETE',
+      });
+  }
 
   const onChange = debounce((value) => {
     if (!data) {
       return;
     }
 
-    if (firstLoad) {
-      firstLoad = false;
-      return;
-    }
-
-    fetch(baseUrl + '/v1/page/document', {
+    fetch(documentBaseUrl, {
       method: 'PUT',
-      body: JSON.stringify({ ...restData, id: data?._id, ...sanitize(value) }),
+      body: JSON.stringify({ id: data?._id, ...sanitize(value) }),
     });
   }, 4000);
 
@@ -102,15 +102,14 @@ export default function Whiteboard() {
 
   return (
     <div className="text-center h-full pt-16 -mt-16 overflow-hidden">
-      <ExcalidrawRender content={data?.content} onChange={onChange} {...sanitize(pageMeta)} />
+      <ExcalidrawRender content={data?.pageContent?.content} onChange={onChange} />
 
       <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure to proceed?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this
-              document.
+              This action cannot be undone. This will permanently delete this page.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

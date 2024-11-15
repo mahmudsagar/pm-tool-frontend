@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import {
   Excalidraw,
   MainMenu,
@@ -11,7 +11,6 @@ import {
 import { StickyNote } from "lucide-react";
 
 import { useTheme } from "@/components/theme-provider";
-// import CustomLibrary from "./custom-library";
 
 import { PAGE_EMBED, STICKY_NOTE } from './constants';
 import PageEmbed from "./PageEmbed";
@@ -125,20 +124,8 @@ export default function ExcalidrawRender({ content, onChange }) {
         }}
         theme={theme}
         onChange={handleChange}
-        // renderTopRightUI={() => {
-        //   return (
-        //     <Sidebar.Trigger
-        //       name="custom-library"
-        //       tab="one"
-        //       icon={<BookIcon />}
-        //     >
-        //       Library
-        //     </Sidebar.Trigger>
-        //   );
-        // }}
       >
         <MainMenu>
-          {/* <MainMenu.DefaultItems.LoadScene /> */}
           <MainMenu.DefaultItems.Export />
           <MainMenu.DefaultItems.SaveAsImage />
           <MainMenu.DefaultItems.ClearCanvas />
@@ -156,9 +143,7 @@ export default function ExcalidrawRender({ content, onChange }) {
         <Footer>
           <PageEmbed onSelect={(id) => createPageEmbed(id)} />
         </Footer>
-        {/* <CustomLibrary excalidrawAPI={excalidrawAPI} /> */}
       </Excalidraw>
-      {/* json data view */}
     </div>
   );
 }
