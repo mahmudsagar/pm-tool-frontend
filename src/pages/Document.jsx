@@ -2,7 +2,7 @@ import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import useApi from '@/lib/dataFetcher';
 import { useEffect, useState } from 'react';
 import { useLocation, useOutletContext, useParams } from 'react-router-dom';
-import { baseUrl } from '@/utils/constants';
+import { documentBaseUrl } from '@/utils/constants';
 import { debounce, sanitize } from '@/utils/helper';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import Link from '@/BetterRouter/Link';
@@ -33,7 +33,7 @@ export const Document = () => {
   const { id } = useParams();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-  const { pageMeta, ...restData } = data || {}
+  const { pageMeta, title, custom_meta, mediaAttachments, pageContent, ...restData } = data || {}
 
   useEffect(() => {
     if (!data) return;
@@ -75,15 +75,14 @@ export const Document = () => {
   }, [data]);
 
   const handleDelete = () => {
-    fetch(baseUrl + '/v1/page/document?id=' + id,
+    callApi(documentBaseUrl + '?id=' + id,
       {
         method: 'DELETE',
       });
   }
 
   useEffect(debounce(() => {
-    callApi(baseUrl + '/v1/page/document?id=' + id)
-
+    callApi(documentBaseUrl + '?id=' + id)
   }, 1000), [pathname, id])
 
   const onChange = debounce((value) => {
@@ -97,21 +96,31 @@ export const Document = () => {
       return;
     }
 
-    fetch(baseUrl + '/v1/page/document', {
+    fetch(documentBaseUrl, {
       method: 'PUT',
-      body: JSON.stringify({ ...restData, id: data?._id, ...sanitize(value) }),
+      body: JSON.stringify({ id: data?._id, ...sanitize(value) }),
     });
   }, 4000);
 
   if (error) {
     return <NotFound />
   }
+
+  const editorProps = {
+    page_id: data?._id,
+    pageMeta,
+    title,
+    custom_meta,
+    mediaAttachments,
+    content: pageContent?.content,
+    onChange
+  }
   return <div className='lexical-editor relative h-full'>
     {loading ?
       <Spinner />
       :
       <LexicalComposer initialConfig={editorConfig}>
-        {data?.content && <Editor onChange={onChange} content={JSON.parse(data.content)} {...sanitize(pageMeta)} />}
+        {pageContent?.content && <Editor {...editorProps} />}
       </LexicalComposer>}
 
     <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
