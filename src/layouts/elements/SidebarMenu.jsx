@@ -10,7 +10,6 @@ import {
 import { CommandMenu } from "@/components/elements/commandMenu/command-menu";
 import SidebarMenuItems from "./SidebarMenuItems";
 import { useSidebar } from "@/stores/store";
-import useFileManagerStore from "@/stores/useFileManagerStore";
 
 const sidebarTopLinks = [
   {
@@ -34,9 +33,7 @@ export function SidebarMenu({ setOpen, className }) {
   const path = useLocation().pathname;
   const { isOpen } = useSidebar();
   const [openItem, setOpenItem] = useState("");
-  const [loading, setLoading] = useState(false);
   const [lastOpenItem, setLastOpenItem] = useState("");
-  const { fetchSpace } = useFileManagerStore(state => state);
   
   useEffect(() => {
     if (isOpen) {
@@ -46,23 +43,6 @@ export function SidebarMenu({ setOpen, className }) {
       setOpenItem("");
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      
-      try {
-        await fetchSpace();
-        setLoading(false);      
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [fetchSpace]);  
-
 
   return (
     <nav className="space-y-4 h-full">
@@ -81,7 +61,7 @@ export function SidebarMenu({ setOpen, className }) {
       <div className="space-y-2 pt-5 pb-6 h-[calc(100%_-_80px)] overflow-y-auto better-scrollbar">
         <p className="text-xs font-medium text-slate-500 pb-3 dark:text-white">Spaces</p>
         {/* Menu start */}
-        <SidebarMenuItems setOpen={setOpen} className={className} loading={loading} />
+        <SidebarMenuItems setOpen={setOpen} className={className} />
       </div>
     </nav>
   );

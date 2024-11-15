@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,16 +9,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import MenuItemLoading from '../MenuItemLoading';
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import useFileManagerStore from "@/stores/useFileManagerStore";
+import MenuItemLoading from '../../MenuItemLoading';
 
-const ItemDelete = ({ fileId, fileType, onToggle }) => {
-  
+const Delete = ({ fileId, fileType, onToggle }) => {
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -75,6 +72,6 @@ const ItemDelete = ({ fileId, fileType, onToggle }) => {
       </Dialog>
     </>
   );
-};
+}
 
-export default ItemDelete;
+export default Delete

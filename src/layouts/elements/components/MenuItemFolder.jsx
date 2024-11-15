@@ -5,21 +5,17 @@ import { useSidebar } from "@/stores/store";
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import folderIcon from '@/assets/images/folder.svg';
 import AddFileDialog from "./AddFileDialog";
-import DocumentsList from "./FolderDocument";
-import FileDropdownMenu from "./FileDropdownMenu";
-import { 
-  FileText, 
-  CircuitBoard,
-  ChevronDownIcon,
-  FileSpreadsheet
-} from "lucide-react";
+import { File, ChevronDownIcon } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "../subnav-accordion";
-import FolderStructure from "./FolderStructure";
+import MenuItemLoading from "./MenuItemLoading";
+import MenuEmpty from "./MenuEmpty";
+import FolderMenu from "./DropdownMenuItems/FolderMenu";
+import DocStructure from "./DocStructure";
 
 const MenuItemFolder = ({ folder, className }) => {  
   const { isOpen } = useSidebar();
@@ -59,23 +55,7 @@ const MenuItemFolder = ({ folder, className }) => {
         setLoading(false);
       }
     }
-  };  
-
-  const handleDocumentIcons = (type) => {    
-    switch (type) {
-      case 'sheet':
-        return <FileSpreadsheet size={20} />;
-      
-      case 'document':
-        return <FileText size={20} />;
-
-      case 'wb':
-        return <CircuitBoard size={20} />;
-
-      default:
-        return <FileSpreadsheet size={20} />;
-    }
-  }
+  };
 
   return (
     <>
@@ -88,17 +68,7 @@ const MenuItemFolder = ({ folder, className }) => {
           onValueChange={(value) => setOpenItem(value)}
         >
           <AccordionItem value={folder._id} className="border-none ">
-            <FolderStructure
-              data={folder}
-              openItem={openItem}
-              setOpenItem={setOpenItem}
-              dropdownOpenStates={dropdownOpenStates}
-              handleDropdownToggle={handleDropdownToggle}
-              handleDocumentIcons={handleDocumentIcons}
-              isOpen={isOpen}
-              className={className}
-            />
-            {/* <AccordionTrigger
+            <AccordionTrigger
               className={cn(
                 'group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
               )}
@@ -123,7 +93,7 @@ const MenuItemFolder = ({ folder, className }) => {
                   )}
                 />
                 <Link 
-                  to={`/file-manager/${folder._id}`} 
+                  to={`/file-manager/${folder?.entity_type}/${folder._id}`} 
                   className={cn('absolute left-10 text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
                 >
                   {folder.name}
@@ -135,7 +105,7 @@ const MenuItemFolder = ({ folder, className }) => {
                     id={folder?._id} 
                     type={folder?.entity_type} 
                   />
-                  <FileDropdownMenu
+                  <FolderMenu
                     isOpen={dropdownOpenStates}
                     onToggle={(id) => handleDropdownToggle(id)}
                     id={folder?._id}
@@ -145,24 +115,44 @@ const MenuItemFolder = ({ folder, className }) => {
               </div>
             </AccordionTrigger>
             <AccordionContent className="space-y-2 pl-3 py-3">
-              <DocumentsList 
-                key={folder?._id}
-                isOpen={isOpen}
-                className={className}
-                loading ={loading}
-                dropdownOpenStates={dropdownOpenStates}
-                documents={documents[folder._id] || []}
-                handleDocumentIcons={handleDocumentIcons} 
-                handleDropdownToggle={handleDropdownToggle}
-              />        
-            </AccordionContent> */}
+              { loading ? <MenuItemLoading text='Loading...' flex='col' /> :  
+                Array.isArray(documents[folder._id]) && documents[folder._id].length > 0 ? 
+                  documents[folder._id].map(item => (                  
+                    <div 
+                      key={item?._id} 
+                      className="group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline"
+                    >
+                      <div className="flex justify-between items-center">
+                        <File size={20}/>
+                        <Link 
+                          to={`/document/${item?._id}`} 
+                          className={cn('absolute left-10 text-sm duration-200 w-[155px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
+                        >
+                          {`${item?.name}.${item?.page_type}`}
+                        </Link>
+                      </div>
+                      <div className='opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+                        <div className="flex gap-1">
+                          <FolderMenu
+                            isOpen={dropdownOpenStates}
+                            onToggle={(id) => handleDropdownToggle(id)}
+                            id={item?._id}
+                            type={item?.entity_type}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )) : (
+                  <MenuEmpty/>
+                )}      
+            </AccordionContent>
           </AccordionItem>
         </Accordion>
       ) : 
       (
         <div className="group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline">
           <div className="flex justify-between items-center">
-            { handleDocumentIcons(folder?.page_type) }
+            <File size={20}/>
             <Link 
               to={`/document/${folder?._id}`} 
               className={cn('absolute left-10 text-sm duration-200 w-[155px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
@@ -172,7 +162,7 @@ const MenuItemFolder = ({ folder, className }) => {
           </div>
           <div className='opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
             <div className="flex gap-1">
-              <FileDropdownMenu
+              <FolderMenu
                 isOpen={dropdownOpenStates}
                 onToggle={(id) => handleDropdownToggle(id)}
                 id={folder?._id}
@@ -181,6 +171,15 @@ const MenuItemFolder = ({ folder, className }) => {
             </div>
           </div>
         </div>
+          // <DocStructure
+          //   docId = {folder?._id}
+          //   docName = {`${folder?.title}.${folder?.page_type}`} 
+          //   docType = {folder?.entity_type}
+          //   isOpen = {isOpen}
+          //   className = {className}
+          //   dropdownOpenStates = {dropdownOpenStates}
+          //   handleDropdownToggl = {handleDropdownToggl}
+          // />
       )}      
     </>
   );

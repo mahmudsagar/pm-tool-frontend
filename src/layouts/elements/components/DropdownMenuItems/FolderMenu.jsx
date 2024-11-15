@@ -7,10 +7,9 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import ItemDelete from './DropdownMenuItems/ItemDelete';
+import Delete from './items/Delete';
 
-const FileDropdownMenu = ({ isOpen = {}, onToggle = () => {}, id, type }) => { 
-
+const FolderMenu = ({ isOpen = {}, onToggle = () => {}, id, type }) => {
   return (
     <>
       <DropdownMenu open={isOpen[id]} onOpenChange={() => onToggle(id, true)}>
@@ -31,7 +30,7 @@ const FileDropdownMenu = ({ isOpen = {}, onToggle = () => {}, id, type }) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-          <ItemDelete
+          <Delete
             fileId={id}
             fileType={type}
             onToggle={onToggle}
@@ -39,7 +38,7 @@ const FileDropdownMenu = ({ isOpen = {}, onToggle = () => {}, id, type }) => {
         </DropdownMenuContent>
       </DropdownMenu>
     </>
-  );
-};
+  )
+}
 
-export default FileDropdownMenu;
+export default FolderMenu
