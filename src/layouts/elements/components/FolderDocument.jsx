@@ -17,8 +17,7 @@ const FolderDocument = ({
   dropdownOpenStates, 
   handleDocumentIcons, 
   handleDropdownToggle 
-}) => {    
-  console.log(values);
+}) => {
   
   // const renderedDocuments = useMemo(() => {
   //   if (!documents[0]?.childs || documents[0]?.childs.length === 0) {

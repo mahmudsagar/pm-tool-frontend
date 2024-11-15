@@ -39,9 +39,7 @@ function DataTable() {
     };
 
     fetchData();
-  }, [id]); 
-  
-  console.log(tableData);
+  }, [id]);
   
 
   const table = useReactTable({

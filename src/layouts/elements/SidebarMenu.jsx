@@ -38,7 +38,6 @@ export function SidebarMenu({ setOpen, className }) {
   const [lastOpenItem, setLastOpenItem] = useState("");
   const { fetchSpace } = useFileManagerStore(state => state);
   
-
   useEffect(() => {
     if (isOpen) {
       setOpenItem(lastOpenItem);

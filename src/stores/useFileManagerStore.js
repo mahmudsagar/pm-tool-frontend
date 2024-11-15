@@ -5,12 +5,28 @@ const BASE_USER_ID = "66cda5dac6886719e3345c19";
 const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
 
 const useFileManagerStore = createWithEqualityFn((set, get) => ({
+  publicSpaces: null,
+  privateSpaces: null,
+
   error: null,
   users: null, // store user api data
   teams: null, // store team api data
   spaces: null, // store space api data
   documents: {}, // store document api data
   tLoading: false,
+
+  // Space data formatting is categorized into two types: public and private.
+  formatSpaces: (data) => {    
+    set(
+      (data || []).reduce(
+        (acc, space) => {
+          acc[space.is_private ? 'privateSpaces' : 'publicSpaces'].push(space);
+          return acc;
+        },
+        { privateSpaces: [], publicSpaces: [] }
+      )
+    );
+  },
 
   // Define the reusable apiRequest function with direct access to set and get
   apiRequest: async (url, method = 'GET', data = null) => {
