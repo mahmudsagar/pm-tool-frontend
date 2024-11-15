@@ -5,7 +5,7 @@ const useApi = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const callApi = useCallback(async (url, config = {}) => {
+  const callApi = useCallback(async (url, config = {}, onSuccess) => {
     setLoading(true);
     setError(null);
     try {
@@ -19,6 +19,9 @@ const useApi = () => {
       setError(err.message);
     } finally {
       setLoading(false);
+      if (onSuccess) {
+        onSuccess();
+      }
     }
   }, []);
 
