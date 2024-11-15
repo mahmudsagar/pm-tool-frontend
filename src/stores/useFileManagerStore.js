@@ -1,4 +1,5 @@
 import { createWithEqualityFn } from "zustand/traditional";
+import { Folder, File } from 'lucide-react';
 
 const BASE_USER_ID = "66cda5dac6886719e3345c19";
 const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
@@ -9,6 +10,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   teams: null, // store team api data
   spaces: null, // store space api data
   documents: {}, // store document api data
+  tLoading: false,
 
   // Define the reusable apiRequest function with direct access to set and get
   apiRequest: async (url, method = 'GET', data = null) => {
@@ -51,18 +53,33 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   },
 
   // Get Document Data
-  fatchDocument: async (id) => {
-    const { data, error } = await get().apiRequest(`${API_BASE_URL}/page/document?user_id=${BASE_USER_ID}`, 'GET');
-    if (error) {
-      set({ error });
-    } else {      
-      const result = data.filter((document) => document?.folder_id === id || document?.group_id === id );
+  fatchDocument: async (id, type) => {
+
+    let endPoint;
+    if (type === "folder"){
+      endPoint = `/folder?id=${id}`;
+    } else if (type === "group"){
+      endPoint = `/group?id=${id}`;      
+    } else {
+      return { error: "Invalid filetype specified" };
+    }
+
+    try {
+      const { data, error } = await get().apiRequest(`${API_BASE_URL}${endPoint}`, 'GET');
+  
+      if (error) {
+        return { error };
+      }
+      
       set((state) => ({
         documents: {
           ...state.documents,
-          [id]: result,
+          [id]: data,
         }
       }));
+  
+    } catch (error) {
+      return { error: error.message };
     }
   },
 
@@ -108,6 +125,9 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
 
     try {
       const { data: responseData, error } = await get().apiRequest(`${API_BASE_URL}${endpoint}`, 'POST', newDocumentData);
+
+      console.log(responseData);
+      
 
       if (error) {
         return { error };
@@ -232,6 +252,86 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       value: team._id,
       label: team.name,
     }));
+  },
+
+  getRelativeTime: (date) => {
+    const now = new Date();
+    const past = new Date(date);
+    const diffInSeconds = Math.floor((now - past) / 1000);
+    const diffInDays = Math.floor(diffInSeconds / 86400); // Calculate difference in days
+
+    // If more than 24 hours have passed, show the date in "Month Day, Year" format
+    if (diffInDays >= 1) {
+      return past.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    const timeIntervals = [
+      { label: 'hour', seconds: 3600 },
+      { label: 'minute', seconds: 60 },
+      { label: 'second', seconds: 1 }
+    ];
+
+    for (const interval of timeIntervals) {
+      const count = Math.floor(diffInSeconds / interval.seconds);
+      if (count >= 1) {
+        return count === 1
+          ? `a ${interval.label} ago`
+          : `${count} ${interval.label}s ago`;
+      }
+    }
+
+    return 'a moment ago';
+  },
+
+  // Get the User data By ID
+  getUserById: async (id) => {
+    try {
+      const { data, error } = await get().apiRequest(`${API_BASE_URL}/user?id=${id}`, 'GET');
+      if (error) {
+        return { error };
+      }
+      return data;
+    } catch (error) {
+      return { error: error.message };
+    }
+  },
+
+  // Formated Data for Table row
+  formatTableData: async (id, type) => {
+    let endPoint;
+    if (type === "folder") {
+      endPoint = `/folder?id=${id}`;
+    } else if (type === "group") {
+      endPoint = `/group?id=${id}`;      
+    } else {
+      return { error: "Invalid filetype specified" };
+    }
+  
+    try {
+      const { data, error } = await get().apiRequest(`${API_BASE_URL}${endPoint}`, 'GET');
+      if (error) {
+        return { error };
+      }
+  
+      const transformedData = await Promise.all(data[0].childs.map(async (child) => {
+        const result = await get().getUserById(child.user_id);        
+        const modifiedUser = result?.full_name || 'Unknown User';
+  
+        return {
+          id: child._id,
+          type: child.entity_type,
+          icon: child.entity_type === 'folder' ? Folder : File,
+          name: child.name,
+          modified: get().getRelativeTime(child.updatedAt),
+          modifiedBy: modifiedUser,
+          sharing: data[0].is_private ? 'Public' : 'Private',
+        };
+      }));
+  
+      return transformedData;
+    } catch (error) {
+      return { error: error.message };
+    }
   }
 
 }));

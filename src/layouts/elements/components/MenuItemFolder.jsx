@@ -19,6 +19,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../subnav-accordion";
+import FolderStructure from "./FolderStructure";
 
 const MenuItemFolder = ({ folder, className }) => {  
   const { isOpen } = useSidebar();
@@ -26,7 +27,7 @@ const MenuItemFolder = ({ folder, className }) => {
   const [loading, setLoading] = useState(false);
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
-  const { fatchDocument, documents } = useFileManagerStore(state => state);    
+  const { fatchDocument, documents } = useFileManagerStore(state => state);      
 
   useEffect(() => {
     if (isOpen) {
@@ -44,13 +45,14 @@ const MenuItemFolder = ({ folder, className }) => {
     }));
   };  
 
-  const handleFolderClick = async (id) => {
+  const handleFolderClick = async (id, type) => {
+    
     setOpenItem(openItem === id ? "" : id);
 
     if (!documents[id]) {
       setLoading(true);
       try {
-        await fatchDocument(id);
+        await fatchDocument(id, type);
       } catch (error) {
         console.error("Error fetching data: ", error);
       } finally {
@@ -86,13 +88,23 @@ const MenuItemFolder = ({ folder, className }) => {
           onValueChange={(value) => setOpenItem(value)}
         >
           <AccordionItem value={folder._id} className="border-none ">
-            <AccordionTrigger
+            <FolderStructure
+              data={folder}
+              openItem={openItem}
+              setOpenItem={setOpenItem}
+              dropdownOpenStates={dropdownOpenStates}
+              handleDropdownToggle={handleDropdownToggle}
+              handleDocumentIcons={handleDocumentIcons}
+              isOpen={isOpen}
+              className={className}
+            />
+            {/* <AccordionTrigger
               className={cn(
                 'group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                handleFolderClick(folder._id);
+                handleFolderClick(folder?._id, folder?.entity_type);
               }}
             >
               <div className="flex justify-between items-center">
@@ -143,7 +155,7 @@ const MenuItemFolder = ({ folder, className }) => {
                 handleDocumentIcons={handleDocumentIcons} 
                 handleDropdownToggle={handleDropdownToggle}
               />        
-            </AccordionContent>
+            </AccordionContent> */}
           </AccordionItem>
         </Accordion>
       ) : 

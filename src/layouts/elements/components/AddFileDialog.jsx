@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import MenuItemLoading from './MenuItemLoading';
 
-const AddFileDialog = ({ id, type }) => {
+const AddFileDialog = ({ id, type }) => {  
   const [isOpen, setIsOpen] = useState(false);
   const [isFile, setIsFile] = useState('file');
   const [loading, setLoading] = useState(false);
@@ -73,9 +73,7 @@ const AddFileDialog = ({ id, type }) => {
   const onSubmit = async (data) => {
     setLoading(true);
     const newDocument = { id, type, ...data };
-    
-    console.log("Form Data:", newDocument);
-
+        
     try {
       await postDocument(newDocument);
       setLoading(false)
