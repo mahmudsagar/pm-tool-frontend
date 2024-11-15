@@ -16,7 +16,6 @@ import { zhCN, enUS } from 'univer:locales'
 
 // eslint-disable-next-line react/display-name
 const UniverSheet = forwardRef(({ data }, ref) => {
-  console.log('UniverSheet', data);
   const univerRef = useRef(null);
   const workbookRef = useRef(null);
   const containerRef = useRef(null);
