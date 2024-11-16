@@ -22,7 +22,13 @@ const MenuItemSpace = ({ space, className }) => {
 
       { 
         Array.isArray(space?.childs) && space?.childs?.length > 0 ? (
-          space.childs.map(child => <MenuItemFolder key={child._id} folder={child} className={className} />)
+          space.childs.map(child => 
+            <MenuItemFolder 
+              key={child._id} 
+              folder={child} 
+              className={className} 
+            />
+          )
         ) : (
           <MenuEmpty/>
         )

@@ -5,6 +5,7 @@ const BASE_USER_ID = "66cda5dac6886719e3345c19";
 const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
 
 const useFileManagerStore = createWithEqualityFn((set, get) => ({
+  documents: {},
   publicSpaces: null,
   privateSpaces: null,
 
@@ -12,7 +13,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   users: null, // store user api data
   teams: null, // store team api data
   spaces: null, // store space api data
-  documents: {}, // store document api data
   tLoading: false,
 
   // Space data formatting is categorized into two types: public and private.
@@ -33,6 +33,41 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     set((state) => ({
       documents: { ...state.documents, [id]: data }
     }));
+  },
+
+  // Delete functionality for File, Folder 
+  deleteHandler: (id, type) => {
+    set((state) => {
+      // Remove from documents if it exists
+      const updatedDocuments = { ...state.documents };
+      Object.keys(updatedDocuments).forEach((key) => {
+        updatedDocuments[key] = updatedDocuments[key].filter(
+          (child) => !(child._id === id && child.entity_type === type)
+        );
+      });
+  
+      // Helper function to filter child elements from a space
+      const removeChild = (spaces) =>
+        spaces.map((space) => ({
+          ...space,
+          childs: space.childs.filter(
+            (child) => !(child._id === id && child.entity_type === type)
+          ),
+        }));
+  
+      // Remove from publicSpaces
+      const updatedPublicSpaces = removeChild(state.publicSpaces);
+  
+      // Remove from privateSpaces
+      const updatedPrivateSpaces = removeChild(state.privateSpaces);
+  
+      // Return updated state
+      return {
+        documents: updatedDocuments,
+        publicSpaces: updatedPublicSpaces,
+        privateSpaces: updatedPrivateSpaces,
+      };
+    });
   },
 
   // Define the reusable apiRequest function with direct access to set and get

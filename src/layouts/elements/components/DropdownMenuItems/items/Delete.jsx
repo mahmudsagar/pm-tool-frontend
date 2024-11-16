@@ -12,35 +12,55 @@ import {
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import MenuItemLoading from '../../MenuItemLoading';
+import useApi from '@/lib/dataFetcher';
+import NotFound from '@/BetterRouter/NotFound';
+import { baseUrl } from '@/utils/constants';
 
 const Delete = ({ fileId, fileType, onToggle }) => {
+  const { callApi, error } = useApi();
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const { removeData } = useFileManagerStore(state => state);
+  const { deleteHandler } = useFileManagerStore(state => state);
 
   const handleDeleteClick = (e) => {
     e.preventDefault();
     setIsDialogOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async () => {  
+    let endPoint;
     setLoading(true);
 
+    if (fileType === "page") {
+      endPoint = `/v1/page/document?id=${fileId}`;
+    } else if (fileType === "folder"){
+      endPoint = `/v1/folder?id=${fileId}`;
+    } else if (fileType === "group"){
+      endPoint = `/v1/group?id=${fileId}`;      
+    } else {
+      return { error: "Invalid filetype specified" };
+    }   
+
     try {
-      await removeData(fileId, fileType);
-      setLoading(false)
+      await callApi(baseUrl + endPoint, { method: 'DELETE', });
+      deleteHandler(fileId, fileType); 
+      setLoading(false); 
       setIsDialogOpen(false);
     } catch (error) {
-      setLoading(false)
-      console.error("Error fetching data: ", error);
-    }    
+      setLoading(false); 
+      console.error("Error deleting data: ", error);
+    }   
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     onToggle(fileId, false);
   };
+
+  if (error) {
+    return <NotFound />
+  }
 
   return (
     <>

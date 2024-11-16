@@ -7,7 +7,7 @@ import FolderMenu from './DropdownMenuItems/FolderMenu';
 function DocStructure({ 
   docId, 
   docName, 
-  docType, 
+  docType,
   isOpen, 
   className, 
   dropdownOpenStates, 
