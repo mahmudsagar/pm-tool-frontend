@@ -4,10 +4,10 @@ import Check from "@/pages/Check";
 import FileManager from "@/pages/FileManager";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
-import Sheet from "@/pages/sheet";
+import Sheet from "@/pages/Sheet";
 import Whiteboard from "@/pages/Whiteboard";
 import NotFound from "./NotFound";
-import { Document } from "@/components/elements/editor";
+import { Document } from "@/pages/Document";
 
 export const routes = [
   {
