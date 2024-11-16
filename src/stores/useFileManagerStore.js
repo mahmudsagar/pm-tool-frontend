@@ -28,6 +28,13 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     );
   },
 
+  // Store single document by clicking.
+  storeDocuments: (data, id) => {
+    set((state) => ({
+      documents: { ...state.documents, [id]: data }
+    }));
+  },
+
   // Define the reusable apiRequest function with direct access to set and get
   apiRequest: async (url, method = 'GET', data = null) => {
     try {
@@ -337,7 +344,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
           id: child._id,
           type: child.entity_type,
           icon: child.entity_type === 'folder' ? Folder : File,
-          name: child.name,
+          name: child.entity_type === 'folder' ? child.name : `${child.title}.${child.page_type}`,
           modified: get().getRelativeTime(child.updatedAt),
           modifiedBy: modifiedUser,
           sharing: data[0].is_private ? 'Public' : 'Private',

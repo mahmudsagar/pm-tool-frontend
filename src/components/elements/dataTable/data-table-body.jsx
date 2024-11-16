@@ -57,7 +57,7 @@ const DataTableColumnBody = ({ table, loading }) => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   No files are found!
                 </TableCell>
               </TableRow>
