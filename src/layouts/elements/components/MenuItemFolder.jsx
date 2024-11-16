@@ -18,7 +18,7 @@ import FolderMenu from "./DropdownMenuItems/FolderMenu";
 import DocStructure from "./DocStructure";
 import { baseUrl } from '@/utils/constants';
 
-const MenuItemFolder = ({ folder, className }) => {    
+const MenuItemFolder = ({ folder, className }) => {     
   const { isOpen } = useSidebar();
   const [loading, setLoading] = useState(false)
   const [openItem, setOpenItem] = useState("");

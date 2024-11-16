@@ -6,7 +6,7 @@ import SpaceMenu from "./DropdownMenuItems/SpaceMenu";
 import publicIcon from '@/assets/images/public.svg';
 import PrivateIcon from '@/assets/images/private.svg';
 
-const MenuItemSpace = ({ space, className }) => {
+const MenuItemSpace = ({ space, className }) => {  
   console.log(space);
   
   return (

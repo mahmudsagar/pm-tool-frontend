@@ -35,18 +35,18 @@ import {
 import MenuItemLoading from './MenuItemLoading';
 
 const AddFileDialog = ({ id, type }) => {  
-  const { data, callApi, error } = useApi();
-  const [teams, setTeams] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [isFile, setIsFile] = useState('file');
+  const [isFile, setIsFile] = useState('page');
   const [loading, setLoading] = useState(false); // Submitting Data loading
+  const { data: users, callApi:userCallApi } = useApi();
+  const { data: teams, callApi:teamCallApi } = useApi();
   
-  const { postDocument, storeHandler } = useFileManagerStore(state => state);
+  const { storeHandler } = useFileManagerStore(state => state);
   
   const form = useForm({
     defaultValues: {
       title: '',
-      filetype: 'file',
+      filetype: 'page',
       page_type: '',
       shared_members: [],
       shared_teams: []
@@ -59,16 +59,8 @@ const AddFileDialog = ({ id, type }) => {
     if (isOpen) {
       (async () => {
         try {
-          await callApi(baseUrl + '/v1/user');
-          // await callApi(baseUrl + '/v1/team?user_id=' + userID);
-          fetch(baseUrl + '/v1/team?user_id=' + userID)
-          .then(res => res.json())
-          .then( result => {
-            setTeams(result.data);
-          })
-          .catch( error => {
-            console.error("Error fetching Team data:", error);
-          });
+          await userCallApi(baseUrl + '/v1/user');
+          await teamCallApi(baseUrl + '/v1/team?user_id=' + userID);
         } catch (error) {
           console.error("Error fetching User data:", error);
         }
@@ -80,12 +72,13 @@ const AddFileDialog = ({ id, type }) => {
     setLoading(true);
     let endpoint, newDocumentData;
 
-    if (data.filetype === "file") {
-      endpoint = "/page/document";
+    if (data.filetype === "page") {
+      endpoint = "/v1/page/document";
       newDocumentData = {
         user_id: "66cda5dac6886719e3345c19",
         title: data.title,
         page_type: data.page_type,
+        entity_type: data.filetype,
         content: {
           text: "This is the document content"
         },
@@ -101,7 +94,7 @@ const AddFileDialog = ({ id, type }) => {
         attachments: []
       };
     } else if (data.filetype === "folder" || data.filetype === "group") {
-      endpoint = data.filetype === "folder" ? "/folder" : "/group";
+      endpoint = data.filetype === "folder" ? "/v1/folder" : "/v1/group";
       newDocumentData = {
         user_id: "66cda5dac6886719e3345c19",
         entity_type: data.filetype,
@@ -114,16 +107,23 @@ const AddFileDialog = ({ id, type }) => {
       };
     } else {
       return { error: "Invalid filetype specified" };
-    }
-
-    console.log(type, newDocumentData);
-    
+    }    
 
     try {
-      await storeHandler(id, type, newDocumentData);
-      setLoading(false)
-      setIsOpen(false);
-      form.reset();  
+      await fetch(baseUrl + endpoint, {
+        method: 'POST',
+        body: JSON.stringify(newDocumentData),
+      })
+      .then( res => res.json())
+      .then(async ()=>{
+        await storeHandler(id, type, newDocumentData);
+        setLoading(false)
+        setIsOpen(false);
+        form.reset();  
+      }).catch((error)=>{
+        setLoading(false)
+        console.error("Error fetching data: ", error);
+      });
     } catch (error) {
       setLoading(false)
       console.error("Error fetching data: ", error);
@@ -170,8 +170,8 @@ const AddFileDialog = ({ id, type }) => {
                     <FormLabel>Type</FormLabel>
                     <div className="flex items-center gap-3 mt-2">
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="file" id="file" />
-                        <Label htmlFor="file" className="cursor-pointer">File</Label>
+                        <RadioGroupItem value="page" id="page" />
+                        <Label htmlFor="page" className="cursor-pointer">Page</Label>
                       </div>
                       { type === 'folder' || type !== 'group' && 
                         <div className="flex items-center space-x-2">
@@ -207,7 +207,7 @@ const AddFileDialog = ({ id, type }) => {
                   </FormItem>
                 )}
               />
-              {isFile === 'file' &&
+              {isFile === 'page' &&
                 <FormField
                   control={form.control}
                   name="page_type"
@@ -247,7 +247,7 @@ const AddFileDialog = ({ id, type }) => {
                   <FormItem className='w-full'>
                     <FormLabel>Shared Member</FormLabel>
                     <MultiSelect
-                      options={data?.map(user => ({ value: user._id, label: user.full_name })) || []}
+                      options={users?.map(user => ({ value: user._id, label: user.full_name })) || []}
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select frameworks"
                       variant="inverted"

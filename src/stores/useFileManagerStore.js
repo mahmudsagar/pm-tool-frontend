@@ -73,14 +73,19 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
             );
   
             if (itemIndex !== -1) {
-              // Add newData to the childs array
-              const updatedItem = {
-                ...updatedDocuments[key][itemIndex],
-                childs: [...(updatedDocuments[key][itemIndex].childs || []), newData],
-              };
+              // Check if the new data is a file or a folder/group
+              if (newData.entity_type === "file") {
+                // Directly add the file to the childs array
+                const updatedItem = {
+                  ...updatedDocuments[key][itemIndex],
+                  childs: [...(updatedDocuments[key][itemIndex].childs || []), newData],
+                };
   
-              // Update the item in the array
-              updatedDocuments[key][itemIndex] = updatedItem;
+                // Update the item in the array
+                updatedDocuments[key][itemIndex] = updatedItem;
+              } else {
+                // Handle folder or group creation here (if needed)
+              }
             }
           }
         });
@@ -92,10 +97,20 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       const addChildToSpaces = (spaces) =>
         spaces.map((space) => {
           if (space._id === id && space.entity_type === type) {
-            return {
-              ...space,
-              childs: [...(space.childs || []), newData],
-            };
+            // Check if the new data is a file or a folder/group
+            if (newData.entity_type === "file") {
+              // Directly add the file to the childs array
+              return {
+                ...space,
+                childs: [...(space.childs || []), newData],
+              };
+            } else {
+              // Handle folder or group creation here (if needed)
+              return {
+                ...space,
+                childs: [...(space.childs || []), newData],
+              };
+            }
           } else if (space.childs) {
             return {
               ...space,
@@ -112,7 +127,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         privateSpaces: addChildToSpaces(state.privateSpaces),
       };
     });
-  },    
+  },      
 
   // Define the reusable apiRequest function with direct access to set and get
   apiRequest: async (url, method = 'GET', data = null) => {
