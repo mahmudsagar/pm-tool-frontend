@@ -38,14 +38,14 @@ export function InsertImageUriDialogBody({ onClick }) {
       <Input
         label="Image URL"
         placeholder="i.e. https://source.unsplash.com/random"
-        onChange={setSrc}
+        onChange={e => setSrc(e.target.value)}
         value={src}
         data-test-id="image-modal-url-input"
       />
       <Input
         label="Alt Text"
         placeholder="Random unsplash image"
-        onChange={setAltText}
+        onChange={e=> setAltText(e.target.value)}
         value={altText}
         data-test-id="image-modal-alt-text-input"
       /> 
@@ -93,7 +93,7 @@ export function InsertImageUploadedDialogBody({ onClick }) {
       <Input
         label="Alt Text"
         placeholder="Descriptive alternative text"
-        onChange={setAltText}
+        onChange={e=> setAltText(e.target.value)}
         value={altText}
         data-test-id="image-modal-alt-text-input"
       />
@@ -134,25 +134,6 @@ export function InsertImageDialog({ activeEditor, onClose }) {
     <>
       {!mode && (
         <DialogFooter>
-          <Button
-            data-test-id="image-modal-option-sample"
-            onClick={() =>
-              onClick(
-                hasModifier.current
-                  ? {
-                    altText:
-                      'Daylight fir trees forest glacier green high ice landscape',
-                    src: "https://source.unsplash.com/random",
-                  }
-                  : {
-                    altText: 'Yellow flower in tilt shift lens',
-                    src: "https://source.unsplash.com/random",
-                  }
-              )
-            }
-          >
-            Sample
-          </Button>
           <Button
             data-test-id="image-modal-option-url"
             onClick={() => setMode('url')}

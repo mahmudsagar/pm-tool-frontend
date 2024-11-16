@@ -1,19 +1,13 @@
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import useApi from '@/lib/dataFetcher';
-import { useEffect, useState } from 'react';
-import { useLocation, useOutletContext, useParams } from 'react-router-dom';
-import { documentBaseUrl } from '@/utils/constants';
-import { debounce, sanitize } from '@/utils/helper';
+import { useEffect } from 'react';
+import { debounce } from '@/utils/helper';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import Link from '@/BetterRouter/Link';
 import { Copy, History, MessageSquareMore, Share, Trash } from 'lucide-react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import NotFound from '@/BetterRouter/NotFound';
 import { Button } from '@/components/ui/button';
 import PlaygroundNodes from '@/components/elements/editor/nodes/PlaygroundNodes';
 import PlaygroundEditorTheme from '@/components/elements/editor/themes/PlaygroundEditorTheme';
 import Editor from '@/components/elements/editor/editor';
-import Spinner from '@/components/elements/spinner';
 
 const editorConfig = {
   namespace: 'BetterNotion Demo',
@@ -26,17 +20,10 @@ const editorConfig = {
   theme: PlaygroundEditorTheme,
 };
 let firstLoad = true;
-export const Document = () => {
-  const { loading, data, callApi, error } = useApi();
-  const [topMenu, setTopMenu] = useOutletContext();
-  const { pathname } = useLocation()
-  const { id } = useParams();
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-
-  const { pageMeta, title, custom_meta, mediaAttachments, pageContent, ...restData } = data || {}
+const Document = ({ pageContent, pageMeta, title, custom_meta, mediaAttachments, setTopMenu, setOpenDeleteDialog, handleSubmit, _id }) => {
 
   useEffect(() => {
-    if (!data) return;
+    if (!pageContent) return;
     const dropdownContent = <>
       <DropdownMenuItem className="cursor-pointer">
         <div className='flex items-center gap-1'>
@@ -67,27 +54,14 @@ export const Document = () => {
         </Button>
       </Link>
     </>
-
     setTopMenu({
       dropdownContent,
       inlineContent
     })
-  }, [data]);
-
-  const handleDelete = () => {
-    callApi(documentBaseUrl + '?id=' + id,
-      {
-        method: 'DELETE',
-      });
-  }
-
-  useEffect(debounce(() => {
-    callApi(documentBaseUrl + '?id=' + id)
-  }, 1000), [pathname, id])
+  }, [pageContent, setOpenDeleteDialog, setTopMenu]);
 
   const onChange = debounce((value) => {
-    console.log('onChange', value);
-    if (!data) {
+    if (!pageContent) {
       return;
     }
 
@@ -95,19 +69,11 @@ export const Document = () => {
       firstLoad = false;
       return;
     }
-
-    fetch(documentBaseUrl, {
-      method: 'PUT',
-      body: JSON.stringify({ id: data?._id, ...sanitize(value) }),
-    });
+    handleSubmit(value);
   }, 4000);
 
-  if (error) {
-    return <NotFound />
-  }
-
   const editorProps = {
-    page_id: data?._id,
+    page_id: _id,
     pageMeta,
     title,
     custom_meta,
@@ -115,29 +81,11 @@ export const Document = () => {
     content: pageContent?.content,
     onChange
   }
-  return <div className='lexical-editor relative h-full'>
-    {loading ?
-      <Spinner />
-      :
-      <LexicalComposer initialConfig={editorConfig}>
-        {pageContent?.content && <Editor {...editorProps} />}
-      </LexicalComposer>}
-
-    <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure to proceed?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete this
-            document.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+  return <div className='lexical-editor'>
+    <LexicalComposer initialConfig={editorConfig}>
+      {pageContent?.content && <Editor {...editorProps} />}
+    </LexicalComposer>
   </div>
 }
+
+export default Document;
