@@ -17,3 +17,21 @@ export const STICKY_NOTE = {
     fontSize: 20,
   },
 }
+
+export const PAGE_EMBED = {
+  type: "embeddable",
+  fillStyle: "solid",
+  strokeWidth: 2,
+  strokeStyle: "solid",
+  strokeColor: "#1e1e1e",
+  backgroundColor: "transparent",
+  width: 270,
+  height: 151.875,
+  groupIds: [],
+  frameId: null,
+  roundness: {
+    type: 3
+  },
+  boundElements: [],
+  locked: false
+}

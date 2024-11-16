@@ -42,7 +42,7 @@ export const routes = [
         element: <Page />
       },
       {
-        path: "/whiteboard/*",
+        path: "/whiteboard/:id",
         element: <Whiteboard />
       }
     ]
