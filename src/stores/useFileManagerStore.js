@@ -1,7 +1,6 @@
 import { createWithEqualityFn } from "zustand/traditional";
 import { Folder, File } from 'lucide-react';
 
-const BASE_USER_ID = "66cda5dac6886719e3345c19";
 const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
 
 const useFileManagerStore = createWithEqualityFn((set, get) => ({
@@ -10,10 +9,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   privateSpaces: null,
 
   error: null,
-  users: null, // store user api data
-  teams: null, // store team api data
-  spaces: null, // store space api data
-  tLoading: false,
 
   // Space data formatting is categorized into two types: public and private.
   formatSpaces: (data) => {    
@@ -38,7 +33,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   // Delete functionality for File, Folder 
   deleteHandler: (id, type) => {
     set((state) => {
-      // Remove from documents if it exists
       const updatedDocuments = { ...state.documents };
       Object.keys(updatedDocuments).forEach((key) => {
         updatedDocuments[key] = updatedDocuments[key].filter(
@@ -46,7 +40,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         );
       });
   
-      // Helper function to filter child elements from a space
       const removeChild = (spaces) =>
         spaces.map((space) => ({
           ...space,
@@ -55,13 +48,8 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
           ),
         }));
   
-      // Remove from publicSpaces
       const updatedPublicSpaces = removeChild(state.publicSpaces);
-  
-      // Remove from privateSpaces
       const updatedPrivateSpaces = removeChild(state.privateSpaces);
-  
-      // Return updated state
       return {
         documents: updatedDocuments,
         publicSpaces: updatedPublicSpaces,
@@ -69,6 +57,62 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       };
     });
   },
+
+  // Store new data functionality for File, Folder, and Group
+  storeHandler: (id, type, newData) => {
+    set((state) => {
+      // Recursive helper function to add new data to the correct child in documents
+      const addToDocumentsChilds = (documents) => {
+        const updatedDocuments = { ...documents };
+        
+        Object.keys(updatedDocuments).forEach((key) => {
+          if (key === id) {
+            // Find the item by ID and type
+            const itemIndex = updatedDocuments[key].findIndex(
+              (item) => item._id === id && item.entity_type === type
+            );
+  
+            if (itemIndex !== -1) {
+              // Add newData to the childs array
+              const updatedItem = {
+                ...updatedDocuments[key][itemIndex],
+                childs: [...(updatedDocuments[key][itemIndex].childs || []), newData],
+              };
+  
+              // Update the item in the array
+              updatedDocuments[key][itemIndex] = updatedItem;
+            }
+          }
+        });
+  
+        return updatedDocuments;
+      };
+  
+      // Recursive helper to locate and add new data in spaces (public or private)
+      const addChildToSpaces = (spaces) =>
+        spaces.map((space) => {
+          if (space._id === id && space.entity_type === type) {
+            return {
+              ...space,
+              childs: [...(space.childs || []), newData],
+            };
+          } else if (space.childs) {
+            return {
+              ...space,
+              childs: addChildToSpaces(space.childs),
+            };
+          }
+          return space;
+        });
+  
+      // Updated state with new data added in the appropriate places
+      return {
+        documents: addToDocumentsChilds(state.documents),
+        publicSpaces: addChildToSpaces(state.publicSpaces),
+        privateSpaces: addChildToSpaces(state.privateSpaces),
+      };
+    });
+  },    
 
   // Define the reusable apiRequest function with direct access to set and get
   apiRequest: async (url, method = 'GET', data = null) => {
@@ -96,48 +140,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         return { data: responseData?.data, error: null };
     } catch (error) {
         return { data: null, error: error?.message };
-    }
-  },
-
-  // Get Space Data
-  fetchSpace: async () => {
-    const { data, error } = await get().apiRequest(`${API_BASE_URL}/space?user_id=${BASE_USER_ID}`, 'GET');
-    if (error) {
-      set({ error });
-    } else {
-      const result = data?.sort((a, b) => b.is_private - a.is_private)
-      set({ spaces: result });
-    }
-  },
-
-  // Get Document Data
-  fatchDocument: async (id, type) => {
-
-    let endPoint;
-    if (type === "folder"){
-      endPoint = `/folder?id=${id}`;
-    } else if (type === "group"){
-      endPoint = `/group?id=${id}`;      
-    } else {
-      return { error: "Invalid filetype specified" };
-    }
-
-    try {
-      const { data, error } = await get().apiRequest(`${API_BASE_URL}${endPoint}`, 'GET');
-  
-      if (error) {
-        return { error };
-      }
-      
-      set((state) => ({
-        documents: {
-          ...state.documents,
-          [id]: data,
-        }
-      }));
-  
-    } catch (error) {
-      return { error: error.message };
     }
   },
 
@@ -219,97 +221,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     } catch (error) {
       return { error: error.message };
     }
-  },
-
-  // Delete Folder, File, and Group
-  removeData: async (id, type) => {    
-    let endPoint;
-    if (type === "page") {
-      endPoint = `/page/document?id=${id}`;
-    } else if (type === "folder"){
-      endPoint = `/folder?id=${id}`;
-    } else if (type === "group"){
-      endPoint = `/group?id=${id}`;      
-    } else {
-      return { error: "Invalid filetype specified" };
-    }
-
-    try {
-      const { data: responseData, error } = await get().apiRequest(`${API_BASE_URL}${endPoint}`, 'DELETE');
-  
-      if (error) {
-        return { error };
-      }
-
-      set((state) => {
-        // Update documents state
-        let updatedDocuments = { ...state.documents };
-        if (type === "document") {
-            Object.keys(updatedDocuments).forEach((key) => {
-                updatedDocuments[key] = updatedDocuments[key].filter((doc) => doc._id !== id);
-            });
-        }
-
-        // Update spaces state
-        let updatedSpaces = state.spaces.map((space) => {
-            const updatedChilds = space.childs.filter((child) => child._id !== id);
-            return { ...space, childs: updatedChilds };
-        });
-
-        return {
-            documents: updatedDocuments,
-            spaces: updatedSpaces
-        };
-      });
-
-  
-      return { error: null };
-  
-    } catch (error) {
-      return { error: error.message };
-    }
-  },
-
-  // Get Users Data
-  fetchUsers: async () => {
-    const { data, error } = await get().apiRequest(`${API_BASE_URL}/user`, 'GET');
-    if (error) {
-      set({ error });
-    } else {
-      set({ users: data });      
-    }
-  },
-
-  // Format Users data for MultiSelect input option
-  formatUserInput: () => {
-    const userData = get().users;    
-    if (!userData) return [];
-
-    return userData.map((user) => ({
-      value: user._id,
-      label: user.full_name,
-    }));
-  },
-
-  // Get Teams Data
-  fetchTeams: async () => {
-    const { data, error } = await get().apiRequest(`${API_BASE_URL}/team?user_id=${BASE_USER_ID}`, 'GET');
-    if (error) {
-      set({ error });
-    } else {
-      set({ teams: data });
-    }
-  },
-
-  // Format Teams data for MultiSelect input option
-  formatTeamInput: () => {
-    const teamData = get().teams;
-    if (!teamData) return [];
-
-    return teamData.map((team) => ({
-      value: team._id,
-      label: team.name,
-    }));
   },
 
   getRelativeTime: (date) => {

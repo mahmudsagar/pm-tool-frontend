@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Plus } from "lucide-react";
-import { Label } from '@/components/ui/label';
 import { useForm, Controller } from "react-hook-form";
+import { Plus } from "lucide-react";
+import useApi from '@/lib/dataFetcher';
+import { Input } from "@/components/ui/input";
+import { Label } from '@/components/ui/label';
+import { Button } from "@/components/ui/button";
+import { baseUrl, userID } from '@/utils/constants';
 import { MultiSelect } from '@/components/ui/multi-select';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -13,8 +17,6 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -33,17 +35,13 @@ import {
 import MenuItemLoading from './MenuItemLoading';
 
 const AddFileDialog = ({ id, type }) => {  
+  const { data, callApi, error } = useApi();
+  const [teams, setTeams] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isFile, setIsFile] = useState('file');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Submitting Data loading
   
-  const {
-    fetchUsers, 
-    fetchTeams, 
-    postDocument,
-    formatUserInput, 
-    formatTeamInput,
-  } = useFileManagerStore(state => state); // Store area
+  const { postDocument, storeHandler } = useFileManagerStore(state => state);
   
   const form = useForm({
     defaultValues: {
@@ -61,10 +59,18 @@ const AddFileDialog = ({ id, type }) => {
     if (isOpen) {
       (async () => {
         try {
-          await fetchUsers();
-          await fetchTeams();
+          await callApi(baseUrl + '/v1/user');
+          // await callApi(baseUrl + '/v1/team?user_id=' + userID);
+          fetch(baseUrl + '/v1/team?user_id=' + userID)
+          .then(res => res.json())
+          .then( result => {
+            setTeams(result.data);
+          })
+          .catch( error => {
+            console.error("Error fetching Team data:", error);
+          });
         } catch (error) {
-          console.error("Error fetching data:", error);
+          console.error("Error fetching User data:", error);
         }
       })();
     }
@@ -72,10 +78,49 @@ const AddFileDialog = ({ id, type }) => {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    const newDocument = { id, type, ...data };
-        
+    let endpoint, newDocumentData;
+
+    if (data.filetype === "file") {
+      endpoint = "/page/document";
+      newDocumentData = {
+        user_id: "66cda5dac6886719e3345c19",
+        title: data.title,
+        page_type: data.page_type,
+        content: {
+          text: "This is the document content"
+        },
+        summary: "This is the document summary",
+        last_updated_by: "66cda5dac6886719e3345c19",
+        custom_meta: {
+          author: "John Doe",
+          keywords: ["sample", "page", "meta"]
+        },
+        folder_id: type === "folder" ? id : '',
+        group_id: type === "group" ? id : '',
+        space_id: type === "space" ? id : '',
+        attachments: []
+      };
+    } else if (data.filetype === "folder" || data.filetype === "group") {
+      endpoint = data.filetype === "folder" ? "/folder" : "/group";
+      newDocumentData = {
+        user_id: "66cda5dac6886719e3345c19",
+        entity_type: data.filetype,
+        name: data.title,
+        shared_members: data.shared_members,
+        shared_teams: data.shared_teams,
+        folder_id: type === "folder" ? id : '',
+        group_id: type === "group" ? id : '',
+        space_id: type === "space" ? id : '',
+      };
+    } else {
+      return { error: "Invalid filetype specified" };
+    }
+
+    console.log(type, newDocumentData);
+    
+
     try {
-      await postDocument(newDocument);
+      await storeHandler(id, type, newDocumentData);
       setLoading(false)
       setIsOpen(false);
       form.reset();  
@@ -202,7 +247,7 @@ const AddFileDialog = ({ id, type }) => {
                   <FormItem className='w-full'>
                     <FormLabel>Shared Member</FormLabel>
                     <MultiSelect
-                      options={formatUserInput()}
+                      options={data?.map(user => ({ value: user._id, label: user.full_name })) || []}
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select frameworks"
                       variant="inverted"
@@ -219,7 +264,7 @@ const AddFileDialog = ({ id, type }) => {
                   <FormItem className='w-full'>
                     <FormLabel>Shared Team</FormLabel>
                     <MultiSelect
-                      options={formatTeamInput()}
+                      options={teams?.map(team => ({ value: team._id, label: team.name })) || []}
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select frameworks"
                       variant="inverted"

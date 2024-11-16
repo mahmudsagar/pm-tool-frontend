@@ -7,9 +7,11 @@ import publicIcon from '@/assets/images/public.svg';
 import PrivateIcon from '@/assets/images/private.svg';
 
 const MenuItemSpace = ({ space, className }) => {
+  console.log(space);
+  
   return (
     <>
-      <div className="flex items-center justify-between mb-3">
+      <div key={space._id} className="flex items-center justify-between mb-3">
         <div className="flex gap-2">
           { space.is_private ? <img src={PrivateIcon} alt="Space Icon" width={20} /> :  <img src={publicIcon} alt="Space Icon" width={20} /> }
           <h4 className="text-sm font-medium text-black dark:text-white">{space.name}</h4>

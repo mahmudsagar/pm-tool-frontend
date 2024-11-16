@@ -28,7 +28,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
         <div className="block mb-5">
           { Array.isArray(data) && data?.length > 0 ? (
             <>
-              { privateSpaces.map( space => (
+              { privateSpaces?.map( space => (
                 <MenuItemSpace 
                   key={space._id} 
                   space={space} 
@@ -38,7 +38,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
 
               <Separator className="my-4" />
               
-              { publicSpaces.map( space => (
+              { publicSpaces?.map( space => (
                 <MenuItemSpace 
                   key={space._id} 
                   space={space} 

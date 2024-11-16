@@ -24,7 +24,7 @@ const MenuItemFolder = ({ folder, className }) => {
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
-  const { storeDocuments, documents } = useFileManagerStore(state => state);      
+  const { storeDocuments, documents } = useFileManagerStore(state => state);    
 
   useEffect(() => {
     if (isOpen) {
