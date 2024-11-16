@@ -1,20 +1,18 @@
 import '@univerjs/design/lib/index.css';
 
-import { Univer, LocaleType, UniverInstanceType, Tools } from '@univerjs/core';
+import { Univer, LocaleType, UniverInstanceType } from '@univerjs/core';
 import { defaultTheme } from '@univerjs/design';
 import { UniverDocsPlugin } from '@univerjs/docs';
+import { UniverDocsUIPlugin } from '@univerjs/docs-ui';
 import { UniverFormulaEnginePlugin } from '@univerjs/engine-formula';
 import { UniverRenderEnginePlugin } from '@univerjs/engine-render';
 import { UniverSheetsPlugin } from '@univerjs/sheets';
 import { UniverSheetsFormulaPlugin } from '@univerjs/sheets-formula';
 import { UniverSheetsUIPlugin } from '@univerjs/sheets-ui';
 import { UniverUIPlugin } from '@univerjs/ui';
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { UniverDocsUIPlugin } from '@univerjs/docs-ui';
-import '@univerjs-pro/sheets-print/lib/index.css';
-import SheetsPrintPluginEnUS from '@univerjs-pro/sheets-print/locale/en-US';
-
+import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react';
 import './index.css';
+import { zhCN, enUS } from 'univer:locales'
 
 // eslint-disable-next-line react/display-name
 const UniverSheet = forwardRef(({ data }, ref) => {
@@ -38,9 +36,8 @@ const UniverSheet = forwardRef(({ data }, ref) => {
       theme: defaultTheme,
       locale: LocaleType.EN_US,
       locales: {
-        [LocaleType.EN_US]: Tools.deepMerge(
-          SheetsPrintPluginEnUS
-        ),
+        [LocaleType.ZH_CN]: zhCN,
+        [LocaleType.EN_US]: enUS,
       },
     });
     univerRef.current = univer;
@@ -48,8 +45,6 @@ const UniverSheet = forwardRef(({ data }, ref) => {
     // core plugins
     univer.registerPlugin(UniverRenderEnginePlugin);
     univer.registerPlugin(UniverFormulaEnginePlugin);
-    univer.registerPlugin(SheetsPrintPluginEnUS);
-
     univer.registerPlugin(UniverUIPlugin, {
       container: containerRef.current,
     });
@@ -66,8 +61,7 @@ const UniverSheet = forwardRef(({ data }, ref) => {
     univer.registerPlugin(UniverSheetsFormulaPlugin);
 
     // create workbook instance
-    const workbook = univer.createUnit(UniverInstanceType.UNIVER_SHEET, data);
-    workbookRef.current = workbook;
+    workbookRef.current = univer.createUnit(UniverInstanceType.UNIVER_SHEET, data);
   };
 
   /**
@@ -99,4 +93,4 @@ const UniverSheet = forwardRef(({ data }, ref) => {
   return <div ref={containerRef} className="univer-container" />;
 });
 
-export default UniverSheet;
+export default memo(UniverSheet);

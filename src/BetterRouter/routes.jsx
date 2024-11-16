@@ -4,10 +4,9 @@ import Check from "@/pages/Check";
 import FileManager from "@/pages/FileManager";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
-import Sheet from "@/pages/sheet";
 import Whiteboard from "@/pages/Whiteboard";
 import NotFound from "./NotFound";
-import { Document } from "@/components/elements/editor";
+import Page from "@/pages";
 
 export const routes = [
   {
@@ -33,18 +32,18 @@ export const routes = [
       },
       {
         path: '/document/:id',
-        element: <Document />
+        element: <Page />
       },
       {
         path: '/single/:id',
-        element: <Document />
+        element: <Page />
       },
       {
         path: "/sheet/:id",
-        element: <Sheet />
+        element: <Page />
       },
       {
-        path: "/whiteboard/*",
+        path: "/whiteboard/:id",
         element: <Whiteboard />
       }
     ]
@@ -66,8 +65,8 @@ export const routes = [
         element: <Form />
       },
       {
-        path: '/settings/document/*',
-        element: <Document />
+        path: '/settings/document/:id',
+        element: <Page />
       },
     ]
   },

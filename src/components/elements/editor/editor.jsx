@@ -39,24 +39,30 @@ import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import useApi from '@/lib/dataFetcher';
+import { baseUrl, mediaBaseUrl } from '@/utils/constants';
+import Spinner from '../spinner';
+import { sanitize } from '@/utils/helper';
+import { cn } from '@/lib/utils';
+const EMPTY_CONTENT =
+  '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
-
-export default function Editor({ title, content, onChange }) {
+export default function Editor({ title, content, page_id, custom_meta, mediaAttachments, onChange }) {
   const [editor] = useLexicalComposerContext()
-
+  const { loading: imageLoading, data: imageData, callApi: uploadImage } = useApi();
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState(null);
   const [isSmallWidthViewport, setIsSmallWidthViewport] =
     useState(false);
   const [isLinkEditMode, setIsLinkEditMode] = useState(false);
 
-  const [coverImage, setCoverImage] = useState(null);
+  const [coverImage, setCoverImage] = useState(sanitize(mediaAttachments, 'array').find(media => media.media_type === 'cover_photo'));
   const isEditable = useLexicalEditable();
 
   const [currentTitle, setCurrentTitle] = useState(title);
-  const [currentEditorState, setCurrentEditorState] = useState(content);
-  const [currentCustomFields, setCurrentCustomFields] = useState([]);
+  const [currentEditorState, setCurrentEditorState] = useState(typeof content === 'string' ? content : EMPTY_CONTENT);
+  const [currentCustomFields, setCurrentCustomFields] = useState(custom_meta);
 
   const onRef = (_floatingAnchorElem) => {
     if (_floatingAnchorElem !== null) {
@@ -71,13 +77,9 @@ export default function Editor({ title, content, onChange }) {
     editor.setEditorState(state)
   }, [editor])
 
-
-  /** call onchange method if any of the field is changed */
-  useEffect(() => {
-    if (!onChange) return;
-
-    onChange({ title: currentTitle, content: currentEditorState });
-  }, [currentTitle, currentEditorState, currentCustomFields, onChange]);
+  const handleOnChange = ({ title, content, custom_meta }) => {
+    onChange({ title, content, custom_meta });
+  }
 
   useEffect(() => {
     const updateViewPortWidth = () => {
@@ -97,48 +99,87 @@ export default function Editor({ title, content, onChange }) {
   }, [isSmallWidthViewport]);
 
   const coverImageUploadHandler = (files) => {
-    console.log('coverImageUploadHandler', files);
-    setCoverImage(files[0]);
+    const file = files[0];
+    const formData = new FormData()
+    formData.append('media_type', 'cover_photo')
+    formData.append('reference_id', page_id)
+    formData.append('caption', ' ')
+    formData.append('reference_for', 'page')
+
+    formData.append('file', file.File)
+    if (file) {
+      uploadImage(mediaBaseUrl, {
+        method: 'POST',
+        body: formData
+      })
+    }
   }
 
+  useEffect(() => {
+    if (imageData?.url) {
+      setCoverImage(imageData)
+    }
+  }, [imageData])
+
   const handleCoverRemove = () => {
-    setCoverImage(null);
+    uploadImage(mediaBaseUrl + '?id=' + coverImage?._id + '&reference_for=page',
+      {
+        method: 'DELETE'
+      }, () => {
+
+        setCoverImage(null)
+      })
   }
+
+  console.log('imageData', imageData)
 
   return (
     <div className="editor-container relative">
-      {coverImage &&
+      {coverImage?.url &&
         <div
           className="relative h-52 cover-image-container group"
           style={{
-            backgroundImage: `url(${URL.createObjectURL(coverImage.File)})`,
+            backgroundImage: `url(${coverImage?.url})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
           }}
         >
-          <Button onClick={handleCoverRemove} variant="outline" className="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-70">
-            Remove cover
-          </Button>
+          {imageLoading ?
+            <Spinner className="absolute inset-0" />
+            :
+            <Button onClick={handleCoverRemove} variant="outline" className="absolute inset-x-0 bottom-0 opacity-0 group-hover:opacity-70">
+              Remove cover
+            </Button>}
         </div>
       }
-      <div className='py-2 px-6 mb-4'>
-
-        {!coverImage && <div className='h-10 opacity-0 hover:opacity-100'>
-          <ImageUpload onChange={coverImageUploadHandler} >
-            <Button variant="secondary" className="opacity-60 ">
-              <Image size={15} className='mr-1' />
-              Add a cover
-            </Button>
-          </ImageUpload>
-        </div>}
+      <div className='py-2 px-6 mb-4 relative'>
+        {!coverImage?.url && <div className={cn('h-10', imageLoading ? '' : 'opacity-0 hover:opacity-100')}>
+          {imageLoading ?
+            <Spinner className="absolute inset-0" />
+            :
+            <ImageUpload onChange={coverImageUploadHandler} >
+              <Button variant="secondary" className="opacity-60 ">
+                <Image size={15} className='mr-1' />
+                Add a cover
+              </Button>
+            </ImageUpload>}
+        </div>
+        }
 
         <div className="" style={{ fontWeight: 700, lineHeight: 1.2, fontSize: '32px', cursor: 'text' }}>
-          <h1 onInput={e => setCurrentTitle(e.target.textContent)} className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0 max-w-full w-full whitespace-pre-wrap break-words pt-[3px] pl-[2px] pr-[2px]" spellCheck="true" data-content-editable-leaf="true" suppressContentEditableWarning={true} contentEditable="true">
+          <h1 onInput={e => {
+            const title = e.target.innerText;
+            setCurrentTitle(title);
+            handleOnChange({ title, content: currentEditorState, custom_meta: currentCustomFields });
+          }} className="empty:after:content-['Untitled'] after:text-slate-300 outline-none m-0 max-w-full w-full whitespace-pre-wrap break-words pt-[3px] pl-[2px] pr-[2px]" spellCheck="true" data-content-editable-leaf="true" suppressContentEditableWarning={true} contentEditable="true">
             {title || "Document title"}
           </h1>
         </div>
-        <DynamicInput onChange={setCurrentCustomFields} />
+        <DynamicInput initialData={custom_meta} onChange={(custom_meta) => {
+          setCurrentCustomFields(custom_meta);
+          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta });
+        }} />
 
       </div>
       <Separator />
@@ -173,8 +214,9 @@ export default function Editor({ title, content, onChange }) {
         <LayoutPlugin />
         <OnChangePlugin onChange={editorState => {
           editorState.read(() => {
-            const value = JSON.stringify(editorState);
-            setCurrentEditorState(value);
+            const content = JSON.stringify(editorState);
+            setCurrentEditorState(content);
+            handleOnChange({ title: currentTitle, content, custom_meta: currentCustomFields });
           });
         }} />
         <>
