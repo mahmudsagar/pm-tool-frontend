@@ -61,31 +61,27 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   // Store new data functionality for File, Folder, and Group
   storeHandler: (id, type, newData) => {
     set((state) => {
-      // Recursive helper function to add new data to the correct child in documents
+      // Helper function to add data to the correct childs array in documents
       const addToDocumentsChilds = (documents) => {
         const updatedDocuments = { ...documents };
-        
+  
+        // Iterate over the documents' keys to find the matching ID
         Object.keys(updatedDocuments).forEach((key) => {
           if (key === id) {
-            // Find the item by ID and type
-            const itemIndex = updatedDocuments[key].findIndex(
+            // Find the matching group object in the array
+            const groupIndex = updatedDocuments[key].findIndex(
               (item) => item._id === id && item.entity_type === type
             );
   
-            if (itemIndex !== -1) {
-              // Check if the new data is a file or a folder/group
-              if (newData.entity_type === "file") {
-                // Directly add the file to the childs array
-                const updatedItem = {
-                  ...updatedDocuments[key][itemIndex],
-                  childs: [...(updatedDocuments[key][itemIndex].childs || []), newData],
-                };
+            if (groupIndex !== -1) {
+              // Update the childs array for the matched group
+              const updatedGroup = {
+                ...updatedDocuments[key][groupIndex],
+                childs: [...(updatedDocuments[key][groupIndex].childs || []), newData],
+              };
   
-                // Update the item in the array
-                updatedDocuments[key][itemIndex] = updatedItem;
-              } else {
-                // Handle folder or group creation here (if needed)
-              }
+              // Replace the group object with the updated version
+              updatedDocuments[key][groupIndex] = updatedGroup;
             }
           }
         });
@@ -93,41 +89,63 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         return updatedDocuments;
       };
   
-      // Recursive helper to locate and add new data in spaces (public or private)
-      const addChildToSpaces = (spaces) =>
+      // Helper function to add a child element to a specific folder or group within a space
+      const addChild = (spaces) =>
         spaces.map((space) => {
+          // If the current space matches the id and type OR has a child that matches, proceed
           if (space._id === id && space.entity_type === type) {
-            // Check if the new data is a file or a folder/group
-            if (newData.entity_type === "file") {
-              // Directly add the file to the childs array
-              return {
-                ...space,
-                childs: [...(space.childs || []), newData],
-              };
-            } else {
-              // Handle folder or group creation here (if needed)
-              return {
-                ...space,
-                childs: [...(space.childs || []), newData],
-              };
-            }
-          } else if (space.childs) {
             return {
               ...space,
-              childs: addChildToSpaces(space.childs),
+              childs: [
+                ...space.childs,
+                newData.entity_type === "page" ? newData : { ...newData, childs: [] },
+              ],
             };
           }
+  
+          // Check if we're dealing with a nested child scenario
+          if (space.childs && space.childs.some((child) => child._id === id && child.entity_type === type)) {
+            return {
+              ...space,
+              childs: space.childs.map((child) => {
+                // Only update the target folder/group, not the parent space
+                if (child._id === id && child.entity_type === type) {
+                  return {
+                    ...child,
+                    // Ensure 'child.childs' is always an array
+                    childs: [
+                      ...(Array.isArray(child.childs) ? child.childs : []),
+                      newData.entity_type === "page" ? newData : { ...newData, childs: [] },
+                    ],
+                  };
+                }
+                return child;
+              }),
+            };
+          }
+  
           return space;
         });
   
-      // Updated state with new data added in the appropriate places
+      // Adding data to the childs array in documents
+      const updatedDocuments = addToDocumentsChilds(state.documents);
+  
+      // Adding data to publicSpaces, but avoid adding if it's inside a folder/group
+      const updatedPublicSpaces = addChild(state.publicSpaces);
+  
+      // Adding data to privateSpaces, but avoid adding if it's inside a folder/group
+      const updatedPrivateSpaces = addChild(state.privateSpaces);
+  
+      // Return updated state
       return {
-        documents: addToDocumentsChilds(state.documents),
-        publicSpaces: addChildToSpaces(state.publicSpaces),
-        privateSpaces: addChildToSpaces(state.privateSpaces),
+        documents: updatedDocuments,
+        publicSpaces: updatedPublicSpaces,
+        privateSpaces: updatedPrivateSpaces,
       };
     });
-  },      
+  },
+  
+     
 
   // Define the reusable apiRequest function with direct access to set and get
   apiRequest: async (url, method = 'GET', data = null) => {
