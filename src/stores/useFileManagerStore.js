@@ -144,8 +144,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       };
     });
   },
-  
-     
 
   // Define the reusable apiRequest function with direct access to set and get
   apiRequest: async (url, method = 'GET', data = null) => {
@@ -173,86 +171,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         return { data: responseData?.data, error: null };
     } catch (error) {
         return { data: null, error: error?.message };
-    }
-  },
-
-  // Add Document Data
-  postDocument: async (data) => {
-    let endpoint, newDocumentData;
-
-    if (data.filetype === "file") {
-      endpoint = "/page/document";
-      newDocumentData = {
-        user_id: "66cda5dac6886719e3345c19",
-        title: data.title,
-        page_type: data.page_type,
-        content: {
-          text: "This is the document content"
-        },
-        summary: "This is the document summary",
-        last_updated_by: "66cda5dac6886719e3345c19",
-        custom_meta: {
-          author: "John Doe",
-          keywords: ["sample", "page", "meta"]
-        },
-        folder_id: data.type === "folder" ? data.id : '',
-        group_id: data.type === "group" ? data.id : '',
-        space_id: data.type === "space" ? data.id : '',
-        attachments: []
-      };
-    } else if (data.filetype === "folder" || data.filetype === "group") {
-      endpoint = data.filetype === "folder" ? "/folder" : "/group";
-      newDocumentData = {
-        user_id: "66cda5dac6886719e3345c19",
-        entity_type: data.filetype,
-        name: data.title,
-        shared_members: data.shared_members,
-        shared_teams: data.shared_teams,
-        folder_id: data.type === "folder" ? data.id : '',
-        group_id: data.type === "group" ? data.id : '',
-        space_id: data.type === "space" ? data.id : '',
-      };
-    } else {
-      return { error: "Invalid filetype specified" };
-    }
-
-    try {
-      const { data: responseData, error } = await get().apiRequest(`${API_BASE_URL}${endpoint}`, 'POST', newDocumentData);
-
-      console.log(responseData);
-      
-
-      if (error) {
-        return { error };
-      }
-
-      // Update the appropriate state based on filetype
-      set((state) => {
-        if (data.filetype === "file") {
-          return {
-            documents: {
-              ...state.documents,
-              [data.id]: [...(state.documents[data.id] || []), responseData],
-            },
-          };
-        } else {
-          // Find the space, update the child's array, and replace it in the array
-          const updatedSpaces = state.spaces.map(space => {
-            if (space._id === data.space_id) {
-              const updatedChilds = [...(space.childs || []), responseData];
-              return { ...space, childs: updatedChilds }; // Update child nodes
-            }
-            return space;
-          });
-
-          return { spaces: updatedSpaces }; // Set directly updated array
-        }
-      });
-
-      return { error: null };
-
-    } catch (error) {
-      return { error: error.message };
     }
   },
 
