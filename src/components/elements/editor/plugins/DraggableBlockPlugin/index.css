@@ -7,6 +7,7 @@
   left: 0;
   top: 0;
   will-change: transform;
+  @apply mb-2;
 }
 
 .draggable-block-menu .icon {
@@ -20,7 +21,10 @@
 }
 
 .draggable-block-menu:hover {
-  background-color: #efefef;
+  background-color: #efefefd2;
+  svg{
+    color: #000;
+  }
 }
 
 .draggable-block-target-line {

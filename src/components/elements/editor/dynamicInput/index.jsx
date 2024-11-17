@@ -36,7 +36,7 @@ const fieldTypes = [
   { type: 'input', label: 'Input', hasOptions: false },
   { type: 'number', label: 'Number', hasOptions: false },
   { type: 'select', label: 'Select', hasOptions: true },
-  { type: 'multi-select', label: 'Multi Select', hasOptions: true },
+  { type: 'multiSelect', label: 'Multi Select', hasOptions: true },
   { type: 'date', label: 'Date', hasOptions: false },
   { type: 'daterange', label: 'Date Range', hasOptions: false },
 ];
@@ -60,6 +60,7 @@ const Field = ({ field, control, onChange }) => {
   const [changedField, setChangedField] = useState({});
 
   const Component = fields[field.type] || Input;
+  const { hasOptions, initialized, ...passableProps } = field
 
   useEffect(() => {
     if (!field.initialized) {
@@ -92,7 +93,10 @@ const Field = ({ field, control, onChange }) => {
               setShowFieldList(true);
             }}>
               <h5 className="text-sm">Field Type</h5>
-              <List size={12} />
+              <div className='flex items-center gap-1'>
+                <List size={12} />
+                {field.type}
+              </div>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>}
@@ -172,7 +176,7 @@ const Field = ({ field, control, onChange }) => {
         render={({ field: formField }) => (
           <FormItem>
             <FormControl>
-              <Component className="outline-none w-full h-8" {...field} {...formField} />
+              <Component className="outline-none w-full h-8" {...passableProps} {...formField} />
             </FormControl>
           </FormItem>
         )}
@@ -247,7 +251,7 @@ const DynamicInput = ({ initialData, onChange }) => {
 
   const handleFormChange = debounce(() => {
     const values = form.getValues();
-    const fields = customFields.map(({...rest }) => ({ ...rest }));
+    const fields = customFields.map(({ ...rest }) => ({ ...rest }));
     onChange({ values, fields });
   }, 1000);
 
