@@ -55,12 +55,14 @@ const Field = ({ field, control, onChange }) => {
   const [label, setLabel] = useState(field.label);
   const [actionType, setActionType] = useState('edit');
   /** options array for select, radio, checkbox */
-  const [options, setOptions] = useState([]);
+  const [options, setOptions] = useState(field?.options || []);
   const [showFieldList, setShowFieldList] = useState(false);
   const [changedField, setChangedField] = useState({});
 
   const Component = fields[field.type] || Input;
-  const { hasOptions, initialized, ...passableProps } = field
+  const { hasOptions, initialized, ...passableProps } = field;
+
+  console.log('field', passableProps);
 
   useEffect(() => {
     if (!field.initialized) {
@@ -76,7 +78,7 @@ const Field = ({ field, control, onChange }) => {
           onChange({
             ...field, label, actionType, initialized: true,
             ...(field.hasOptions ?
-              { options: options.filter(Boolean).map((option) => ({ value: option, label: option })) } : {}),
+              { options } : {}),
             ...(changedField ? { ...changedField } : {})
           });
         }
@@ -128,10 +130,13 @@ const Field = ({ field, control, onChange }) => {
                           className="h-8"
                           onChange={e => {
                             const updatedOptions = [...options];
-                            updatedOptions[index] = e.target.value;
+                            updatedOptions[index] = {
+                              value: e.target.value,
+                              label: e.target.value
+                            };
                             setOptions(updatedOptions);
                           }}
-                          value={option}
+                          value={option.label}
                         />
                         <Button variant="ghost" size="sm" className="px-2 py-1" onClick={() => {
                           const updatedOptions = options.filter((_, i) => i !== index);
@@ -258,7 +263,7 @@ const DynamicInput = ({ initialData, onChange }) => {
   return (
 
     <Form {...form}>
-      <form onChange={handleFormChange} >
+      <form onChange={handleFormChange} onSubmit={e => e.preventDefault()}>
         <table className='w-full mt-3'>
           <tbody>
             {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} />
