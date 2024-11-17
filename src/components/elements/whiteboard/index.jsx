@@ -1,7 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef } from 'react';
 import {
   Excalidraw,
   MainMenu,
+  Footer,
   convertToExcalidrawElements,
   getNonDeletedElements,
   getSceneVersion,
@@ -9,24 +10,21 @@ import {
 
 import { StickyNote } from "lucide-react";
 
-import useSyncStore from '@/stores/useSyncStore';
 import { useTheme } from "@/components/theme-provider";
-// import CustomLibrary from "./custom-library";
 
-import { STICKY_NOTE } from './constants';
+import { PAGE_EMBED, STICKY_NOTE } from './constants';
+import PageEmbed from "./PageEmbed";
 
 /**
  * 
  * @param {viewId} viewId of the current page
  * @returns 
  */
-export default function ExcalidrawRender({ viewId }) {
+export default function ExcalidrawRender({ content, onChange }) {
   const { theme } = useTheme();
   const wrapperRef = useRef(null);
 
   const [excalidrawAPI, setExcalidrawAPI] = useState(null);
-  // store data
-  const { viewData, setViewData } = useSyncStore()
 
   const [flags, setFlags] = useState({
     justLoaded: true,
@@ -53,6 +51,27 @@ export default function ExcalidrawRender({ viewId }) {
     excalidrawAPI.updateScene({ elements });
   };
 
+  const createPageEmbed = (id) => {
+    const { scrollX, scrollY } = excalidrawAPI.getAppState();
+    const newStickyNote = convertToExcalidrawElements([
+      {
+        ...PAGE_EMBED,
+        link: `betternotion:${id}`,
+        x: -scrollX + 200,
+        y: -scrollY + 200,
+      }
+    ]);
+
+    // Update the scene with the new element
+    const elements = [
+      ...excalidrawAPI.getSceneElements(),
+      ...newStickyNote
+    ]
+
+    excalidrawAPI.updateScene({ elements });
+    onChange({ content: { elements } })
+  }
+
   /**
    * Handle drawing element changes
    * @param {Object} elements 
@@ -62,9 +81,7 @@ export default function ExcalidrawRender({ viewId }) {
   const handleChange = (elements, state) => {
     // Making sure we are not updating data during element events (drag, resize, edit etc)
     if (
-      state.editingElement === null &&
       state.resizingElement === null &&
-      state.draggingElement === null &&
       state.editingGroupId === null &&
       state.editingLinearElement === null
     ) {
@@ -83,20 +100,21 @@ export default function ExcalidrawRender({ viewId }) {
         setPreviousSceneVersion(sceneVersion);
 
         // Send non deleted elements to store state
-        setViewData(viewId, {
-          data: getNonDeletedElements(elements),
-          // clientId: clientId
-        });
+
+        onChange({ content: { elements: getNonDeletedElements(elements) } })
       }
     }
   }
 
   return (
     <div className='h-full relative' ref={wrapperRef}>
+      {/* <pre className="text-start text-xs overflow-y-scroll h-16 p-4 bg-green-200">
+        {JSON.stringify(viewData?.[viewId]?.data, null, 2)}
+      </pre> */}
       <Excalidraw
         excalidrawAPI={(api) => setExcalidrawAPI(api)}
         initialData={{
-          elements: viewData?.[viewId]?.data || [],
+          elements: Array.isArray(content?.elements) ? content?.elements : [],
           appState: {
             currentItemRoughness: 0,
             currentItemRoundness: 'round',
@@ -106,20 +124,8 @@ export default function ExcalidrawRender({ viewId }) {
         }}
         theme={theme}
         onChange={handleChange}
-        // renderTopRightUI={() => {
-        //   return (
-        //     <Sidebar.Trigger
-        //       name="custom-library"
-        //       tab="one"
-        //       icon={<BookIcon />}
-        //     >
-        //       Library
-        //     </Sidebar.Trigger>
-        //   );
-        // }}
       >
         <MainMenu>
-          {/* <MainMenu.DefaultItems.LoadScene /> */}
           <MainMenu.DefaultItems.Export />
           <MainMenu.DefaultItems.SaveAsImage />
           <MainMenu.DefaultItems.ClearCanvas />
@@ -134,12 +140,10 @@ export default function ExcalidrawRender({ viewId }) {
             Insert Sticky Note
           </MainMenu.Item>
         </MainMenu>
-        {/* <CustomLibrary excalidrawAPI={excalidrawAPI} /> */}
+        <Footer>
+          <PageEmbed onSelect={(id) => createPageEmbed(id)} />
+        </Footer>
       </Excalidraw>
-      {/* json data view */}
-      {/* <pre className="text-start text-xs overflow-y-scroll h-screen p-4 bg-green-200">
-          {JSON.stringify(viewData[viewId]?.data, null, 2)}
-        </pre> */}
     </div>
   );
 }
