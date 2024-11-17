@@ -34,7 +34,7 @@ export function SidebarMenu({ setOpen, className }) {
   const { isOpen } = useSidebar();
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
-
+  
   useEffect(() => {
     if (isOpen) {
       setOpenItem(lastOpenItem);
@@ -43,7 +43,6 @@ export function SidebarMenu({ setOpen, className }) {
       setOpenItem("");
     }
   }, [isOpen]);
-
 
   return (
     <nav className="space-y-4 h-full">

@@ -125,13 +125,13 @@ export default [
     ),
   },
   {
-    accessorKey: "fileSize",
+    accessorKey: "sharing",
     header: ({ column }) => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="font-medium dark:text-white flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
-              File Size
+              Sharing
               <ChevronDown className='w-4 h-4' />
             </button>
           </DropdownMenuTrigger>
@@ -139,21 +139,7 @@ export default [
       );
     },
     cell: ({ row }) => (
-      <div className='text-slate-500 dark:text-white'>{row.getValue("fileSize")}</div>
-    ),
-  },
-  {
-    accessorKey: "sharing",
-    header: ({ column }) => <p className='dark:text-white'>Sharing</p>,
-    cell: ({ row }) => (
       <div className='text-slate-500 dark:text-white'>{row.getValue("sharing")}</div>
-    ),
-  },
-  {
-    accessorKey: "activity",
-    header: ({ column }) => <p className='dark:text-white'>Activity</p>,
-    cell: ({ row }) => (
-      <div className='text-slate-500 dark:text-white'>{row.getValue("activity")}</div>
     ),
   },
 ];
