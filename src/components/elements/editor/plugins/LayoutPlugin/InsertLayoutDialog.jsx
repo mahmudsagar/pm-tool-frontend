@@ -31,7 +31,6 @@ export default function InsertLayoutDialog({
     activeEditor.dispatchCommand(INSERT_LAYOUT_COMMAND, layout);
     onClose();
   };
-
   return (
     <div className='w-72'>
       {/* <DropdownMenu
@@ -47,14 +46,14 @@ export default function InsertLayoutDialog({
         ))}
       </DropdownMenu> */}
 
-      <Select>
+      <Select onValueChange={setLayout}>
         <SelectTrigger >
           <SelectValue placeholder={buttonLabel} />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
             {LAYOUTS.map(({ label, value }) => (
-              <SelectItem onClick={() => setLayout(value)} key={value} value={value}>{label}</SelectItem>
+              <SelectItem key={value} value={value}>{label}</SelectItem>
             ))}
           </SelectGroup>
         </SelectContent>

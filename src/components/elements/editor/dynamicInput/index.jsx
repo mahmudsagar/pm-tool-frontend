@@ -26,6 +26,8 @@ const SelectField = ({ options, onChange, ...props }) => {
         {options?.map((option, index) => (
           <SelectItem key={index} value={option?.value}>{option?.label}</SelectItem>
         ))}
+
+        {options?.length === 0 && <SelectItem disabled>No options available</SelectItem>}
       </SelectGroup>
     </SelectContent>
   </Select>
@@ -61,8 +63,6 @@ const Field = ({ field, control, onChange }) => {
 
   const Component = fields[field.type] || Input;
   const { hasOptions, initialized, ...passableProps } = field;
-
-  console.log('field', passableProps);
 
   useEffect(() => {
     if (!field.initialized) {
@@ -254,8 +254,14 @@ const DynamicInput = ({ initialData, onChange }) => {
     }
   }
 
+  useEffect(() => {
+    handleFormChange();
+  }, [customFields.length]);
+
   const handleFormChange = debounce(() => {
     const values = form.getValues();
+
+    console.log('values', values);
     const fields = customFields.map(({ ...rest }) => ({ ...rest }));
     onChange({ values, fields });
   }, 1000);
