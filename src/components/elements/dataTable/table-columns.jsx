@@ -37,21 +37,21 @@ export default [
     enableSorting: false,
     enableHiding: false,
   },
-  {
-    accessorKey: "icon",
-    header: ({ column }) => {
-      return (
-        <div className="w-10 flex items-center justify-center">
-          <FileText className='w-5 h-5 dark:text-white' />
-        </div>
-      )
-    },
-    cell: ({ row }) => (
-      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-        <row.original.icon className="w-5 h-5 text-purple-700" />
-      </div>
-    ),
-  },
+  // {
+  //   accessorKey: "icon",
+  //   header: ({ column }) => {
+  //     return (
+  //       <div className="w-10 flex items-center justify-center">
+  //         <FileText className='w-5 h-5 dark:text-white' />
+  //       </div>
+  //     )
+  //   },
+  //   cell: ({ row }) => (
+  //     <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+  //       <row.original.icon className="w-5 h-5 text-purple-700" />
+  //     </div>
+  //   ),
+  // },
   {
     accessorKey: "name",
     header: ({ column }) => {
@@ -78,7 +78,12 @@ export default [
     },
     cell: ({ row }) => (
       <div className="group flex items-center gap-8">
-        <span>{row.getValue("name")}</span>
+        <div className='flex items-center gap-3'>
+          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+            <row.original.icon className="w-5 h-5 text-purple-700" />
+          </div>
+          <span>{row.getValue("name")}</span>
+        </div>
         <div className="flex items-center gap-2 transition-opacity">
           {/* DropDown Menu */}
           <TableColumnsDropdown info={row} />

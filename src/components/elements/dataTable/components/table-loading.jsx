@@ -11,10 +11,10 @@ const TableLoading = () => {
             <Skeleton className="h-4 w-4 rounded-sm border border-slate-400 bg-slate-300" />
           </TableCell>
           <TableCell>
-            <Skeleton className="h-10 w-10 rounded-full bg-slate-300" />
-          </TableCell>
-          <TableCell>
-            <Skeleton className="h-3 w-[180px] rounded-full bg-slate-300" />
+            <div className='flex items-center gap-3'>
+              <Skeleton className="h-10 w-10 rounded-full bg-slate-300" />
+              <Skeleton className="h-3 w-[180px] rounded-full bg-slate-300" />
+            </div>
           </TableCell>
           <TableCell>
             <Skeleton className="h-3 w-[100px] rounded-full bg-slate-300" />

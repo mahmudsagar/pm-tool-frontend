@@ -61,7 +61,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   // Store new data functionality for File, Folder, and Group
   storeHandler: (id, type, newData) => {
     set((state) => {
-      // Helper function to add data to the correct childs array in documents
       const addToDocumentsChilds = (documents) => {
         const updatedDocuments = { ...documents };
   
@@ -175,14 +174,13 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   },
 
   getRelativeTime: (date) => {
-    const now = new Date();
-    const past = new Date(date);
+    const now = Date.now();
+    const past = new Date(date).getTime();
     const diffInSeconds = Math.floor((now - past) / 1000);
-    const diffInDays = Math.floor(diffInSeconds / 86400); // Calculate difference in days
 
-    // If more than 24 hours have passed, show the date in "Month Day, Year" format
-    if (diffInDays >= 1) {
-      return past.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (diffInSeconds >= 86400) {
+      // More than 24 hours, return formatted date
+      return new Date(past).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     const timeIntervals = [
@@ -191,16 +189,10 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       { label: 'second', seconds: 1 }
     ];
 
-    for (const interval of timeIntervals) {
-      const count = Math.floor(diffInSeconds / interval.seconds);
-      if (count >= 1) {
-        return count === 1
-          ? `a ${interval.label} ago`
-          : `${count} ${interval.label}s ago`;
-      }
-    }
+    const { label, seconds } = timeIntervals.find(({ seconds }) => diffInSeconds >= seconds) || {};
+    const count = Math.floor(diffInSeconds / (seconds || 1));
 
-    return 'a moment ago';
+    return count === 1 ? `a ${label} ago` : `${count} ${label}s ago`;
   },
 
   // Get the User data By ID
