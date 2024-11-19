@@ -40,10 +40,15 @@ import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import useApi from '@/lib/dataFetcher';
-import { baseUrl, mediaBaseUrl } from '@/utils/constants';
+import { mediaBaseUrl } from '@/utils/constants';
 import Spinner from '../spinner';
 import { sanitize } from '@/utils/helper';
 import { cn } from '@/lib/utils';
+import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
+
+import TableCellResizerPlugin from './plugins/TableCellResizer';
+import TableHoverActionsPlugin from './plugins/TableHoverActionsPlugin';
+import TableCellActionMenuPlugin from './plugins/TableActionMenuPlugin';
 const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
@@ -212,6 +217,10 @@ export default function Editor({ title, content, page_id, custom_meta, mediaAtta
         <ClickableLinkPlugin disabled={isEditable} />
         <HorizontalRulePlugin />
         <LayoutPlugin />
+        <TablePlugin hasCellMerge={true}
+          hasCellBackgroundColor={true} />
+        <TableCellResizerPlugin />
+        <TableHoverActionsPlugin />
         <OnChangePlugin onChange={editorState => {
           editorState.read(() => {
             const content = JSON.stringify(editorState);
@@ -229,10 +238,10 @@ export default function Editor({ title, content, page_id, custom_meta, mediaAtta
                 isLinkEditMode={isLinkEditMode}
                 setIsLinkEditMode={setIsLinkEditMode}
               />
-              {/* <TableCellActionMenuPlugin
-                  anchorElem={floatingAnchorElem}
-                  cellMerge={true}
-                /> */}
+              <TableCellActionMenuPlugin
+                anchorElem={floatingAnchorElem}
+                cellMerge={true}
+              />
               <FloatingTextFormatToolbarPlugin
                 anchorElem={floatingAnchorElem}
                 setIsLinkEditMode={setIsLinkEditMode}

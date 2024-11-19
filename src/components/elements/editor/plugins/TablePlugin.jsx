@@ -7,7 +7,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { DialogClose, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
@@ -86,9 +86,6 @@ export function InsertTableDialog({
 
   return (
     <>
-      <DialogHeader>
-        <DialogTitle>Insert Table</DialogTitle>
-      </DialogHeader>
       <div>
         <Label>Rows:</Label>
         <Input

@@ -7,7 +7,7 @@ const Modal = ({ title, onClose, open, children, closeOnClickOutside, ...props }
     }
   };
 
-  return <Dialog onOpenChange={onOpenChange} open={open} {...props}>
+  return <Dialog onOpenChange={onOpenChange} className="z-9999" open={open} {...props}>
     <DialogContent className="w-auto" onInteractOutside={(e) => {
       if (!closeOnClickOutside) {
         e.preventDefault();

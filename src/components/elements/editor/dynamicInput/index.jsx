@@ -69,6 +69,7 @@ const Field = ({ field, control, onChange }) => {
       setOpen(true);
     }
   }, [])
+  
   return <tr className=''>
     <td className='w-[150px]'>
       <DropdownMenu open={open} onOpenChange={state => {
