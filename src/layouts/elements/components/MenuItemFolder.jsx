@@ -112,28 +112,20 @@ const MenuItemFolder = ({ folder, className }) => {
           value={openItem}
           onValueChange={(value) => setOpenItem(value)}
         >
-          <AccordionItem value={folder._id} className="border-none ">
+          <AccordionItem value={folder._id} className="border-none mr-1">
             <AccordionTrigger
               className={cn(
-                'group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
+                'group relative flex h-9 justify-between px-2 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
               )}
               onClick={(e) => {
                 e.stopPropagation();
                 handleFolderClick(folder?._id, folder?.entity_type);
               }}
             >
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center gap-2">
                 <span className="inline group-hover:hidden group-data-[state=open]:hidden">
                   { showIcon(folder?.entity_type, folder?.page_type) }
                 </span>
-                {/* <ChevronDownIcon
-                  strokeWidth={2.5}
-                  size={20}
-                  className={cn(
-                    'hidden group-hover:inline group-data-[state=open]:inline shrink-0 transition-transform duration-200',
-                    { 'inline': openItem === folder._id }
-                  )}
-                /> */}
                 <ChevronRight
                   strokeWidth={2.5}
                   size={20}
@@ -148,7 +140,7 @@ const MenuItemFolder = ({ folder, className }) => {
                 )}
                 <Link 
                   to={`/file-manager/${folder?.entity_type}/${folder._id}`} 
-                  className={cn('absolute left-10 text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
+                  className={cn('text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
                 >
                   {folder.name}
                 </Link>
@@ -168,7 +160,7 @@ const MenuItemFolder = ({ folder, className }) => {
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="space-y-2 pl-3 py-3">
+            <AccordionContent className="space-y-2 py-3">
               { loading ? <ButtonLoading text='Loading...' flex='col' /> :                 
                 Array.isArray(documents[folder?._id]) && documents[folder?._id].length > 0 ? 
                   documents[folder?._id].map( doc => 
@@ -180,6 +172,7 @@ const MenuItemFolder = ({ folder, className }) => {
                           docName = {item?.title} 
                           docType = {item?.entity_type}
                           fileType = { item?.page_type }
+                          openItem={openItem}
                           isOpen = {isOpen}
                           showIcon={showIcon}
                           className = {className}
@@ -203,6 +196,7 @@ const MenuItemFolder = ({ folder, className }) => {
           docName = {folder?.title}
           docType = {folder?.entity_type}
           fileType = {folder?.page_type}
+          openItem={openItem}
           isOpen = {isOpen}
           showIcon={showIcon}
           className = {className}
