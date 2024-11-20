@@ -1,7 +1,7 @@
 import React from 'react';
 import { Loader } from "lucide-react";
 
-const MenuItemLoading = ({ text, flex = 'row', btn = false }) => {
+const ButtonLoading = ({ text, flex = 'row', btn = false }) => {
   return (
     <div className={`flex items-center justify-center flex-${flex} gap-2 py-5`}>
       <Loader className={`animate-spin text-black ${btn ? 'text-white dark:text-black' : 'dark:text-white'}`} />
@@ -10,4 +10,4 @@ const MenuItemLoading = ({ text, flex = 'row', btn = false }) => {
   )
 }
 
-export default MenuItemLoading;
+export default ButtonLoading;

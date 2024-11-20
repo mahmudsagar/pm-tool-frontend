@@ -1,7 +1,7 @@
 import { Separator } from "@/components/ui/separator";
 import useFileManagerStore from "@/stores/useFileManagerStore";
-import MenuItemLoading from "./components/MenuItemLoading";
 import MenuItemSpace from "./components/MenuItemSpace";
+import MenuLoading from "./components/MenuLoading";
 
 const SidebarMenuItems = ({ className, setOpen }) => {
   const { publicSpaces, privateSpaces } = useFileManagerStore(state => state);
@@ -23,7 +23,7 @@ const SidebarMenuItems = ({ className, setOpen }) => {
               ))}
             </>
           ) : (
-            <MenuItemLoading text='Loading...' flex='col' />
+            <MenuLoading/>
           )}          
         </div>
       }

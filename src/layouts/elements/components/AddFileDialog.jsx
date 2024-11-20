@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import MenuItemLoading from './MenuItemLoading';
+import ButtonLoading from './ButtonLoading';
 
 const AddFileDialog = ({ id, type }) => {  
   const [isOpen, setIsOpen] = useState(false);
@@ -276,7 +276,7 @@ const AddFileDialog = ({ id, type }) => {
               />
             </div>
             <div className="flex justify-end space-x-2">
-              <Button type="submit">{loading ? <MenuItemLoading text='Creating...' flex='row' btn={true} /> : "Create"}</Button>
+              <Button type="submit">{loading ? <ButtonLoading text='Creating...' flex='row' btn={true} /> : "Create"}</Button>
             </div>
           </form>
         </Form>

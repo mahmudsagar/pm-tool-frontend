@@ -1,5 +1,5 @@
 import { createWithEqualityFn } from "zustand/traditional";
-import { Folder, File } from 'lucide-react';
+import { File, Folder } from 'lucide-react';
 
 const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
 
