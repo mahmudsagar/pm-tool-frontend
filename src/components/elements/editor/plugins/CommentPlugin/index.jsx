@@ -40,8 +40,13 @@ import {
   createCommand,
   KEY_ESCAPE_COMMAND,
 } from 'lexical';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { CommentStore, createComment, createThread, useCommentStore } from '../../commenting';
+import { Button } from '@/components/ui/button';
+import useModal from '@/components/elements/modal/useModal';
+import CommentEditorTheme from '../../themes/CommentEditorTheme';
+
 // import useLayoutEffect from 'shared/useLayoutEffect';
 
 // import {
@@ -89,10 +94,9 @@ function AddCommentBox({
     };
   }, [editor, updatePosition]);
 
-  // useLayoutEffect(() => {
-  //   updatePosition();
-  // }, [anchorKey, editor, updatePosition]);
-
+  useLayoutEffect(() => {
+    updatePosition();
+  }, [anchorKey, editor, updatePosition]);
   return (
     <div className="CommentPlugin_AddCommentBox" ref={boxRef}>
       <button
@@ -136,7 +140,7 @@ function PlainTextEditor({
     onError: (error) => {
       throw error;
     },
-    //theme: CommentEditorTheme,
+    theme: CommentEditorTheme,
   };
 
   return (
@@ -871,7 +875,7 @@ export default function CommentPlugin({
             }`}
           onClick={() => setShowComments(!showComments)}
           title={showComments ? 'Hide Comments' : 'Show Comments'}>
-          <i className="comments" />
+          <i className="comments" />gg
         </Button>,
         document.body,
       )}

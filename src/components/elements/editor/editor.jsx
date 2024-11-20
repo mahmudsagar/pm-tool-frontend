@@ -49,6 +49,7 @@ import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
 import TableCellResizerPlugin from './plugins/TableCellResizer';
 import TableHoverActionsPlugin from './plugins/TableHoverActionsPlugin';
 import TableCellActionMenuPlugin from './plugins/TableActionMenuPlugin';
+import CommentPlugin from './plugins/CommentPlugin';
 const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
@@ -217,6 +218,7 @@ export default function Editor({ title, content, page_id, custom_meta, mediaAtta
         <ClickableLinkPlugin disabled={isEditable} />
         <HorizontalRulePlugin />
         <LayoutPlugin />
+        <CommentPlugin />
         <TablePlugin hasCellMerge={true}
           hasCellBackgroundColor={true} />
         <TableCellResizerPlugin />
