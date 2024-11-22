@@ -16,29 +16,37 @@ import DataTableColumnHeader from '@/components/elements/dataTable/data-table-he
 
 const Home = () => {
   const [sorting, setSorting] = useState([]);
-  const [tableData, setTableData] = useState([]);
   const [rowSelection, setRowSelection] = useState({});
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
-  const { loading: userLoading, data: user, callApi: userCallApi } = useApi();
+  const { data: users, callApi: userCallApi } = useApi();
   const { loading: spaceLoading, data: spaces, callApi: spaceCallApi } = useApi();
-  const { formatSpaces, spaceFiles, publicSpaces, privateSpaces } = useFileManagerStore(state => state);
+  
+  const { 
+    storeState, 
+    spaceFiles, 
+    publicSpaces, 
+    formatSpaces, 
+    privateSpaces, 
+  } = useFileManagerStore(state => state);
 
   useEffect(() => {
     if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
       spaceCallApi(baseUrl + '/v1/space?user_id=' + userID);
+      userCallApi(baseUrl + '/v1/user');
     }
-  }, [spaceCallApi, publicSpaces, privateSpaces]);
+  }, [ spaceCallApi, publicSpaces, privateSpaces]);
 
-  
   useEffect(() => {
-    if (spaces) {
+    if (spaces) {      
+      storeState('users', users);
       formatSpaces(spaces);
     }
-  }, [spaces, formatSpaces]);
+  }, [ spaces, formatSpaces ]);
+
 
   const table = useReactTable({
-    data: tableData,
+    data: spaceFiles || [],
     columns,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),

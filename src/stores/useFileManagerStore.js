@@ -1,10 +1,18 @@
 import { createWithEqualityFn } from "zustand/traditional";
-import { File, Folder } from 'lucide-react';
 import { formatTime } from '@/utils/helper';
+import { 
+  File, 
+  Users, 
+  Folder,
+  FileText,
+  StickyNote,
+  FileSpreadsheet,
+} from 'lucide-react';
 
 const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
 
 const useFileManagerStore = createWithEqualityFn((set, get) => ({
+  users: null,
   documents: {},
   spaceFiles: null,
   publicSpaces: null,
@@ -13,7 +21,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   error: null,
 
   // Space data formatting is categorized into two types: public and private.
-  formatSpaces: (data) => {
+  formatSpaces: (data) => {    
     const categorizedSpaces = {
       privateSpaces: [],
       publicSpaces: []
@@ -31,7 +39,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     });
   
     set({
-      spaceFiles: allChildFiles,
+      spaceFiles: get().convertTableFormat(allChildFiles),
       privateSpaces: categorizedSpaces.privateSpaces,
       publicSpaces: categorizedSpaces.publicSpaces
     });
@@ -41,6 +49,14 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   storeDocuments: (data, id) => {
     set((state) => ({
       documents: { ...state.documents, [id]: data }
+    }));
+  },
+
+  // Universal function to store data into any state
+  storeState: (key, data) => {
+    set((state) => ({
+      // Update the specific state based on the key
+      [key]: data,
     }));
   },
 
@@ -185,6 +201,30 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     } catch (error) {
         return { data: null, error: error?.message };
     }
+  },
+
+  // Obtain the data and convert it into a table format.
+  convertTableFormat: (data) => {
+    return (data || []).map((child) => {
+      const fileIcon = child.entity_type === 'folder' ? Folder : child.entity_type === 'group' ? Users : { 
+        document: FileText, 
+        whiteboard: StickyNote, 
+        sheet: FileSpreadsheet 
+      }[child.page_type] || FileText;
+
+      const fileName = child.entity_type === 'folder' || child.entity_type === 'group' ? child.name : child.title;
+      const modifiedUser = (get().users || []).filter(user => user._id === child.user_id) || 'Unknown User';
+
+      return {
+        id: child._id,
+        type: child.entity_type,
+        icon: fileIcon,
+        name: fileName,
+        modified: formatTime(child.updatedAt),
+        modifiedBy: modifiedUser[0].full_name,
+        sharing: child.is_private ? 'Private' : 'Public',
+      };
+    });
   },
 
   // Get the User data By ID
