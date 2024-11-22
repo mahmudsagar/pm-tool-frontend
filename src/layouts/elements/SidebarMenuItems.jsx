@@ -4,30 +4,26 @@ import MenuItemSpace from "./components/MenuItemSpace";
 import MenuLoading from "./components/MenuLoading";
 
 const SidebarMenuItems = ({ className, setOpen }) => {
-  const { publicSpaces, privateSpaces } = useFileManagerStore(state => state);
+  const { publicSpaces, privateSpaces } = useFileManagerStore(state => state);   
 
   return (
-    <>
-      { (publicSpaces || privateSpaces) &&
-        <div className="block mb-5">
-          { publicSpaces?.length > 0 && privateSpaces?.length > 0 ? (
-            <>
-              { privateSpaces?.map( space => (
-                <MenuItemSpace key={space._id} space={space} className={className} />
-              ))}
+    <div className="block mb-5">
+      { publicSpaces?.length > 0 || privateSpaces?.length > 0 ? (
+        <>
+          { privateSpaces?.map( space => (
+            <MenuItemSpace key={space._id} space={space} className={className} />
+          ))}
 
-              <Separator className="my-4" />
-              
-              { publicSpaces?.map( space => (
-                <MenuItemSpace key={space._id} space={space} className={className} />
-              ))}
-            </>
-          ) : (
-            <MenuLoading/>
-          )}          
-        </div>
-      }
-    </>
+          <Separator className="my-4" />
+          
+          { publicSpaces?.map( space => (
+            <MenuItemSpace key={space._id} space={space} className={className} />
+          ))}
+        </>
+      ) : (
+        <MenuLoading/>
+      )}          
+    </div>
   );
 };
 

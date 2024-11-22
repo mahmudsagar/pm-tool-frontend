@@ -22,15 +22,20 @@ const Home = () => {
   const [columnVisibility, setColumnVisibility] = useState({});
   const { loading: userLoading, data: user, callApi: userCallApi } = useApi();
   const { loading: spaceLoading, data: spaces, callApi: spaceCallApi } = useApi();
-  const { formatSpaces, publicSpaces, privateSpaces } = useFileManagerStore(state => state);
-
-  useEffect(() => {  
-      spaceCallApi(baseUrl + '/v1/space?user_id=' + userID);
-  }, []);
+  const { formatSpaces, spaceFiles, publicSpaces, privateSpaces } = useFileManagerStore(state => state);
 
   useEffect(() => {
-    formatSpaces(spaces);
-  }, [spaces]);  
+    if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
+      spaceCallApi(baseUrl + '/v1/space?user_id=' + userID);
+    }
+  }, [spaceCallApi, publicSpaces, privateSpaces]);
+
+  
+  useEffect(() => {
+    if (spaces) {
+      formatSpaces(spaces);
+    }
+  }, [spaces, formatSpaces]);
 
   const table = useReactTable({
     data: tableData,

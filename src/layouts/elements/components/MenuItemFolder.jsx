@@ -172,6 +172,7 @@ const MenuItemFolder = ({ folder, className }) => {
                           docName = {item?.title} 
                           docType = {item?.entity_type}
                           fileType = { item?.page_type }
+                          hasChild = {true}
                           openItem={openItem}
                           isOpen = {isOpen}
                           showIcon={showIcon}

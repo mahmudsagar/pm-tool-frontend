@@ -1,26 +1,40 @@
 import { createWithEqualityFn } from "zustand/traditional";
 import { File, Folder } from 'lucide-react';
+import { formatTime } from '@/utils/helper';
 
 const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
 
 const useFileManagerStore = createWithEqualityFn((set, get) => ({
   documents: {},
+  spaceFiles: null,
   publicSpaces: null,
   privateSpaces: null,
 
   error: null,
 
   // Space data formatting is categorized into two types: public and private.
-  formatSpaces: (data) => {    
-    set(
-      (data || []).reduce(
-        (acc, space) => {
-          acc[space.is_private ? 'privateSpaces' : 'publicSpaces'].push(space);
-          return acc;
-        },
-        { privateSpaces: [], publicSpaces: [] }
-      )
-    );
+  formatSpaces: (data) => {
+    const categorizedSpaces = {
+      privateSpaces: [],
+      publicSpaces: []
+    };
+  
+    const allChildFiles = (data || []).flatMap(space => {
+      if (Array.isArray(space.childs)) {
+        const pinnedItems = space.childs.filter(item => item.pinned);
+        const updatedSpace = { ...space, childs: pinnedItems };
+        const target = space.is_private ? 'privateSpaces' : 'publicSpaces';
+        categorizedSpaces[target].push(updatedSpace);
+        return space.childs;
+      }
+      return [];
+    });
+  
+    set({
+      spaceFiles: allChildFiles,
+      privateSpaces: categorizedSpaces.privateSpaces,
+      publicSpaces: categorizedSpaces.publicSpaces
+    });
   },
 
   // Store single document by clicking.
@@ -173,28 +187,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  getRelativeTime: (date) => {
-    const now = Date.now();
-    const past = new Date(date).getTime();
-    const diffInSeconds = Math.floor((now - past) / 1000);
-
-    if (diffInSeconds >= 86400) {
-      // More than 24 hours, return formatted date
-      return new Date(past).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-
-    const timeIntervals = [
-      { label: 'hour', seconds: 3600 },
-      { label: 'minute', seconds: 60 },
-      { label: 'second', seconds: 1 }
-    ];
-
-    const { label, seconds } = timeIntervals.find(({ seconds }) => diffInSeconds >= seconds) || {};
-    const count = Math.floor(diffInSeconds / (seconds || 1));
-
-    return count === 1 ? `a ${label} ago` : `${count} ${label}s ago`;
-  },
-
   // Get the User data By ID
   getUserById: async (id) => {
     try {
@@ -234,7 +226,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
           type: child.entity_type,
           icon: child.entity_type === 'folder' ? Folder : File,
           name: child.entity_type === 'folder' ? child.name : `${child.title}.${child.page_type}`,
-          modified: get().getRelativeTime(child.updatedAt),
+          modified: formatTime(child.updatedAt),
           modifiedBy: modifiedUser,
           sharing: data[0].is_private ? 'Public' : 'Private',
         };

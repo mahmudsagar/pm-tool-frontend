@@ -10,6 +10,7 @@ function DocStructure({
   docType,
   fileType,
   openItem,
+  hasChild,
   isOpen, 
   showIcon,
   className, 
@@ -17,7 +18,7 @@ function DocStructure({
   handleDropdownToggle 
 }) {  
   return (
-    <div className="group relative flex h-9 justify-between mr-1 px-2 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline">
+    <div className={`group relative flex h-9 justify-between ${hasChild && 'ml-3'} mr-1 px-2 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline`}>
       <div className="flex justify-between items-center gap-2">
         <span className="inline">{ showIcon(docType, fileType) } </span>
         <Link 
