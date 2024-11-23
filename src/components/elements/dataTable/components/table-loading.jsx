@@ -5,7 +5,7 @@ import { TableCell, TableRow } from '@/components/ui/table'
 const TableLoading = () => {
   return (
     <>
-      { Array.from({ length: 5 }).map((_, index) => (
+      { Array.from({ length: 8 }).map((_, index) => (
         <TableRow key={index}>
           <TableCell>
             <Skeleton className="h-4 w-4 rounded-sm border border-slate-400 bg-slate-300" />

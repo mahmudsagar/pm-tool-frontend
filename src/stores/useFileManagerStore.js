@@ -21,22 +21,18 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   error: null,
 
   // Space data formatting is categorized into two types: public and private.
-  formatSpaces: (data) => {    
+  formatSpaces: (data) => {     
     const categorizedSpaces = {
       privateSpaces: [],
       publicSpaces: []
     };
   
     const allChildFiles = (data || []).flatMap(space => {
-      if (Array.isArray(space.childs)) {
-        const pinnedItems = space.childs.filter(item => item.pinned);
-        const updatedSpace = { ...space, childs: pinnedItems };
-        const target = space.is_private ? 'privateSpaces' : 'publicSpaces';
-        categorizedSpaces[target].push(updatedSpace);
-        return space.childs;
-      }
-      return [];
-    });
+      if (!Array.isArray(space.childs)) return [];    
+      const target = space.is_private ? 'privateSpaces' : 'publicSpaces';
+      categorizedSpaces[target].push({ ...space, childs: space.childs.filter(item => item.pinned) });      
+      return space.childs;
+    }).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
   
     set({
       spaceFiles: get().convertTableFormat(allChildFiles),

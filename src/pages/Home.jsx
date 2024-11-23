@@ -42,7 +42,7 @@ const Home = () => {
       storeState('users', users);
       formatSpaces(spaces);
     }
-  }, [ spaces, formatSpaces ]);
+  }, [ spaces, formatSpaces ]);  
 
 
   const table = useReactTable({
