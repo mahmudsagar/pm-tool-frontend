@@ -9,3 +9,7 @@
 html.dark .univer-theme {
   filter: invert(1);
 }
+
+.univer-theme .univer-tooltip-inner{
+  max-width: 130px;
+}

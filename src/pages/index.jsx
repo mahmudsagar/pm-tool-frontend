@@ -46,8 +46,6 @@ const Page = () => {
     return <NotFound />
   }
 
-  if (!data) return null;
-
   const componentProps = {
     ...restData,
     setTopMenu,
@@ -61,7 +59,7 @@ const Page = () => {
     {(loading || (!data && !error)) ?
       <Spinner />
       :
-      <Component {...componentProps} />
+      data && <Component {...componentProps} />
     }
 
     <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>

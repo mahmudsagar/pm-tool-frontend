@@ -26,6 +26,8 @@ const SelectField = ({ options, onChange, ...props }) => {
         {options?.map((option, index) => (
           <SelectItem key={index} value={option?.value}>{option?.label}</SelectItem>
         ))}
+
+        {options?.length === 0 && <SelectItem disabled>No options available</SelectItem>}
       </SelectGroup>
     </SelectContent>
   </Select>
@@ -36,7 +38,7 @@ const fieldTypes = [
   { type: 'input', label: 'Input', hasOptions: false },
   { type: 'number', label: 'Number', hasOptions: false },
   { type: 'select', label: 'Select', hasOptions: true },
-  { type: 'multi-select', label: 'Multi Select', hasOptions: true },
+  { type: 'multiSelect', label: 'Multi Select', hasOptions: true },
   { type: 'date', label: 'Date', hasOptions: false },
   { type: 'daterange', label: 'Date Range', hasOptions: false },
 ];
@@ -55,17 +57,19 @@ const Field = ({ field, control, onChange }) => {
   const [label, setLabel] = useState(field.label);
   const [actionType, setActionType] = useState('edit');
   /** options array for select, radio, checkbox */
-  const [options, setOptions] = useState([]);
+  const [options, setOptions] = useState(field?.options || []);
   const [showFieldList, setShowFieldList] = useState(false);
   const [changedField, setChangedField] = useState({});
 
   const Component = fields[field.type] || Input;
+  const { hasOptions, initialized, ...passableProps } = field;
 
   useEffect(() => {
     if (!field.initialized) {
       setOpen(true);
     }
   }, [])
+  
   return <tr className=''>
     <td className='w-[150px]'>
       <DropdownMenu open={open} onOpenChange={state => {
@@ -75,7 +79,7 @@ const Field = ({ field, control, onChange }) => {
           onChange({
             ...field, label, actionType, initialized: true,
             ...(field.hasOptions ?
-              { options: options.filter(Boolean).map((option) => ({ value: option, label: option })) } : {}),
+              { options } : {}),
             ...(changedField ? { ...changedField } : {})
           });
         }
@@ -92,7 +96,10 @@ const Field = ({ field, control, onChange }) => {
               setShowFieldList(true);
             }}>
               <h5 className="text-sm">Field Type</h5>
-              <List size={12} />
+              <div className='flex items-center gap-1'>
+                <List size={12} />
+                {field.type}
+              </div>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
           </>}
@@ -124,10 +131,13 @@ const Field = ({ field, control, onChange }) => {
                           className="h-8"
                           onChange={e => {
                             const updatedOptions = [...options];
-                            updatedOptions[index] = e.target.value;
+                            updatedOptions[index] = {
+                              value: e.target.value,
+                              label: e.target.value
+                            };
                             setOptions(updatedOptions);
                           }}
-                          value={option}
+                          value={option.label}
                         />
                         <Button variant="ghost" size="sm" className="px-2 py-1" onClick={() => {
                           const updatedOptions = options.filter((_, i) => i !== index);
@@ -172,7 +182,7 @@ const Field = ({ field, control, onChange }) => {
         render={({ field: formField }) => (
           <FormItem>
             <FormControl>
-              <Component className="outline-none w-full h-8" {...field} {...formField} />
+              <Component className="outline-none w-full h-8" {...passableProps} {...formField} />
             </FormControl>
           </FormItem>
         )}
@@ -245,16 +255,22 @@ const DynamicInput = ({ initialData, onChange }) => {
     }
   }
 
+  useEffect(() => {
+    handleFormChange();
+  }, [customFields.length]);
+
   const handleFormChange = debounce(() => {
     const values = form.getValues();
-    const fields = customFields.map(({...rest }) => ({ ...rest }));
+
+    console.log('values', values);
+    const fields = customFields.map(({ ...rest }) => ({ ...rest }));
     onChange({ values, fields });
   }, 1000);
 
   return (
 
     <Form {...form}>
-      <form onChange={handleFormChange} >
+      <form onChange={handleFormChange} onSubmit={e => e.preventDefault()}>
         <table className='w-full mt-3'>
           <tbody>
             {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} />

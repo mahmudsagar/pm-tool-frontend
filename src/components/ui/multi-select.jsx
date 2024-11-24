@@ -69,7 +69,6 @@ export const MultiSelect = React.forwardRef(
     },
     ref
   ) => {
-
     const [selectedValues, setSelectedValues] = React.useState(defaultValue);
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
     const [isAnimating, setIsAnimating] = React.useState(false);
@@ -130,7 +129,7 @@ export const MultiSelect = React.forwardRef(
             {...props}
             onClick={handleTogglePopover}
             className={cn(
-              "flex w-full p-1 rounded-md border min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit",
+              "flex w-full p-1 rounded-md border h-auto items-center justify-between bg-inherit hover:bg-inherit",
               className
             )}
           >
@@ -209,7 +208,7 @@ export const MultiSelect = React.forwardRef(
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto p-0 z-50 pointer-events-none"
+          className="w-auto p-0 z-50 pointer-events-auto"
           align="start"
           onEscapeKeyDown={() => setIsPopoverOpen(false)}
         >
