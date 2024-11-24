@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import useFileManagerStore from "@/stores/useFileManagerStore";
-import MenuItemLoading from '../../MenuItemLoading';
+import ButtonLoading from '../../ButtonLoading';
 import useApi from '@/lib/dataFetcher';
 import NotFound from '@/BetterRouter/NotFound';
 import { baseUrl } from '@/utils/constants';
@@ -85,7 +85,7 @@ const Delete = ({ fileId, fileType, onToggle }) => {
               Cancel
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
-              {loading ? <MenuItemLoading text='Deleting...' flex='row' /> : 'Delete'}
+              {loading ? <ButtonLoading text='Deleting...' flex='row' /> : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

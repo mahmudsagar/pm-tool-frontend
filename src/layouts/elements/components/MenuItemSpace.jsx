@@ -6,9 +6,7 @@ import SpaceMenu from "./DropdownMenuItems/SpaceMenu";
 import publicIcon from '@/assets/images/public.svg';
 import PrivateIcon from '@/assets/images/private.svg';
 
-const MenuItemSpace = ({ space, className }) => {  
-  console.log(space);
-  
+const MenuItemSpace = ({ space, className }) => {    
   return (
     <>
       <div key={space._id} className="flex items-center justify-between mb-3">

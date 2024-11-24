@@ -41,13 +41,12 @@ const DataTableColumnBody = ({ table, loading }) => {
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                 >
-                  {row.getVisibleCells().map((cell) => {
-                    let target = cell?.row?.original?.type === 'folder' ? "_self" : "_sidebar";
-                    let path = cell?.row?.original?.type === 'folder' ? `/file-manager/${cell?.row?.original?.type}/${cell?.row?.original?.id}` : `/document/${cell?.row?.original?.id}`;
+                  {row.getVisibleCells().map((cell) => {                    
+                    let path = cell?.row?.original?.type === 'folder' || cell?.row?.original?.type === 'group' ? `/file-manager/${cell?.row?.original?.type}/${cell?.row?.original?.id}` : `/document/${cell?.row?.original?.id}`;
                     
                     return (
                       <TableCell key={cell.id}>
-                        <Link to={path} target={target}>                    
+                        <Link to={path} target="_sidebar">                    
                           { flexRender( cell?.column?.columnDef?.cell, cell.getContext()) }
                         </Link>
                       </TableCell>

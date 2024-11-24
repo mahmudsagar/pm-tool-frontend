@@ -40,6 +40,11 @@ function DataTable() {
 
     fetchData();
   }, [id]);
+
+
+  const formattingTime = (date) => {
+
+  }
   
 
   const table = useReactTable({

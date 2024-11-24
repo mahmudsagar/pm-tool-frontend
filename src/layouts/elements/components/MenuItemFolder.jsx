@@ -2,9 +2,16 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useSidebar } from "@/stores/store";
-import { ChevronDownIcon } from "lucide-react";
 import useFileManagerStore from "@/stores/useFileManagerStore";
-import folderIcon from '@/assets/images/folder.svg';
+import {
+  Users, 
+  Folder,
+  FileText, 
+  StickyNote, 
+  ChevronRight, 
+  FileSpreadsheet,
+  ChevronDownIcon,
+} from 'lucide-react';
 import AddFileDialog from "./AddFileDialog";
 import {
   Accordion,
@@ -12,7 +19,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../subnav-accordion";
-import MenuItemLoading from "./MenuItemLoading";
+import ButtonLoading from "./ButtonLoading";
 import MenuEmpty from "./MenuEmpty";
 import FolderMenu from "./DropdownMenuItems/FolderMenu";
 import DocStructure from "./DocStructure";
@@ -71,6 +78,29 @@ const MenuItemFolder = ({ folder, className }) => {
       }      
     }
   }  
+
+  // Displaying the icon based on their file format.
+  const showIcon = (file, page) => {
+    switch (file) {
+      case 'group':
+        return <Users size={20} />;
+      case 'folder':
+        return <Folder width={20} />;
+      case 'page':
+        switch (page) {
+          case 'document':
+            return <FileText size={20} />;
+          case 'sheet':
+            return <FileSpreadsheet size={20} />;
+          case 'whiteboard':
+            return <StickyNote size={20} />;
+          default:
+            return <FileText size={20} />;
+        }
+      default:
+        return <FileText size={20} className="inline" />;
+    }
+  };  
           
   return (
     <>
@@ -82,34 +112,35 @@ const MenuItemFolder = ({ folder, className }) => {
           value={openItem}
           onValueChange={(value) => setOpenItem(value)}
         >
-          <AccordionItem value={folder._id} className="border-none ">
+          <AccordionItem value={folder._id} className="border-none mr-1">
             <AccordionTrigger
               className={cn(
-                'group relative flex h-9 justify-between px-4 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
+                'group relative flex h-9 justify-between px-2 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
               )}
               onClick={(e) => {
                 e.stopPropagation();
                 handleFolderClick(folder?._id, folder?.entity_type);
               }}
             >
-              <div className="flex justify-between items-center">
-                <img
-                  src={folderIcon}
-                  alt="Folder Icon"
-                  width={18}
-                  className={cn('inline group-hover:hidden group-data-[state=open]:hidden')}
-                />
-                <ChevronDownIcon
+              <div className="flex justify-between items-center gap-2">
+                <span className="inline group-hover:hidden group-data-[state=open]:hidden">
+                  { showIcon(folder?.entity_type, folder?.page_type) }
+                </span>
+                <ChevronRight
                   strokeWidth={2.5}
                   size={20}
-                  className={cn(
-                    'hidden group-hover:inline group-data-[state=open]:inline shrink-0 transition-transform duration-200',
-                    { 'inline': openItem === folder._id }
-                  )}
+                  className="hidden group-hover:inline-block group-data-[state=open]:hidden"
                 />
+                {openItem === folder._id && (
+                  <ChevronDownIcon
+                    strokeWidth={2.5}
+                    size={20}
+                    className="shrink-0 transition-transform duration-200"
+                  />
+                )}
                 <Link 
                   to={`/file-manager/${folder?.entity_type}/${folder._id}`} 
-                  className={cn('absolute left-10 text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
+                  className={cn('text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
                 >
                   {folder.name}
                 </Link>
@@ -129,8 +160,8 @@ const MenuItemFolder = ({ folder, className }) => {
                 </div>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="space-y-2 pl-3 py-3">
-              { loading ? <MenuItemLoading text='Loading...' flex='col' /> :                 
+            <AccordionContent className="space-y-2 py-3">
+              { loading ? <ButtonLoading text='Loading...' flex='col' /> :                 
                 Array.isArray(documents[folder?._id]) && documents[folder?._id].length > 0 ? 
                   documents[folder?._id].map( doc => 
                     Array.isArray(doc.childs) && doc.childs.length > 0 ? 
@@ -138,16 +169,20 @@ const MenuItemFolder = ({ folder, className }) => {
                         <DocStructure
                           key={item?._id}
                           docId = {item?._id}
-                          docName = {`${item?.title}.${item?.page_type}`} 
+                          docName = {item?.title} 
                           docType = {item?.entity_type}
+                          fileType = { item?.page_type }
+                          hasChild = {true}
+                          openItem={openItem}
                           isOpen = {isOpen}
+                          showIcon={showIcon}
                           className = {className}
                           dropdownOpenStates = {dropdownOpenStates}
                           handleDropdownToggle = {handleDropdownToggle}
                         />
                       ))
                     :(
-                    <MenuEmpty/> // Document Child Empty
+                    <MenuEmpty key={doc._id}/> // Document Child Empty
                   )) : (
                   <MenuEmpty/> // Document Empty
                 )                
@@ -159,9 +194,12 @@ const MenuItemFolder = ({ folder, className }) => {
       (
         <DocStructure
           docId = {folder?._id}
-          docName = {`${folder?.title}.${folder?.page_type}`} 
+          docName = {folder?.title}
           docType = {folder?.entity_type}
+          fileType = {folder?.page_type}
+          openItem={openItem}
           isOpen = {isOpen}
+          showIcon={showIcon}
           className = {className}
           dropdownOpenStates = {dropdownOpenStates}
           handleDropdownToggle = {handleDropdownToggle}

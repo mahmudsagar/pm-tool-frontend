@@ -1,32 +1,58 @@
 import { createWithEqualityFn } from "zustand/traditional";
-import { Folder, File } from 'lucide-react';
+import { formatTime } from '@/utils/helper';
+import { 
+  File, 
+  Users, 
+  Folder,
+  FileText,
+  StickyNote,
+  FileSpreadsheet,
+} from 'lucide-react';
 
 const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
 
 const useFileManagerStore = createWithEqualityFn((set, get) => ({
+  users: null,
   documents: {},
+  spaceFiles: null,
   publicSpaces: null,
   privateSpaces: null,
 
   error: null,
 
   // Space data formatting is categorized into two types: public and private.
-  formatSpaces: (data) => {    
-    set(
-      (data || []).reduce(
-        (acc, space) => {
-          acc[space.is_private ? 'privateSpaces' : 'publicSpaces'].push(space);
-          return acc;
-        },
-        { privateSpaces: [], publicSpaces: [] }
-      )
-    );
+  formatSpaces: (data) => {     
+    const categorizedSpaces = {
+      privateSpaces: [],
+      publicSpaces: []
+    };
+  
+    const allChildFiles = (data || []).flatMap(space => {
+      if (!Array.isArray(space.childs)) return [];    
+      const target = space.is_private ? 'privateSpaces' : 'publicSpaces';
+      categorizedSpaces[target].push({ ...space, childs: space.childs.filter(item => item.pinned) });      
+      return space.childs;
+    }).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  
+    set({
+      spaceFiles: get().convertTableFormat(allChildFiles),
+      privateSpaces: categorizedSpaces.privateSpaces,
+      publicSpaces: categorizedSpaces.publicSpaces
+    });
   },
 
   // Store single document by clicking.
   storeDocuments: (data, id) => {
     set((state) => ({
       documents: { ...state.documents, [id]: data }
+    }));
+  },
+
+  // Universal function to store data into any state
+  storeState: (key, data) => {
+    set((state) => ({
+      // Update the specific state based on the key
+      [key]: data,
     }));
   },
 
@@ -61,7 +87,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   // Store new data functionality for File, Folder, and Group
   storeHandler: (id, type, newData) => {
     set((state) => {
-      // Helper function to add data to the correct childs array in documents
       const addToDocumentsChilds = (documents) => {
         const updatedDocuments = { ...documents };
   
@@ -144,8 +169,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       };
     });
   },
-  
-     
 
   // Define the reusable apiRequest function with direct access to set and get
   apiRequest: async (url, method = 'GET', data = null) => {
@@ -176,113 +199,28 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     }
   },
 
-  // Add Document Data
-  postDocument: async (data) => {
-    let endpoint, newDocumentData;
+  // Obtain the data and convert it into a table format.
+  convertTableFormat: (data) => {
+    return (data || []).map((child) => {
+      const fileIcon = child.entity_type === 'folder' ? Folder : child.entity_type === 'group' ? Users : { 
+        document: FileText, 
+        whiteboard: StickyNote, 
+        sheet: FileSpreadsheet 
+      }[child.page_type] || FileText;
 
-    if (data.filetype === "file") {
-      endpoint = "/page/document";
-      newDocumentData = {
-        user_id: "66cda5dac6886719e3345c19",
-        title: data.title,
-        page_type: data.page_type,
-        content: {
-          text: "This is the document content"
-        },
-        summary: "This is the document summary",
-        last_updated_by: "66cda5dac6886719e3345c19",
-        custom_meta: {
-          author: "John Doe",
-          keywords: ["sample", "page", "meta"]
-        },
-        folder_id: data.type === "folder" ? data.id : '',
-        group_id: data.type === "group" ? data.id : '',
-        space_id: data.type === "space" ? data.id : '',
-        attachments: []
+      const fileName = child.entity_type === 'folder' || child.entity_type === 'group' ? child.name : child.title;
+      const modifiedUser = (get().users || []).filter(user => user._id === child.user_id) || 'Unknown User';
+
+      return {
+        id: child._id,
+        type: child.entity_type,
+        icon: fileIcon,
+        name: fileName,
+        modified: formatTime(child.updatedAt),
+        modifiedBy: modifiedUser[0].full_name,
+        sharing: child.is_private ? 'Private' : 'Public',
       };
-    } else if (data.filetype === "folder" || data.filetype === "group") {
-      endpoint = data.filetype === "folder" ? "/folder" : "/group";
-      newDocumentData = {
-        user_id: "66cda5dac6886719e3345c19",
-        entity_type: data.filetype,
-        name: data.title,
-        shared_members: data.shared_members,
-        shared_teams: data.shared_teams,
-        folder_id: data.type === "folder" ? data.id : '',
-        group_id: data.type === "group" ? data.id : '',
-        space_id: data.type === "space" ? data.id : '',
-      };
-    } else {
-      return { error: "Invalid filetype specified" };
-    }
-
-    try {
-      const { data: responseData, error } = await get().apiRequest(`${API_BASE_URL}${endpoint}`, 'POST', newDocumentData);
-
-      console.log(responseData);
-      
-
-      if (error) {
-        return { error };
-      }
-
-      // Update the appropriate state based on filetype
-      set((state) => {
-        if (data.filetype === "file") {
-          return {
-            documents: {
-              ...state.documents,
-              [data.id]: [...(state.documents[data.id] || []), responseData],
-            },
-          };
-        } else {
-          // Find the space, update the child's array, and replace it in the array
-          const updatedSpaces = state.spaces.map(space => {
-            if (space._id === data.space_id) {
-              const updatedChilds = [...(space.childs || []), responseData];
-              return { ...space, childs: updatedChilds }; // Update child nodes
-            }
-            return space;
-          });
-
-          return { spaces: updatedSpaces }; // Set directly updated array
-        }
-      });
-
-      return { error: null };
-
-    } catch (error) {
-      return { error: error.message };
-    }
-  },
-
-  getRelativeTime: (date) => {
-    const now = new Date();
-    const past = new Date(date);
-    const diffInSeconds = Math.floor((now - past) / 1000);
-    const diffInDays = Math.floor(diffInSeconds / 86400); // Calculate difference in days
-
-    // If more than 24 hours have passed, show the date in "Month Day, Year" format
-    if (diffInDays >= 1) {
-      return past.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-
-    const timeIntervals = [
-      { label: 'hour', seconds: 3600 },
-      { label: 'minute', seconds: 60 },
-      { label: 'second', seconds: 1 }
-    ];
-
-    for (const interval of timeIntervals) {
-      const count = Math.floor(diffInSeconds / interval.seconds);
-      if (count >= 1) {
-        return count === 1
-          ? `a ${interval.label} ago`
-          : `${count} ${interval.label}s ago`;
-      }
-    }
-
-    return 'a moment ago';
+    });
   },
 
   // Get the User data By ID
@@ -324,7 +262,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
           type: child.entity_type,
           icon: child.entity_type === 'folder' ? Folder : File,
           name: child.entity_type === 'folder' ? child.name : `${child.title}.${child.page_type}`,
-          modified: get().getRelativeTime(child.updatedAt),
+          modified: formatTime(child.updatedAt),
           modifiedBy: modifiedUser,
           sharing: data[0].is_private ? 'Public' : 'Private',
         };
