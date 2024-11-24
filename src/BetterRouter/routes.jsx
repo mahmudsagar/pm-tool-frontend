@@ -4,7 +4,6 @@ import Check from "@/pages/Check";
 import FileManager from "@/pages/FileManager";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
-import Whiteboard from "@/pages/Whiteboard";
 import NotFound from "./NotFound";
 import Page from "@/pages";
 
@@ -44,7 +43,7 @@ export const routes = [
       },
       {
         path: "/whiteboard/:id",
-        element: <Whiteboard />
+        element: <Page />
       }
     ]
   },
