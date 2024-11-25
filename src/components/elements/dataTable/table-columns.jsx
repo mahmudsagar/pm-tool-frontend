@@ -37,21 +37,21 @@ export default [
     enableSorting: false,
     enableHiding: false,
   },
-  {
-    accessorKey: "icon",
-    header: ({ column }) => {
-      return (
-        <div className="w-10 flex items-center justify-center">
-          <FileText className='w-5 h-5 dark:text-white' />
-        </div>
-      )
-    },
-    cell: ({ row }) => (
-      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-        <row.original.icon className="w-5 h-5 text-purple-700" />
-      </div>
-    ),
-  },
+  // {
+  //   accessorKey: "icon",
+  //   header: ({ column }) => {
+  //     return (
+  //       <div className="w-10 flex items-center justify-center">
+  //         <FileText className='w-5 h-5 dark:text-white' />
+  //       </div>
+  //     )
+  //   },
+  //   cell: ({ row }) => (
+  //     <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+  //       <row.original.icon className="w-5 h-5 text-purple-700" />
+  //     </div>
+  //   ),
+  // },
   {
     accessorKey: "name",
     header: ({ column }) => {
@@ -78,7 +78,12 @@ export default [
     },
     cell: ({ row }) => (
       <div className="group flex items-center gap-8">
-        <span>{row.getValue("name")}</span>
+        <div className='flex items-center gap-3'>
+          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+            <row.original.icon className="w-5 h-5 text-purple-700" />
+          </div>
+          <span>{row.getValue("name")}</span>
+        </div>
         <div className="flex items-center gap-2 transition-opacity">
           {/* DropDown Menu */}
           <TableColumnsDropdown info={row} />
@@ -125,13 +130,13 @@ export default [
     ),
   },
   {
-    accessorKey: "fileSize",
+    accessorKey: "sharing",
     header: ({ column }) => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="font-medium dark:text-white flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
-              File Size
+              Sharing
               <ChevronDown className='w-4 h-4' />
             </button>
           </DropdownMenuTrigger>
@@ -139,21 +144,7 @@ export default [
       );
     },
     cell: ({ row }) => (
-      <div className='text-slate-500 dark:text-white'>{row.getValue("fileSize")}</div>
-    ),
-  },
-  {
-    accessorKey: "sharing",
-    header: ({ column }) => <p className='dark:text-white'>Sharing</p>,
-    cell: ({ row }) => (
       <div className='text-slate-500 dark:text-white'>{row.getValue("sharing")}</div>
-    ),
-  },
-  {
-    accessorKey: "activity",
-    header: ({ column }) => <p className='dark:text-white'>Activity</p>,
-    cell: ({ row }) => (
-      <div className='text-slate-500 dark:text-white'>{row.getValue("activity")}</div>
     ),
   },
 ];

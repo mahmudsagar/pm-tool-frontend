@@ -52,10 +52,6 @@ const DataTableColumnHeader = ({ title, table }) => {
             </Button>
           </DropdownMenuTrigger>
         </DropdownMenu>
-        <Button variant="outline" className="flex items-center justify-center text-base gap-2 bg-none border-none focus:outline-none">
-          <LogOut className='w-4 h-4' />
-          Details
-        </Button>
       </div>
     </div>
   )

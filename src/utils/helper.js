@@ -26,3 +26,25 @@ export function debounce(func, wait, immediate = false) {
     if (callNow) func(...args);
   };
 }
+
+export function formatTime(date) {
+  const now = Date.now();
+  const past = new Date(date).getTime();
+  const diffInSeconds = Math.floor((now - past) / 1000);
+
+  if (diffInSeconds >= 86400) {
+    // More than 24 hours, return formatted date
+    return new Date(past).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  const timeIntervals = [
+    { label: 'hour', seconds: 3600 },
+    { label: 'minute', seconds: 60 },
+    { label: 'second', seconds: 1 }
+  ];
+
+  const { label, seconds } = timeIntervals.find(({ seconds }) => diffInSeconds >= seconds) || {};
+  const count = Math.floor(diffInSeconds / (seconds || 1));
+
+  return count === 1 ? `a ${label} ago` : `${count} ${label}s ago`;
+}

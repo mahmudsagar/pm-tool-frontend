@@ -8,12 +8,15 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
-const FolderDropdownMenu = () => {
+const SpaceMenu = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="hover:bg-slate-300 w-6 h-6">
-          <EllipsisVertical size={16} className="text-slate-500 hover:text-black dark:text-white dark:hover:text-black" />
+          <EllipsisVertical 
+            size={16} 
+            className="text-slate-500 hover:text-black dark:text-white dark:hover:text-black" 
+          />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -26,4 +29,4 @@ const FolderDropdownMenu = () => {
   )
 }
 
-export default FolderDropdownMenu
+export default SpaceMenu;

@@ -1,22 +1,73 @@
-import useSyncStore from "@/stores/useSyncStore"
-
-import { Button } from "@/components/ui/button"
+"use client"
+import React, { useEffect, useState } from 'react';
+import useApi from '@/lib/dataFetcher';
+import { baseUrl, userID } from '@/utils/constants';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+} from "@tanstack/react-table";
+import useFileManagerStore from '@/stores/useFileManagerStore';
+import columns from '@/components/elements/dataTable/table-columns';
+import DataTableColumnBody from '@/components/elements/dataTable/data-table-body';
+import DataTableColumnHeader from '@/components/elements/dataTable/data-table-header';
 
 const Home = () => {
-  const { count, increment, decrement } = useSyncStore();
+  const [sorting, setSorting] = useState([]);
+  const [rowSelection, setRowSelection] = useState({});
+  const [columnFilters, setColumnFilters] = useState([]);
+  const [columnVisibility, setColumnVisibility] = useState({});
+  const { data: users, callApi: userCallApi } = useApi();
+  const { loading: spaceLoading, data: spaces, callApi: spaceCallApi } = useApi();
+  
+  const { 
+    storeState, 
+    spaceFiles, 
+    publicSpaces, 
+    formatSpaces, 
+    privateSpaces, 
+  } = useFileManagerStore(state => state);
+
+  useEffect(() => {
+    if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
+      spaceCallApi(baseUrl + '/v1/space?user_id=' + userID);
+      userCallApi(baseUrl + '/v1/user');
+    }
+  }, [ spaceCallApi, publicSpaces, privateSpaces]);
+
+  useEffect(() => {
+    if (spaces) {      
+      storeState('users', users);
+      formatSpaces(spaces);
+    }
+  }, [ spaces, formatSpaces ]);  
+
+
+  const table = useReactTable({
+    data: spaceFiles || [],
+    columns,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    onRowSelectionChange: setRowSelection,
+    getSortedRowModel: getSortedRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    getPaginationRowModel: getPaginationRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+  })
 
   return (
-    <section className="w-full flex flex-col items-center justify-center gap-4 text-center py-24">
-      <h1 className="text-6xl font-bold">Better Notion | Home Page</h1>
-      <p>Below is a button component imported via shadcn/ui</p>
-      <h1 className="text-3xl font-bold uppercase my-8">Count: {count}</h1>
-      <div className="flex items-center justify-center gap-4">
-        <Button onClick={increment}>Increase Count</Button>
-        <Button onClick={decrement}>Decrese Count</Button>
-      </div>
-      <Button asChild>
-        <a href='/view'>{"Goto View Page ->"}</a>
-      </Button>
+    <section className='w-full py-9 px-6'>
+      <DataTableColumnHeader title="My Files" table={table} />
+      <DataTableColumnBody table={table} loading={spaceLoading} />
     </section>
   );
 };
