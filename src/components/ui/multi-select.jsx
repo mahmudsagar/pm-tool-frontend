@@ -56,20 +56,20 @@ export const MultiSelect = React.forwardRef(
   (
     {
       options = [],
-      onValueChange = () => {},
+      onChange = () => { },
       variant = "default",
-      defaultValue = [],
+      value = [],
       placeholder = "Select options",
       animation = 0,
       maxCount = 3,
       modalPopover = false,
-      asChild = false,
+      handleFormChange,
       className,
       ...props
     },
     ref
   ) => {
-    const [selectedValues, setSelectedValues] = React.useState(defaultValue);
+    const [selectedValues, setSelectedValues] = React.useState(value);
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
     const [isAnimating, setIsAnimating] = React.useState(false);
     const handleInputKeyDown = (event) => {
@@ -80,7 +80,7 @@ export const MultiSelect = React.forwardRef(
         const newSelectedValues = [...selectedValues];
         newSelectedValues.pop();
         setSelectedValues(newSelectedValues);
-        onValueChange(newSelectedValues);
+        onChange(newSelectedValues);
       }
     };
 
@@ -89,12 +89,12 @@ export const MultiSelect = React.forwardRef(
         ? selectedValues.filter((value) => value !== option)
         : [...selectedValues, option];
       setSelectedValues(newSelectedValues);
-      onValueChange(newSelectedValues);
+      onChange(newSelectedValues);
     };
 
     const handleClear = () => {
       setSelectedValues([]);
-      onValueChange([]);
+      onChange([]);
     };
 
     const handleTogglePopover = () => {
@@ -104,7 +104,7 @@ export const MultiSelect = React.forwardRef(
     const clearExtraOptions = () => {
       const newSelectedValues = selectedValues.slice(0, maxCount);
       setSelectedValues(newSelectedValues);
-      onValueChange(newSelectedValues);
+      onChange(newSelectedValues);
     };
 
     const toggleAll = () => {
@@ -113,9 +113,15 @@ export const MultiSelect = React.forwardRef(
       } else {
         const allValues = options.map((option) => option.value);
         setSelectedValues(allValues);
-        onValueChange(allValues);
+        onChange(allValues);
       }
     };
+
+    React.useEffect(() => {
+      if (!isPopoverOpen) {
+        handleFormChange();
+      }
+    }, [isPopoverOpen]);
 
     return (
       <Popover

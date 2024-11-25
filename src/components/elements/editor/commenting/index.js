@@ -109,7 +109,6 @@ export class CommentStore {
     offset
   ) {
     const nextComments = Array.from(this._comments);
-    const sharedCommentsArray = this._getCollabComments();
 
     if (thread !== undefined && commentOrThread.type === "comment") {
       for (let i = 0; i < nextComments.length; i++) {
@@ -119,27 +118,12 @@ export class CommentStore {
           nextComments.splice(i, 1, newThread);
           const insertOffset =
             offset !== undefined ? offset : newThread.comments.length;
-          if (this.isCollaborative() && sharedCommentsArray !== null) {
-            const parentSharedArray = sharedCommentsArray
-              .get(i)
-              .get("comments");
-            this._withRemoteTransaction(() => {
-              const sharedMap = this._createCollabSharedMap(commentOrThread);
-              parentSharedArray.insert(insertOffset, [sharedMap]);
-            });
-          }
           newThread.comments.splice(insertOffset, 0, commentOrThread);
           break;
         }
       }
     } else {
       const insertOffset = offset !== undefined ? offset : nextComments.length;
-      if (this.isCollaborative() && sharedCommentsArray !== null) {
-        this._withRemoteTransaction(() => {
-          const sharedMap = this._createCollabSharedMap(commentOrThread);
-          sharedCommentsArray.insert(insertOffset, [sharedMap]);
-        });
-      }
       nextComments.splice(insertOffset, 0, commentOrThread);
     }
     this._comments = nextComments;
@@ -177,11 +161,6 @@ export class CommentStore {
       }
     } else {
       commentIndex = nextComments.indexOf(commentOrThread);
-      if (this.isCollaborative() && sharedCommentsArray !== null) {
-        this._withRemoteTransaction(() => {
-          sharedCommentsArray.delete(commentIndex);
-        });
-      }
       nextComments.splice(commentIndex, 1);
     }
     this._comments = nextComments;

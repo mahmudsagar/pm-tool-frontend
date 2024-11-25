@@ -46,21 +46,7 @@ import { CommentStore, createComment, createThread, useCommentStore } from '../.
 import { Button } from '@/components/ui/button';
 import useModal from '@/components/elements/modal/useModal';
 import CommentEditorTheme from '../../themes/CommentEditorTheme';
-
-// import useLayoutEffect from 'shared/useLayoutEffect';
-
-// import {
-
-//   CommentStore,
-//   createComment,
-//   createThread,
-
-//   useCommentStore,
-// } from '../../commenting';
-// import useModal from '../../hooks/useModal';
-// import CommentEditorTheme from '../../themes/CommentEditorTheme';
-// import Button from '../../ui/Button';
-// import ContentEditable from '../../ui/ContentEditable';
+import { MessageCircle } from 'lucide-react';
 
 export const INSERT_INLINE_COMMAND = createCommand(
   'INSERT_INLINE_COMMAND',
@@ -194,7 +180,6 @@ function CommentInputBox({
     [],
   );
   const selectionRef = useRef(null);
-  const author = useCollabAuthorName();
 
   const updateLocation = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -235,6 +220,7 @@ function CommentInputBox({
             let elem = elements[i];
             if (elem === undefined) {
               elem = document.createElement('span');
+              elem.classList.add('testmest');
               elements[i] = elem;
               container.appendChild(elem);
             }
@@ -292,7 +278,7 @@ function CommentInputBox({
         quote = quote.slice(0, 99) + '…';
       }
       submitAddComment(
-        createThread(quote, [createComment(content, author)]),
+        createThread(quote, [createComment(content)]),
         true,
         undefined,
         selectionRef.current,
@@ -488,6 +474,7 @@ function CommentsPanelList({
         const id = commentOrThread.id;
         if (commentOrThread.type === 'thread') {
           const handleClickThread = () => {
+            
             const markNodeKeys = markNodeMap.get(id);
             if (
               markNodeKeys !== undefined &&
@@ -612,10 +599,7 @@ function useCollabAuthorName() {
   return yjsDocMap.has('comments') ? name : 'Playground User';
 }
 
-export default function CommentPlugin({
-  providerFactory,
-}) {
-  const collabContext = useCollaborationContext();
+export default function CommentPlugin() {
   const [editor] = useLexicalComposerContext();
   const commentStore = useMemo(() => new CommentStore(editor), [editor]);
   const comments = useCommentStore(commentStore);
@@ -626,14 +610,7 @@ export default function CommentPlugin({
   const [activeIDs, setActiveIDs] = useState([]);
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const { yjsDocMap } = collabContext;
 
-  useEffect(() => {
-    if (providerFactory) {
-      const provider = providerFactory('comments', yjsDocMap);
-      return commentStore.registerCollaboration(provider);
-    }
-  }, [commentStore, providerFactory, yjsDocMap]);
 
   const cancelAddComment = useCallback(() => {
     editor.update(() => {
@@ -734,7 +711,7 @@ export default function CommentPlugin({
 
   useEffect(() => {
     const markNodeKeysToIDs = new Map();
-
+    
     return mergeRegister(
       registerNestedElementResolver(
         editor,
@@ -823,9 +800,6 @@ export default function CommentPlugin({
           if (!hasAnchorKey) {
             setActiveAnchorKey(null);
           }
-          if (!tags.has('collaboration') && $isRangeSelection(selection)) {
-            setShowCommentInput(false);
-          }
         });
       }),
       editor.registerCommand(
@@ -847,8 +821,10 @@ export default function CommentPlugin({
     editor.dispatchCommand(INSERT_INLINE_COMMAND, undefined);
   };
 
+  console.log('CommentPlugin', comments,markNodeMap, activeAnchorKey);
+
   return (
-    <>
+    <div className='onek'>
       {showCommentInput &&
         createPortal(
           <CommentInputBox
@@ -869,16 +845,15 @@ export default function CommentPlugin({
           />,
           document.body,
         )}
-      {createPortal(
-        <Button
-          className={`CommentPlugin_ShowCommentsButton ${showComments ? 'active' : ''
-            }`}
+      
+        <Button size="icon"
+          className="w-6 h-6"
           onClick={() => setShowComments(!showComments)}
           title={showComments ? 'Hide Comments' : 'Show Comments'}>
-          <i className="comments" />gg
-        </Button>,
-        document.body,
-      )}
+          <MessageCircle size={12} />
+        </Button>
+
+      
       {showComments &&
         createPortal(
           <CommentsPanel
@@ -890,6 +865,6 @@ export default function CommentPlugin({
           />,
           document.body,
         )}
-    </>
+    </div>
   );
 }

@@ -1,4 +1,3 @@
-import * as React from "react"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 
@@ -11,10 +10,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-export function DatePicker({ className = '', onChange, value, ...props }) {
-console.log('value', value)
+export function DatePicker({ className = '', onChange,handleFormChange, value, ...props }) {
   return (
-    <Popover>
+    <Popover onOpenChange={open => {
+      if (!open) {
+        handleFormChange()
+      }
+    }}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
