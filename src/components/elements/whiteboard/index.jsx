@@ -68,8 +68,12 @@ export default function ExcalidrawRender({ content, onChange }) {
       ...newStickyNote
     ]
 
+    const settings = {
+      locked: excalidrawAPI.getAppState()?.activeTool?.locked
+    }
+
     excalidrawAPI.updateScene({ elements });
-    onChange({ content: { elements } })
+    onChange({ content: { elements, settings } })
   }
 
   /**
@@ -93,15 +97,24 @@ export default function ExcalidrawRender({ content, onChange }) {
         }))
         return;
       }
-
+      
       // Maintaining scene version so data does not update on each state
       const sceneVersion = getSceneVersion(elements);
-      if (sceneVersion > 0 && sceneVersion !== previousSceneVersion) {
+
+      if (
+        (sceneVersion > 0 && sceneVersion !== previousSceneVersion) ||
+        (state?.activeTool?.locked !== content.settings.locked)
+      ) {
         setPreviousSceneVersion(sceneVersion);
 
         // Send non deleted elements to store state
 
-        onChange({ content: { elements: getNonDeletedElements(elements) } })
+        onChange({ content: {
+          elements: getNonDeletedElements(elements),
+          settings: {
+            locked: state?.activeTool?.locked
+          }
+        }})
       }
     }
   }
@@ -119,7 +132,10 @@ export default function ExcalidrawRender({ content, onChange }) {
             currentItemRoughness: 0,
             currentItemRoundness: 'round',
             currentItemEndArrowhead: 'triangle',
-            currentChartType: 'line'
+            currentChartType: 'line',
+            activeTool: {
+              locked: content?.settings.locked
+            }
           }
         }}
         theme={theme}

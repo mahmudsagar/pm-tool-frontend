@@ -1,34 +1,19 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useOutletContext, useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 
 // utils
-import { documentBaseUrl } from '@/utils/constants';
-import useApi from '@/lib/dataFetcher';
-import { debounce, sanitize } from '@/utils/helper';
-import NotFound from '@/BetterRouter/NotFound';
 import Link from '@/BetterRouter/Link';
 
 import ExcalidrawRender from "@/components/elements/whiteboard";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 import { Copy, History, MessageSquareMore, Share, Trash } from 'lucide-react';
 
 import "@betternotion/excalidraw/index.css";
-import Spinner from '@/components/elements/spinner';
 import { Button } from '@/components/ui/button';
 
-export default function Whiteboard() {
-  const { id } = useParams()
-  const { pathname } = useLocation()
-  const { data, loading, error, callApi } = useApi();
-  const { pageMeta, ...restData } = data || {}
-  const [, setTopMenu] = useOutletContext()
-
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-
+export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setOpenDeleteDialog }) {
   useEffect(() => {
-    if (!data) return;
+    if (!pageContent) return;
     const dropdownContent = <>
       <DropdownMenuItem className="cursor-pointer">
         <div className='flex items-center gap-1'>
@@ -64,60 +49,11 @@ export default function Whiteboard() {
       dropdownContent,
       inlineContent
     })
-  }, [data]);
-
-
-  // fetch page data via api handler
-  
-  useEffect(() => {
-    callApi(documentBaseUrl + '?id=' + id)
-  }, [pathname, id])
-
-  // delete page via api handler
-  const handleDelete = () => {
-    callApi(documentBaseUrl + '?id=' + id,
-      {
-        method: 'DELETE',
-      });
-  }
-
-  const onChange = debounce((value) => {
-    if (!data) {
-      return;
-    }
-
-    fetch(documentBaseUrl, {
-      method: 'PUT',
-      body: JSON.stringify({ id: data?._id, ...sanitize(value) }),
-    });
-  }, 4000);
-
-  if (error) {
-    return <NotFound />
-  }
-
-  if (loading) {
-    return <Spinner />
-  }
+  }, [pageContent]);
 
   return (
     <div className="text-center h-full pt-16 -mt-16 overflow-hidden">
-      <ExcalidrawRender content={data?.pageContent?.content} onChange={onChange} />
-
-      <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure to proceed?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete this page.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ExcalidrawRender content={pageContent?.content} onChange={handleSubmit} />
     </div>
   )
 }

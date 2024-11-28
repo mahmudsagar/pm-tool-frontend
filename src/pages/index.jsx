@@ -8,10 +8,12 @@ import NotFound from '@/BetterRouter/NotFound';
 import Spinner from '@/components/elements/spinner';
 import Document from './Document';
 import Sheet from './Sheets';
+import Whiteboard from './Whiteboard';
 
 const pageType = {
   document: Document,
   sheet: Sheet,
+  whiteboard: Whiteboard
 }
 const Page = () => {
   const { loading, data, callApi, error } = useApi();

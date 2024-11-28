@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,17 +15,21 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-import useDocumentStore from "@/stores/useDocumentStore"
+import useApi from "@/lib/dataFetcher"
+import { documentBaseUrl } from "@/utils/constants"
 
 export default function TaskEmbed({ onSelect }) {
-  
   const [open, setOpen] = useState(false)
-  // const [document, setSelectedDocument] = useState(null)
+  const { data, loading, error, callApi } = useApi(state => state);
 
-  const { documentData, loading } = useDocumentStore(state => state);
+  const userId = '66cda5dac6886719e3345c19';
+  
+  useEffect(() => {
+    callApi(documentBaseUrl + '?user_id=' + userId)
+  }, [userId])
 
-  if(loading.document) {
-    return null
+  if(loading || error) {
+    return null;
   }
 
   return (
@@ -33,21 +37,21 @@ export default function TaskEmbed({ onSelect }) {
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button variant="secondary" className="w-[150px] justify-start">
-            + Insert Page Embed
+            + Embed Page
           </Button>
         </PopoverTrigger>
         <PopoverContent className="p-0" side="top" align="start">
-          {(documentData?.length > 0) ? (
+          {(data?.length > 0) ? (
             <Command>
               <CommandInput placeholder="Select Document..." />
               <CommandList>
                 <CommandEmpty>No results found.</CommandEmpty>
                 <CommandGroup>
-                  {documentData?.map((document) => (
+                  {data?.map((document) => (
                     <CommandItem
                       key={document._id}
                       value={document._id}
-                      keywords={document.pageMeta?.title.split(' ')}
+                      keywords={document?.title.split(' ')}
                       className="cursor-pointer"
                       onSelect={(value) => {
                         onSelect(document._id)
@@ -55,7 +59,7 @@ export default function TaskEmbed({ onSelect }) {
                         setOpen(false)
                       }}
                     >
-                      {document.pageMeta?.title || '--'}
+                      {document?.title || '--'}
                     </CommandItem>
                   ))}
                 </CommandGroup>
