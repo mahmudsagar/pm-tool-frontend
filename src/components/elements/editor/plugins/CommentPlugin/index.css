@@ -136,29 +136,6 @@
   outline: 1px solid rgb(66, 135, 245);
 }
 
-.CommentPlugin_ShowCommentsButton {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  background-color: #ddd;
-  border-radius: 10px;
-}
-
-
-@media (max-width: 1024px) {
-  .CommentPlugin_ShowCommentsButton {
-    display: none;
-  }
-}
-
-.CommentPlugin_ShowCommentsButton:hover i.comments {
-  opacity: 1;
-}
-
-.CommentPlugin_ShowCommentsButton.active {
-  background-color: #ccc;
-}
-
 .CommentPlugin_CommentsPanel {
   position: fixed;
   right: 0;

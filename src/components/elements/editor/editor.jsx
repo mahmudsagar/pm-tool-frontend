@@ -137,8 +137,6 @@ export default function Editor({ title, content, page_id, custom_meta, mediaAtta
       })
   }
 
-  console.log('imageData', imageData)
-
   return (
     <div className="editor-container relative">
       {coverImage?.url &&

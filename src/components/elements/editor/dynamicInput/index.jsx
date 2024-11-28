@@ -16,8 +16,8 @@ const InputNumber = ({ ...props }) => {
   return <Input type="number" {...props} />;
 };
 
-const SelectField = ({ options, onChange, ...props }) => {
-  return <Select onValueChange={onChange}>
+const SelectField = ({ options, onChange,value, ...props }) => {
+  return <Select onValueChange={onChange} value={value}>
     <SelectTrigger {...props}>
       <SelectValue />
     </SelectTrigger>
@@ -52,7 +52,7 @@ const fields = {
   daterange: DatePickerWithRange
 }
 
-const Field = ({ field, control, onChange }) => {
+const Field = ({ field, control, onChange,handleFormChange }) => {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState(field.label);
   const [actionType, setActionType] = useState('edit');
@@ -182,7 +182,7 @@ const Field = ({ field, control, onChange }) => {
         render={({ field: formField }) => (
           <FormItem>
             <FormControl>
-              <Component className="outline-none w-full h-8" {...passableProps} {...formField} />
+              <Component className="outline-none w-full h-8" {...passableProps} {...formField} handleFormChange={handleFormChange} />
             </FormControl>
           </FormItem>
         )}
@@ -262,7 +262,7 @@ const DynamicInput = ({ initialData, onChange }) => {
   const handleFormChange = debounce(() => {
     const values = form.getValues();
 
-    console.log('values', values);
+    console.log('form values', values);
     const fields = customFields.map(({ ...rest }) => ({ ...rest }));
     onChange({ values, fields });
   }, 1000);
@@ -273,7 +273,7 @@ const DynamicInput = ({ initialData, onChange }) => {
       <form onChange={handleFormChange} onSubmit={e => e.preventDefault()}>
         <table className='w-full mt-3'>
           <tbody>
-            {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} />
+            {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} handleFormChange={handleFormChange} />
             )}
           </tbody>
         </table>

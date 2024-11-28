@@ -14,7 +14,6 @@ const App = () => {
     try {
       if (search.includes('_sidebar') || search.includes('_popup')) {
         const activePath = (search.split('&').findLast(item => item.includes("_sidebar") || item.includes("_popup")) || pathname).replace('?', '').replace(/%2F/g, "/");
-        console.log('activePath', activePath);
         const [path, target] = activePath.split('=')
         setCurrentRoute({ path, target, type: "parallel" });
       }
