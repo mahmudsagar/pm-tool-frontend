@@ -8,8 +8,6 @@
 
 import './StickyNode.css';
 
-import { useCollaborationContext } from '@lexical/react/LexicalCollaborationContext';
-import { CollaborationPlugin } from '@lexical/react/LexicalCollaborationPlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
@@ -17,15 +15,11 @@ import { LexicalNestedComposer } from '@lexical/react/LexicalNestedComposer';
 import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { calculateZoomLevel } from '@lexical/utils';
 import { $getNodeByKey } from 'lexical';
-import { useEffect, useRef } from 'react';
-import useLayoutEffect from 'shared/useLayoutEffect';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
-import { createWebsocketProvider } from '../collaboration';
-import { useSharedHistoryContext } from '../context/SharedHistoryContext';
 import StickyEditorTheme from '../themes/StickyEditorTheme';
 import ContentEditable from '../ui/ContentEditable';
 import { $isStickyNode } from './StickyNode';
-
 
 function positionSticky(
   stickyElem,
@@ -56,7 +50,6 @@ export default function StickyComponent({
     x: 0,
     y: 0,
   });
-  const { isCollabActive } = useCollaborationContext();
 
   useEffect(() => {
     const position = positioningRef.current;
@@ -143,7 +136,7 @@ export default function StickyComponent({
     }
   };
 
-  const handlePointerUp = (event) => {
+  const handlePointerUp = () => {
     const stickyContainer = stickyContainerRef.current;
     const positioning = positioningRef.current;
     if (stickyContainer !== null) {
@@ -177,8 +170,6 @@ export default function StickyComponent({
       }
     });
   };
-
-  const { historyState } = useSharedHistoryContext();
 
   return (
     <div ref={stickyContainerRef} className="sticky-note-container">
@@ -225,15 +216,9 @@ export default function StickyComponent({
         <LexicalNestedComposer
           initialEditor={caption}
           initialTheme={StickyEditorTheme}>
-          {isCollabActive ? (
-            <CollaborationPlugin
-              id={caption.getKey()}
-              providerFactory={createWebsocketProvider}
-              shouldBootstrap={true}
-            />
-          ) : (
-            <HistoryPlugin externalHistoryState={historyState} />
-          )}
+          
+            <HistoryPlugin />
+          
           <PlainTextPlugin
             contentEditable={
               <ContentEditable

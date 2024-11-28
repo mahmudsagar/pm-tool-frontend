@@ -47,6 +47,7 @@ import {
 import {
   $createParagraphNode,
   $getNodeByKey,
+  $getRoot,
   $getSelection,
   $isElementNode,
   $isRangeSelection,
@@ -96,6 +97,8 @@ import {
   ChevronDown,
   Code,
   Columns,
+  DivideSquare,
+  FoldHorizontal,
   FoldVertical,
   Heading1,
   Heading2,
@@ -106,6 +109,7 @@ import {
   Italic,
   Link,
   List,
+  ListCollapse,
   ListOrdered,
   NotepadText,
   Outdent,
@@ -121,6 +125,7 @@ import {
   Trash2,
   Underline,
   Undo,
+  Vote,
 } from "lucide-react";
 import DropdownColorPicker from "../../ui/colorpicker/DropdownColorPicker";
 import {
@@ -134,6 +139,10 @@ import { INSERT_EMBED_COMMAND } from "@lexical/react/LexicalAutoEmbedPlugin";
 import useModal from "@/components/elements/modal/useModal";
 import { InsertInlineImageDialog } from "../InlineImagePlugin";
 import InsertLayoutDialog from "../LayoutPlugin/InsertLayoutDialog";
+import { INSERT_PAGE_BREAK } from "../PageBreakPlugin";
+import { INSERT_COLLAPSIBLE_COMMAND } from "../CollapsiblePlugin";
+import { InsertPollDialog } from "../PollPlugin";
+import { $createStickyNode } from "../../nodes/StickyNode";
 const commonToolbarItemProps = {
   variant: "ghost",
   className: "gap-1 px-1.5 truncate",
@@ -1139,14 +1148,14 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                     <FoldVertical size={16} />
                     <span className="ml-1">Horizontal Rule</span>
                   </DropdownMenuItem>
-                  {/* <DropdownMenuItem
-                  onClick={() => {
-                    activeEditor.dispatchCommand(INSERT_PAGE_BREAK, undefined);
-                  }}
-                  className="cursor-pointer">
-                  <i className="icon page-break" />
-                  <span className="text">Page Break</span>
-                </DropdownMenuItem> */}
+                  <DropdownMenuItem
+                    onClick={() => {
+                      activeEditor.dispatchCommand(INSERT_PAGE_BREAK, undefined);
+                    }}
+                    className="cursor-pointer">
+                    <DivideSquare size={16} />
+                    <span className="ml-1">Page Break</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       showModal("Insert Image", (onClose) => (
@@ -1214,20 +1223,17 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                     <Table size={16} />
                     <span className="ml-1">Table</span>
                   </DropdownMenuItem>
-                  {/* <DropdownMenuItem
-                  onClick={() => {
-                    openModal({
-                      title: 'Insert Poll',
-                      content: <InsertPollDialog
+                  <DropdownMenuItem
+                    onClick={() => {
+                      showModal('Insert Poll', (onClose) => (<InsertPollDialog
                         activeEditor={activeEditor}
-                        onClose={closeModal}
-                      />
-                    });
-                  }}
-                  className="cursor-pointer">
-                  <i className="icon poll" />
-                  <span className="text">Poll</span>
-                </DropdownMenuItem> */}
+                        onClose={onClose}
+                      />), false);
+                    }}
+                    className="cursor-pointer">
+                    <Vote size={16} />
+                    <span className="ml-1">Poll</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       showModal('Insert Columns Layout', (onClose) => (<InsertLayoutDialog
@@ -1253,7 +1259,7 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   <i className="icon equation" />
                   <span className="text">Equation</span>
                 </DropdownMenuItem> */}
-                  {/* <DropdownMenuItem
+                  <DropdownMenuItem
                   onClick={() => {
                     editor.update(() => {
                       const root = $getRoot();
@@ -1264,18 +1270,18 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                   className="cursor-pointer">
                   <i className="icon sticky" />
                   <span className="text">Sticky Note</span>
-                </DropdownMenuItem> */}
-                  {/* <DropdownMenuItem
-                  onClick={() => {
-                    editor.dispatchCommand(
-                      INSERT_COLLAPSIBLE_COMMAND,
-                      undefined,
-                    );
-                  }}
-                  className="cursor-pointer">
-                  <i className="icon caret-right" />
-                  <span className="text">Collapsible container</span>
-                </DropdownMenuItem> */}
+                </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      editor.dispatchCommand(
+                        INSERT_COLLAPSIBLE_COMMAND,
+                        undefined,
+                      );
+                    }}
+                    className="cursor-pointer">
+                    <ListCollapse size={16} />
+                    <span className="ml-1">Collapsible container</span>
+                  </DropdownMenuItem>
                   {EmbedConfigs.map((embedConfig) => (
                     <DropdownMenuItem
                       key={embedConfig.type}

@@ -23,6 +23,13 @@ import {LayoutItemNode} from './LayoutItemNode';
 import {PageBreakNode} from './PageBreakNode';
 import {YouTubeNode} from './YouTubeNode';
 import { InlineImageNode } from './InlineImageNode/InlineImageNode';
+import { CollapsibleContainerNode } from '../plugins/CollapsiblePlugin/CollapsibleContainerNode';
+import { CollapsibleContentNode } from '../plugins/CollapsiblePlugin/CollapsibleContentNode';
+import { CollapsibleTitleNode } from '../plugins/CollapsiblePlugin/CollapsibleTitleNode';
+import { TweetNode } from './TweetNode';
+import { FigmaNode } from './FigmaNode';
+import { PollNode } from './PollNode';
+import { StickyNode } from './StickyNode';
 
 const PlaygroundNodes = [
   HeadingNode,
@@ -42,11 +49,18 @@ const PlaygroundNodes = [
   InlineImageNode,
   KeywordNode,
   HorizontalRuleNode,
+  TweetNode,
   YouTubeNode,
+  FigmaNode,
   MarkNode,
+  PollNode,
+  CollapsibleContainerNode,
+  CollapsibleContentNode,
+  CollapsibleTitleNode,
   PageBreakNode,
   LayoutContainerNode,
   LayoutItemNode,
+  StickyNode
 ];
 
 export default PlaygroundNodes;
