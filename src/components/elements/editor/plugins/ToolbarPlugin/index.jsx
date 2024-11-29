@@ -117,6 +117,7 @@ import {
   Plus,
   Quote,
   Redo,
+  StickyNote,
   Strikethrough,
   Subscript,
   Superscript,
@@ -1268,8 +1269,8 @@ export default function ToolbarPlugin({ setIsLinkEditMode }) {
                     });
                   }}
                   className="cursor-pointer">
-                  <i className="icon sticky" />
-                  <span className="text">Sticky Note</span>
+                  <StickyNote size={16} />
+                  <span className="ml-1">Sticky Note</span>
                 </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {

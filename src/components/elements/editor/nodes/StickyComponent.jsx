@@ -20,6 +20,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import StickyEditorTheme from '../themes/StickyEditorTheme';
 import ContentEditable from '../ui/ContentEditable';
 import { $isStickyNode } from './StickyNode';
+import { PaintBucket, X } from 'lucide-react';
 
 function positionSticky(
   stickyElem,
@@ -204,14 +205,14 @@ export default function StickyComponent({
           className="delete"
           aria-label="Delete sticky note"
           title="Delete">
-          X
+          <X size={16} />
         </button>
         <button
           onClick={handleColorChange}
           className="color"
           aria-label="Change sticky note color"
           title="Color">
-          <i className="bucket" />
+          <PaintBucket size={14} />
         </button>
         <LexicalNestedComposer
           initialEditor={caption}
