@@ -191,7 +191,7 @@ export default function StickyComponent({
           if (stickContainer !== null) {
             const { top, left } = stickContainer.getBoundingClientRect();
             const zoom = calculateZoomLevel(stickContainer);
-            positioning.offsetX = event.clientX / zoom - left;
+            positioning.offsetX = event.clientX / zoom - left + 272;
             positioning.offsetY = event.clientY / zoom - top;
             positioning.isDragging = true;
             stickContainer.classList.add('dragging');

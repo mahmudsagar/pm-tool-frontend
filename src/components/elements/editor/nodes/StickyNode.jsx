@@ -107,7 +107,7 @@ export class StickyNode extends DecoratorNode {
           caption={this.__caption}
         />
       </Suspense>,
-      document.body,
+      document.querySelector('main'),
     );
   }
 
