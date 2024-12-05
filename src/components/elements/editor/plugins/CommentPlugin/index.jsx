@@ -474,7 +474,7 @@ function CommentsPanelList({
         const id = commentOrThread.id;
         if (commentOrThread.type === 'thread') {
           const handleClickThread = () => {
-            
+
             const markNodeKeys = markNodeMap.get(id);
             if (
               markNodeKeys !== undefined &&
@@ -599,7 +599,7 @@ function useCollabAuthorName() {
   return yjsDocMap.has('comments') ? name : 'Playground User';
 }
 
-export default function CommentPlugin() {
+export default function CommentPlugin({ onChange }) {
   const [editor] = useLexicalComposerContext();
   const commentStore = useMemo(() => new CommentStore(editor), [editor]);
   const comments = useCommentStore(commentStore);
@@ -610,6 +610,12 @@ export default function CommentPlugin() {
   const [activeIDs, setActiveIDs] = useState([]);
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [showComments, setShowComments] = useState(false);
+
+
+  useEffect(() => {
+    console.log('comments', comments);
+    onChange && onChange(comments);
+  }, [comments])
 
 
   const cancelAddComment = useCallback(() => {
@@ -693,6 +699,7 @@ export default function CommentPlugin() {
       if (keys !== undefined) {
         for (const key of keys) {
           const elem = editor.getElementByKey(key);
+          console.log('elem', elem, key, id);
           if (elem !== null) {
             elem.classList.add('selected');
             changedElems.push(elem);
@@ -711,12 +718,13 @@ export default function CommentPlugin() {
 
   useEffect(() => {
     const markNodeKeysToIDs = new Map();
-    
+console.log('markNodeKeysToIDs', markNodeKeysToIDs);
     return mergeRegister(
       registerNestedElementResolver(
         editor,
         MarkNode,
         (from) => {
+          console.log('from', $createMarkNode(from.getIDs()));
           return $createMarkNode(from.getIDs());
         },
         (from, to) => {
@@ -740,7 +748,7 @@ export default function CommentPlugin() {
               } else if ($isMarkNode(node)) {
                 ids = node.getIDs();
               }
-
+              console.log('ids', ids);
               for (let i = 0; i < ids.length; i++) {
                 const id = ids[i];
                 let markNodeKeys = markNodeMap.get(id);
@@ -821,8 +829,6 @@ export default function CommentPlugin() {
     editor.dispatchCommand(INSERT_INLINE_COMMAND, undefined);
   };
 
-  console.log('CommentPlugin', comments,markNodeMap, activeAnchorKey);
-
   return (
     <div className='onek'>
       {showCommentInput &&
@@ -845,15 +851,15 @@ export default function CommentPlugin() {
           />,
           document.body,
         )}
-      
-        <Button size="icon"
-          className="w-6 h-6"
-          onClick={() => setShowComments(!showComments)}
-          title={showComments ? 'Hide Comments' : 'Show Comments'}>
-          <MessageCircle size={12} />
-        </Button>
 
-      
+      <Button size="icon"
+        className="w-6 h-6"
+        onClick={() => setShowComments(!showComments)}
+        title={showComments ? 'Hide Comments' : 'Show Comments'}>
+        <MessageCircle size={12} />
+      </Button>
+
+
       {showComments &&
         createPortal(
           <CommentsPanel

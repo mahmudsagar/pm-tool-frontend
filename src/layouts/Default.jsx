@@ -14,7 +14,7 @@ const Default = ({ children }) => {
         <>
             <div className="flex h-screen border-collapse overflow-hidden">
                 <Sidebar />
-                <main className="flex-1 overflow-y-auto overflow-x-hidden bg-secondary/10 pb-1">
+                <main className="flex-1 overflow-y-auto overflow-x-hidden bg-secondary/10 pb-1 relative">
                     <Header topMenu={topMenu} />
                     {children}
                     <Outlet context={[topMenu, setTopMenu]} />

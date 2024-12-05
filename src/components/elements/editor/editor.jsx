@@ -50,11 +50,16 @@ import TableCellResizerPlugin from './plugins/TableCellResizer';
 import TableHoverActionsPlugin from './plugins/TableHoverActionsPlugin';
 import TableCellActionMenuPlugin from './plugins/TableActionMenuPlugin';
 import CommentPlugin from './plugins/CommentPlugin';
+import PageBreakPlugin from './plugins/PageBreakPlugin';
+import CollapsiblePlugin from './plugins/CollapsiblePlugin';
+import TwitterPlugin from './plugins/TwitterPlugin';
+import FigmaPlugin from './plugins/FigmaPlugin';
+import PollPlugin from './plugins/PollPlugin';
 const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
-export default function Editor({ title, content, page_id, custom_meta, mediaAttachments, onChange }) {
+export default function Editor({ title, content, page_id, custom_meta, comments, mediaAttachments, onChange }) {
   const [editor] = useLexicalComposerContext()
   const { loading: imageLoading, data: imageData, callApi: uploadImage } = useApi();
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -69,7 +74,7 @@ export default function Editor({ title, content, page_id, custom_meta, mediaAtta
   const [currentTitle, setCurrentTitle] = useState(title);
   const [currentEditorState, setCurrentEditorState] = useState(typeof content === 'string' ? content : EMPTY_CONTENT);
   const [currentCustomFields, setCurrentCustomFields] = useState(custom_meta);
-
+  const [currentComments, setCurrentComments] = useState(comments);
   const onRef = (_floatingAnchorElem) => {
     if (_floatingAnchorElem !== null) {
       setFloatingAnchorElem(_floatingAnchorElem);
@@ -83,8 +88,9 @@ export default function Editor({ title, content, page_id, custom_meta, mediaAtta
     editor.setEditorState(state)
   }, [editor])
 
-  const handleOnChange = ({ title, content, custom_meta }) => {
-    onChange({ title, content, custom_meta });
+  const handleOnChange = (values) => {
+    console.log('values', values);
+    onChange(values);
   }
 
   useEffect(() => {
@@ -211,12 +217,21 @@ export default function Editor({ title, content, page_id, custom_meta, mediaAtta
         <LexicalAutoLinkPlugin />
         <ImagesPlugin />
         <InlineImagePlugin />
+        <CollapsiblePlugin />
+        <PageBreakPlugin />
         <LinkPlugin />
+        <PollPlugin />
+        <TwitterPlugin />
         <YouTubePlugin />
+        <FigmaPlugin />
         <ClickableLinkPlugin disabled={isEditable} />
         <HorizontalRulePlugin />
         <LayoutPlugin />
-        <CommentPlugin />
+        <CommentPlugin onChange={(comments) => {
+          setCurrentComments(comments);
+          console.log('comments asc', comments);
+          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields, comments });
+        }} />
         <TablePlugin hasCellMerge={true}
           hasCellBackgroundColor={true} />
         <TableCellResizerPlugin />

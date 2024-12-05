@@ -11,7 +11,8 @@
   border: 0;
   resize: none;
   cursor: text;
-  font-size: 24px;
+  font-size: 19px;
+  font-style: italic;
   caret-color: rgb(5, 5, 5);
   display: block;
   position: relative;
@@ -22,7 +23,7 @@
   word-wrap: break-word;
 }
 .StickyNode__placeholder {
-  font-size: 24px;
+  font-size: 19px;
   color: #999;
   overflow: hidden;
   position: absolute;

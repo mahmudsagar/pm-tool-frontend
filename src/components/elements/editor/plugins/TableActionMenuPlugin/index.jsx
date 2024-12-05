@@ -41,6 +41,7 @@ import {createPortal} from 'react-dom';
 import ColorPicker from '../../ui/colorpicker/ColorPicker';
 import useModal from '@/components/elements/modal/useModal';
 import { ChevronDownIcon } from 'lucide-react';
+import { invariant } from '@/utils/helper';
 
 function computeSelectionCount(selection) {
   const selectionShape = selection.getShape();
@@ -62,10 +63,10 @@ function isTableSelectionRectangular(selection) {
     const node = nodes[i];
     if ($isTableCellNode(node)) {
       const row = node.getParentOrThrow();
-      // invariant(
-      //   $isTableRowNode(row),
-      //   'Expected CellNode to have a RowNode parent',
-      // );
+      invariant(
+        $isTableRowNode(row),
+        'Expected CellNode to have a RowNode parent',
+      );
       if (currentRow !== row) {
         if (expectedColumns !== null && currentColumns !== expectedColumns) {
           return false;
@@ -497,7 +498,7 @@ function TableActionMenu({
     <div
       className="dropdown"
       ref={dropDownRef}
-      onClick={(e) => {
+      onClick={() => {
         //e.stopPropagation();
       }}>
       {mergeCellButton}
