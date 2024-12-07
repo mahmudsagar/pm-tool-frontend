@@ -703,7 +703,7 @@ export default function CommentPlugin({ onChange }) {
           if (elem !== null) {
             elem.classList.add('selected');
             changedElems.push(elem);
-            setShowComments(true);
+            //setShowComments(true);
           }
         }
       }
@@ -718,7 +718,7 @@ export default function CommentPlugin({ onChange }) {
 
   useEffect(() => {
     const markNodeKeysToIDs = new Map();
-console.log('markNodeKeysToIDs', markNodeKeysToIDs);
+    console.log('markNodeKeysToIDs', markNodeKeysToIDs);
     return mergeRegister(
       registerNestedElementResolver(
         editor,

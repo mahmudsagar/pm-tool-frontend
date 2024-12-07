@@ -89,7 +89,6 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
   }, [editor])
 
   const handleOnChange = (values) => {
-    console.log('values', values);
     onChange(values);
   }
 
@@ -229,7 +228,6 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
         <LayoutPlugin />
         <CommentPlugin onChange={(comments) => {
           setCurrentComments(comments);
-          console.log('comments asc', comments);
           handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields, comments });
         }} />
         <TablePlugin hasCellMerge={true}
