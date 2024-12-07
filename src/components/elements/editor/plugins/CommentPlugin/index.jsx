@@ -613,10 +613,10 @@ export default function CommentPlugin({ onChange }) {
 
 
   useEffect(() => {
-    console.log('comments', comments);
     onChange && onChange(comments);
   }, [comments])
 
+  console.log('comments', markNodeMap);
 
   const cancelAddComment = useCallback(() => {
     editor.update(() => {
@@ -742,7 +742,7 @@ export default function CommentPlugin({ onChange }) {
             for (const [key, mutation] of mutations) {
               const node = $getNodeByKey(key);
               let ids = [];
-
+              console.log('node ', node)
               if (mutation === 'destroyed') {
                 ids = markNodeKeysToIDs.get(key) || [];
               } else if ($isMarkNode(node)) {
