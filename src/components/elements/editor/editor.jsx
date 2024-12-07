@@ -188,7 +188,7 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
         </div>
         <DynamicInput initialData={custom_meta} onChange={(custom_meta) => {
           setCurrentCustomFields(custom_meta);
-          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta });
+          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta, comments: currentComments });
         }} />
 
       </div>
@@ -240,7 +240,7 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
           editorState.read(() => {
             const content = JSON.stringify(editorState);
             setCurrentEditorState(content);
-            handleOnChange({ title: currentTitle, content, custom_meta: currentCustomFields });
+            handleOnChange({ title: currentTitle, content, custom_meta: currentCustomFields, comments: currentComments });
           });
         }} />
         <>
