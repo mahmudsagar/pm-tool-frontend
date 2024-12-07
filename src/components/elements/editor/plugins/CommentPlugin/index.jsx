@@ -613,10 +613,10 @@ export default function CommentPlugin({ onChange }) {
 
 
   useEffect(() => {
-    console.log('comments', comments);
     onChange && onChange(comments);
   }, [comments])
 
+  console.log('comments', markNodeMap);
 
   const cancelAddComment = useCallback(() => {
     editor.update(() => {
@@ -703,7 +703,7 @@ export default function CommentPlugin({ onChange }) {
           if (elem !== null) {
             elem.classList.add('selected');
             changedElems.push(elem);
-            setShowComments(true);
+            //setShowComments(true);
           }
         }
       }
@@ -718,7 +718,7 @@ export default function CommentPlugin({ onChange }) {
 
   useEffect(() => {
     const markNodeKeysToIDs = new Map();
-console.log('markNodeKeysToIDs', markNodeKeysToIDs);
+    console.log('markNodeKeysToIDs', markNodeKeysToIDs);
     return mergeRegister(
       registerNestedElementResolver(
         editor,
@@ -742,7 +742,7 @@ console.log('markNodeKeysToIDs', markNodeKeysToIDs);
             for (const [key, mutation] of mutations) {
               const node = $getNodeByKey(key);
               let ids = [];
-
+              console.log('node ', node)
               if (mutation === 'destroyed') {
                 ids = markNodeKeysToIDs.get(key) || [];
               } else if ($isMarkNode(node)) {
