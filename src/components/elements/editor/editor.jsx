@@ -198,7 +198,7 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
           contentEditable={
             <div className="editor-scroller">
               <div className="editor" ref={onRef}>
-                <ContentEditable className="editor-input"
+                <ContentEditable className="editor-input" spellCheck="false"
                   aria-placeholder={placeholder} placeholder={placeholder} />
               </div>
             </div>
@@ -225,7 +225,7 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
         <FigmaPlugin />
         <ClickableLinkPlugin disabled={isEditable} />
         <HorizontalRulePlugin />
-        <LayoutPlugin />
+        <LayoutPlugin /> 
         <CommentPlugin onChange={(comments) => {
           setCurrentComments(comments);
           handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields, comments });

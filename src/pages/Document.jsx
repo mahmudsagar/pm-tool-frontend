@@ -69,8 +69,6 @@ const Document = ({ pageContent, pageMeta, title, custom_meta, mediaAttachments,
       firstLoad = false;
       return;
     }
-
-    console.log('Saving changes...',value);
     handleSubmit(value);
   }, 4000);
 

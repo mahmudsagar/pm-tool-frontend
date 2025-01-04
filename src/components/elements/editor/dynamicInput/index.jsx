@@ -265,7 +265,6 @@ const DynamicInput = ({ initialData, onChange }) => {
   const handleFormChange = debounce(() => {
     const values = form.getValues();
 
-    console.log('form values', values);
     const fields = customFields.map(({ ...rest }) => ({ ...rest }));
     onChange({ values, fields });
   }, 1000);

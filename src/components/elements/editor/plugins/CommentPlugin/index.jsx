@@ -46,7 +46,7 @@ import { CommentStore, createComment, createThread, useCommentStore } from '../.
 import { Button } from '@/components/ui/button';
 import useModal from '@/components/elements/modal/useModal';
 import CommentEditorTheme from '../../themes/CommentEditorTheme';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Trash } from 'lucide-react';
 
 export const INSERT_INLINE_COMMAND = createCommand(
   'INSERT_INLINE_COMMAND',
@@ -321,7 +321,7 @@ function CommentsComposer({
   const [content, setContent] = useState('');
   const [canSubmit, setCanSubmit] = useState(false);
   const editorRef = useRef(null);
-  const author = useCollabAuthorName();
+  const author = 'You';
 
   const onChange = useOnChange(setContent, setCanSubmit);
 
@@ -526,7 +526,7 @@ function CommentsPanelList({
                     ));
                   }}
                   className="CommentPlugin_CommentsPanel_List_DeleteButton">
-                  <i className="delete" />
+                  <Trash />
                 </Button>
                 {modal}
               </div>
@@ -593,11 +593,11 @@ function CommentsPanel({
   );
 }
 
-function useCollabAuthorName() {
-  const collabContext = useCollaborationContext();
-  const { yjsDocMap, name } = collabContext;
-  return yjsDocMap.has('comments') ? name : 'Playground User';
-}
+// function useCollabAuthorName() {
+//   const collabContext = useCollaborationContext();
+//   const { yjsDocMap, name } = collabContext;
+//   return yjsDocMap.has('comments') ? name : 'You';
+// }
 
 export default function CommentPlugin({ onChange }) {
   const [editor] = useLexicalComposerContext();
@@ -699,11 +699,10 @@ export default function CommentPlugin({ onChange }) {
       if (keys !== undefined) {
         for (const key of keys) {
           const elem = editor.getElementByKey(key);
-          console.log('elem', elem, key, id);
           if (elem !== null) {
             elem.classList.add('selected');
             changedElems.push(elem);
-            //setShowComments(true);
+            setShowComments(true);
           }
         }
       }
@@ -718,13 +717,11 @@ export default function CommentPlugin({ onChange }) {
 
   useEffect(() => {
     const markNodeKeysToIDs = new Map();
-    console.log('markNodeKeysToIDs', markNodeKeysToIDs);
     return mergeRegister(
       registerNestedElementResolver(
         editor,
         MarkNode,
         (from) => {
-          console.log('from', $createMarkNode(from.getIDs()));
           return $createMarkNode(from.getIDs());
         },
         (from, to) => {
@@ -742,7 +739,6 @@ export default function CommentPlugin({ onChange }) {
             for (const [key, mutation] of mutations) {
               const node = $getNodeByKey(key);
               let ids = [];
-              console.log('node ', node)
               if (mutation === 'destroyed') {
                 ids = markNodeKeysToIDs.get(key) || [];
               } else if ($isMarkNode(node)) {
@@ -830,7 +826,7 @@ export default function CommentPlugin({ onChange }) {
   };
 
   return (
-    <div className='onek'>
+    <div>
       {showCommentInput &&
         createPortal(
           <CommentInputBox
