@@ -401,15 +401,14 @@
 
 $colors: red, orange, yellow, green, blue, purple;
 
-
-
-@for $i from 1 through length($colors) {
+@for $i from 1 through list.length($colors) {
   .PlaygroundEditorTheme__paragraph {
     .PlaygroundEditorTheme__mark:nth-child(#{$i}) {
       border-bottom: 2px solid list.nth($colors, $i);
     }
   }
 }
+
 .PlaygroundEditorTheme__embedBlock {
   user-select: none;
 }

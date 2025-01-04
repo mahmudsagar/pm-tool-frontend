@@ -94,7 +94,7 @@
 .CommentPlugin_CommentInputBox_Button.primary {
   background-color: rgb(66, 135, 245);
   font-weight: bold;
-  color: #fff;
+  /* color: #fff; */
 }
 
 .CommentPlugin_CommentInputBox_Button.primary:hover {
@@ -162,9 +162,6 @@
 
 .CommentPlugin_CommentsPanel_Heading {
   padding-left: 15px;
-  padding-top: 10px;
-  margin: 0;
-  height: 34px;
   border-bottom: 1px solid #eee;
   font-size: 20px;
   display: block;
@@ -195,7 +192,7 @@
 .CommentPlugin_CommentsPanel_SendButton {
   position: absolute;
   right: 10px;
-  top: 8px;
+  top: 12px;
   background: none;
 }
 
@@ -273,6 +270,9 @@
 
 .CommentPlugin_CommentsPanel_List_Comment_Time {
   color: #999;
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .CommentPlugin_CommentsPanel_List_Thread {
@@ -291,9 +291,9 @@
   border-top: none;
 }
 
-.CommentPlugin_CommentsPanel_List_Thread.interactive {
+/* .CommentPlugin_CommentsPanel_List_Thread.interactive {
   cursor: pointer;
-}
+} */
 
 .CommentPlugin_CommentsPanel_List_Thread.interactive:hover {
   background-color: #fafafa;
@@ -307,12 +307,15 @@
 
 .CommentPlugin_CommentsPanel_List_Thread_QuoteBox {
   padding-top: 10px;
-  color: #ccc;
-  display: block;
+  /* color: #ccc; */
+
 }
 
 .CommentPlugin_CommentsPanel_List_Thread_Quote {
   margin: 0px 10px 0 10px;
+  display: flex;
+  align-items: center;
+  gap:7px;
 }
 
 .CommentPlugin_CommentsPanel_List_Thread_Quote span {
@@ -351,6 +354,7 @@
 .CommentPlugin_CommentsPanel_List_Thread_Editor {
   position: relative;
   padding-top: 1px;
+  color: #222;
 }
 
 .CommentPlugin_CommentsPanel_List_DeleteButton {
@@ -368,12 +372,10 @@
   .CommentPlugin_CommentsPanel_List_DeleteButton,
 .CommentPlugin_CommentsPanel_List_Thread_QuoteBox:hover
   .CommentPlugin_CommentsPanel_List_DeleteButton {
-  opacity: 0.5;
+  opacity: 1;
 }
 
 .CommentPlugin_CommentsPanel_List_DeleteButton:hover {
   background-color: transparent;
   opacity: 1;
-  filter: invert(45%) sepia(98%) saturate(2299%) hue-rotate(201deg)
-    brightness(100%) contrast(92%);
 }

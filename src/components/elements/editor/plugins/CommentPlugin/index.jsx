@@ -46,7 +46,7 @@ import { CommentStore, createComment, createThread, useCommentStore } from '../.
 import { Button } from '@/components/ui/button';
 import useModal from '@/components/elements/modal/useModal';
 import CommentEditorTheme from '../../themes/CommentEditorTheme';
-import { MessageCircle, Trash } from 'lucide-react';
+import { Clock, LucideReply, MessageCircle, MessageSquare, Send, Trash, X } from 'lucide-react';
 
 export const INSERT_INLINE_COMMAND = createCommand(
   'INSERT_INLINE_COMMAND',
@@ -351,7 +351,7 @@ function CommentsComposer({
         className="CommentPlugin_CommentsPanel_SendButton"
         onClick={submitComment}
         disabled={!canSubmit}>
-        <i className="send" />
+        <Send className="send" size={16} color='#000' />
       </Button>
     </>
   );
@@ -401,21 +401,22 @@ function CommentsPanelListComment({
     <li className="CommentPlugin_CommentsPanel_List_Comment">
       <div className="CommentPlugin_CommentsPanel_List_Details">
         <span className="CommentPlugin_CommentsPanel_List_Comment_Author">
-          {comment.author}
+          {comment.author || 'Unknown User'}
         </span>
         <span className="CommentPlugin_CommentsPanel_List_Comment_Time">
-          · {seconds > -10 ? 'Just now' : rtf.format(minutes, 'minute')}
+          <Clock size={14} /> {seconds > -10 ? 'Just now' : rtf.format(minutes, 'minute')}
         </span>
       </div>
       <p
         className={
-          comment.deleted ? 'CommentPlugin_CommentsPanel_DeletedComment' : ''
+          comment.deleted ? 'CommentPlugin_CommentsPanel_DeletedComment flex items-center gap-0.5' : 'flex items-center gap-0.5'
         }>
-        {comment.content}
+        <LucideReply size={16} /> {comment.content}
       </p>
       {!comment.deleted && (
         <>
           <Button
+          size="icon"
             onClick={() => {
               showModal('Delete Comment', (onClose) => (
                 <ShowDeleteCommentOrThreadDialog
@@ -427,7 +428,7 @@ function CommentsPanelListComment({
               ));
             }}
             className="CommentPlugin_CommentsPanel_List_DeleteButton">
-            <i className="delete" />
+            <Trash size={16} color='#ff6464' />
           </Button>
           {modal}
         </>
@@ -511,11 +512,12 @@ function CommentsPanelList({
                 } ${activeIDs.indexOf(id) === -1 ? '' : 'active'}`}>
               <div className="CommentPlugin_CommentsPanel_List_Thread_QuoteBox">
                 <blockquote className="CommentPlugin_CommentsPanel_List_Thread_Quote">
-                  {'> '}
+                  {/* <MessageSquare  size={16} /> */}
                   <span>{commentOrThread.quote}</span>
                 </blockquote>
                 {/* INTRODUCE DELETE THREAD HERE*/}
                 <Button
+                size="icon"
                   onClick={() => {
                     showModal('Delete Thread', (onClose) => (
                       <ShowDeleteCommentOrThreadDialog
@@ -526,7 +528,7 @@ function CommentsPanelList({
                     ));
                   }}
                   className="CommentPlugin_CommentsPanel_List_DeleteButton">
-                  <Trash />
+                  <Trash size={16} color="#ff6464" />
                 </Button>
                 {modal}
               </div>
@@ -570,13 +572,17 @@ function CommentsPanel({
   comments,
   submitAddComment,
   markNodeMap,
+  setShowComments
 }) {
   const listRef = useRef(null);
   const isEmpty = comments.length === 0;
 
   return (
     <div className="CommentPlugin_CommentsPanel">
+      <div className='flex items-center pr-2'>
       <h2 className="CommentPlugin_CommentsPanel_Heading">Comments</h2>
+      <span onClick={()=>setShowComments(false)} className="p-2 cursor-pointer"><X size={18} /></span>
+      </div>
       {isEmpty ? (
         <div className="CommentPlugin_CommentsPanel_Empty">No Comments</div>
       ) : (
@@ -615,8 +621,12 @@ export default function CommentPlugin({ onChange }) {
   useEffect(() => {
     onChange && onChange(comments);
   }, [comments])
+  
 
-  console.log('comments', markNodeMap);
+  useEffect(()=>{
+    commentStore.loadFromLocalStorage()
+  },[])
+  console.log('comments', comments);
 
   const cancelAddComment = useCallback(() => {
     editor.update(() => {
@@ -864,6 +874,7 @@ export default function CommentPlugin({ onChange }) {
             deleteCommentOrThread={deleteCommentOrThread}
             activeIDs={activeIDs}
             markNodeMap={markNodeMap}
+            setShowComments={setShowComments}
           />,
           document.body,
         )}

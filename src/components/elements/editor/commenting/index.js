@@ -132,7 +132,7 @@ export class CommentStore {
   ) {
     const nextComments = Array.from(this._comments);
     // The YJS types explicitly use `any` as well.
-    const sharedCommentsArray = this._getCollabComments();
+    // const sharedCommentsArray = this._getCollabComments();
     let commentIndex = null;
 
     if (thread !== undefined) {
@@ -143,14 +143,14 @@ export class CommentStore {
           nextComments.splice(i, 1, newThread);
           const threadComments = newThread.comments;
           commentIndex = threadComments.indexOf(commentOrThread);
-          if (this.isCollaborative() && sharedCommentsArray !== null) {
-            const parentSharedArray = sharedCommentsArray
-              .get(i)
-              .get("comments");
-            this._withRemoteTransaction(() => {
-              parentSharedArray.delete(commentIndex);
-            });
-          }
+          // if (this.isCollaborative() && sharedCommentsArray !== null) {
+          //   const parentSharedArray = sharedCommentsArray
+          //     .get(i)
+          //     .get("comments");
+          //   this._withRemoteTransaction(() => {
+          //     parentSharedArray.delete(commentIndex);
+          //   });
+          // }
           threadComments.splice(commentIndex, 1);
           break;
         }
