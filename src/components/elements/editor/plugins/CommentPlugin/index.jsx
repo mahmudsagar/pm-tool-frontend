@@ -416,7 +416,7 @@ function CommentsPanelListComment({
       {!comment.deleted && (
         <>
           <Button
-          size="icon"
+            size="icon"
             onClick={() => {
               showModal('Delete Comment', (onClose) => (
                 <ShowDeleteCommentOrThreadDialog
@@ -517,7 +517,7 @@ function CommentsPanelList({
                 </blockquote>
                 {/* INTRODUCE DELETE THREAD HERE*/}
                 <Button
-                size="icon"
+                  size="icon"
                   onClick={() => {
                     showModal('Delete Thread', (onClose) => (
                       <ShowDeleteCommentOrThreadDialog
@@ -580,8 +580,8 @@ function CommentsPanel({
   return (
     <div className="CommentPlugin_CommentsPanel">
       <div className='flex items-center pr-2'>
-      <h2 className="CommentPlugin_CommentsPanel_Heading">Comments</h2>
-      <span onClick={()=>setShowComments(false)} className="p-2 cursor-pointer"><X size={18} /></span>
+        <h2 className="CommentPlugin_CommentsPanel_Heading">Comments</h2>
+        <span onClick={() => setShowComments(false)} className="p-2 cursor-pointer"><X size={18} /></span>
       </div>
       {isEmpty ? (
         <div className="CommentPlugin_CommentsPanel_Empty">No Comments</div>
@@ -605,7 +605,7 @@ function CommentsPanel({
 //   return yjsDocMap.has('comments') ? name : 'You';
 // }
 
-export default function CommentPlugin({ onChange }) {
+export default function CommentPlugin({ onChange, showComments, setShowComments }) {
   const [editor] = useLexicalComposerContext();
   const commentStore = useMemo(() => new CommentStore(editor), [editor]);
   const comments = useCommentStore(commentStore);
@@ -615,17 +615,17 @@ export default function CommentPlugin({ onChange }) {
   const [activeAnchorKey, setActiveAnchorKey] = useState();
   const [activeIDs, setActiveIDs] = useState([]);
   const [showCommentInput, setShowCommentInput] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+
 
 
   useEffect(() => {
     onChange && onChange(comments);
   }, [comments])
-  
 
-  useEffect(()=>{
+
+  useEffect(() => {
     commentStore.loadFromLocalStorage()
-  },[])
+  }, [])
   console.log('comments', comments);
 
   const cancelAddComment = useCallback(() => {
@@ -858,12 +858,12 @@ export default function CommentPlugin({ onChange }) {
           document.body,
         )}
 
-      <Button size="icon"
+      {/* <Button size="icon"
         className="w-6 h-6"
         onClick={() => setShowComments(!showComments)}
         title={showComments ? 'Hide Comments' : 'Show Comments'}>
         <MessageCircle size={12} />
-      </Button>
+      </Button> */}
 
 
       {showComments &&

@@ -1,5 +1,5 @@
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { debounce } from '@/utils/helper';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import Link from '@/BetterRouter/Link';
@@ -21,7 +21,7 @@ const editorConfig = {
 };
 let firstLoad = true;
 const Document = ({ pageContent, pageMeta, title, custom_meta, mediaAttachments, setTopMenu, setOpenDeleteDialog, handleSubmit, _id }) => {
-
+  const [showComments, setShowComments] = useState(false);
   useEffect(() => {
     if (!pageContent) return;
     const dropdownContent = <>
@@ -48,11 +48,11 @@ const Document = ({ pageContent, pageMeta, title, custom_meta, mediaAttachments,
           <History size={20} />
         </Button>
       </Link>
-      <Link href="#" className="text-sm font-medium text-primary">
-        <Button variant="ghost" size="icon">
-          <MessageSquareMore size={20} />
-        </Button>
-      </Link>
+      {/* <Link href="#" className="text-sm font-medium text-primary"> */}
+      <Button variant="ghost" size="icon" onClick={() => setShowComments(prev => !prev)}>
+        <MessageSquareMore size={20} />
+      </Button>
+      {/* </Link> */}
     </>
     setTopMenu({
       dropdownContent,
@@ -79,7 +79,9 @@ const Document = ({ pageContent, pageMeta, title, custom_meta, mediaAttachments,
     custom_meta,
     mediaAttachments,
     content: pageContent?.content,
-    onChange
+    onChange,
+    showComments,
+    setShowComments
   }
   return <div className='lexical-editor'>
     <LexicalComposer initialConfig={editorConfig}>

@@ -59,7 +59,7 @@ const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
-export default function Editor({ title, content, page_id, custom_meta, comments, mediaAttachments, onChange }) {
+export default function Editor({ title, content, page_id, custom_meta, comments, mediaAttachments, onChange,showComments, setShowComments }) {
   const [editor] = useLexicalComposerContext()
   const { loading: imageLoading, data: imageData, callApi: uploadImage } = useApi();
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -226,7 +226,7 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
         <ClickableLinkPlugin disabled={isEditable} />
         <HorizontalRulePlugin />
         <LayoutPlugin /> 
-        <CommentPlugin onChange={(comments) => {
+        <CommentPlugin showComments={showComments} setShowComments={setShowComments} onChange={(comments) => {
           setCurrentComments(comments);
           handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields, comments });
         }} />
