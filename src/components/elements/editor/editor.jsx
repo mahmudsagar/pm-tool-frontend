@@ -55,6 +55,7 @@ import CollapsiblePlugin from './plugins/CollapsiblePlugin';
 import TwitterPlugin from './plugins/TwitterPlugin';
 import FigmaPlugin from './plugins/FigmaPlugin';
 import PollPlugin from './plugins/PollPlugin';
+import Comment from '../comment';
 const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
@@ -189,7 +190,7 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
           setCurrentCustomFields(custom_meta);
           handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta, comments: currentComments });
         }} />
-
+  <Comment />
       </div>
       <Separator />
       <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />
