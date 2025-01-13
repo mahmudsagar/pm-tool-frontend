@@ -60,7 +60,7 @@ const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
-export default function Editor({ title, content, page_id, custom_meta, comments, mediaAttachments, onChange,showComments, setShowComments }) {
+export default function Editor({ title, content, page_id, user_id, custom_meta, comments, mediaAttachments, onChange, showComments, setShowComments }) {
   const [editor] = useLexicalComposerContext()
   const { loading: imageLoading, data: imageData, callApi: uploadImage } = useApi();
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -190,7 +190,7 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
           setCurrentCustomFields(custom_meta);
           handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta, comments: currentComments });
         }} />
-  <Comment />
+        <Comment {...{ page_id, user_id }} />
       </div>
       <Separator />
       <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />
@@ -226,7 +226,7 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
         <FigmaPlugin />
         <ClickableLinkPlugin disabled={isEditable} />
         <HorizontalRulePlugin />
-        <LayoutPlugin /> 
+        <LayoutPlugin />
         <CommentPlugin showComments={showComments} setShowComments={setShowComments} onChange={(comments) => {
           setCurrentComments(comments);
           handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields, comments });

@@ -1,110 +1,25 @@
-// /**
-//  * v0 by Vercel.
-//  * @see https://v0.dev/t/ABxpomjSXiC
-//  * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
-//  */
-// import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-// import { Button } from "@/components/ui/button"
-// import { Input } from "@/components/ui/input"
-// import { Paperclip, SendHorizonal } from "lucide-react"
-
-// export default function Component() {
-//   return (
-//     <div className="space-y-8">
-//       <div className="space-y-4">
-//         <h2 className="text-md font-bold">Comments</h2>
-//         <div className="flex items-start gap-4">
-//           <Avatar className="w-10 h-10 border">
-//             <AvatarImage src="/placeholder-user.jpg" alt="@shadcn" />
-//             <AvatarFallback>JD</AvatarFallback>
-//           </Avatar>
-
-//           <div className="relative w-full">
-//             <Input type="text" placeholder="Write your comment..." className="bg-transparent border-0 focus-visible:ring-offset-0 focus-visible:ring-0" />
-//             <div className="actions  absolute top-0.5 right-0">
-//             <Button type="button" size="icon" variant="ghost" className="bg-transparent">
-//                 <Paperclip size={14} />
-//               </Button>
-//               <Button type="button" size="icon" variant="ghost" className="bg-transparent">
-//                 <SendHorizonal size={14} />
-//               </Button>
-//             </div>
-//             <div className="border-b">
-
-//             </div>
-//           </div>
-
-
-//         </div>
-//       </div>
-//       <div className="space-y-6">
-//         <div className="flex items-start gap-4">
-//           <Avatar className="w-10 h-10 border">
-//             <AvatarImage src="/placeholder-user.jpg" alt="@shadcn" />
-//             <AvatarFallback>JD</AvatarFallback>
-//           </Avatar>
-//           <div className="space-y-1">
-//             <div className="flex items-center gap-2">
-//               <div className="font-medium">John Doe</div>
-//               <div className="text-sm text-gray-500 dark:text-gray-400">2 days ago</div>
-//             </div>
-//             <div className="text-gray-700 dark:text-gray-300">
-//               This is a great product! I've been using it for a week and it's been a game-changer.
-//             </div>
-//           </div>
-//         </div>
-//         <div className="flex items-start gap-4">
-//           <Avatar className="w-10 h-10 border">
-//             <AvatarImage src="/placeholder-user.jpg" alt="@shadcn" />
-//             <AvatarFallback>JD</AvatarFallback>
-//           </Avatar>
-//           <div className="space-y-1">
-//             <div className="flex items-center gap-2">
-//               <div className="font-medium">Jane Smith</div>
-//               <div className="text-sm text-gray-500 dark:text-gray-400">1 week ago</div>
-//             </div>
-//             <div className="text-gray-700 dark:text-gray-300">
-//               I'm really impressed with the quality of this product. It's exceeded my expectations.
-//             </div>
-//           </div>
-//         </div>
-//         <div className="flex items-start gap-4">
-//           <Avatar className="w-10 h-10 border">
-//             <AvatarImage src="/placeholder-user.jpg" alt="@shadcn" />
-//             <AvatarFallback>JD</AvatarFallback>
-//           </Avatar>
-//           <div className="space-y-1">
-//             <div className="flex items-center gap-2">
-//               <div className="font-medium">Michael Johnson</div>
-//               <div className="text-sm text-gray-500 dark:text-gray-400">3 weeks ago</div>
-//             </div>
-//             <div className="text-gray-700 dark:text-gray-300">
-//               I've been using this product for a month now and it's been fantastic. Highly recommended!
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   )
-// }
-
-
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Paperclip, Send, Edit2, Trash2, X, Image as ImageIcon, SendHorizonal } from "lucide-react";
+import useApi from '@/lib/dataFetcher';
+import { commentBaseUrl } from '@/utils/constants';
 
-export default function CommentSection() {
+export default function CommentSection({ user_id, page_id }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [newAttachments, setNewAttachments] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
   const [editAttachments, setEditAttachments] = useState([]);
-  
+  const { loading: initialLoading, data: initialData, callApi: fetchComments, error } = useApi();
   const fileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
+
+  useEffect(() => {
+    fetchComments(`${commentBaseUrl}/comment?id=${page_id}`);
+  }, [page_id]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -120,6 +35,11 @@ export default function CommentSection() {
       timestamp: new Date(),
       attachments: newAttachments,
     };
+
+    fetchComments(`${commentBaseUrl}/comment`, {
+      method: 'POST',
+      body: JSON.stringify(comment),
+    });
 
     setComments([comment, ...comments]);
     setNewComment('');
@@ -138,9 +58,9 @@ export default function CommentSection() {
 
   const handleUpdate = (id) => {
     if (!editContent.trim() && editAttachments.length === 0) return;
-    
-    setComments(comments.map(comment => 
-      comment.id === id 
+
+    setComments(comments.map(comment =>
+      comment.id === id
         ? { ...comment, content: editContent, attachments: editAttachments }
         : comment
     ));
@@ -170,7 +90,7 @@ export default function CommentSection() {
     } else {
       setNewAttachments([...newAttachments, ...newFiles]);
     }
-    
+
     e.target.value = '';
   };
 
@@ -204,7 +124,7 @@ export default function CommentSection() {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  const AttachmentList = ({ attachments, onRemove, isEditing = false}) => (
+  const AttachmentList = ({ attachments, onRemove, isEditing = false }) => (
     <div className="flex flex-wrap gap-2 mt-2">
       {attachments.map((file, index) => (
         file.type.startsWith('image/') ? (
@@ -250,7 +170,7 @@ export default function CommentSection() {
   return (
     <div className="w-full space-y-6 mt-3">
       <form onSubmit={handleSubmit} className="space-y-2">
-      <h4 className="font-bold">Comments</h4>
+        <h4 className="font-bold">Comments</h4>
         <div className="relative flex items-start gap-3 w-full">
           <Avatar className="w-8 h-8">
             <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" />

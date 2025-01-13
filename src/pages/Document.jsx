@@ -20,7 +20,7 @@ const editorConfig = {
   theme: PlaygroundEditorTheme,
 };
 let firstLoad = true;
-const Document = ({ pageContent, pageMeta, title, custom_meta, mediaAttachments, setTopMenu, setOpenDeleteDialog, handleSubmit, _id }) => {
+const Document = ({ pageContent, pageMeta, title, custom_meta, mediaAttachments, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, user_id }) => {
   const [showComments, setShowComments] = useState(false);
   useEffect(() => {
     if (!pageContent) return;
@@ -74,6 +74,7 @@ const Document = ({ pageContent, pageMeta, title, custom_meta, mediaAttachments,
 
   const editorProps = {
     page_id: _id,
+    user_id,
     pageMeta,
     title,
     custom_meta,

@@ -46,7 +46,7 @@ import { CommentStore, createComment, createThread, useCommentStore } from '../.
 import { Button } from '@/components/ui/button';
 import useModal from '@/components/elements/modal/useModal';
 import CommentEditorTheme from '../../themes/CommentEditorTheme';
-import { Clock, LucideReply, MessageCircle, MessageSquare, Send, Trash, X } from 'lucide-react';
+import { Clock, LucideReply, MessageCircle, MessageSquare, Send, SendHorizonal, Trash, X } from 'lucide-react';
 
 export const INSERT_INLINE_COMMAND = createCommand(
   'INSERT_INLINE_COMMAND',
@@ -351,7 +351,7 @@ function CommentsComposer({
         className="CommentPlugin_CommentsPanel_SendButton"
         onClick={submitComment}
         disabled={!canSubmit}>
-        <Send className="send" size={16} color='#000' />
+        <SendHorizonal className="send" size={16} color='#000' />
       </Button>
     </>
   );
