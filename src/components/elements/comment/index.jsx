@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Paperclip, Send, Edit2, Trash2, X, Image as ImageIcon, SendHorizonal } from "lucide-react";
+import { Paperclip, Edit2, Trash2, X, Image as ImageIcon, SendHorizonal } from "lucide-react";
 import useApi from '@/lib/dataFetcher';
 import { commentBaseUrl } from '@/utils/constants';
 
@@ -18,7 +18,7 @@ export default function CommentSection({ user_id, page_id }) {
   const editFileInputRef = useRef(null);
 
   useEffect(() => {
-    fetchComments(`${commentBaseUrl}/comment?id=${page_id}`);
+    fetchComments(`${commentBaseUrl}?id=${page_id}`);
   }, [page_id]);
 
   const handleSubmit = (e) => {
@@ -28,15 +28,18 @@ export default function CommentSection({ user_id, page_id }) {
     const comment = {
       id: Date.now().toString(),
       content: newComment,
+      comment_body: newComment,
       author: {
         name: 'John Doe',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
       },
+      page_id,
+      user_id,
       timestamp: new Date(),
       attachments: newAttachments,
     };
 
-    fetchComments(`${commentBaseUrl}/comment`, {
+    fetchComments(`${commentBaseUrl}`, {
       method: 'POST',
       body: JSON.stringify(comment),
     });

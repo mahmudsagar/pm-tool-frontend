@@ -18,7 +18,6 @@ import {
 } from '@lexical/mark';
 import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { ClearEditorPlugin } from '@lexical/react/LexicalClearEditorPlugin';
-import { useCollaborationContext } from '@lexical/react/LexicalCollaborationContext';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -46,7 +45,7 @@ import { CommentStore, createComment, createThread, useCommentStore } from '../.
 import { Button } from '@/components/ui/button';
 import useModal from '@/components/elements/modal/useModal';
 import CommentEditorTheme from '../../themes/CommentEditorTheme';
-import { Clock, LucideReply, MessageCircle, MessageSquare, Send, SendHorizonal, Trash, X } from 'lucide-react';
+import { Clock, LucideReply, SendHorizonal, Trash, X } from 'lucide-react';
 
 export const INSERT_INLINE_COMMAND = createCommand(
   'INSERT_INLINE_COMMAND',
@@ -404,7 +403,7 @@ function CommentsPanelListComment({
           {comment.author || 'Unknown User'}
         </span>
         <span className="CommentPlugin_CommentsPanel_List_Comment_Time">
-          <Clock size={14} /> {seconds > -10 ? 'Just now' : rtf.format(minutes, 'minute')}
+          <Clock size={14} /> {seconds > -10 ? 'Just now' : minutes < -60 ? new Date(comment.timeStamp).toLocaleString() : rtf.format(minutes, 'minute')}
         </span>
       </div>
       <p
@@ -599,11 +598,6 @@ function CommentsPanel({
   );
 }
 
-// function useCollabAuthorName() {
-//   const collabContext = useCollaborationContext();
-//   const { yjsDocMap, name } = collabContext;
-//   return yjsDocMap.has('comments') ? name : 'You';
-// }
 
 export default function CommentPlugin({ onChange, showComments, setShowComments }) {
   const [editor] = useLexicalComposerContext();
@@ -616,17 +610,6 @@ export default function CommentPlugin({ onChange, showComments, setShowComments 
   const [activeIDs, setActiveIDs] = useState([]);
   const [showCommentInput, setShowCommentInput] = useState(false);
 
-
-
-  useEffect(() => {
-    onChange && onChange(comments);
-  }, [comments])
-
-
-  useEffect(() => {
-    commentStore.loadFromLocalStorage()
-  }, [])
-  console.log('comments', comments);
 
   const cancelAddComment = useCallback(() => {
     editor.update(() => {
@@ -673,6 +656,7 @@ export default function CommentPlugin({ onChange, showComments, setShowComments 
           });
         }
       }
+      onChange(commentStore.getComments());
     },
     [commentStore, editor, markNodeMap],
   );
@@ -697,6 +681,7 @@ export default function CommentPlugin({ onChange, showComments, setShowComments 
         });
         setShowCommentInput(false);
       }
+      onChange(commentStore.getComments());
     },
     [commentStore, editor],
   );
@@ -754,7 +739,6 @@ export default function CommentPlugin({ onChange, showComments, setShowComments 
               } else if ($isMarkNode(node)) {
                 ids = node.getIDs();
               }
-              console.log('ids', ids);
               for (let i = 0; i < ids.length; i++) {
                 const id = ids[i];
                 let markNodeKeys = markNodeMap.get(id);
@@ -782,7 +766,7 @@ export default function CommentPlugin({ onChange, showComments, setShowComments 
         },
         { skipInitialization: false },
       ),
-      editor.registerUpdateListener(({ editorState, tags }) => {
+      editor.registerUpdateListener(({ editorState }) => {
         editorState.read(() => {
           const selection = $getSelection();
           let hasActiveIds = false;
