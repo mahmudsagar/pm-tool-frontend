@@ -27,7 +27,6 @@ export default function CommentSection({ user_id, page_id }) {
 
     const comment = {
       id: Date.now().toString(),
-      content: newComment,
       comment_body: newComment,
       author: {
         name: 'John Doe',
@@ -51,7 +50,7 @@ export default function CommentSection({ user_id, page_id }) {
 
   const handleEdit = (comment) => {
     setEditingId(comment.id);
-    setEditContent(comment.content);
+    setEditContent(comment.comment_body);
     setEditAttachments([...comment.attachments]);
   };
 
@@ -64,7 +63,7 @@ export default function CommentSection({ user_id, page_id }) {
 
     setComments(comments.map(comment =>
       comment.id === id
-        ? { ...comment, content: editContent, attachments: editAttachments }
+        ? { ...comment, comment_body: editContent, attachments: editAttachments }
         : comment
     ));
     setEditingId(null);
@@ -306,7 +305,7 @@ export default function CommentSection({ user_id, page_id }) {
                       </Button>
                     </div>
                   </div>
-                  <p className="mt-1 text-sm">{comment.content}</p>
+                  <p className="mt-1 text-sm">{comment.comment_body}</p>
                   {comment.attachments.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {comment.attachments.map((file, index) => (
