@@ -188,9 +188,9 @@ export default function Editor({ title, content, page_id, user_id, custom_meta, 
         </div>
         <DynamicInput initialData={custom_meta} onChange={(custom_meta) => {
           setCurrentCustomFields(custom_meta);
-          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta, comments: currentComments });
+          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta, inner_comments: currentComments });
         }} />
-        <Comment {...{ page_id, user_id }} />
+        <Comment {...{ page_id, user_id, comments }} />
       </div>
       <Separator />
       <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />
@@ -229,7 +229,7 @@ export default function Editor({ title, content, page_id, user_id, custom_meta, 
         <LayoutPlugin />
         <CommentPlugin showComments={showComments} setShowComments={setShowComments} onChange={(comments) => {
           setCurrentComments(comments);
-          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields, comments });
+          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields, inner_comments: comments });
         }} />
         <TablePlugin hasCellMerge={true}
           hasCellBackgroundColor={true} />
@@ -239,7 +239,7 @@ export default function Editor({ title, content, page_id, user_id, custom_meta, 
           editorState.read(() => {
             const content = JSON.stringify(editorState);
             setCurrentEditorState(content);
-            handleOnChange({ title: currentTitle, content, custom_meta: currentCustomFields, comments: currentComments });
+            handleOnChange({ title: currentTitle, content, custom_meta: currentCustomFields, inner_comments: currentComments });
           });
         }} />
         <>

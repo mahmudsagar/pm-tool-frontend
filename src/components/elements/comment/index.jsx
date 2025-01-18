@@ -5,15 +5,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Paperclip, Edit2, Trash2, X, Image as ImageIcon, SendHorizonal } from "lucide-react";
 import useApi from '@/lib/dataFetcher';
 import { commentBaseUrl } from '@/utils/constants';
+import Spinner from '../spinner';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default function CommentSection({ user_id, page_id }) {
-  const [comments, setComments] = useState([]);
+export default function CommentSection({ user_id, page_id, comments: initialComments }) {
+  console.log('CommentSection', initialComments);
+  const [comments, setComments] = useState(initialComments || []);
   const [newComment, setNewComment] = useState('');
   const [newAttachments, setNewAttachments] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
   const [editAttachments, setEditAttachments] = useState([]);
-  const { loading: initialLoading, data: initialData, callApi: fetchComments, error } = useApi();
+  const { loading: addCommentLoading, data: initialData, callApi: fetchComments, error } = useApi();
+  const { loading: getUserLoading, data: userData, callApi: getUser } = useApi();
   const fileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
 
@@ -26,26 +30,20 @@ export default function CommentSection({ user_id, page_id }) {
     if (!newComment.trim() && newAttachments.length === 0) return;
 
     const comment = {
-      id: Date.now().toString(),
       comment_body: newComment,
-      author: {
-        name: 'John Doe',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'
-      },
       page_id,
       user_id,
-      timestamp: new Date(),
-      attachments: newAttachments,
     };
 
     fetchComments(`${commentBaseUrl}`, {
       method: 'POST',
       body: JSON.stringify(comment),
+    }, () => {
+      setComments([comment, ...comments]);
+      setNewComment('');
+      setNewAttachments([]);
     });
 
-    setComments([comment, ...comments]);
-    setNewComment('');
-    setNewAttachments([]);
   };
 
   const handleEdit = (comment) => {
@@ -169,6 +167,8 @@ export default function CommentSection({ user_id, page_id }) {
     </div>
   );
 
+  if (addCommentLoading || getUserLoading) return <Skeleton />
+
   return (
     <div className="w-full space-y-6 mt-3">
       <form onSubmit={handleSubmit} className="space-y-2">
@@ -226,8 +226,8 @@ export default function CommentSection({ user_id, page_id }) {
             className="flex gap-3 group"
           >
             <Avatar className="w-8 h-8">
-              <AvatarImage src={comment.author.avatar} />
-              <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={comment?.author?.avatar} />
+              <AvatarFallback>{comment?.author?.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
               {editingId === comment.id ? (
@@ -281,9 +281,9 @@ export default function CommentSection({ user_id, page_id }) {
                 <>
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-medium text-sm">{comment.author.name}</p>
+                      <p className="font-medium text-sm">{comment.author?.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {comment.timestamp.toLocaleString()}
+                        {comment.createdAt}
                       </p>
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">

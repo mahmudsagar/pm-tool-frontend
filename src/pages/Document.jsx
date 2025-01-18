@@ -20,7 +20,7 @@ const editorConfig = {
   theme: PlaygroundEditorTheme,
 };
 let firstLoad = true;
-const Document = ({ pageContent, pageMeta, title, custom_meta, mediaAttachments, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, user_id }) => {
+const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, ...rest }) => {
   const [showComments, setShowComments] = useState(false);
   useEffect(() => {
     if (!pageContent) return;
@@ -74,16 +74,13 @@ const Document = ({ pageContent, pageMeta, title, custom_meta, mediaAttachments,
 
   const editorProps = {
     page_id: _id,
-    user_id,
-    pageMeta,
-    title,
-    custom_meta,
-    mediaAttachments,
     content: pageContent?.content,
     onChange,
     showComments,
-    setShowComments
+    setShowComments,
+    ...rest
   }
+
   return <div className='lexical-editor'>
     <LexicalComposer initialConfig={editorConfig}>
       {pageContent?.content && <Editor {...editorProps} />}
