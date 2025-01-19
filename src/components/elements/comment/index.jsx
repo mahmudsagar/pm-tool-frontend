@@ -1,15 +1,17 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Paperclip, Edit2, Trash2, X, Image as ImageIcon, SendHorizonal } from "lucide-react";
+import { Paperclip, Edit2, Trash2, X, SendHorizonal } from "lucide-react";
 import useApi from '@/lib/dataFetcher';
-import { commentBaseUrl } from '@/utils/constants';
-import Spinner from '../spinner';
+import { commentBaseUrl, mediaBaseUrl } from '@/utils/constants';
 import { Skeleton } from '@/components/ui/skeleton';
+import useSyncStore from '@/stores/useSyncStore';
+import { format, isValid } from 'date-fns';
+import Spinner from '../spinner';
+import { sanitize } from '@/utils/helper';
 
 export default function CommentSection({ user_id, page_id, comments: initialComments }) {
-  console.log('CommentSection', initialComments);
   const [comments, setComments] = useState(initialComments || []);
   const [newComment, setNewComment] = useState('');
   const [newAttachments, setNewAttachments] = useState([]);
@@ -21,9 +23,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   const fileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
 
-  useEffect(() => {
-    fetchComments(`${commentBaseUrl}?id=${page_id}`);
-  }, [page_id]);
+  const { user } = useSyncStore();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -38,32 +38,70 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
     fetchComments(`${commentBaseUrl}`, {
       method: 'POST',
       body: JSON.stringify(comment),
-    }, () => {
-      setComments([comment, ...comments]);
+    }, (response) => {
+      console.log(response, newAttachments);
+      setComments([sanitize(response), ...comments]);
       setNewComment('');
-      setNewAttachments([]);
-    });
 
+      if (newAttachments.length === 0) {
+        return;
+      }
+
+      const formData = new FormData()
+      formData.append('media_type', 'comment_attachment')
+      formData.append('reference_id', response?._id)
+      formData.append('caption', ' ')
+      formData.append('reference_for', 'comment')
+
+      formData.append('file', newAttachments)
+
+      fetchComments(`${mediaBaseUrl}`, {
+        method: 'POST',
+        body: formData,
+      }, () => {
+        setNewAttachments([]);
+      });
+    });
   };
 
   const handleEdit = (comment) => {
-    setEditingId(comment.id);
+    setEditingId(comment._id);
     setEditContent(comment.comment_body);
     setEditAttachments([...comment.attachments]);
   };
 
   const handleDelete = (id) => {
-    setComments(comments.filter(comment => comment.id !== id));
+    setComments(comments.filter(comment => comment._id !== id));
   };
 
   const handleUpdate = (id) => {
     if (!editContent.trim() && editAttachments.length === 0) return;
 
-    setComments(comments.map(comment =>
-      comment.id === id
-        ? { ...comment, comment_body: editContent, attachments: editAttachments }
-        : comment
-    ));
+    const updatedComment = {
+      id,
+      comment_body: editContent,
+      attachments: editAttachments,
+      page_id,
+      user_id
+    };
+
+    fetchComments(`${commentBaseUrl}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        id,
+        comment_body: editContent,
+        page_id,
+        user_id
+      }),
+    }, () => {
+      setComments(comments.map(comment =>
+        comment._id === id
+          ? { ...comment, comment_body: editContent, attachments: editAttachments }
+          : comment
+      ));
+    });
+
+
     setEditingId(null);
     setEditAttachments([]);
   };
@@ -71,11 +109,8 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   const handleFileChange = async (e, isEditing = false) => {
     const files = Array.from(e.target.files || []);
     const newFiles = await Promise.all(files.map(async (file) => {
-      const attachment = {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      };
+
+      const attachment = file
 
       // Create preview URL for images
       if (file.type.startsWith('image/')) {
@@ -86,9 +121,9 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
     }));
 
     if (isEditing) {
-      setEditAttachments([...editAttachments, ...newFiles]);
+      setEditAttachments([...editAttachments, ...files]);
     } else {
-      setNewAttachments([...newAttachments, ...newFiles]);
+      setNewAttachments([...newAttachments, ...files]);
     }
 
     e.target.value = '';
@@ -167,16 +202,16 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
     </div>
   );
 
-  if (addCommentLoading || getUserLoading) return <Skeleton />
-
   return (
     <div className="w-full space-y-6 mt-3">
       <form onSubmit={handleSubmit} className="space-y-2">
         <h4 className="font-bold">Comments</h4>
+
         <div className="relative flex items-start gap-3 w-full">
+          {(addCommentLoading || getUserLoading) && <Spinner className="absolute inset-0" />}
           <Avatar className="w-8 h-8">
-            <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" />
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarImage src={user?.profileImage} />
+            <AvatarFallback>{user?.name}</AvatarFallback>
           </Avatar>
           <div className="flex-1 relative">
             <Input
@@ -222,15 +257,15 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
       <div className="space-y-6">
         {comments.map((comment) => (
           <div
-            key={comment.id}
+            key={comment._id}
             className="flex gap-3 group"
           >
             <Avatar className="w-8 h-8">
-              <AvatarImage src={comment?.author?.avatar} />
-              <AvatarFallback>{comment?.author?.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={comment?.userInfo?.url} />
+              <AvatarFallback>{comment?.userInfo?.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              {editingId === comment.id ? (
+              {editingId === comment._id ? (
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <Input
@@ -238,7 +273,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                       onChange={(e) => setEditContent(e.target.value)}
                       className="flex-1"
                     />
-                    <Button onClick={() => handleUpdate(comment.id)}>Save</Button>
+                    <Button onClick={() => handleUpdate(comment._id)}>Save</Button>
                     <Button
                       variant="outline"
                       onClick={() => {
@@ -281,7 +316,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                 <>
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-medium text-sm">{comment.author?.name}</p>
+                      <p className="font-medium text-sm">{comment.userInfo?.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {comment.createdAt}
                       </p>
@@ -299,14 +334,14 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive"
-                        onClick={() => handleDelete(comment.id)}
+                        onClick={() => handleDelete(comment._id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                   <p className="mt-1 text-sm">{comment.comment_body}</p>
-                  {comment.attachments.length > 0 && (
+                  {comment.attachments?.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {comment.attachments.map((file, index) => (
                         file.type.startsWith('image/') ? (

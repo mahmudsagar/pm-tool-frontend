@@ -10,13 +10,14 @@ const useSyncStore = () => {
   const [, setWorker] = useState(null);
   const [clientId, setClientId] = useState(null); // unique id for each tab opened in the browser
 
-  const { viewData, setViewData, count, increment, decrement } = useStore(
+  const { viewData, setViewData, count, increment, decrement, user } = useStore(
     (state) => ({
       viewData: state.viewData,
       setViewData: state.setViewData,
       count: state.count,
       increment: state.increment,
-      decrement: state.decrement
+      decrement: state.decrement,
+      user: state.user
     }),
     shallow
   );
@@ -33,7 +34,7 @@ const useSyncStore = () => {
     const handleStateChange = (state) => {
       syncWorker.postMessage({
         type: 'BetterNotionStorage',
-        state: { viewData: state.viewData, count: state.count },
+        state: { viewData: state.viewData, count: state.count, user: state.user },
         clientId: id,
       });
     };
@@ -80,7 +81,7 @@ const useSyncStore = () => {
     };
   }, []);
 
-  return { clientId, viewData, setViewData, count, increment, decrement };
+  return { clientId, viewData, setViewData, count, increment, decrement, user };
 };
 
 export default useSyncStore;
