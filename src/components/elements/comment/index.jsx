@@ -21,6 +21,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   const { loading: addCommentLoading, callApi: fetchComments } = useApi();
   const { callApi: deleteComment } = useApi();
   const [currentDeletingId, setCurrentDeletingId] = useState(null);
+  const [currentMediaDeletingId, setCurrentMediaDeletingId] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
   const fileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
@@ -121,7 +122,6 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   };
 
   const handleFileChange = async (e, isEditing = false) => {
-    console.log('ta', e.target.value, e.target.files)
     const files = Array.from(e.target.files || []);
     // const newFiles = await Promise.all(files.map(async (file) => {
 
@@ -158,7 +158,13 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
       if (attachment.url) {
         URL.revokeObjectURL(attachment.url);
       }
-      setEditAttachments(editAttachments.filter((_, i) => i !== index));
+      setCurrentMediaDeletingId(attachment._id);
+      deleteComment(`${mediaBaseUrl}?id=${attachment._id}&reference_for=comment` , {
+        method: 'DELETE',
+      }, () => {
+        setCurrentMediaDeletingId(null);
+        setEditAttachments(editAttachments.filter((_, i) => i !== index));
+      });
     } else {
       const attachment = newAttachments[index];
       if (attachment.url) {
@@ -182,6 +188,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
         attachments.map((file, index) => (
           isImage(file) ? (
             <div key={index} className="relative group">
+              {currentMediaDeletingId === file._id && <Spinner className="absolute inset-0" loadingText={false} />}
               <img
                 src={file instanceof File ? URL.createObjectURL(file) : file.url}
                 alt={file.name}
