@@ -10,6 +10,7 @@ import useSyncStore from '@/stores/useSyncStore';
 import Spinner from '../spinner';
 import { sanitize } from '@/utils/helper';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import dayjs from 'dayjs';
 
 export default function CommentSection({ user_id, page_id, comments: initialComments }) {
   const [comments, setComments] = useState(initialComments || []);
@@ -18,11 +19,12 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
   const [editAttachments, setEditAttachments] = useState([]);
-  const { loading: addCommentLoading, callApi: fetchComments } = useApi();
+  const { callApi: fetchComments } = useApi();
   const { callApi: deleteComment } = useApi();
   const [currentDeletingId, setCurrentDeletingId] = useState(null);
   const [currentMediaDeletingId, setCurrentMediaDeletingId] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
 
@@ -48,6 +50,9 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   }
 
   const saveComment = ({ method = 'POST', commentBaseUrl, mediaBaseUrl, commentBody, attachments }) => {
+    if (method === 'PUT') setEditLoading(true);
+    else setLoading(true);
+
     fetchComments(commentBaseUrl, {
       method,
       body: JSON.stringify(commentBody),
@@ -56,6 +61,8 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
 
       if (attachments.length === 0) {
         setComments([...comments, sanitize(response)]);
+        setLoading(false);
+        setEditLoading(false);
         return;
       }
 
@@ -73,6 +80,8 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
         method,
         body: formData,
       }, (mediaResponse) => {
+        setLoading(false);
+        setEditLoading(false);
         const newComment = response;
         newComment.mediaAttachments = Array.isArray(mediaResponse) ? mediaResponse : [mediaResponse];
         setComments([...comments, sanitize(response)]);
@@ -84,7 +93,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   const handleEdit = (comment) => {
     setEditingId(comment._id);
     setEditContent(comment.comment_body);
-    setEditAttachments([...comment.mediaAttachments]);
+    setEditAttachments([...sanitize(comment.mediaAttachments, 'array')]);
   };
 
   const handleDelete = (id) => {
@@ -100,6 +109,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   const handleUpdate = (id) => {
     if (!editContent.trim() && editAttachments.length === 0) return;
 
+    setEditLoading(true);
     fetchComments(`${commentBaseUrl}`, {
       method: 'PUT',
       body: JSON.stringify({
@@ -109,16 +119,15 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
         user_id
       }),
     }, (response) => {
+      setEditLoading(false);  
+      setEditingId(null);
+      setEditAttachments([]);
       setComments(comments.map(comment =>
         comment._id === id
           ? { ...comment, ...sanitize(response) }
           : comment
       ));
     });
-
-
-    setEditingId(null);
-    setEditAttachments([]);
   };
 
   const handleFileChange = async (e, isEditing = false) => {
@@ -159,7 +168,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
         URL.revokeObjectURL(attachment.url);
       }
       setCurrentMediaDeletingId(attachment._id);
-      deleteComment(`${mediaBaseUrl}?id=${attachment._id}&reference_for=comment` , {
+      deleteComment(`${mediaBaseUrl}?id=${attachment._id}&reference_for=comment`, {
         method: 'DELETE',
       }, () => {
         setCurrentMediaDeletingId(null);
@@ -233,7 +242,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
       <form onSubmit={handleSubmit} className="space-y-2">
         <h4 className="font-bold">Comments</h4>
         <div className="relative">
-          {addCommentLoading && <Spinner className="absolute inset-0" />}
+          {loading && <Spinner className="absolute inset-0" />}
           <div className="relative flex items-start gap-3 w-full">
             <Avatar className="w-8 h-8">
               <AvatarImage src={user?.profileImage} />
@@ -305,50 +314,62 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                 <div className="flex-1">
                   {editingId === comment._id ? (
                     <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button onClick={() => handleUpdate(comment._id)}>Save</Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setEditingId(null);
-                            setEditAttachments([]);
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          ref={editFileInputRef}
-                          type="file"
-                          className="hidden"
-                          multiple
-                          onChange={(e) => handleFileChange(e, true)}
-                          accept="image/*,.pdf,.doc,.docx,.txt"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => handleAttachmentClick(true)}
-                        >
-                          <Paperclip className="h-4 w-4" />
-                          Add files
-                        </Button>
-                      </div>
-                      {editAttachments.length > 0 && (
-                        <AttachmentList
-                          attachments={editAttachments}
-                          onRemove={(index) => removeAttachment(index, true)}
-                          isEditing
-                        />
-                      )}
+                      {editLoading ?
+                        <div className="flex items-center space-x-4">
+                          <Skeleton className="h-12 w-12 rounded-full" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-[250px]" />
+                            <Skeleton className="h-4 w-[200px]" />
+                          </div>
+                        </div>
+                        :
+                        <>
+                          <div className="flex gap-2">
+                            <Input
+                              value={editContent}
+                              onChange={(e) => setEditContent(e.target.value)}
+                              className="flex-1"
+                            />
+                            <Button onClick={() => handleUpdate(comment._id)}>Save</Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setEditingId(null);
+                                setEditAttachments([]);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              ref={editFileInputRef}
+                              type="file"
+                              className="hidden"
+                              multiple
+                              onChange={(e) => handleFileChange(e, true)}
+                              accept="image/*,.pdf,.doc,.docx,.txt"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => handleAttachmentClick(true)}
+                            >
+                              <Paperclip className="h-4 w-4" />
+                              Add files
+                            </Button>
+                          </div>
+                          {editAttachments.length > 0 && (
+                            <AttachmentList
+                              attachments={editAttachments}
+                              onRemove={(index) => removeAttachment(index, true)}
+                              isEditing
+                            />
+                          )}
+                        </>}
+
                     </div>
                   ) : (
 
@@ -357,7 +378,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                         <div>
                           <p className="font-medium text-sm">{comment.userInfo?.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {comment.createdAt}
+                            {dayjs(comment.createdAt).isValid() ? dayjs(comment.createdAt).format('MMM D, YYYY h:mm A') : ''}
                           </p>
                         </div>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
