@@ -111,7 +111,6 @@ export default function Editor({ title, content, page_id, user_id, custom_meta, 
   }, [isSmallWidthViewport]);
 
   const coverImageUploadHandler = (files) => {
-    console.log(files)
     const file = files[0];
     const formData = new FormData()
     formData.append('media_type', 'cover_photo')

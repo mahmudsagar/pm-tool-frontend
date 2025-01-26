@@ -11,6 +11,7 @@ import Spinner from '../spinner';
 import { sanitize } from '@/utils/helper';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import dayjs from 'dayjs';
+import ButtonLoading from '@/layouts/elements/components/ButtonLoading';
 
 export default function CommentSection({ user_id, page_id, comments: initialComments }) {
   const [comments, setComments] = useState(initialComments || []);
@@ -56,35 +57,63 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
     fetchComments(commentBaseUrl, {
       method,
       body: JSON.stringify(commentBody),
-    }, (response) => {
+    }, (commentResponse) => {
       setNewComment('');
-
       if (attachments.length === 0) {
-        setComments([...comments, sanitize(response)]);
+
+        if (method === 'PUT') {
+          setComments(comments.map(comment =>
+            comment._id === commentResponse?._id
+              ? { ...comment, ...sanitize(commentResponse) }
+              : comment
+          ));
+        }
+        else {
+          setComments([...comments, sanitize(commentResponse)]);
+        }
         setLoading(false);
-        setEditLoading(false);
+        if (method === 'PUT') {
+          setEditLoading(false);
+          setEditingId(null);
+          setEditAttachments([]);
+        }
         return;
       }
 
       const formData = new FormData()
       formData.append('media_type', 'comment_attachment')
-      formData.append('reference_id', response?._id)
+      formData.append('reference_id', commentResponse?._id)
       formData.append('caption', ' ')
       formData.append('reference_for', 'comment')
 
       for (let i = 0; i < attachments.length; i++) {
-        formData.append('file', attachments[i])
+        if (attachments[i] instanceof File)
+          formData.append('file', attachments[i])
       }
 
       fetchComments(mediaBaseUrl, {
-        method,
+        method: 'POST',
         body: formData,
       }, (mediaResponse) => {
         setLoading(false);
-        setEditLoading(false);
-        const newComment = response;
+        if (method === 'PUT') {
+          setEditLoading(false);
+          setEditingId(null);
+          setEditAttachments([]);
+        }
+        const newComment = commentResponse;
         newComment.mediaAttachments = Array.isArray(mediaResponse) ? mediaResponse : [mediaResponse];
-        setComments([...comments, sanitize(response)]);
+
+        if (method === 'PUT') {
+          setComments(comments.map(comment =>
+            comment._id === commentResponse?._id
+              ? { ...comment, ...sanitize(commentResponse) }
+              : comment
+          ));
+        }
+        else {
+          setComments([...comments, sanitize(commentResponse)]);
+        }
         setNewAttachments([]);
       });
     });
@@ -110,23 +139,18 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
     if (!editContent.trim() && editAttachments.length === 0) return;
 
     setEditLoading(true);
-    fetchComments(`${commentBaseUrl}`, {
+
+    saveComment({
       method: 'PUT',
-      body: JSON.stringify({
+      commentBaseUrl,
+      mediaBaseUrl,
+      commentBody: {
         id,
         comment_body: editContent,
         page_id,
         user_id
-      }),
-    }, (response) => {
-      setEditLoading(false);  
-      setEditingId(null);
-      setEditAttachments([]);
-      setComments(comments.map(comment =>
-        comment._id === id
-          ? { ...comment, ...sanitize(response) }
-          : comment
-      ));
+      },
+      attachments: editAttachments.filter(file => file instanceof File),
     });
   };
 
@@ -189,12 +213,18 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  const isImage = (file) => file.type?.startsWith('image/') || (file.url?.includes("jpg") || file.url?.includes("png"));
+  const isImage = (file) => {
+    if (!file) return false;
+    return file.type?.startsWith('image/') || 
+    (file.url?.includes("jpg") || 
+    file.url?.includes("png")) ||
+    file.url?.includes("jpeg");
+  }
 
-  const AttachmentList = ({ attachments, onRemove, isEditing = false }) => {
+  const AttachmentList = ({ attachments, onRemove }) => {
     return <div className="flex flex-wrap gap-2 mt-2" >
       {
-        attachments.map((file, index) => (
+        attachments.filter(Boolean).map((file, index) => (
           isImage(file) ? (
             <div key={index} className="relative group">
               {currentMediaDeletingId === file._id && <Spinner className="absolute inset-0" loadingText={false} />}
@@ -236,13 +266,11 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
       }
     </div>
   }
-  console.log('comments', comments)
   return (
     <div className="w-full space-y-6 mt-3">
       <form onSubmit={handleSubmit} className="space-y-2">
-        <h4 className="font-bold">Comments</h4>
+        <h4 className="font-bold">Comments ({comments?.length})</h4>
         <div className="relative">
-          {loading && <Spinner className="absolute inset-0" />}
           <div className="relative flex items-start gap-3 w-full">
             <Avatar className="w-8 h-8">
               <AvatarImage src={user?.profileImage} />
@@ -264,18 +292,23 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                   onChange={(e) => handleFileChange(e)}
                   accept="image/*,.pdf,.doc,.docx,.txt"
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => handleAttachmentClick()}
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-                <Button type="submit" size="icon" variant="ghost" className="h-8 w-8">
-                  <SendHorizonal className="h-4 w-4" />
-                </Button>
+                {loading ? <ButtonLoading />
+                  :
+                  <>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleAttachmentClick()}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                    <Button type="submit" size="icon" variant="ghost" className="h-8 w-8">
+                      <SendHorizonal className="h-4 w-4" />
+                    </Button>
+                  </>
+                }
               </div>
             </div>
           </div>
@@ -421,7 +454,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                       <p className="mt-1 text-sm">{comment.comment_body}</p>
                       {comment.mediaAttachments?.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
-                          {comment.mediaAttachments.map((file, index) => (
+                          {comment.mediaAttachments.filter(Boolean).map((file, index) => (
                             isImage(file) ? (
                               <div key={index} className="relative">
                                 <img
