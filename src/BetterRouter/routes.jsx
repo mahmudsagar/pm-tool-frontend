@@ -4,6 +4,7 @@ import Check from "@/pages/Check";
 import FileManager from "@/pages/FileManager";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
+import Data from "@/pages/Data";
 import NotFound from "./NotFound";
 import Page from "@/pages";
 
@@ -15,6 +16,10 @@ export const routes = [
       {
         path: '/',
         element: <Home />
+      },
+      {
+        path: '/data',
+        element: <Data />
       },
       {
         path: '/check',
