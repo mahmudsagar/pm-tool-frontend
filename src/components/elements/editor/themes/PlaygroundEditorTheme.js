@@ -6,7 +6,7 @@
  *
  */
 
-import './PlaygroundEditorTheme.css';
+import './PlaygroundEditorTheme.scss';
 
 const PlaygroundEditorTheme = {
   autocomplete: 'PlaygroundEditorTheme__autocomplete',

@@ -16,7 +16,7 @@ const InputNumber = ({ ...props }) => {
   return <Input type="number" {...props} />;
 };
 
-const SelectField = ({ options, onChange,value, ...props }) => {
+const SelectField = ({ options, onChange, value, ...props }) => {
   return <Select onValueChange={onChange} value={value}>
     <SelectTrigger {...props}>
       <SelectValue />
@@ -52,7 +52,7 @@ const fields = {
   daterange: DatePickerWithRange
 }
 
-const Field = ({ field, control, onChange,handleFormChange }) => {
+const Field = ({ field, control, onChange, handleFormChange }) => {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState(field.label);
   const [actionType, setActionType] = useState('edit');
@@ -69,7 +69,7 @@ const Field = ({ field, control, onChange,handleFormChange }) => {
       setOpen(true);
     }
   }, [])
-  
+
   return <tr className=''>
     <td className='w-[150px]'>
       <DropdownMenu open={open} onOpenChange={state => {
@@ -179,13 +179,16 @@ const Field = ({ field, control, onChange,handleFormChange }) => {
       <FormField
         control={control}
         name={field.name}
-        render={({ field: formField }) => (
-          <FormItem>
+        render={({ field: formField }) => {
+          if (['date', 'daterange', 'multiSelect'].includes(field.type)) {
+            formField.handleFormChange = handleFormChange;
+          }
+          return <FormItem>
             <FormControl>
-              <Component className="outline-none w-full h-8" {...passableProps} {...formField} handleFormChange={handleFormChange} />
+              <Component className="outline-none w-full h-8" {...passableProps} {...formField} />
             </FormControl>
           </FormItem>
-        )}
+        }}
       />
     </td>
   </tr>
@@ -262,7 +265,6 @@ const DynamicInput = ({ initialData, onChange }) => {
   const handleFormChange = debounce(() => {
     const values = form.getValues();
 
-    console.log('form values', values);
     const fields = customFields.map(({ ...rest }) => ({ ...rest }));
     onChange({ values, fields });
   }, 1000);

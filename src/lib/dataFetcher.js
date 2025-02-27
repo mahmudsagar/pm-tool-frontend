@@ -8,6 +8,7 @@ const useApi = () => {
   const callApi = useCallback(async (url, config = {}, onSuccess) => {
     setLoading(true);
     setError(null);
+    let tempData = null;
     try {
       const response = await fetch(url, config);
       if (!response.ok) {
@@ -15,12 +16,13 @@ const useApi = () => {
       }
       const result = await response.json();
       setData(result.data);
+      tempData = result.data;
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
       if (onSuccess) {
-        onSuccess();
+        onSuccess(tempData);
       }
     }
   }, []);

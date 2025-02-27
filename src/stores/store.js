@@ -16,6 +16,12 @@ const useStore = create(subscribeWithSelector((set) => ({
   increment: () => set((state) => ({ count: state.count + 1 })),
   decrement: () => set((state) => ({ count: state.count - 1 })),
 
+  user: {
+    name: 'John Doe',
+    profileImage: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face",
+  },
+  setUser: (newUser) => set({ user: newUser }),
+
   /** later organize with slices */
 
   currentRoute: {},
