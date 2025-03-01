@@ -29,10 +29,10 @@ const Home = () => {
     formatSpaces, 
     privateSpaces, 
   } = useFileManagerStore(state => state);
-
+  const userId = '66cda5dac6886719e3345c19';
   useEffect(() => {
     if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
-      spaceCallApi(baseUrl + '/v1/space?user_id=' + userID);
+      spaceCallApi(baseUrl + '/v1/space?user_id=' + userId);
       userCallApi(baseUrl + '/v1/user');
     }
   }, [ spaceCallApi, publicSpaces, privateSpaces]);
