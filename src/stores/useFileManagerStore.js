@@ -209,7 +209,9 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       }[child.page_type] || FileText;
 
       const fileName = child.entity_type === 'folder' || child.entity_type === 'group' ? child.name : child.title;
-      const modifiedUser = (get().users || []).filter(user => user._id === child.user_id) || 'Unknown User';
+      const usersArr = Array.isArray(get().users) ? get().users : [];
+      const user = usersArr.find(user => user._id === child.user_id);
+      const modifiedUserName = user ? user.full_name : 'Unknown User';
 
       return {
         id: child._id,
@@ -217,7 +219,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         icon: fileIcon,
         name: fileName,
         modified: formatTime(child.updatedAt),
-        modifiedBy: modifiedUser[0].full_name,
+        modifiedBy: modifiedUserName,
         sharing: child.is_private ? 'Private' : 'Public',
       };
     });
