@@ -3,7 +3,7 @@ import useFileManagerStore from "@/stores/useFileManagerStore";
 import MenuItemSpace from "./components/MenuItemSpace";
 import MenuLoading from "./components/MenuLoading";
 
-const SidebarMenuItems = ({ className, setOpen }) => {
+const SidebarMenuItems = ({ className }) => {
   const { publicSpaces, privateSpaces } = useFileManagerStore(state => state);   
 
   return (

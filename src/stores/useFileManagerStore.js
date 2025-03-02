@@ -17,6 +17,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   spaceFiles: null,
   publicSpaces: null,
   privateSpaces: null,
+  space: null,
 
   error: null,
 

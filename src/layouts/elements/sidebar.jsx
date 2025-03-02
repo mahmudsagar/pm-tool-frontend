@@ -13,12 +13,36 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
+import useApi from "@/lib/dataFetcher";
+import { baseUrl, userID } from '@/utils/constants';
+import useFileManagerStore from "@/stores/useFileManagerStore";
 
 
 export default function Sidebar({ className }) {
   const { isOpen, toggle } = useSidebar();
   const [status, setStatus] = useState(false);  
+  const { data: users, callApi: userCallApi } = useApi();
+  const { loading: spaceLoading, data: spaces, callApi: spaceCallApi } = useApi();
   
+  const { 
+    storeState, 
+    spaceFiles, 
+    publicSpaces, 
+    formatSpaces, 
+    privateSpaces, 
+  } = useFileManagerStore(state => state);
+  useEffect(() => {
+    if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
+      spaceCallApi(baseUrl + '/v1/space?user_id=' + userID);
+      userCallApi(baseUrl + '/v1/user');
+    }
+  }, [ spaceCallApi, publicSpaces, privateSpaces]);
+  useEffect(() => {
+    if (spaces) {      
+      storeState('users', users);
+      formatSpaces(spaces);
+    }
+  }, [ spaces, formatSpaces ]);  
   const handleToggle = () => {
     setStatus(true);
     toggle();

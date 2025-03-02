@@ -55,6 +55,7 @@ const AddFileDialog = ({ id, type }) => {
   
   useEffect(() => {    
     document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
+    const userID = '66cda5dac6886719e3345c19';
 
     if (isOpen) {
       (async () => {
@@ -247,12 +248,13 @@ const AddFileDialog = ({ id, type }) => {
                   <FormItem className='w-full'>
                     <FormLabel>Shared Member</FormLabel>
                     <MultiSelect
-                      options={users?.map(user => ({ value: user._id, label: user.full_name })) || []}
+                      options={Array.isArray(users) ? users.map(user => ({ value: user._id, label: user.full_name })) : []}                      
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select frameworks"
                       variant="inverted"
                       animation={2}
                       maxCount={3}
+                      handleFormChange={field.onChange}
                     />
                   </FormItem>
                 )}
@@ -270,6 +272,7 @@ const AddFileDialog = ({ id, type }) => {
                       variant="inverted"
                       animation={2}
                       maxCount={3}
+                      handleFormChange={field.onChange}
                     />
                   </FormItem>
                 )}
