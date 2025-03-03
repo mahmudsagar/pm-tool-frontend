@@ -17,7 +17,8 @@ const pageType = {
 }
 const Page = () => {
   const { loading, data, callApi, error } = useApi();
-  const [, setTopMenu] = useOutletContext();
+  const context = useOutletContext();
+  const [, setTopMenu] = context || ['', () => { }];
   const { pathname } = useLocation()
   const { id } = useParams();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
