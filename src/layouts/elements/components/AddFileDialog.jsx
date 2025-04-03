@@ -5,7 +5,7 @@ import useApi from '@/lib/dataFetcher';
 import { Input } from "@/components/ui/input";
 import { Label } from '@/components/ui/label';
 import { Button } from "@/components/ui/button";
-import { baseUrl, userID } from '@/utils/constants';
+import { baseUrl } from '@/utils/constants';
 import { MultiSelect } from '@/components/ui/multi-select';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -33,6 +33,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import ButtonLoading from './ButtonLoading';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AddFileDialog = ({ id, type }) => {  
   const [isOpen, setIsOpen] = useState(false);
@@ -53,9 +54,11 @@ const AddFileDialog = ({ id, type }) => {
     }
   });
   
+  const { user } = useAuth();
+
+  const userID = user.id;
   useEffect(() => {    
     document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
-    const userID = '66cda5dac6886719e3345c19';
 
     if (isOpen) {
       (async () => {
@@ -111,13 +114,19 @@ const AddFileDialog = ({ id, type }) => {
     }    
 
     try {
+      
       await fetch(baseUrl + endpoint, {
         method: 'POST',
         body: JSON.stringify(newDocumentData),
       })
       .then( res => res.json())
-      .then(async ()=>{
-        await storeHandler(id, type, newDocumentData);
+      .then(async (res)=>{
+        if (res.error) {
+          console.error("Error creating document: ", res.error);
+          setLoading(false)
+          return;
+        }        
+        await storeHandler(id, type, res.data);
         setLoading(false)
         setIsOpen(false);
         form.reset();  
@@ -222,7 +231,7 @@ const AddFileDialog = ({ id, type }) => {
                           render={({ field }) => (
                             <Select
                               onValueChange={(value) => field.onChange(value)}
-                              value={field.value}
+                              value={field.value || 'document'}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="File Format" />

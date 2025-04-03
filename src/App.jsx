@@ -3,6 +3,8 @@ import useStore from './stores/store';
 import BetterRouter from './BetterRouter';
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from './components/ui/toaster';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 const App = () => {
   const { pathname, search, href } = window.location;
@@ -26,10 +28,12 @@ const App = () => {
     }
   }, [href, pathname, search]);
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <BetterRouter />
-      <Toaster />
-    </ThemeProvider>
+    // <AuthProvider>
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+          <BetterRouter />
+        <Toaster />
+      </ThemeProvider>
+    // </AuthProvider>
   );
 };
 

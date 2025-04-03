@@ -9,7 +9,7 @@ import {
   FileSpreadsheet,
 } from 'lucide-react';
 
-const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
+const API_BASE_URL = import.meta.env.BN_BASE_URL + '/v1';
 
 const useFileManagerStore = createWithEqualityFn((set, get) => ({
   users: null,

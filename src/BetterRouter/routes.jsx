@@ -6,11 +6,15 @@ import Form from "@/pages/Form";
 import Home from "@/pages/Home";
 import NotFound from "./NotFound";
 import Page from "@/pages";
+import { LoginForm } from "@/components/auth/LoginForm";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export const routes = [
   {
     path: '/',
-    element: <Default />, /** layout element */
+    element: <ProtectedRoute>
+      <Default />
+    </ProtectedRoute>, /** layout element */
     children: [
       {
         path: '/',
@@ -69,7 +73,10 @@ export const routes = [
       },
     ]
   },
-
+  {
+    path: '/login',
+    element: <LoginForm />
+  },
   {
     path: "*",
     element: <NotFound />
