@@ -16,7 +16,7 @@ import useApi from '@/lib/dataFetcher';
 import NotFound from '@/BetterRouter/NotFound';
 import { baseUrl } from '@/utils/constants';
 
-const Delete = ({ fileId, fileType, onToggle }) => {
+const Delete = ({ fileId, fileType, onToggle, onSuccess, wrapperClassName = "" }) => {
   const { callApi, error } = useApi();
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -44,9 +44,15 @@ const Delete = ({ fileId, fileType, onToggle }) => {
 
     try {
       await callApi(baseUrl + endPoint, { method: 'DELETE', });
+      // Update the store
       deleteHandler(fileId, fileType); 
       setLoading(false); 
       setIsDialogOpen(false);
+      
+      // Call the success callback if provided
+      if (typeof onSuccess === 'function') {
+        onSuccess(fileId, fileType);
+      }
     } catch (error) {
       setLoading(false); 
       console.error("Error deleting data: ", error);
@@ -65,7 +71,7 @@ const Delete = ({ fileId, fileType, onToggle }) => {
   return (
     <>
       <DropdownMenuItem
-        className="cursor-pointer flex items-center gap-2"
+        className={`cursor-pointer flex items-center gap-2 ${wrapperClassName}`}
         onClick={handleDeleteClick}
       >
         <Trash2 className="w-4 h-4" />
@@ -77,7 +83,7 @@ const Delete = ({ fileId, fileType, onToggle }) => {
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this folder? This action cannot be undone.
+              Are you sure you want to delete this {fileType}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end space-x-2">

@@ -35,19 +35,26 @@ import {
 import ButtonLoading from './ButtonLoading';
 import { useAuth } from '@/contexts/AuthContext';
 
-const AddFileDialog = ({ id, type }) => {  
-  const [isOpen, setIsOpen] = useState(false);
+const AddFileDialog = ({ 
+  id, 
+  type, 
+  isEdit = false, 
+  initialName = '', 
+  isOpen, 
+  setIsOpen,
+  onEditSuccess 
+}) => {  
   const [isFile, setIsFile] = useState('page');
   const [loading, setLoading] = useState(false); // Submitting Data loading
   const { data: users, callApi:userCallApi } = useApi();
   const { data: teams, callApi:teamCallApi } = useApi();
   
-  const { storeHandler } = useFileManagerStore(state => state);
+  const { storeHandler, updateHandler } = useFileManagerStore(state => state);
   
   const form = useForm({
     defaultValues: {
-      title: '',
-      filetype: 'page',
+      title: isEdit ? initialName : '',
+      filetype: type || 'page',
       page_type: '',
       shared_members: [],
       shared_teams: []
@@ -56,7 +63,7 @@ const AddFileDialog = ({ id, type }) => {
   
   const { user } = useAuth();
 
-  const userID = user.id;
+  const userID = user?.id;
   useEffect(() => {    
     document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
 
@@ -74,12 +81,18 @@ const AddFileDialog = ({ id, type }) => {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    let endpoint, newDocumentData;
+    let endpoint, documentData, method;
+
+    // Set method based on whether we're editing or creating
+    method = isEdit ? 'PUT' : 'POST';
 
     if (data.filetype === "page") {
       endpoint = "/v1/page/document";
-      newDocumentData = {
-        user_id: "66cda5dac6886719e3345c19",
+      documentData = isEdit ? {
+        id: id,
+        title: data.title,
+      } : {
+        user_id: userID || "66cda5dac6886719e3345c19",
         title: data.title,
         page_type: data.page_type,
         entity_type: data.filetype,
@@ -87,7 +100,7 @@ const AddFileDialog = ({ id, type }) => {
           text: "This is the document content"
         },
         summary: "This is the document summary",
-        last_updated_by: "66cda5dac6886719e3345c19",
+        last_updated_by: userID || "66cda5dac6886719e3345c19",
         custom_meta: {
           author: "John Doe",
           keywords: ["sample", "page", "meta"]
@@ -99,106 +112,138 @@ const AddFileDialog = ({ id, type }) => {
       };
     } else if (data.filetype === "folder" || data.filetype === "group") {
       endpoint = data.filetype === "folder" ? "/v1/folder" : "/v1/group";
-      newDocumentData = {
-        user_id: "66cda5dac6886719e3345c19",
-        entity_type: data.filetype,
-        name: data.title,
-        shared_members: data.shared_members,
-        shared_teams: data.shared_teams,
-        folder_id: type === "folder" ? id : '',
-        group_id: type === "group" ? id : '',
-        space_id: type === "space" ? id : '',
-      };
+      
+      if (isEdit) {
+        endpoint += `?id=${id}`;
+        documentData = {
+          name: data.title,
+          shared_members: data.shared_members,
+          shared_teams: data.shared_teams,
+        };
+      } else {
+        documentData = {
+          user_id: userID || "66cda5dac6886719e3345c19",
+          entity_type: data.filetype,
+          name: data.title,
+          shared_members: data.shared_members,
+          shared_teams: data.shared_teams,
+          folder_id: type === "folder" ? id : '',
+          group_id: type === "group" ? id : '',
+          space_id: type === "space" ? id : '',
+        };
+      }
     } else {
+      setLoading(false);
       return { error: "Invalid filetype specified" };
     }    
 
     try {
-      
       await fetch(baseUrl + endpoint, {
-        method: 'POST',
-        body: JSON.stringify(newDocumentData),
+        method: method,
+        body: JSON.stringify(documentData),
       })
-      .then( res => res.json())
-      .then(async (res)=>{
+      .then(res => res.json())
+      .then(async (res) => {
         if (res.error) {
-          console.error("Error creating document: ", res.error);
-          setLoading(false)
+          console.error("Error saving document: ", res.error);
+          setLoading(false);
           return;
         }        
-        await storeHandler(id, type, res.data);
-        setLoading(false)
+        
+        if (isEdit) {
+          // Update the store with edited data
+          await updateHandler(id, data.filetype, {
+            ...res.data,
+            // Ensure we have the correct name/title property
+            name: data.filetype === "page" ? undefined : data.title,
+            title: data.filetype === "page" ? data.title : undefined
+          });
+          
+          // Call the edit success callback if provided
+          if (onEditSuccess) {
+            onEditSuccess(res.data);
+          }
+        } else {
+          // For creation, use the existing storeHandler
+          await storeHandler(id, type, res.data);
+        }
+        
+        setLoading(false);
         setIsOpen(false);
         form.reset();  
-      }).catch((error)=>{
-        setLoading(false)
+      }).catch((error) => {
+        setLoading(false);
         console.error("Error fetching data: ", error);
       });
     } catch (error) {
-      setLoading(false)
+      setLoading(false);
       console.error("Error fetching data: ", error);
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="group hover:bg-slate-300 w-6 h-6"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsOpen(true);
-          }}
-        >
-          <Plus size={16} className="text-slate-500 hover:text-black dark:text-white dark:hover:text-black" />
-        </Button>
-      </DialogTrigger>
+      {!isEdit && (
+        <DialogTrigger>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="group hover:bg-slate-300 w-6 h-6"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(true);
+            }}
+          >
+            <Plus size={16} className="text-slate-500 hover:text-black dark:text-white dark:hover:text-black" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent onClick={(e) => e.stopPropagation()}>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>Create</DialogTitle>
+              <DialogTitle>{isEdit ? 'Edit' : 'Create'}</DialogTitle>
               <DialogDescription>
-                Please provide the necessary details to create.
+                Please provide the necessary details to {isEdit ? 'update' : 'create'}.
               </DialogDescription>
             </DialogHeader>
             <div className="py-3 w-full flex items-start flex-col gap-4">
-              <FormField
-                control={form.control}
-                name="filetype"
-                render={({ field }) => (
-                  <RadioGroup
-                    onValueChange={(value) => {                      
-                      field.onChange(value); // Update form value
-                      setIsFile(value);      // Update local state
-                    }}
-                    defaultValue={isFile}
-                    className="w-full"
-                  >
-                    <FormLabel>Type</FormLabel>
-                    <div className="flex items-center gap-3 mt-2">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="page" id="page" />
-                        <Label htmlFor="page" className="cursor-pointer">Page</Label>
-                      </div>
-                      { type === 'folder' || type !== 'group' && 
+              {!isEdit && (
+                <FormField
+                  control={form.control}
+                  name="filetype"
+                  render={({ field }) => (
+                    <RadioGroup
+                      onValueChange={(value) => {                      
+                        field.onChange(value); // Update form value
+                        setIsFile(value);      // Update local state
+                      }}
+                      defaultValue={isFile}
+                      className="w-full"
+                    >
+                      <FormLabel>Type</FormLabel>
+                      <div className="flex items-center gap-3 mt-2">
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="group" id="group" />
-                          <Label htmlFor="group" className="cursor-pointer">Group</Label>
+                          <RadioGroupItem value="page" id="page" />
+                          <Label htmlFor="page" className="cursor-pointer">Page</Label>
                         </div>
-                      }
-                      { type !== 'folder' && 
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="folder" id="folder" />
-                          <Label htmlFor="folder" className="cursor-pointer">Folder</Label>
-                        </div> 
-                      }
-                    </div>
-                  </RadioGroup>
-                )}
-              />
+                        { type === 'folder' || type !== 'group' && 
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="group" id="group" />
+                            <Label htmlFor="group" className="cursor-pointer">Group</Label>
+                          </div>
+                        }
+                        { type !== 'folder' && 
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="folder" id="folder" />
+                            <Label htmlFor="folder" className="cursor-pointer">Folder</Label>
+                          </div> 
+                        }
+                      </div>
+                    </RadioGroup>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="title"
@@ -217,7 +262,7 @@ const AddFileDialog = ({ id, type }) => {
                   </FormItem>
                 )}
               />
-              {isFile === 'page' &&
+              {isFile === 'page' && !isEdit &&
                 <FormField
                   control={form.control}
                   name="page_type"
@@ -288,7 +333,12 @@ const AddFileDialog = ({ id, type }) => {
               />
             </div>
             <div className="flex justify-end space-x-2">
-              <Button type="submit">{loading ? <ButtonLoading text='Creating...' flex='row' btn={true} /> : "Create"}</Button>
+              <Button type="submit">
+                {loading ? 
+                  <ButtonLoading text={isEdit ? 'Updating...' : 'Creating...'} flex='row' btn={true} /> : 
+                  isEdit ? "Update" : "Create"
+                }
+              </Button>
             </div>
           </form>
         </Form>

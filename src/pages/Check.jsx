@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -13,6 +13,7 @@ const Check = () => {
   const [email, setEmail] = useState("");
   const [daysLeft, setDaysLeft] = useState(30);
   const [selectedDate, setSelectedDate] = useState(null);
+  const { toast } = useToast(); // Use the hook to get the toast function
   
   // Simple countdown effect
   useEffect(() => {

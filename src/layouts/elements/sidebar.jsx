@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
 import useApi from "@/lib/dataFetcher";
-import { baseUrl } from '@/utils/constants';
+import { baseUrl, userID } from '@/utils/constants';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -25,7 +25,6 @@ export default function Sidebar({ className }) {
   const { data: users, callApi: userCallApi } = useApi();
   const { loading: spaceLoading, data: spaces, callApi: spaceCallApi } = useApi();
   const { logout, user } = useAuth();
-  // console.log("Sidebar user", user);
 
   const {
     storeState,

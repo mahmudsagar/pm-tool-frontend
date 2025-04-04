@@ -32,17 +32,16 @@ const TableColumnsShare = ({ title }) => {
         </Button>
       </DialogTrigger>
       <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Sharing File ({title})</DialogTitle>
+          <DialogDescription className="pt-1">
+            Please select the users you want to share this file with.
+          </DialogDescription>
+        </DialogHeader>
         <form 
           onSubmit={handleSubmit(onSubmit)}
           onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
         >
-          <DialogHeader>
-            <DialogTitle>Sharing File ({title})</DialogTitle>
-            <DialogDescription className="pt-1">
-              Please select the users you want to share this file with.
-            </DialogDescription>
-          </DialogHeader>
-
           {/* Form Fields */}
           <div className="py-3">
             Multi Select input will be here

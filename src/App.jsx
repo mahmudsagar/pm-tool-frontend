@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import useStore from './stores/store';
 import BetterRouter from './BetterRouter';
 import { ThemeProvider } from './components/theme-provider';
-import { Toaster } from './components/ui/toaster';
+import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
@@ -28,12 +28,12 @@ const App = () => {
     }
   }, [href, pathname, search]);
   return (
-    // <AuthProvider>
+    <>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-          <BetterRouter />
+        <BetterRouter />
         <Toaster />
       </ThemeProvider>
-    // </AuthProvider>
+    </>
   );
 };
 
