@@ -25,7 +25,7 @@ export default function Sidebar({ className }) {
   const { data: users, callApi: userCallApi } = useApi();
   const { loading: spaceLoading, data: spaces, callApi: spaceCallApi } = useApi();
   const { logout, user } = useAuth();
-
+  
   const {
     storeState,
     spaceFiles,
@@ -35,7 +35,7 @@ export default function Sidebar({ className }) {
   } = useFileManagerStore(state => state);
   useEffect(() => {
     if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
-      spaceCallApi(baseUrl + '/v1/space?user_id=' + user.id);
+      spaceCallApi(baseUrl + '/v1/space?user_id=' + user._id);
       userCallApi(baseUrl + '/v1/user');
     }
   }, [spaceCallApi, publicSpaces, privateSpaces]);

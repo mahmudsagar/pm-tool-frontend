@@ -6,8 +6,11 @@ import Form from "@/pages/Form";
 import Home from "@/pages/Home";
 import NotFound from "./NotFound";
 import Page from "@/pages";
-import { LoginForm } from "@/components/auth/LoginForm";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import Teams from "@/pages/teams";
+import { LoginForm } from "@/components/auth/LoginForm";
+import CreateTeam from "@/pages/teams/Create";
+import TeamDetails from "@/pages/teams/TeamDetails";
 
 export const routes = [
   {
@@ -76,6 +79,22 @@ export const routes = [
   {
     path: '/login',
     element: <LoginForm />
+  },
+  {
+    path: '/my-teams',
+    element: <Teams />
+  },
+  {
+    path: '/teams/create',
+    element: <CreateTeam />
+  },
+  {
+    path: '/my-teams/:id',
+    element: <TeamDetails />
+  },
+  {
+    path: '/my-teams/edit/:id',
+    element: <CreateTeam />
   },
   {
     path: "*",

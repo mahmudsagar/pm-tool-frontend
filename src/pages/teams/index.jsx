@@ -1,0 +1,163 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { PlusIcon, Pencil, Trash2 } from 'lucide-react';
+import Link from '@/BetterRouter/Link';
+import useApi from '@/lib/dataFetcher';
+import { baseUrl } from '@/utils/constants';
+import { useAuth } from '@/contexts/AuthContext';
+
+export default function Teams() {
+  const navigate = useNavigate();
+  const [teams, setTeams] = useState([]);
+  const { loading: isLoading, error, callApi } = useApi();
+  const { user } = useAuth();
+  
+  useEffect(() => {
+    // Only fetch teams when user is loaded
+    if (user?._id) {
+      fetchTeams();
+    }
+  }, [user]);
+
+  const fetchTeams = () => {
+    callApi(baseUrl + `/v1/team?user_id=${user?._id}`, {}, (data) => {
+      // API returns array of teams in data property
+      setTeams(Array.isArray(data) ? data : []);
+    });
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this team?')) {
+      callApi(baseUrl + `/v1/team?id=${id}`, { method: 'DELETE' }, () => {
+        fetchTeams();
+      });
+    }
+  };
+
+  const renderEmptyState = () => (
+    <div className="text-center py-8">
+      <p className="text-muted-foreground mb-4">No teams found. Create your first team to get started.</p>
+      <Button onClick={() => navigate('/teams/create')}>
+        <PlusIcon className="mr-2 h-4 w-4" />
+        Create Team
+      </Button>
+    </div>
+  );
+
+  return (
+    <div className="container mx-auto py-8">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-2xl">Teams</CardTitle>
+            <CardDescription>Manage your organization's teams</CardDescription>
+          </div>
+          <Button onClick={() => navigate('/teams/create')}>
+            <PlusIcon className="mr-2 h-4 w-4" />
+            New Team
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Team Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Members</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center">
+                    Loading teams...
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          ) : error || teams.length === 0 ? (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Team Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Members</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      {error ? `Error: ${error}. Please try again or create a new team.` : 'No teams found.'}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+              {renderEmptyState()}
+            </>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Team Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Members</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {teams.map((team) => (
+                  <TableRow key={team._id}>
+                    <TableCell className="font-medium">
+                      <Link href={`/my-teams/${team._id}`} className="hover:underline">
+                        {team.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{team.description}</TableCell>
+                    <TableCell>{team.shared_members?.length || 0}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/my-teams/edit/${team._id}`)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(team._id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
