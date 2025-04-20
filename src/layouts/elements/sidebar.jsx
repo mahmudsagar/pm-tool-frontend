@@ -5,20 +5,46 @@ import { SidebarMenu } from "./SidebarMenu";
 import { useSidebar } from "@/stores/store";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
+import useApi from "@/lib/dataFetcher";
+import { baseUrl, userID } from '@/utils/constants';
+import useFileManagerStore from "@/stores/useFileManagerStore";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 export default function Sidebar({ className }) {
   const { isOpen, toggle } = useSidebar();
-  const [status, setStatus] = useState(false);  
-  
+  const [status, setStatus] = useState(false);
+  const { data: users, callApi: userCallApi } = useApi();
+  const { loading: spaceLoading, data: spaces, callApi: spaceCallApi } = useApi();
+  const { logout, user } = useAuth();
+
+  const {
+    storeState,
+    spaceFiles,
+    publicSpaces,
+    formatSpaces,
+    privateSpaces,
+  } = useFileManagerStore(state => state);
+  useEffect(() => {
+    if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
+      spaceCallApi(baseUrl + '/v1/space?user_id=' + user.id);
+      userCallApi(baseUrl + '/v1/user');
+    }
+  }, [spaceCallApi, publicSpaces, privateSpaces]);
+  useEffect(() => {
+    if (spaces) {
+      storeState('users', users);
+      formatSpaces(spaces);
+    }
+  }, [spaces, formatSpaces]);
   const handleToggle = () => {
     setStatus(true);
     toggle();
@@ -54,9 +80,9 @@ export default function Sidebar({ className }) {
                     <AvatarFallback>user</AvatarFallback>
                   </Avatar>
                 </div>
-                <div>
-                  <h5 className="text-xs font-semibold">User Name</h5>
-                  <span className="text-slate-600 dark:text-slate-100 text-xs">Chief Technology Officer</span>
+                <div className="flex flex-col justify-center">
+                  <h5 className="text-xs font-semibold">{user.email}</h5>
+                  {/* <span className="text-slate-600 dark:text-slate-100 text-xs">Chief Technology Officer</span> */}
                 </div>
               </div>
               <DropdownMenu>
@@ -69,6 +95,11 @@ export default function Sidebar({ className }) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem>
                     <Link href="/">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button variant="ghost" size="xs" onClick={logout}>
+                      Logout
+                    </Button>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

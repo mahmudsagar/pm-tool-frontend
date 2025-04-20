@@ -9,7 +9,7 @@ import {
   FileSpreadsheet,
 } from 'lucide-react';
 
-const API_BASE_URL = "https://better-notion-api-server.onrender.com/v1";
+const API_BASE_URL = import.meta.env.BN_BASE_URL + '/v1';
 
 const useFileManagerStore = createWithEqualityFn((set, get) => ({
   users: null,
@@ -17,6 +17,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   spaceFiles: null,
   publicSpaces: null,
   privateSpaces: null,
+  space: null,
 
   error: null,
 
@@ -33,7 +34,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       categorizedSpaces[target].push({ ...space, childs: space.childs.filter(item => item.pinned) });      
       return space.childs;
     }).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-  
+    
     set({
       spaceFiles: get().convertTableFormat(allChildFiles),
       privateSpaces: categorizedSpaces.privateSpaces,
@@ -170,32 +171,261 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     });
   },
 
+  // Update functionality for File, Folder, and Group
+  updateHandler: (id, type, updatedData) => {
+    set((state) => {
+      // Helper function to update an item in documents
+      const updateInDocuments = (documents) => {
+        const updatedDocuments = { ...documents };
+        
+        // Iterate through all documents to find and update the target
+        Object.keys(updatedDocuments).forEach((key) => {
+          updatedDocuments[key] = updatedDocuments[key].map((item) => {
+            if (item._id === id && item.entity_type === type) {
+              // For pages we update the title, for folders/groups we update the name
+              const updatedItem = { ...item };
+              if (type === 'page' && updatedData.title) {
+                updatedItem.title = updatedData.title;
+              } else if ((type === 'folder' || type === 'group') && updatedData.name) {
+                updatedItem.name = updatedData.name;
+              }
+              // Update any other fields that might have changed
+              return { ...updatedItem, ...updatedData };
+            }
+            return item;
+          });
+          
+          // Also check child items
+          updatedDocuments[key] = updatedDocuments[key].map((item) => {
+            if (item.childs && Array.isArray(item.childs)) {
+              return {
+                ...item,
+                childs: item.childs.map(child => {
+                  if (child._id === id && child.entity_type === type) {
+                    const updatedChild = { ...child };
+                    if (type === 'page' && updatedData.title) {
+                      updatedChild.title = updatedData.title;
+                    } else if ((type === 'folder' || type === 'group') && updatedData.name) {
+                      updatedChild.name = updatedData.name;
+                    }
+                    return { ...updatedChild, ...updatedData };
+                  }
+                  return child;
+                })
+              };
+            }
+            return item;
+          });
+        });
+        
+        return updatedDocuments;
+      };
+      
+      // Helper function to update items in spaces
+      const updateInSpaces = (spaces) => {
+        return spaces.map(space => {
+          // Check if this space has the item directly
+          if (space._id === id && space.entity_type === type) {
+            return { ...space, ...updatedData };
+          }
+          
+          // Check for the item in child elements
+          if (space.childs && Array.isArray(space.childs)) {
+            return {
+              ...space,
+              childs: space.childs.map(child => {
+                if (child._id === id && child.entity_type === type) {
+                  const updatedChild = { ...child };
+                  if (type === 'page' && updatedData.title) {
+                    updatedChild.title = updatedData.title;
+                  } else if ((type === 'folder' || type === 'group') && updatedData.name) {
+                    updatedChild.name = updatedData.name;
+                  }
+                  return { ...updatedChild, ...updatedData };
+                }
+                return child;
+              })
+            };
+          }
+          
+          return space;
+        });
+      };
+      
+      // Update documents, publicSpaces, and privateSpaces
+      const updatedDocuments = updateInDocuments(state.documents);
+      const updatedPublicSpaces = updateInSpaces(state.publicSpaces);
+      const updatedPrivateSpaces = updateInSpaces(state.privateSpaces);
+      
+      // Also update spaceFiles if it exists and is an array
+      let updatedSpaceFiles = state.spaceFiles;
+      if (Array.isArray(updatedSpaceFiles)) {
+        updatedSpaceFiles = updatedSpaceFiles.map(file => {
+          if (file.id === id && file.type === type) {
+            // Update the visible name in the file table
+            const nameKey = type === 'page' ? 'title' : 'name';
+            return { 
+              ...file,
+              name: updatedData[nameKey] || file.name,
+              modified: formatTime(new Date())
+            };
+          }
+          return file;
+        });
+      }
+      
+      return {
+        documents: updatedDocuments,
+        publicSpaces: updatedPublicSpaces,
+        privateSpaces: updatedPrivateSpaces,
+        spaceFiles: updatedSpaceFiles
+      };
+    });
+  },
+
+  // Toggle pin status for an item
+  togglePinStatus: async (id, type, isPinned) => {
+    try {
+      let endpoint;
+      
+      if (type === "page") {
+        endpoint = `/page/document?id=${id}`;
+      } else if (type === "folder") {
+        endpoint = `/folder?id=${id}`;
+      } else if (type === "group") {
+        endpoint = `/group?id=${id}`;
+      } else {
+        return { error: "Invalid filetype specified" };
+      }
+      
+      const { data, error } = await get().apiRequest(
+        `${API_BASE_URL}${endpoint}`,
+        'PUT',
+        { id, 
+          entity_type: type,
+          pinned: isPinned 
+        }
+      );
+      
+      if (error) {
+        return { error };
+      }
+      
+      // Update the store with the new pinned status
+      set((state) => {
+        // Helper function to update pin status in any collection
+        const updatePinStatus = (items) => {
+          if (!Array.isArray(items)) return items;
+          
+          return items.map(item => {
+            // If this is the target item, update its pin status
+            if (item._id === id && item.entity_type === type) {
+              return { ...item, pinned: isPinned };
+            }
+            
+            // Also check in childs if they exist
+            if (item.childs && Array.isArray(item.childs)) {
+              const updatedChilds = item.childs.map(child => {
+                if (child._id === id && child.entity_type === type) {
+                  return { ...child, pinned: isPinned };
+                }
+                return child;
+              });
+              
+              // If we're pinning an item, make sure it's in the parent's childs list
+              if (isPinned && !updatedChilds.some(child => child._id === id && child.entity_type === type)) {
+                // Try to find the item in spaceFiles to add it to the pinned items
+                const itemToPin = state.spaceFiles?.find(file => file.id === id && file.type === type);
+                if (itemToPin) {
+                  updatedChilds.push({
+                    _id: id,
+                    entity_type: type,
+                    pinned: true,
+                    name: type === 'page' ? undefined : itemToPin.name,
+                    title: type === 'page' ? itemToPin.name : undefined,
+                    // Add other necessary fields
+                  });
+                }
+              }
+              
+              return {
+                ...item,
+                childs: updatedChilds
+              };
+            }
+            
+            return item;
+          });
+        };
+        
+        // Update in all collections
+        const updatedDocuments = { ...state.documents };
+        Object.keys(updatedDocuments).forEach(key => {
+          updatedDocuments[key] = updatePinStatus(updatedDocuments[key]);
+        });
+        
+        // Update the spaces with the new pin status
+        const updatedPublicSpaces = updatePinStatus(state.publicSpaces);
+        const updatedPrivateSpaces = updatePinStatus(state.privateSpaces);
+        
+        // Also update spaceFiles to reflect the pin status
+        const updatedSpaceFiles = Array.isArray(state.spaceFiles) 
+          ? state.spaceFiles.map(file => {
+              if (file.id === id && file.type === type) {
+                return { ...file, pinned: isPinned };
+              }
+              return file;
+            })
+          : state.spaceFiles;
+        
+        return {
+          documents: updatedDocuments,
+          publicSpaces: updatedPublicSpaces,
+          privateSpaces: updatedPrivateSpaces,
+          spaceFiles: updatedSpaceFiles,
+        };
+      });
+      
+      return { success: true, data };
+    } catch (error) {
+      return { error: error.message };
+    }
+  },
+
   // Define the reusable apiRequest function with direct access to set and get
   apiRequest: async (url, method = 'GET', data = null) => {
     try {
-        const options = {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        };
+      // Get the token from localStorage
+      const token = localStorage.getItem('token');
+      
+      const options = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+      
+      // Add the authorization header if token exists
+      if (token) {
+        options.headers['Authorization'] = `Bearer ${token}`;
+      }
 
-        if (data && method !== 'GET') {
-            options.body = JSON.stringify(data);
-        }
+      if (data && method !== 'GET') {
+        options.body = JSON.stringify(data);
+      }
 
-        const response = await fetch(url, options);
+      const response = await fetch(url, options);
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData?.message || 'Something went wrong!');
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData?.message || 'Something went wrong!');
+      }
 
-        const responseData = await response.json();
-                
-        return { data: responseData?.data, error: null };
+      const responseData = await response.json();
+              
+      return { data: responseData?.data, error: null };
     } catch (error) {
-        return { data: null, error: error?.message };
+      return { data: null, error: error?.message };
     }
   },
 
@@ -209,7 +439,9 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       }[child.page_type] || FileText;
 
       const fileName = child.entity_type === 'folder' || child.entity_type === 'group' ? child.name : child.title;
-      const modifiedUser = (get().users || []).filter(user => user._id === child.user_id) || 'Unknown User';
+      const usersArr = Array.isArray(get().users) ? get().users : [];
+      const user = usersArr.find(user => user._id === child.user_id);
+      const modifiedUserName = user ? user.full_name : 'Unknown User';
 
       return {
         id: child._id,
@@ -217,7 +449,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         icon: fileIcon,
         name: fileName,
         modified: formatTime(child.updatedAt),
-        modifiedBy: modifiedUser[0].full_name,
+        modifiedBy: modifiedUserName,
         sharing: child.is_private ? 'Private' : 'Public',
       };
     });

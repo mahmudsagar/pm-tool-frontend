@@ -10,7 +10,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-export function DatePicker({ className = '', onChange,handleFormChange, value, ...props }) {
+export function DatePicker({ className = '', onChange, handleFormChange, value, ...props }) {
   return (
     <Popover onOpenChange={open => {
       if (!open) {

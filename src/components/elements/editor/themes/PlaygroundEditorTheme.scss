@@ -6,6 +6,7 @@
  *
  *
  */
+ @use "sass:list";
 .PlaygroundEditorTheme__ltr {
   text-align: left;
 }
@@ -377,23 +378,37 @@
 .PlaygroundEditorTheme__tokenFunction {
   color: #dd4a68;
 }
+
+
 .PlaygroundEditorTheme__mark {
-  background: rgba(255, 212, 0, 0.14);
-  border-bottom: 2px solid rgba(255, 212, 0, 0.3);
+  background: rgba(255, 213, 0, 0);
   padding-bottom: 2px;
+  color: inherit;
+  border-bottom: 2px solid rgba(255, 212, 0, 0.7);
 }
 .PlaygroundEditorTheme__markOverlap {
-  background: rgba(255, 212, 0, 0.3);
-  border-bottom: 2px solid rgba(255, 212, 0, 0.7);
+  background: rgba(255, 213, 0, 0);
+  // border-bottom: 2px solid rgba(255, 212, 0, 0.7);
 }
 .PlaygroundEditorTheme__mark.selected {
-  background: rgba(255, 212, 0, 0.5);
-  border-bottom: 2px solid rgba(255, 212, 0, 1);
+  background: rgba(255, 213, 0, 0);
+  // border-bottom: 2px solid rgba(255, 212, 0, 1);
 }
 .PlaygroundEditorTheme__markOverlap.selected {
-  background: rgba(255, 212, 0, 0.7);
-  border-bottom: 2px solid rgba(255, 212, 0, 0.7);
+  background: rgba(255, 213, 0, 0);
+  // border-bottom: 2px solid rgba(255, 212, 0, 0.7);
 }
+
+$colors: red, orange, yellow, green, blue, purple;
+
+@for $i from 1 through list.length($colors) {
+  .PlaygroundEditorTheme__paragraph {
+    .PlaygroundEditorTheme__mark:nth-child(#{$i}) {
+      border-bottom: 2px solid list.nth($colors, $i);
+    }
+  }
+}
+
 .PlaygroundEditorTheme__embedBlock {
   user-select: none;
 }

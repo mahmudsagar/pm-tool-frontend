@@ -7,6 +7,7 @@ import {
   ArrowUpAZ,
   ArrowDownZA,
   CircleX,
+  Plus,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -45,12 +46,12 @@ const DataTableColumnHeader = ({ title, table }) => {
           </DropdownMenuContent>
         </DropdownMenu>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          {/* <DropdownMenuTrigger asChild>
             <Button variant="outline" className="flex items-center justify-center text-base gap-2 bg-none border-none focus:outline-none">
-              <AlignLeft className='w-5 h-5' />
-              <ChevronDown className='w-4 h-4' />
+              Add
+              <Plus className='w-4 h-4' />
             </Button>
-          </DropdownMenuTrigger>
+          </DropdownMenuTrigger> */}
         </DropdownMenu>
       </div>
     </div>

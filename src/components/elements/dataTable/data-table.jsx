@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import useFileManagerStore from '@/stores/useFileManagerStore';
 import {
@@ -9,7 +9,7 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
 } from "@tanstack/react-table";
-import columns from './table-columns';
+import { createColumns } from './table-columns';
 import DataTablePagination from './data-table-pagination';
 import DataTableColumnBody from './data-table-body';
 import DataTableColumnHeader from './data-table-header';
@@ -23,6 +23,42 @@ function DataTable() {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const { formatTableData } = useFileManagerStore(state => state);
+
+  // Callbacks for handling delete and edit operations
+  const handleDataChange = useCallback((updatedData, handlers) => {
+    // If we received updated data, update the table
+    if (updatedData) {
+      setTableData(updatedData);
+    }
+  }, []);
+
+  // Handler for successful deletion
+  const handleDeleteSuccess = useCallback((fileId, fileType) => {
+    // Update the UI by removing the deleted item
+    setTableData(prev => prev.filter(item => item.id !== fileId));
+  }, []);
+
+  // Handler for successful edit
+  const handleEditSuccess = useCallback((fileId, fileType, updatedData) => {
+    // Update the UI by updating the edited item
+    setTableData(prev => prev.map(item => {
+      if (item.id === fileId) {
+        // If we have updated data, merge it
+        if (updatedData) {
+          return { ...item, ...updatedData };
+        }
+        // Otherwise just update the modified timestamp
+        return { 
+          ...item, 
+          modified: new Date().toLocaleString()
+        };
+      }
+      return item;
+    }));
+  }, []);
+
+  // Create columns with handlers attached
+  const columns = createColumns(handleDeleteSuccess, handleEditSuccess);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,13 +75,7 @@ function DataTable() {
     };
 
     fetchData();
-  }, [id]);
-
-
-  const formattingTime = (date) => {
-
-  }
-  
+  }, [id, type, formatTableData]);
 
   const table = useReactTable({
     data: tableData,
@@ -69,7 +99,11 @@ function DataTable() {
   return (
     <>
       <DataTableColumnHeader title="My Files" table={table} />
-      <DataTableColumnBody table={table} loading={loading} />
+      <DataTableColumnBody 
+        table={table} 
+        loading={loading} 
+        onDataChange={handleDataChange} 
+      />
       {/* <DataTablePagination table={table} /> */}
     </>
   )

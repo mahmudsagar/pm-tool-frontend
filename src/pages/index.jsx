@@ -15,21 +15,23 @@ const pageType = {
   sheet: Sheet,
   whiteboard: Whiteboard
 }
-const Page = () => {
+const Page = ({ ...props }) => {
   const { loading, data, callApi, error } = useApi();
-  const [, setTopMenu] = useOutletContext();
+  const context = useOutletContext();
+  const [, setTopMenu] = context || ['', (props.setTopMenu ? props.setTopMenu : () => { })];
   const { pathname } = useLocation()
   const { id } = useParams();
+  const paramId = props.id || id;
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const { page_type, ...restData } = data || {}
 
   useEffect(debounce(() => {
-    callApi(documentBaseUrl + '?id=' + id)
-  }, 1000), [pathname, id])
+    callApi(documentBaseUrl + '?id=' + paramId)
+  }, 1000), [pathname, paramId])
 
   const handleDelete = () => {
-    callApi(documentBaseUrl + '?id=' + id,
+    callApi(documentBaseUrl + '?id=' + paramId,
       {
         method: 'DELETE',
       }, () => {

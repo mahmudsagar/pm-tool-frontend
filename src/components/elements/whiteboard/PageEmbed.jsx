@@ -17,16 +17,17 @@ import {
 
 import useApi from "@/lib/dataFetcher"
 import { documentBaseUrl } from "@/utils/constants"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function TaskEmbed({ onSelect }) {
   const [open, setOpen] = useState(false)
   const { data, loading, error, callApi } = useApi(state => state);
 
-  const userId = '66cda5dac6886719e3345c19';
+  const {user} = useAuth();
   
   useEffect(() => {
-    callApi(documentBaseUrl + '?user_id=' + userId)
-  }, [userId])
+    callApi(documentBaseUrl + '?user_id=' + user.id)
+  }, [user.id])
 
   if(loading || error) {
     return null;

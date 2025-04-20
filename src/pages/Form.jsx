@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { toast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast"
 import Link from "@/BetterRouter/Link"
 import { Input } from "@/components/ui/input"
 
@@ -49,7 +49,6 @@ const profileFormSchema = z.object({
     .optional(),
 })
 
-
 // This can come from your database or API.
 const defaultValues = {
   bio: "I own a computer.",
@@ -65,6 +64,8 @@ const ProfileForm = () => {
     defaultValues,
     mode: "onChange",
   })
+
+  const { toast } = useToast()
 
   const { fields, append } = useFieldArray({
     name: "urls",
@@ -189,7 +190,6 @@ const ProfileForm = () => {
         </form>
       </Form>
     </div>
-
   )
 }
 

@@ -14,7 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import TableColumnsShare from './components/table-columns-share';
 import TableColumnsDropdown from './components/table-columns-dropdown';
 
-export default [
+// Create a function to generate columns with delete and edit handlers
+export const createColumns = (onDeleteSuccess, onEditSuccess) => [
   {
     id: "select",
     header: ({ table }) => (
@@ -84,11 +85,25 @@ export default [
           </div>
           <span>{row.getValue("name")}</span>
         </div>
-        <div className="flex items-center gap-2 transition-opacity">
-          {/* DropDown Menu */}
-          <TableColumnsDropdown info={row} />
+        <div 
+          className="flex items-center gap-2 transition-opacity" 
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            // Ensure clicks on action buttons don't bubble up to the row
+            if (e.nativeEvent) {
+              e.nativeEvent.stopImmediatePropagation();
+            }
+          }}
+        >
+          {/* Pass row instead of row info to avoid undefined column ID issues */}
+          <TableColumnsDropdown 
+            info={row} 
+            onDeleteSuccess={onDeleteSuccess}
+            onEditSuccess={onEditSuccess}
+          />
           {/* Share Button */}
-          <TableColumnsShare title={row.getValue("name")} />
+          {/* <TableColumnsShare title={row.getValue("name") || ''} /> */}
         </div>
       </div>
     ),
@@ -148,3 +163,7 @@ export default [
     ),
   },
 ];
+
+// Export a default version for backward compatibility
+// Use empty functions as defaults to avoid errors
+export default createColumns(() => {}, () => {});

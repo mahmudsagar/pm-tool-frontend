@@ -55,11 +55,12 @@ import CollapsiblePlugin from './plugins/CollapsiblePlugin';
 import TwitterPlugin from './plugins/TwitterPlugin';
 import FigmaPlugin from './plugins/FigmaPlugin';
 import PollPlugin from './plugins/PollPlugin';
+import Comment from '../comment';
 const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
-export default function Editor({ title, content, page_id, custom_meta, comments, mediaAttachments, onChange }) {
+export default function Editor({ title, content, page_id, user_id, custom_meta, comments, mediaAttachments, onChange, showComments, setShowComments }) {
   const [editor] = useLexicalComposerContext()
   const { loading: imageLoading, data: imageData, callApi: uploadImage } = useApi();
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -89,7 +90,6 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
   }, [editor])
 
   const handleOnChange = (values) => {
-    console.log('values', values);
     onChange(values);
   }
 
@@ -188,9 +188,9 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
         </div>
         <DynamicInput initialData={custom_meta} onChange={(custom_meta) => {
           setCurrentCustomFields(custom_meta);
-          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta });
+          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta, inner_comments: currentComments });
         }} />
-
+        <Comment {...{ page_id, user_id, comments }} />
       </div>
       <Separator />
       <ToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />
@@ -199,7 +199,7 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
           contentEditable={
             <div className="editor-scroller">
               <div className="editor" ref={onRef}>
-                <ContentEditable className="editor-input"
+                <ContentEditable className="editor-input" spellCheck="false"
                   aria-placeholder={placeholder} placeholder={placeholder} />
               </div>
             </div>
@@ -227,10 +227,9 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
         <ClickableLinkPlugin disabled={isEditable} />
         <HorizontalRulePlugin />
         <LayoutPlugin />
-        <CommentPlugin onChange={(comments) => {
+        <CommentPlugin showComments={showComments} setShowComments={setShowComments} onChange={(comments) => {
           setCurrentComments(comments);
-          console.log('comments asc', comments);
-          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields, comments });
+          handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta: currentCustomFields, inner_comments: comments });
         }} />
         <TablePlugin hasCellMerge={true}
           hasCellBackgroundColor={true} />
@@ -240,7 +239,7 @@ export default function Editor({ title, content, page_id, custom_meta, comments,
           editorState.read(() => {
             const content = JSON.stringify(editorState);
             setCurrentEditorState(content);
-            handleOnChange({ title: currentTitle, content, custom_meta: currentCustomFields });
+            handleOnChange({ title: currentTitle, content, custom_meta: currentCustomFields, inner_comments: currentComments });
           });
         }} />
         <>
