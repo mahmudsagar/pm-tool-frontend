@@ -25,14 +25,14 @@ import FolderMenu from "./DropdownMenuItems/FolderMenu";
 import DocStructure from "./DocStructure";
 import { baseUrl } from '@/utils/constants';
 
-const MenuItemFolder = ({ folder, className }) => {     
+const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {     
   const { isOpen } = useSidebar();
   const [loading, setLoading] = useState(false)
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
   const { storeDocuments, documents } = useFileManagerStore(state => state);    
-
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   useEffect(() => {
     if (isOpen) {
       setOpenItem(lastOpenItem);
@@ -150,6 +150,8 @@ const MenuItemFolder = ({ folder, className }) => {
                   <AddFileDialog 
                     id={folder?._id} 
                     type={folder?.entity_type} 
+                    isOpen={isAddModalOpen}
+                    setIsOpen={setIsAddModalOpen}
                   />
                   <FolderMenu
                     isOpen={dropdownOpenStates}

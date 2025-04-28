@@ -29,6 +29,8 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     };
   
     const allChildFiles = (data || []).flatMap(space => {
+      console.log(space);
+      
       if (!Array.isArray(space.childs)) return [];    
       const target = space.is_private ? 'privateSpaces' : 'publicSpaces';
       categorizedSpaces[target].push({ ...space, childs: space.childs.filter(item => item.pinned) });      
@@ -451,6 +453,8 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         modified: formatTime(child.updatedAt),
         modifiedBy: modifiedUserName,
         sharing: child.is_private ? 'Private' : 'Public',
+        pinned: child.pinned,
+        space_id: child.space_id,
       };
     });
   },
@@ -488,7 +492,8 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       const transformedData = await Promise.all(data[0].childs.map(async (child) => {
         const result = await get().getUserById(child.user_id);        
         const modifiedUser = result?.full_name || 'Unknown User';
-  
+        console.log(child);
+        
         return {
           id: child._id,
           type: child.entity_type,
@@ -497,6 +502,8 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
           modified: formatTime(child.updatedAt),
           modifiedBy: modifiedUser,
           sharing: data[0].is_private ? 'Public' : 'Private',
+          pinned: child.pinned,
+          space_id: child.space_id
         };
       }));
   

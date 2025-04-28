@@ -43,6 +43,10 @@ const Page = ({ ...props }) => {
     fetch(documentBaseUrl, {
       method: 'PUT',
       body: JSON.stringify({ id: data?._id, ...sanitize(value) }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
     });
   }
 

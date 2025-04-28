@@ -31,7 +31,6 @@ const useApi = () => {
         headers
       };
       
-      console.log("Fetch config:", updatedConfig);
       const response = await fetch(url, updatedConfig);
       
       if (!response.ok) {

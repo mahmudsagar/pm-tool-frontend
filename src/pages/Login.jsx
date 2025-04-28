@@ -1,15 +1,22 @@
-import { LoginForm } from "@/components/auth/LoginForm";
-import { Toaster } from "@/components/ui/toaster";
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import LoginForm from '@/components/auth/LoginForm';
+import useAuthStore from '@/store/useAuthStore';
 
-const LoginPage = () => {
+export default function Login() {
+  const navigate = useNavigate();
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/teams');
+    }
+  }, [isAuthenticated, navigate]);
+
   return (
-    <section className="w-full h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <LoginForm />
-      </div>
-      <Toaster />
-    </section>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+      <LoginForm />
+    </div>
   );
-};
-
-export default LoginPage;
+}

@@ -44,8 +44,10 @@ const AddFileDialog = ({
   setIsOpen,
   onEditSuccess 
 }) => {  
-  const [isFile, setIsFile] = useState('page');
+  const defaultFileType = 'page'; // Always default to page instead of using type
+  const [isFile, setIsFile] = useState(defaultFileType);
   const [loading, setLoading] = useState(false); // Submitting Data loading
+  const [fileName, setFileName] = useState(initialName || ''); // Track filename separately
   const { data: users, callApi:userCallApi } = useApi();
   const { data: teams, callApi:teamCallApi } = useApi();
   
@@ -53,17 +55,56 @@ const AddFileDialog = ({
   
   const form = useForm({
     defaultValues: {
-      title: isEdit ? initialName : '',
-      filetype: type || 'page',
-      page_type: '',
+      title: isEdit ? initialName : fileName,
+      filetype: defaultFileType,
+      page_type: 'document', 
       shared_members: [],
       shared_teams: []
     }
   });
   
-  const { user } = useAuth();
-
-  const userID = user?.id;
+  // Update filename state when initialName changes
+  useEffect(() => {
+    if (isEdit && initialName) {
+      setFileName(initialName);
+    }
+  }, [isEdit, initialName]);
+  
+  // Force set form values when component mounts
+  useEffect(() => {
+    const title = isEdit ? initialName : fileName;
+    
+    // Only reset if we have the needed data
+    form.reset({
+      title,
+      filetype: defaultFileType,
+      page_type: 'document',
+      shared_members: [],
+      shared_teams: []
+    }, { keepValues: true });
+    
+    setIsFile(defaultFileType);
+  }, []);
+  
+  // Synchronize when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      // Force update form values when dialog opens
+      form.setValue("filetype", defaultFileType);
+      form.setValue("page_type", "document");
+      
+      // Preserve the title
+      if (isEdit && initialName) {
+        form.setValue("title", initialName);
+      }
+      
+      setIsFile(defaultFileType);
+    }
+  }, [isOpen, isEdit, initialName, form]);
+  
+  const { user, token } = useAuth();
+  
+  const userID = user?._id;
   useEffect(() => {    
     document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
 
@@ -85,7 +126,7 @@ const AddFileDialog = ({
 
     // Set method based on whether we're editing or creating
     method = isEdit ? 'PUT' : 'POST';
-
+    
     if (data.filetype === "page") {
       endpoint = "/v1/page/document";
       documentData = isEdit ? {
@@ -140,6 +181,10 @@ const AddFileDialog = ({
     try {
       await fetch(baseUrl + endpoint, {
         method: method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(documentData),
       })
       .then(res => res.json())
@@ -182,7 +227,30 @@ const AddFileDialog = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open && !isEdit) {
+        // Keep the title value when updating (use current value)
+        const currentTitle = form.getValues().title;
+        
+        // Reset the form when the dialog closes but preserve title
+        form.reset({
+          title: currentTitle || '',
+          filetype: defaultFileType,
+          page_type: 'document',
+          shared_members: [],
+          shared_teams: []
+        });
+        setIsFile(defaultFileType);
+      }
+      
+      // When opening, make sure the form is properly initialized
+      if (open && !isEdit) {
+        // Don't reset the title when reopening
+        form.setValue("filetype", defaultFileType); 
+        setIsFile(defaultFileType);
+      }
+      setIsOpen(open);
+    }}>
       {!isEdit && (
         <DialogTrigger>
           <Button
@@ -215,54 +283,37 @@ const AddFileDialog = ({
                   render={({ field }) => (
                     <RadioGroup
                       onValueChange={(value) => {                      
-                        field.onChange(value); // Update form value
-                        setIsFile(value);      // Update local state
+                        field.onChange(value);
+                        setIsFile(value);
                       }}
-                      defaultValue={isFile}
+                      defaultValue="page" // Hard-code "page" as the default
+                      value={field.value}
                       className="w-full"
                     >
                       <FormLabel>Type</FormLabel>
                       <div className="flex items-center gap-3 mt-2">
                         <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="page" id="page" />
+                          <RadioGroupItem value="page" id="page" checked={field.value === "page"} />
                           <Label htmlFor="page" className="cursor-pointer">Page</Label>
                         </div>
-                        { type === 'folder' || type !== 'group' && 
+                        {(type === 'folder' || type !== 'group') && (
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="group" id="group" />
+                            <RadioGroupItem value="group" id="group" checked={field.value === "group"} />
                             <Label htmlFor="group" className="cursor-pointer">Group</Label>
                           </div>
-                        }
-                        { type !== 'folder' && 
+                        )}
+                        {type !== 'folder' && (
                           <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="folder" id="folder" />
+                            <RadioGroupItem value="folder" id="folder" checked={field.value === "folder"} />
                             <Label htmlFor="folder" className="cursor-pointer">Folder</Label>
-                          </div> 
-                        }
+                          </div>
+                        )}
                       </div>
                     </RadioGroup>
                   )}
                 />
               )}
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="File Name"
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {isFile === 'page' && !isEdit &&
+              {(isFile === 'page' || form.getValues('filetype') === 'page') && !isEdit && (
                 <FormField
                   control={form.control}
                   name="page_type"
@@ -294,7 +345,29 @@ const AddFileDialog = ({
                     </FormItem>
                   )}
                 />
-              }
+              )}
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="File Name"
+                        {...field}
+                        value={field.value ?? fileName ?? ''} 
+                        onChange={(e) => {
+                          field.onChange(e);
+                          setFileName(e.target.value);
+                        }}
+                        required
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="shared_members"
@@ -302,9 +375,9 @@ const AddFileDialog = ({
                   <FormItem className='w-full'>
                     <FormLabel>Shared Member</FormLabel>
                     <MultiSelect
-                      options={Array.isArray(users) ? users.map(user => ({ value: user._id, label: user.full_name })) : []}                      
+                      options={Array.isArray(users) ? users.map(user => ({ value: user._id, label: user.email })) : []}                      
                       onValueChange={(value) => field.onChange(value)}
-                      placeholder="Select frameworks"
+                      placeholder="Select Member"
                       variant="inverted"
                       animation={2}
                       maxCount={3}
@@ -322,7 +395,7 @@ const AddFileDialog = ({
                     <MultiSelect
                       options={teams?.map(team => ({ value: team._id, label: team.name })) || []}
                       onValueChange={(value) => field.onChange(value)}
-                      placeholder="Select frameworks"
+                      placeholder="Select Team"
                       variant="inverted"
                       animation={2}
                       maxCount={3}

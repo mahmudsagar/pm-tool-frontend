@@ -51,7 +51,6 @@ const multiSelectVariants = cva(
   }
 );
 
-
 export const MultiSelect = React.forwardRef(
   (
     {
@@ -72,8 +71,9 @@ export const MultiSelect = React.forwardRef(
     const [selectedValues, setSelectedValues] = React.useState(value);
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
     const [isAnimating, setIsAnimating] = React.useState(false);
-    const handleInputKeyDown = (event) => {
+    const commandListRef = React.useRef(null);
 
+    const handleInputKeyDown = (event) => {
       if (event.key === "Enter") {
         setIsPopoverOpen(true);
       } else if (event.key === "Backspace" && !event.currentTarget.value) {
@@ -114,6 +114,16 @@ export const MultiSelect = React.forwardRef(
         const allValues = options.map((option) => option.value);
         setSelectedValues(allValues);
         onChange(allValues);
+      }
+    };
+
+    const handleWheel = (event) => {
+      // Prevent the default behavior which might interfere with scrolling
+      event.stopPropagation();
+
+      // Manually handle the scroll
+      if (commandListRef.current) {
+        commandListRef.current.scrollTop += event.deltaY;
       }
     };
 
@@ -223,7 +233,11 @@ export const MultiSelect = React.forwardRef(
               placeholder="Search..."
               onKeyDown={handleInputKeyDown}
             />
-            <CommandList>
+            <CommandList
+              ref={commandListRef}
+              className="max-h-[200px] overflow-y-auto"
+              onWheel={handleWheel}
+            >
               <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup>
                 <CommandItem

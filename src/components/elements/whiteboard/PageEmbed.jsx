@@ -26,7 +26,7 @@ export default function TaskEmbed({ onSelect }) {
   const {user} = useAuth();
   
   useEffect(() => {
-    callApi(documentBaseUrl + '?user_id=' + user.id)
+    callApi(documentBaseUrl + '?user_id=' + user._id)
   }, [user.id])
 
   if(loading || error) {
