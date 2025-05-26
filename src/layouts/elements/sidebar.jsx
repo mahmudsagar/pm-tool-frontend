@@ -35,7 +35,7 @@ export default function Sidebar({ className }) {
   } = useFileManagerStore(state => state);
   useEffect(() => {
     if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
-      spaceCallApi(baseUrl + '/v1/space?user_id=' + user._id);
+      // spaceCallApi(baseUrl + '/v1/space?user_id=' + user._id);
       userCallApi(baseUrl + '/v1/user');
     }
   }, [spaceCallApi, publicSpaces, privateSpaces]);
@@ -72,16 +72,12 @@ export default function Sidebar({ className }) {
               <div className="flex gap-1.5">
                 <div className="w-12 flex flex-row-reverse justify-end items-center relative transform translate-z-0">
                   <Avatar className="w-8 h-8 relative -mr-3.5">
-                    <AvatarImage src="https://avatars.githubusercontent.com/u/124598.png" alt="@shadcn" />
-                    <AvatarFallback>PP</AvatarFallback>
-                  </Avatar>
-                  <Avatar className="w-8 h-8 relative -mr-3.5">
                     <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
                     <AvatarFallback>user</AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <h5 className="text-xs font-semibold">{user.email}</h5>
+                  <h5 className="text-xs font-semibold">{user.name ? user.name : user.email}</h5>
                   {/* <span className="text-slate-600 dark:text-slate-100 text-xs">Chief Technology Officer</span> */}
                 </div>
               </div>

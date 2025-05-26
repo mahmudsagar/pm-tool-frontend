@@ -103,7 +103,7 @@ export default function ExcalidrawRender({ content, onChange }) {
 
       if (
         (sceneVersion > 0 && sceneVersion !== previousSceneVersion) ||
-        (state?.activeTool?.locked !== content.settings.locked)
+        (state?.activeTool?.locked !== content?.settings?.locked)
       ) {
         setPreviousSceneVersion(sceneVersion);
 
@@ -134,7 +134,7 @@ export default function ExcalidrawRender({ content, onChange }) {
             currentItemEndArrowhead: 'triangle',
             currentChartType: 'line',
             activeTool: {
-              locked: content?.settings.locked
+              locked: content?.settings?.locked
             }
           }
         }}

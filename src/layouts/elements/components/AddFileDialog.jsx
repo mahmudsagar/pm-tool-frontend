@@ -34,10 +34,12 @@ import {
 } from "@/components/ui/select";
 import ButtonLoading from './ButtonLoading';
 import { useAuth } from '@/contexts/AuthContext';
+import { ensureArray, sanitize } from '@/utils/helper';
 
 const AddFileDialog = ({ 
   id, 
   type, 
+  space_visibility,
   isEdit = false, 
   initialName = '', 
   isOpen, 
@@ -49,8 +51,9 @@ const AddFileDialog = ({
   const [loading, setLoading] = useState(false); // Submitting Data loading
   const [fileName, setFileName] = useState(initialName || ''); // Track filename separately
   const { data: users, callApi:userCallApi } = useApi();
-  const { data: teams, callApi:teamCallApi } = useApi();
-  
+  const { data: teams, callApi:teamCallApi } = useApi();;
+  const usersData = ensureArray(users)
+  const teamsData = ensureArray(teams)
   const { storeHandler, updateHandler } = useFileManagerStore(state => state);
   
   const form = useForm({
@@ -368,6 +371,7 @@ const AddFileDialog = ({
                   </FormItem>
                 )}
               />
+              {!space_visibility && (<>
               <FormField
                 control={form.control}
                 name="shared_members"
@@ -375,7 +379,7 @@ const AddFileDialog = ({
                   <FormItem className='w-full'>
                     <FormLabel>Shared Member</FormLabel>
                     <MultiSelect
-                      options={Array.isArray(users) ? users.map(user => ({ value: user._id, label: user.email })) : []}                      
+                      options={Array.isArray(usersData) ? usersData.map(user => ({ value: user._id, label: user.email })) : []}                      
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select Member"
                       variant="inverted"
@@ -393,7 +397,7 @@ const AddFileDialog = ({
                   <FormItem className='w-full'>
                     <FormLabel>Shared Team</FormLabel>
                     <MultiSelect
-                      options={teams?.map(team => ({ value: team._id, label: team.name })) || []}
+                      options={Array.isArray(teamsData) ? teamsData?.map(team => ({ value: team._id, label: team.name })) : []}
                       onValueChange={(value) => field.onChange(value)}
                       placeholder="Select Team"
                       variant="inverted"
@@ -404,6 +408,7 @@ const AddFileDialog = ({
                   </FormItem>
                 )}
               />
+              </>)}
             </div>
             <div className="flex justify-end space-x-2">
               <Button type="submit">
