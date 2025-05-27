@@ -23,10 +23,27 @@ const defaultTeamSpace = {
 };
 
 const SidebarMenuItems = ({ className }) => {
-  // Get spaces from store
-  const { publicSpaces, privateSpaces } = useFileManagerStore(state => state);
-  console.log("🚀 ~ SidebarMenuItems ~ publicSpaces:", publicSpaces)
-  console.log("🚀 ~ SidebarMenuItems ~ privateSpaces:", privateSpaces)
+  // Get spaces and loading state from store
+  const {
+    publicSpaces,
+    privateSpaces,
+    isSpacesLoading,
+    hasInitializedSpaces
+  } = useFileManagerStore(state => state);
+
+  console.log("🚀 ~ SidebarMenuItems ~ publicSpaces:", publicSpaces);
+  console.log("🚀 ~ SidebarMenuItems ~ privateSpaces:", privateSpaces);
+  console.log("🚀 ~ SidebarMenuItems ~ isSpacesLoading:", isSpacesLoading);
+  console.log("🚀 ~ SidebarMenuItems ~ hasInitializedSpaces:", hasInitializedSpaces);
+
+  // Show loading only if we haven't initialized spaces yet and are currently loading
+  if (isSpacesLoading && !hasInitializedSpaces) {
+    return (
+      <div className="block mb-5">
+        <MenuLoading />
+      </div>
+    );
+  }
 
   // Sort items from API to ensure pinned items appear at top
   const sortedPrivateSpaces = [...(privateSpaces || [])].sort((a, b) => {
@@ -41,37 +58,30 @@ const SidebarMenuItems = ({ className }) => {
     return 0;
   });
 
+  // Always show the default spaces, even if no API spaces are loaded
   return (
     <div className="block mb-5">
-      {(publicSpaces?.length > 0 || privateSpaces?.length > 0) ? (
-        <>
-          {/* Private Space - Static root with dynamic children */}
-          <MenuItemSpace
-            key={defaultPrivateSpace._id}
-            space={defaultPrivateSpace}
-            isRootSpace={true}
-            spaceType="private"
-            className={className}
-            // Pass all private spaces as children of this root space
-            childSpaces={sortedPrivateSpaces}
-          />
-
-          <Separator className="my-4" />
-
-          {/* Team Space - Static root with dynamic children */}
-          <MenuItemSpace
-            key={defaultTeamSpace._id}
-            space={defaultTeamSpace}
-            isRootSpace={true}
-            spaceType="team"
-            className={className}
-            // Pass all public spaces as children of this root space
-            childSpaces={sortedPublicSpaces}
-          />
-        </>
-      ) : (
-        <MenuLoading />
-      )}
+      {/* Private Space - Static root with dynamic children */}
+      <MenuItemSpace
+        key={defaultPrivateSpace._id}
+        space={defaultPrivateSpace}
+        isRootSpace={true}
+        spaceType="private"
+        className={className}
+        // Pass all private spaces as children of this root space
+        childSpaces={sortedPrivateSpaces}
+      />
+      <Separator className="my-4" />
+      {/* Team Space - Static root with dynamic children */}
+      <MenuItemSpace
+        key={defaultTeamSpace._id}
+        space={defaultTeamSpace}
+        isRootSpace={true}
+        spaceType="team"
+        className={className}
+        // Pass all public spaces as children of this root space
+        childSpaces={sortedPublicSpaces}
+      />
     </div>
   );
 };

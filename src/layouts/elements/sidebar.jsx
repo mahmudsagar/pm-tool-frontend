@@ -14,37 +14,43 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
 import useApi from "@/lib/dataFetcher";
-import { baseUrl, userID } from '@/utils/constants';
+import { baseUrl } from '@/utils/constants';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import { useAuth } from "@/contexts/AuthContext";
-
 
 export default function Sidebar({ className }) {
   const { isOpen, toggle } = useSidebar();
   const [status, setStatus] = useState(false);
   const { data: users, callApi: userCallApi } = useApi();
-  const { loading: spaceLoading, data: spaces, callApi: spaceCallApi } = useApi();
+  const { data: spaces, callApi: spaceCallApi } = useApi();
   const { logout, user } = useAuth();
-  
+
   const {
     storeState,
-    spaceFiles,
     publicSpaces,
-    formatSpaces,
     privateSpaces,
+    formatSpaces,
+    hasInitializedSpaces, // Add this flag to track if spaces have been loaded
+    setInitializedSpaces, // Add this method to set the flag
   } = useFileManagerStore(state => state);
+
   useEffect(() => {
-    if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
-      // spaceCallApi(baseUrl + '/v1/space?user_id=' + user._id);
+    // Only call space API if we haven't initialized spaces yet and user exists
+    // This prevents unnecessary API calls for static default spaces
+    if (user && !hasInitializedSpaces) {
+      spaceCallApi(baseUrl + '/v1/space?user_id=' + user._id);
       userCallApi(baseUrl + '/v1/user');
+      setInitializedSpaces(true); // Mark as initialized after first load
     }
-  }, [spaceCallApi, publicSpaces, privateSpaces]);
+  }, [user, hasInitializedSpaces, spaceCallApi, userCallApi, setInitializedSpaces]);
+
   useEffect(() => {
-    if (spaces) {
+    if (spaces && users) {
       storeState('users', users);
       formatSpaces(spaces);
     }
-  }, [spaces, formatSpaces]);
+  }, [spaces, users, formatSpaces, storeState]);
+
   const handleToggle = () => {
     setStatus(true);
     toggle();
@@ -77,8 +83,7 @@ export default function Sidebar({ className }) {
                   </Avatar>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <h5 className="text-xs font-semibold">{user.name ? user.name : user.email}</h5>
-                  {/* <span className="text-slate-600 dark:text-slate-100 text-xs">Chief Technology Officer</span> */}
+                  <h5 className="text-xs font-semibold">{user?.name ? user.name : user?.email}</h5>
                 </div>
               </div>
               <DropdownMenu>
