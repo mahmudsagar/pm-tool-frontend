@@ -30,7 +30,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table"
 import { useState, useEffect } from "react"
-import { ArrowUpIcon, ArrowDownIcon, GripVertical, PlusIcon } from "lucide-react"
+import { ArrowUpIcon, ArrowDownIcon, GripVertical, PlusIcon, CopyIcon } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,8 +56,14 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import TablePropertiesMenu from "@/components/elements/dataView/TablePropertiesMenu";
 
+import TableFilter from "@/components/elements/dataView/filter"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
+import { Trash2 } from "lucide-react"
+import EditPropertyModal from "./EditPropertyModal";
+
 // Add this new component for sortable column headers
-function DraggableColumnHeader({ header }) {
+function DraggableColumnHeader({ header, addFilter, setEditPropertyModal }) {
   const {
     attributes,
     listeners,
@@ -75,6 +81,7 @@ function DraggableColumnHeader({ header }) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  
   return (
     <TableHead ref={setNodeRef} style={style} key={header.id}>
       <div className="h-full w-full">
@@ -101,15 +108,25 @@ function DraggableColumnHeader({ header }) {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              console.log(header.column.columnDef);
+              setEditPropertyModal({
+                open: true,
+                property: {
+                  ...header.column.columnDef,
+                  label: header.column.columnDef.header, // ensure label is set from header
+                  name: header.column.columnDef.accessorKey || header.column.columnDef.id // set name from accessorKey or id
+                }
+              })
+            }}>
               Edit property
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => header.column.toggleSorting(false)}>
-              Sort Ascending
+            <DropdownMenuItem onSelect={() => addFilter(header, 'ascending')}>
+              Add ascending
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => header.column.toggleSorting(true)}>
-              Sort Descending
+            <DropdownMenuItem onSelect={() => addFilter(header, 'descending')}>
+              Add descending
             </DropdownMenuItem>
             <DropdownMenuItem>
               Filter
@@ -122,11 +139,9 @@ function DraggableColumnHeader({ header }) {
 }
 
 export default function TableView({ data }) {
-  // Add state for sorting
   const [sorting, setSorting] = useState([]);
-  // Add state for column order
   const [columnOrder, setColumnOrder] = useState([]);
-  // Add state for managing columns with additional properties for visibility and deletion
+  const [filters, setFilters] = useState([]);
   const [tableColumns, setTableColumns] = useState(
     data.property_name.map(col => ({
       ...col,
@@ -134,10 +149,13 @@ export default function TableView({ data }) {
       hidden: false
     }))
   );
+  const [rows, setRows] = useState(data.property_values);
+  const [rowSelection, setRowSelection] = useState({});
+  const [editPropertyModal, setEditPropertyModal] = useState({ open: false, property: null });
 
   const form = useForm({
     defaultValues: {
-      rows: data.property_values
+      rows: rows
     }
   });
 
@@ -150,6 +168,69 @@ export default function TableView({ data }) {
     };
     
     setTableColumns(prev => [...prev, newColumn]);
+  };
+
+  // Add filter management functions
+  const addFilter = (header, type) => {
+    // Remove any existing sorting filter for this column
+    setFilters(prev => prev.filter(f => f.column !== header.id));
+    
+    // Add new sorting filter
+    header.column.toggleSorting(type === 'ascending' ? false : true);
+    setFilters(prev => [...prev, {
+      id: Date.now(),
+      column: header.id,
+      type: type,
+      value: ''
+    }]);
+  };
+
+  const removeFilter = (filterId) => {
+    const filterToRemove = filters.find(f => f.id === filterId);
+    if (filterToRemove) {
+      // Clear the sorting if we're removing a sort filter
+      const column = table.getColumn(filterToRemove.column);
+      if (column && (filterToRemove.type === 'ascending' || filterToRemove.type === 'descending')) {
+        column.clearSorting();
+      }
+    }
+    setFilters(prev => prev.filter(f => f.id !== filterId));
+  };
+
+  // Update the duplicateRow function to handle multiple rows
+  const duplicateRows = (indices = []) => {
+    const newRows = [...rows];
+    const rowsToAdd = [];
+    
+    // If no specific indices provided, use the selected rows
+    const targetIndices = indices.length > 0 ? indices : 
+      Object.keys(rowSelection).map(index => parseInt(index));
+
+    // Sort indices in reverse order to maintain correct insertion positions
+    targetIndices.sort((a, b) => b - a).forEach(index => {
+      const duplicatedRow = { ...newRows[index] };
+      rowsToAdd.push(duplicatedRow);
+    });
+
+    // Insert all duplicated rows
+    rowsToAdd.forEach(row => {
+      newRows.splice(Math.max(...targetIndices) + 1, 0, row);
+    });
+    
+    setRows(newRows);
+    form.setValue('rows', newRows);
+    setRowSelection({}); // Clear selection after duplication
+  };
+
+  // Add deleteRows function
+  const deleteRows = (indices = []) => {
+    const targetIndices = indices.length > 0 ? indices : 
+      Object.keys(rowSelection).map(index => parseInt(index));
+    
+    const newRows = rows.filter((_, index) => !targetIndices.includes(index));
+    setRows(newRows);
+    form.setValue('rows', newRows);
+    setRowSelection({}); // Clear selection after deletion
   };
 
   // Setup sensors for drag and drop
@@ -224,8 +305,6 @@ export default function TableView({ data }) {
     )
   }
 
-  // In the TableView component, update the columns definition:
-  
   // Update columns to filter out deleted and hidden properties
   const columns = tableColumns
     .filter(column => !column.deleted && !column.hidden)
@@ -240,7 +319,7 @@ export default function TableView({ data }) {
     }));
 
   const table = useReactTable({
-    data: data.property_values,
+    data: rows, // Use rows state instead of data.property_values
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -248,29 +327,100 @@ export default function TableView({ data }) {
     state: {
       sorting,
       columnOrder, // Add column order to state
+      rowSelection,
     },
     onColumnOrderChange: setColumnOrder, // Add column order change handler
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
   });
 
   return (
     <Form {...form}>
       <form>
-        <Table className="border">
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
+        <TableFilter 
+          filters={filters}
+          onRemoveFilter={removeFilter}
+          columns={tableColumns}
+        />
+        
+        {/* Bulk actions bar */}
+        {Object.keys(rowSelection).length > 0 && (
+          <div className="h-10 mb-2 flex items-center gap-2 px-2 border rounded-md">
+            <span className="text-sm text-muted-foreground">
+              {Object.keys(rowSelection).length} selected
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => duplicateRows()}
+            >
+              <CopyIcon className="h-4 w-4 mr-2" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => deleteRows()}
+              className="text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+            </Button>
+          </div>
+        )}
+
+        {/* Table with floating menu */}
+        <div className="relative flex gap-2">
+          {/* Floating menu */}
+          <div className="flex flex-col pt-10">
+            <div className="flex flex-col gap-[1px]">
+              {table.getRowModel().rows.map((row) => (
+                <div key={row.id} className="flex items-center h-10 group">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 transition-opacity p-2">
+                      <GripVertical className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => duplicateRows([row.index])}>
+                        Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => deleteRows([row.index])}
+                        className="text-destructive"
+                      >
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <div className={`px-2 ${!row.getIsSelected() ? 'opacity-0 group-hover:opacity-100' : ''} transition-opacity`}>
+                    <Checkbox
+                      checked={row.getIsSelected()}
+                      onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Table */}
+          <Table className="border flex-1">
+            <TableHeader>
               <DndContext 
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragEnd={handleDragEnd}
-                key={headerGroup.id}
               >
                 <SortableContext 
-                  items={headerGroup.headers.map(h => h.id)}
+                  items={table.getHeaderGroups()[0].headers.map(h => h.id)}
                   strategy={horizontalListSortingStrategy}
                 >
                   <TableRow>
-                    {headerGroup.headers.map((header) => (
-                      <DraggableColumnHeader key={header.id} header={header} />
+                    {table.getHeaderGroups()[0].headers.map((header) => (
+                      <DraggableColumnHeader 
+                        setEditPropertyModal={setEditPropertyModal}
+                        addFilter={addFilter} 
+                        key={header.id} 
+                        header={header} 
+                      />
                     ))}
                     
                     {/* Add menu and plus button as the last column */}
@@ -292,28 +442,39 @@ export default function TableView({ data }) {
                   </TableRow>
                 </SortableContext>
               </DndContext>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} className="divide-x">
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="text-left p-0">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-                {/* Add empty cell to match the header */}
-                <TableCell className="w-[120px]"></TableCell>
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} className="divide-x">
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className="text-left p-0">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                  <TableCell className="w-[120px]"></TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell className="py-3 block">
+                  Load More
+                </TableCell>
               </TableRow>
-            ))}
-            <TableRow>
-              <TableCell className="py-3 block">
-                Load More
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+            </TableBody>
+          </Table>
+        </div>
       </form>
+      <EditPropertyModal
+        open={editPropertyModal.open}
+        property={editPropertyModal.property}
+        onClose={() => setEditPropertyModal({ open: false, property: null })}
+        onSave={updatedProperty => {
+          setTableColumns(cols => cols.map(col =>
+            col.name === editPropertyModal.property.name
+              ? { ...col, ...updatedProperty }
+              : col
+          ));
+        }}
+      />
     </Form>
   );
 }
