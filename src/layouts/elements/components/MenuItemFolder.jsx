@@ -43,6 +43,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
   }, [isOpen]);  
 
   const handleDropdownToggle = (id) => {
+    console.log("🚀 ~ handleDropdownToggle ~ id:", id)
     setDropdownOpenStates(prevState => ({
       ...prevState,
       [id]: !prevState[id]
@@ -158,6 +159,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                     onToggle={(id) => handleDropdownToggle(id)}
                     id={folder?._id}
                     type={folder?.entity_type}
+                    fileName={folder}
                   />
                 </div>
               </div>
@@ -185,8 +187,8 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                       ))
                     :(
                     <MenuEmpty key={doc._id}/> // Document Child Empty
-                  )) : (
-                  <MenuEmpty/> // Document Empty
+                  )) : ( null
+                  // <MenuEmpty/> // Document Empty
                 )                
               }
             </AccordionContent>

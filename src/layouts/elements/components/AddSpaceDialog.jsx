@@ -31,6 +31,7 @@ import { ensureArray } from '@/utils/helper';
 
 const AddSpaceDialog = ({
   id,
+  space_visibility,
   isEdit = false,
   initialData = {},
   isOpen,
@@ -43,7 +44,7 @@ const AddSpaceDialog = ({
   const { data: teams, callApi: teamCallApi } = useApi();
   const usersData = ensureArray(users);
   const teamsData = ensureArray(teams);
-  const { storeHandler, updateHandler } = useFileManagerStore(state => state);
+  const { createSpaceAndSync, storeHandler, updateHandler } = useFileManagerStore(state => state);
 
   const form = useForm({
     defaultValues: {
@@ -97,7 +98,7 @@ const AddSpaceDialog = ({
       name: data.name,
       description: data.description,
       user_id: userID || "66cda5dac6886719e3345c19",
-      is_private: data.is_private ?? false,
+      is_private: data.is_private ? data.is_private : space_visibility ?? false,
       shared_members: data.shared_members,
       shared_teams: data.shared_teams,
       is_default: data.is_default ?? false
@@ -107,16 +108,15 @@ const AddSpaceDialog = ({
     const url = isEdit ? `${baseUrl}${endpoint}?id=${id}` : `${baseUrl}${endpoint}`;
 
     try {
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(spaceData),
-      });
-
-      const result = await response.json();
+      // const response = await fetch(url, {
+      //   method: method,
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     "Authorization": `Bearer ${token}`
+      //   },
+      //   body: JSON.stringify(spaceData),
+      // });
+      const result = await createSpaceAndSync(spaceData)
 
       if (result.error) {
         console.error("Error saving space: ", result.error);

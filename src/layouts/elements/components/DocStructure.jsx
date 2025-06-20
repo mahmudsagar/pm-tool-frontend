@@ -35,6 +35,7 @@ function DocStructure({
             onToggle={(id) => handleDropdownToggle(id)}
             id={docId}
             type={docType}
+            fileName={docName}
           />
         </div>
       </div>

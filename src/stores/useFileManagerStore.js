@@ -23,14 +23,13 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   // Add loading states for spaces
   isSpacesLoading: false,
   hasInitializedSpaces: false,
-
   // Set loading state
   setSpacesLoading: (loading) => set({ isSpacesLoading: loading }),
 
   // Set initialization state
   setInitializedSpaces: (value) => set({ hasInitializedSpaces: value }),
 
-  // Initialize empty spaces (for new users with no spaces)
+  // Initialize empty spaces (fallback)
   initializeEmptySpaces: () => {
     set({
       publicSpaces: [],
@@ -41,23 +40,151 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     });
   },
 
+  // This will be called when fetching spaces from API (for existing users or after space operations)
+  syncSpacesFromAPI: async (userId) => {
+    console.log("Syncing spaces from API for user:", userId);
+    set({ isSpacesLoading: true });
+
+    try {
+      const { data, error } = await get().apiRequest(
+        `${API_BASE_URL}/space?user_id=${userId}`,
+        "GET"
+      );
+
+      if (error) {
+        console.error("Error syncing spaces:", error);
+        set({ isSpacesLoading: false, error });
+        return { error };
+      }
+
+      // Format and update spaces
+      if (data && Array.isArray(data)) {
+        get().formatSpaces(data);
+        set({ isNewUser: false }); // User now has real spaces
+      } else {
+        get().initializeEmptySpaces();
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in syncSpacesFromAPI:", error);
+      set({ isSpacesLoading: false, error: error.message });
+      return { error: error.message };
+    }
+  },
+
+  // Function to create a space and then sync
+  createSpaceAndSync: async (spaceData) => {
+    console.log("Creating space and syncing:", spaceData);
+
+    try {
+      const { data, error } = await get().apiRequest(
+        `${API_BASE_URL}/space`,
+        "POST",
+        spaceData
+      );
+
+      if (error) {
+        console.error("Error creating space:", error);
+        return { error };
+      }
+
+      // After successful creation, sync all spaces to get updated data
+      await get().syncSpacesFromAPI(spaceData.user_id);
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in createSpaceAndSync:", error);
+      return { error: error.message };
+    }
+  },
+
+  // Function to update a space and then sync
+  updateSpaceAndSync: async (spaceId, updateData, userId) => {
+    console.log("Updating space and syncing:", { spaceId, updateData });
+
+    try {
+      const { data, error } = await get().apiRequest(
+        `${API_BASE_URL}/space?id=${spaceId}`,
+        "PUT",
+        updateData
+      );
+
+      if (error) {
+        console.error("Error updating space:", error);
+        return { error };
+      }
+
+      // After successful update, sync all spaces to get updated data
+      await get().syncSpacesFromAPI(userId);
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in updateSpaceAndSync:", error);
+      return { error: error.message };
+    }
+  },
+
+  // Function to delete a space and then sync
+  deleteSpaceAndSync: async (spaceId, userId) => {
+    console.log("Deleting space and syncing:", spaceId);
+
+    try {
+      const { data, error } = await get().apiRequest(
+        `${API_BASE_URL}/space?id=${spaceId}`,
+        "DELETE"
+      );
+
+      if (error) {
+        console.error("Error deleting space:", error);
+        return { error };
+      }
+
+      // After successful deletion, sync all spaces to get updated data
+      await get().syncSpacesFromAPI(userId);
+
+      return { success: true, data };
+    } catch (error) {
+      console.error("Error in deleteSpaceAndSync:", error);
+      return { error: error.message };
+    }
+  },
+
   // Space data formatting is categorized into two types: public and private.
   formatSpaces: (data) => {
+    // Handle empty or null data
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.log("No spaces data found, initializing empty state");
+      get().initializeEmptySpaces();
+      return;
+    }
+
     const categorizedSpaces = {
       privateSpaces: [],
       publicSpaces: [],
     };
 
-    const allChildFiles = (data || [])
+    const allChildFiles = data
       .flatMap((space) => {
-        console.log(space);
+        console.log("Processing space:", space);
 
         if (!Array.isArray(space.childs)) return [];
+
         const target = space.is_private ? "privateSpaces" : "publicSpaces";
+
+        // Sort children: pinned first, then unpinned
+        const sortedChilds = space.childs.sort((a, b) => {
+          // If both have same pinned status, maintain original order
+          if (a.pinned === b.pinned) return 0;
+          // Pinned items come first (true > false when converted to number)
+          return b.pinned - a.pinned;
+        });
+
         categorizedSpaces[target].push({
           ...space,
-          childs: space.childs.filter((item) => item.pinned),
+          childs: sortedChilds, // Keep all children but sorted by pinned status
         });
+
         return space.childs;
       })
       .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
@@ -86,8 +213,9 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     }));
   },
 
-  // Optional: Method to reset initialization flag (useful for logout)
-  resetInitialization: () =>
+  // Method to reset initialization flag (useful for logout)
+  resetInitialization: () => {
+    console.log("Resetting file manager store");
     set({
       hasInitializedSpaces: false,
       isSpacesLoading: false,
@@ -98,7 +226,8 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       users: null,
       space: null,
       error: null,
-    }),
+    });
+  },
 
   // Delete functionality for File, Folder
   deleteHandler: (id, type) => {
@@ -111,12 +240,12 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       });
 
       const removeChild = (spaces) =>
-        spaces.map((space) => ({
+        spaces?.map((space) => ({
           ...space,
           childs: space.childs.filter(
             (child) => !(child._id === id && child.entity_type === type)
           ),
-        }));
+        })) || [];
 
       const updatedPublicSpaces = removeChild(state.publicSpaces);
       const updatedPrivateSpaces = removeChild(state.privateSpaces);
@@ -163,7 +292,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
 
       // Helper function to add a child element to a specific folder or group within a space
       const addChild = (spaces) =>
-        spaces.map((space) => {
+        spaces?.map((space) => {
           // If the current space matches the id and type OR has a child that matches, proceed
           if (space._id === id && space.entity_type === type) {
             return {
@@ -206,7 +335,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
           }
 
           return space;
-        });
+        }) || [];
 
       // Adding data to the childs array in documents
       const updatedDocuments = addToDocumentsChilds(state.documents);
@@ -284,36 +413,38 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
 
       // Helper function to update items in spaces
       const updateInSpaces = (spaces) => {
-        return spaces.map((space) => {
-          // Check if this space has the item directly
-          if (space._id === id && space.entity_type === type) {
-            return { ...space, ...updatedData };
-          }
+        return (
+          spaces?.map((space) => {
+            // Check if this space has the item directly
+            if (space._id === id && space.entity_type === type) {
+              return { ...space, ...updatedData };
+            }
 
-          // Check for the item in child elements
-          if (space.childs && Array.isArray(space.childs)) {
-            return {
-              ...space,
-              childs: space.childs.map((child) => {
-                if (child._id === id && child.entity_type === type) {
-                  const updatedChild = { ...child };
-                  if (type === "page" && updatedData.title) {
-                    updatedChild.title = updatedData.title;
-                  } else if (
-                    (type === "folder" || type === "group") &&
-                    updatedData.name
-                  ) {
-                    updatedChild.name = updatedData.name;
+            // Check for the item in child elements
+            if (space.childs && Array.isArray(space.childs)) {
+              return {
+                ...space,
+                childs: space.childs.map((child) => {
+                  if (child._id === id && child.entity_type === type) {
+                    const updatedChild = { ...child };
+                    if (type === "page" && updatedData.title) {
+                      updatedChild.title = updatedData.title;
+                    } else if (
+                      (type === "folder" || type === "group") &&
+                      updatedData.name
+                    ) {
+                      updatedChild.name = updatedData.name;
+                    }
+                    return { ...updatedChild, ...updatedData };
                   }
-                  return { ...updatedChild, ...updatedData };
-                }
-                return child;
-              }),
-            };
-          }
+                  return child;
+                }),
+              };
+            }
 
-          return space;
-        });
+            return space;
+          }) || []
+        );
       };
 
       // Update documents, publicSpaces, and privateSpaces
@@ -358,6 +489,8 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         endpoint = `/folder?id=${id}`;
       } else if (type === "group") {
         endpoint = `/group?id=${id}`;
+      } else if (type === "space") {
+        endpoint = `/space?id=${id}`;
       } else {
         return { error: "Invalid filetype specified" };
       }
@@ -464,7 +597,8 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   apiRequest: async (url, method = "GET", data = null) => {
     try {
       // Get the token from localStorage
-      const token = localStorage.getItem("token");
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
       const options = {
         method,
@@ -598,4 +732,5 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
     }
   },
 }));
+
 export default useFileManagerStore;

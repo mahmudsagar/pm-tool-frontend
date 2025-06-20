@@ -17,6 +17,7 @@ import DataTableColumnHeader from './data-table-header';
 function DataTable() {
   let { id, type } = useParams();
   const [tableData, setTableData] = useState([]);
+  console.log("🚀 ~ DataTable ~ tableData:", tableData)
   const [sorting, setSorting] = useState([]);
   const [loading, setLoading] = useState(false);
   const [columnFilters, setColumnFilters] = useState([]);

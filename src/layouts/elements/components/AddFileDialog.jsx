@@ -299,7 +299,7 @@ const AddFileDialog = ({
                           <RadioGroupItem value="page" id="page" checked={field.value === "page"} />
                           <Label htmlFor="page" className="cursor-pointer">Page</Label>
                         </div>
-                        {(type === 'folder' || type !== 'group') && (
+                        {(type !== 'folder' && type !== 'group') && (
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="group" id="group" checked={field.value === "group"} />
                             <Label htmlFor="group" className="cursor-pointer">Group</Label>

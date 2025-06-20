@@ -66,7 +66,7 @@ const MenuItemSpace = ({
         </div>
         <div className="flex gap-2">
           {/* Show appropriate dialog based on space type and nesting level */}
-          {isRootSpace && spaceType === "team" ? (
+          {isRootSpace ? (
             <AddSpaceDialog
               id={space?._id}
               space_visibility={space.is_private}

@@ -33,9 +33,6 @@ const SidebarMenuItems = ({ className }) => {
 
   console.log("🚀 ~ SidebarMenuItems ~ publicSpaces:", publicSpaces);
   console.log("🚀 ~ SidebarMenuItems ~ privateSpaces:", privateSpaces);
-  console.log("🚀 ~ SidebarMenuItems ~ isSpacesLoading:", isSpacesLoading);
-  console.log("🚀 ~ SidebarMenuItems ~ hasInitializedSpaces:", hasInitializedSpaces);
-
   // Show loading only if we haven't initialized spaces yet and are currently loading
   if (isSpacesLoading && !hasInitializedSpaces) {
     return (

@@ -18,9 +18,18 @@ import {
 import { Button } from "@/components/ui/button";
 
 const DataTableColumnHeader = ({ title, table }) => {
+  const handleMyFiles = () =>{
+    console.log("🚀 ~ DataTableColumnHeader ~ table:", table)
+
+  }
   return (
     <div className="flex items-center justify-between pb-6">
+      <div className='flex items-center gap-2'>
       <h3 className='text-xl font-medium'>{title}</h3>
+        <Button variant="outline" className="flex items-center justify-center text-base gap-2 bg-none border-none focus:outline-none">
+          <Plus onClick={() => handleMyFiles()} className='w-4 h-4' />
+        </Button>
+      </div>
       <div className='menu-buttons flex items-center gap-8'>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -45,14 +54,7 @@ const DataTableColumnHeader = ({ title, table }) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <DropdownMenu>
-          {/* <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="flex items-center justify-center text-base gap-2 bg-none border-none focus:outline-none">
-              Add
-              <Plus className='w-4 h-4' />
-            </Button>
-          </DropdownMenuTrigger> */}
-        </DropdownMenu>
+
       </div>
     </div>
   )
