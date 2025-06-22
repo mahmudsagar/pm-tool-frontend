@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
       // Extract token and user data from response
-      const { token: authToken, user: userData } = data;
+      const { token: authToken, user_info: userData } = data.data;
       
       // Store token and user data
       setToken(authToken);

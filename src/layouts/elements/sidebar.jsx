@@ -35,7 +35,7 @@ export default function Sidebar({ className }) {
   } = useFileManagerStore(state => state);
   useEffect(() => {
     if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
-      spaceCallApi(baseUrl + '/v1/space?user_id=' + user.id);
+      spaceCallApi(baseUrl + '/v1/space?user_id=' + user?.id);
       userCallApi(baseUrl + '/v1/user');
     }
   }, [spaceCallApi, publicSpaces, privateSpaces]);
@@ -81,7 +81,7 @@ export default function Sidebar({ className }) {
                   </Avatar>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <h5 className="text-xs font-semibold">{user.email}</h5>
+                  <h5 className="text-xs font-semibold">{user?.email}</h5>
                   {/* <span className="text-slate-600 dark:text-slate-100 text-xs">Chief Technology Officer</span> */}
                 </div>
               </div>
