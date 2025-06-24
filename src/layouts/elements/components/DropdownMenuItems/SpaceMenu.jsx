@@ -22,48 +22,7 @@ const SpaceMenu = ({ id, type, isPinned: initialIsPinned = false }) => {
     setIsPinned(initialIsPinned);
   }, [initialIsPinned, isOpen]);
   
-  // Handle pin toggle with optimistic UI update
-  const handlePinToggle = useCallback(async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setPinLoading(true);
-    const newPinStatus = !isPinned;
-    
-    // Optimistically update UI
-    setIsPinned(newPinStatus);
-    
-    try {
-      const result = await togglePinStatus(id, type, newPinStatus);
-      
-      if (result?.error) {
-        // Revert optimistic update if there was an error
-        setIsPinned(!newPinStatus);
-        toast({
-          variant: "destructive",
-          title: "Error updating pin status",
-          description: result.error,
-        });
-      } else {
-        toast({
-          variant: "success",
-          title: newPinStatus ? "Space pinned" : "Space unpinned",
-          description: `Space has been ${newPinStatus ? "pinned to sidebar" : "unpinned"}.`,
-        });
-      }
-    } catch (error) {
-      // Revert optimistic update if there was an error
-      setIsPinned(!newPinStatus);
-      toast({
-        variant: "destructive",
-        title: "Error updating pin status",
-        description: error.message,
-      });
-    } finally {
-      setPinLoading(false);
-      setIsOpen(false);
-    }
-  }, [id, type, isPinned, togglePinStatus, toast]);
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
@@ -75,14 +34,6 @@ const SpaceMenu = ({ id, type, isPinned: initialIsPinned = false }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-        <DropdownMenuItem 
-          className="flex items-center px-4 py-3 font-medium gap-3 cursor-pointer" 
-          onSelect={handlePinToggle}
-          disabled={pinLoading}
-        >
-          <Pin className="w-4 h-4" />
-          {isPinned ? "Unpin" : "Pin"}
-        </DropdownMenuItem>
         <DropdownMenuItem>Profile</DropdownMenuItem>
         <DropdownMenuItem>Billing</DropdownMenuItem>
         <DropdownMenuItem>Team</DropdownMenuItem>
