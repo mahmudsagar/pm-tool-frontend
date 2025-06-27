@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ChevronDown,
   ArrowDownWideNarrow,
@@ -16,10 +16,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import AddMyFilesDialog from '@/layouts/elements/components/AddMyFilesDialog';
+import { useMatches } from 'react-router-dom';
 
 const DataTableColumnHeader = ({ title, table }) => {
+  let matches = useMatches();
+  const [isOpen, setIsOpen] = useState(false);
   const handleMyFiles = () =>{
-    console.log("🚀 ~ DataTableColumnHeader ~ table:", table)
+    setIsOpen((current) => !current);
 
   }
   return (
@@ -54,8 +58,14 @@ const DataTableColumnHeader = ({ title, table }) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-
       </div>
+      {isOpen ? 
+        <AddMyFilesDialog 
+          id={matches[matches.length - 1].params.id} //last item id
+          type={matches[matches.length - 1].params.type} //last item type
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+      /> : null}
     </div>
   )
 }
