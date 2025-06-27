@@ -129,7 +129,7 @@ const AddFileDialog = ({
 
     // Set method based on whether we're editing or creating
     method = isEdit ? 'PUT' : 'POST';
-    
+
     if (data.filetype === "page") {
       endpoint = "/v1/page/document";
       documentData = isEdit ? {
@@ -156,7 +156,7 @@ const AddFileDialog = ({
       };
     } else if (data.filetype === "folder" || data.filetype === "group") {
       endpoint = data.filetype === "folder" ? "/v1/folder" : "/v1/group";
-      
+
       if (isEdit) {
         endpoint += `?id=${id}`;
         documentData = {
@@ -179,79 +179,110 @@ const AddFileDialog = ({
     } else {
       setLoading(false);
       return { error: "Invalid filetype specified" };
-    }    
+    }
 
     try {
-      await fetch(baseUrl + endpoint, {
+      const response = await fetch(baseUrl + endpoint, {
         method: method,
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(documentData),
-      })
-      .then(res => res.json())
-      .then(async (res) => {
-        if (res.error) {
-          console.error("Error saving document: ", res.error);
-          setLoading(false);
-          return;
-        }        
-        
-        if (isEdit) {
-          // Update the store with edited data
-          await updateHandler(id, data.filetype, {
-            ...res.data,
-            // Ensure we have the correct name/title property
-            name: data.filetype === "page" ? undefined : data.title,
-            title: data.filetype === "page" ? data.title : undefined
-          });
-          
-          // Call the edit success callback if provided
-          if (onEditSuccess) {
-            onEditSuccess(res.data);
-          }
-        } else {
-          // For creation, use the existing storeHandler
-          await storeHandler(id, type, res.data);
-        }
-        
-        setLoading(false);
-        setIsOpen(false);
-        form.reset();  
-      }).catch((error) => {
-        setLoading(false);
-        console.error("Error fetching data: ", error);
       });
+
+      const res = await response.json();
+
+      if (res.error) {
+        console.error("Error saving document: ", res.error);
+        setLoading(false);
+        return;
+      }
+
+      if (isEdit) {
+        // Update the store with edited data
+        const updateData = {
+          ...res.data,
+          // Ensure we have the correct name/title property based on entity type
+          ...(data.filetype === "page" ? { title: data.title } : { name: data.title })
+        };
+        updateHandler(id, data.filetype, updateData);
+        // Call the edit success callback if provided
+        if (onEditSuccess) {
+          onEditSuccess(res.data);
+        }
+      } else {
+        storeHandler(id, type, res.data);
+        
+      }
+      // Close the modal and reset form after successful operation
+      setLoading(false);
+      setIsOpen(false);
+
+      // Reset form with default values
+      form.reset({
+        title: '',
+        filetype: defaultFileType,
+        page_type: 'document',
+        shared_members: [],
+        shared_teams: []
+      });
+
+      // Reset local state
+      setFileName('');
+      setIsFile(defaultFileType);
     } catch (error) {
       setLoading(false);
-      console.error("Error fetching data: ", error);
+      
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open && !isEdit) {
-        // Keep the title value when updating (use current value)
-        const currentTitle = form.getValues().title;
-        
-        // Reset the form when the dialog closes but preserve title
-        form.reset({
-          title: currentTitle || '',
-          filetype: defaultFileType,
-          page_type: 'document',
-          shared_members: [],
-          shared_teams: []
-        });
+      if (!open) {
+        // Reset form when closing
+        if (isEdit) {
+          // For edit mode, keep the original values when canceling
+          form.reset({
+            title: initialName,
+            filetype: defaultFileType,
+            page_type: 'document',
+            shared_members: [],
+            shared_teams: []
+          });
+        } else {
+          // For create mode, reset to empty values
+          form.reset({
+            title: '',
+            filetype: defaultFileType,
+            page_type: 'document',
+            shared_members: [],
+            shared_teams: []
+          });
+          setFileName('');
+        }
+
+        // Reset local state
         setIsFile(defaultFileType);
+      } else {
+        // When opening, initialize form properly
+        if (isEdit && initialName) {
+          form.reset({
+            title: initialName,
+            filetype: defaultFileType,
+            page_type: 'document',
+            shared_members: [],
+            shared_teams: []
+          });
+          setFileName(initialName);
+        } else if (!isEdit) {
+          // For create mode, ensure clean state
+          form.setValue("filetype", defaultFileType);
+          form.setValue("page_type", "document");
+          setIsFile(defaultFileType);
+        }
       }
-      
-      // When opening, make sure the form is properly initialized
-      if (open && !isEdit) {
-        // Don't reset the title when reopening
-        form.setValue("filetype", defaultFileType); 
-        setIsFile(defaultFileType);
-      }
+
       setIsOpen(open);
     }}>
       {!isEdit && (
