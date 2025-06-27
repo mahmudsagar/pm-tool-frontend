@@ -23,7 +23,7 @@ function DataTable() {
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
-  const { formatTableData } = useFileManagerStore(state => state);
+  const { formatTableData, documents } = useFileManagerStore(state => state);
 
   // Callbacks for handling delete and edit operations
   const handleDataChange = useCallback((updatedData, handlers) => {
@@ -76,7 +76,7 @@ function DataTable() {
     };
 
     fetchData();
-  }, [id, type, formatTableData]);
+  }, [id, type, formatTableData, documents]);
 
   const table = useReactTable({
     data: tableData,
