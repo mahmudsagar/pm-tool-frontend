@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/select';
 import useStatusStore from '@/stores/useStatusStore';
 
-function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo", onSave }) {
+function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo", defaultDate = null, onSave }) {
   // Get status options from the global store
   const { getStatusOptions } = useStatusStore();
   const statusOptions = getStatusOptions();
@@ -89,18 +89,19 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
       });
     } else if (open) {
       // Creating new task
+      const defaultDueDate = defaultDate ? defaultDate.toISOString().split('T')[0] : '';
       form.reset({
         title: '',
         description: '',
         status: defaultStatus,
         priority: 'medium',
         assignee: '',
-        due_date: '',
+        due_date: defaultDueDate,
         sprint: 'sprint-1',
         type: 'feature'
       });
     }
-  }, [task, defaultStatus, open, form]);
+  }, [task, defaultStatus, defaultDate, open, form]);
 
   const onSubmit = (data) => {
     // Generate task ID for new tasks
@@ -240,7 +241,14 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
                 name="due_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date</FormLabel>
+                    <FormLabel>
+                      Due Date
+                      {defaultDate && !task && (
+                        <span className="text-sm text-blue-600 ml-2">
+                          (Pre-selected: {defaultDate.toLocaleDateString()})
+                        </span>
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
