@@ -15,7 +15,7 @@ import { TabsContent } from "@radix-ui/react-tabs"
 import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
 
 // Dummy data for now
-import viewJSONData from "@/utils/dummyDataView"
+import { getDummyDataView } from "@/utils/dummyDataView"
 
 const layouts = [
   {
@@ -45,6 +45,9 @@ const layouts = [
 ]
 
 export default function Data() {
+  // Get dynamic data with current status options
+  const viewJSONData = getDummyDataView();
+  
   return (
     <section className="w-full flex flex-col items-center justify-center gap-4 text-center p-6">
       <Tabs defaultValue="table" className="w-full">
