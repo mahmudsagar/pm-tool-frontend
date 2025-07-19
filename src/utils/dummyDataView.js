@@ -18,6 +18,11 @@ export const getDummyDataView = () => {
             "name": "title"
         },
         {
+            "type": "text",
+            "label": "Description",
+            "name": "description"
+        },
+        {
             "type": "select",
             "label": "Status",
             "props": {
@@ -76,29 +81,18 @@ export const getDummyDataView = () => {
           "name": "priority"
       },
       {
-          "type": "text",
+          "type": "date",
           "label": "Due Date",
           "name": "due_date"
       },
       {
-          "type": "select",
+          "type": "date",
+          "label": "Start Date",
+          "name": "start_date"
+      },
+      {
+          "type": "text",
           "label": "Sprint",
-          "props": {
-              "optionsData": [
-                  {
-                      "label": "Sprint 1",
-                      "value": "sprint-1"
-                  },
-                  {
-                      "label": "Sprint 2",
-                      "value": "sprint-2"
-                  },
-                  {
-                      "label": "Sprint 3",
-                      "value": "sprint-3"
-                  }
-              ]
-          },
           "name": "sprint"
       },
       {
@@ -111,146 +105,80 @@ export const getDummyDataView = () => {
       {
           "id": "task-1",
           "task_id": "BNH-001",
-          "title": "Design System Implementation",
-          "status": "todo",
+          "title": "Implement user authentication system",
+          "description": "Create login/logout functionality with JWT tokens and secure session management.",
+          "status": "in-progress",
           "priority": "high",
-          "assignee": "sarah_johnson",
-          "due_date": "2025-07-15",
-          "sprint": "sprint-1",
-          "type": "feature",
-          "description": "Implement the design system components for the new dashboard"
+          "assignee": "muhtasim_fuad_fahim",
+          "due_date": new Date(Date.now() - 86400000).toISOString().split('T')[0], // Yesterday (overdue)
+          "start_date": new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0], // Week ago
+          "sprint": "Sprint 1",
+          "type": "feature"
       },
       {
           "id": "task-2",
           "task_id": "BNH-002",
-          "title": "User Authentication API",
-          "status": "in-progress",
-          "priority": "critical",
-          "assignee": "muhtasim_fuad_fahim",
-          "due_date": "2025-07-10",
-          "sprint": "sprint-1",
-          "type": "backend",
-          "description": "Develop secure user authentication endpoints"
+          "title": "Design database schema",
+          "description": "Create comprehensive database design for user management and content storage.",
+          "status": "done",
+          "priority": "high",
+          "assignee": "mahmudul_hasan",
+          "due_date": new Date().toISOString().split('T')[0], // Today
+          "start_date": new Date(Date.now() - 3 * 86400000).toISOString().split('T')[0], // 3 days ago
+          "sprint": "Sprint 1",
+          "type": "backend"
       },
       {
           "id": "task-3",
           "task_id": "BNH-003",
-          "title": "Mobile Responsive Layout",
-          "status": "review",
+          "title": "Create responsive dashboard layout",
+          "description": "Build modern dashboard with sidebar navigation and responsive grid system.",
+          "status": "todo",
           "priority": "medium",
-          "assignee": "alex_chen",
-          "due_date": "2025-07-12",
-          "sprint": "sprint-1",
-          "type": "frontend",
-          "description": "Make the application responsive for mobile devices"
+          "assignee": "sarah_johnson",
+          "due_date": new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
+          "start_date": new Date().toISOString().split('T')[0], // Today
+          "sprint": "Sprint 1",
+          "type": "frontend"
       },
       {
           "id": "task-4",
           "task_id": "BNH-004",
-          "title": "Database Migration Scripts",
-          "status": "done",
+          "title": "API endpoint testing",
+          "description": "Comprehensive testing of all REST API endpoints with automated test suite.",
+          "status": "review",
           "priority": "medium",
-          "assignee": "mahmudul_hasan",
-          "due_date": "2025-07-05",
-          "sprint": "sprint-1",
-          "type": "backend",
-          "description": "Create migration scripts for the new database schema"
+          "assignee": "alex_chen",
+          "due_date": new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0], // 5 days from now
+          "start_date": new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
+          "sprint": "Sprint 2",
+          "type": "testing"
       },
       {
           "id": "task-5",
           "task_id": "BNH-005",
-          "title": "Unit Test Coverage",
+          "title": "Security vulnerability audit",
+          "description": "Perform comprehensive security audit and implement necessary fixes.",
           "status": "todo",
-          "priority": "medium",
-          "assignee": "alex_chen",
-          "due_date": "2025-07-20",
-          "sprint": "sprint-2",
-          "type": "testing",
-          "description": "Increase unit test coverage to 80%"
+          "priority": "critical",
+          "assignee": "muhtasim_fuad_fahim",
+          "due_date": new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0], // 2 weeks from now
+          "start_date": new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0], // Next week
+          "sprint": "Sprint 2",
+          "type": "security"
       },
       {
           "id": "task-6",
           "task_id": "BNH-006",
-          "title": "Performance Optimization",
-          "status": "in-progress",
-          "priority": "high",
-          "assignee": "sarah_johnson",
-          "due_date": "2025-07-18",
-          "sprint": "sprint-2",
-          "type": "optimization",
-          "description": "Optimize application performance and reduce load times"
-      },
-      {
-          "id": "task-7",
-          "task_id": "BNH-007",
-          "title": "Documentation Update",
-          "status": "review",
-          "priority": "low",
-          "assignee": "muhtasim_fuad_fahim",
-          "due_date": "2025-07-25",
-          "sprint": "sprint-2",
-          "type": "documentation",
-          "description": "Update API documentation with latest changes"
-      },
-      {
-          "id": "task-8",
-          "task_id": "BNH-008",
-          "title": "Security Audit",
-          "status": "done",
-          "priority": "critical",
-          "assignee": "mahmudul_hasan",
-          "due_date": "2025-07-01",
-          "sprint": "sprint-1",
-          "type": "security",
-          "description": "Conduct comprehensive security audit"
-      },
-      {
-          "id": "task-9",
-          "task_id": "BNH-009",
-          "title": "Email Notification System",
+          "title": "Update project documentation",
+          "description": "Comprehensive update of API documentation and user guides.",
           "status": "todo",
-          "priority": "medium",
-          "assignee": "alex_chen",
-          "due_date": "2025-07-30",
-          "sprint": "sprint-3",
-          "type": "feature",
-          "description": "Implement email notification system for user actions"
-      },
-      {
-          "id": "task-10",
-          "task_id": "BNH-010",
-          "title": "Dashboard Analytics",
-          "status": "in-progress",
-          "priority": "high",
+          "priority": "low",
           "assignee": "sarah_johnson",
-          "due_date": "2025-07-22",
-          "sprint": "sprint-2",
-          "type": "feature",
-          "description": "Create analytics dashboard with charts and metrics"
-      },
-      {
-          "id": "task-11",
-          "task_id": "BNH-011",
-          "title": "API Rate Limiting",
-          "status": "review",
-          "priority": "high",
-          "assignee": "muhtasim_fuad_fahim",
-          "due_date": "2025-07-14",
-          "sprint": "sprint-1",
-          "type": "backend",
-          "description": "Implement rate limiting for API endpoints"
-      },
-      {
-          "id": "task-12",
-          "task_id": "BNH-012",
-          "title": "Code Review Process",
-          "status": "done",
-          "priority": "medium",
-          "assignee": "mahmudul_hasan",
-          "due_date": "2025-06-28",
-          "sprint": "sprint-1",
-          "type": "process",
-          "description": "Establish code review process and guidelines"
+          "due_date": null, // No date
+          "start_date": null,
+          "sprint": "Sprint 3",
+          "type": "documentation"
       }
   ]
   };
