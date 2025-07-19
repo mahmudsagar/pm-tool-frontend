@@ -411,6 +411,7 @@ const AddMyFilesDialog = ({
                                 <SelectItem value="document">Document</SelectItem>
                                 <SelectItem value="sheet">Sheet</SelectItem>
                                 <SelectItem value="whiteboard">Whiteboard</SelectItem>
+                                <SelectItem value="board">Board</SelectItem>
                               </SelectContent>
                             </Select>
                           )}
