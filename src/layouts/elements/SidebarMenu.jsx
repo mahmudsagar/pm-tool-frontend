@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import {
   LucideCalendar,
   LucideHome,
-  LucideInbox,
+  LucideUsers
 } from "lucide-react";
 import { CommandMenu } from "@/components/elements/commandMenu/command-menu";
 import SidebarMenuItems from "./SidebarMenuItems";
@@ -23,9 +23,9 @@ const sidebarTopLinks = [
     icon: LucideCalendar,
   },
   {
-    title: "Inbox",
-    href: "/form/1",
-    icon: LucideInbox,
+    title: "Teams",
+    href: "/my-teams",
+    icon: LucideUsers,
   },
 ];
 

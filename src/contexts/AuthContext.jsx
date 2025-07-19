@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const response = await fetch(import.meta.env.BN_BASE_URL +'/v1/login', {
+      const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,23 +48,31 @@ export const AuthProvider = ({ children }) => {
         throw new Error(errorData.message || "Login failed");
       }
 
-      const data = await response.json();
-      // Extract token and user data from response
-      const { token: authToken, user_info: userData } = data.data;
+      const responseData = await response.json();
       
-      // Store token and user data
-      setToken(authToken);
-      setUser(userData);
-      
-      // Save to localStorage
-      localStorage.setItem("token", authToken);
-      localStorage.setItem("user", JSON.stringify(userData));
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
-      });
-      return true;
+      // Extract token and user data from the new response structure
+      if (responseData.status === "success" && responseData.data) {
+        const authToken = responseData.data.token;
+        const userData = responseData.data.user_info;
+        
+        // Store token and user data
+        setToken(authToken);
+        setUser(userData);
+        
+        // Save to localStorage
+        localStorage.setItem("token", authToken);
+        localStorage.setItem("user", JSON.stringify(userData));
+        
+        toast({
+          title: "Login successful",
+          description: Array.isArray(responseData.message[0]?.success) 
+            ? responseData.message[0].success[0] 
+            : "Welcome back!",
+        });
+        return true;
+      } else {
+        throw new Error("Invalid response format");
+      }
     } catch (error) {
       toast({
         title: "Login failed",
@@ -147,23 +155,31 @@ export const AuthProvider = ({ children }) => {
         throw new Error(errorData.message || "Registration failed");
       }
 
-      const data = await response.json();
-      // Extract token and user data from response
-      const { token: authToken, user: userData } = data;
+      const responseData = await response.json();
       
-      // Store token and user data
-      setToken(authToken);
-      setUser(userData);
-      
-      // Save to localStorage
-      localStorage.setItem("token", authToken);
-      localStorage.setItem("user", JSON.stringify(userData));
-      
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created",
-      });
-      return true;
+      // Extract token and user data from the new response structure
+      if (responseData.status === "success" && responseData.data) {
+        const authToken = responseData.data.token;
+        const userData = responseData.data.user_info;
+        
+        // Store token and user data
+        setToken(authToken);
+        setUser(userData);
+        
+        // Save to localStorage
+        localStorage.setItem("token", authToken);
+        localStorage.setItem("user", JSON.stringify(userData));
+        
+        toast({
+          title: "Registration successful",
+          description: Array.isArray(responseData.message[0]?.success) 
+            ? responseData.message[0].success[0] 
+            : "Your account has been created",
+        });
+        return true;
+      } else {
+        throw new Error("Invalid response format");
+      }
     } catch (error) {
       toast({
         title: "Registration failed",

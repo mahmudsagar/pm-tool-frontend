@@ -17,12 +17,13 @@ import DataTableColumnHeader from './data-table-header';
 function DataTable() {
   let { id, type } = useParams();
   const [tableData, setTableData] = useState([]);
+  console.log("🚀 ~ DataTable ~ tableData:", tableData)
   const [sorting, setSorting] = useState([]);
   const [loading, setLoading] = useState(false);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
-  const { formatTableData } = useFileManagerStore(state => state);
+  const { formatTableData, documents } = useFileManagerStore(state => state);
 
   // Callbacks for handling delete and edit operations
   const handleDataChange = useCallback((updatedData, handlers) => {
@@ -75,7 +76,7 @@ function DataTable() {
     };
 
     fetchData();
-  }, [id, type, formatTableData]);
+  }, [id, type, formatTableData, documents]);
 
   const table = useReactTable({
     data: tableData,

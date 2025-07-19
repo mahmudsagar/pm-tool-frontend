@@ -28,6 +28,7 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue
@@ -36,7 +37,7 @@ import ButtonLoading from './ButtonLoading';
 import { useAuth } from '@/contexts/AuthContext';
 import { ensureArray, sanitize } from '@/utils/helper';
 
-const AddFileDialog = ({ 
+const AddMyFilesDialog = ({ 
   id, 
   type, 
   space_visibility,
@@ -46,16 +47,24 @@ const AddFileDialog = ({
   setIsOpen,
   onEditSuccess 
 }) => {  
+    console.log("🚀 ~ AddMyFilesDialog ~ id:", id)
+    console.log("🚀 ~ AddMyFilesDialog ~ type:", type)
+    console.log("🚀 ~ AddMyFilesDialog ~ space_visibility:", space_visibility)
   const defaultFileType = 'page'; // Always default to page instead of using type
   const [isFile, setIsFile] = useState(defaultFileType);
   const [loading, setLoading] = useState(false); // Submitting Data loading
   const [fileName, setFileName] = useState(initialName || ''); // Track filename separately
+  const [spaceId, setSpaceId] = useState(''); // Track space ID separately
+  const [selectedSpace, setSelectedSpace] = useState({}) // Track selected space object
+  console.log("🚀 ~ selectedSpace:", selectedSpace)
+  console.log("🚀 ~ spaceId:", spaceId)
   const { data: users, callApi:userCallApi } = useApi();
   const { data: teams, callApi:teamCallApi } = useApi();;
   const usersData = ensureArray(users)
   const teamsData = ensureArray(teams)
-  const { storeHandler, updateHandler } = useFileManagerStore(state => state);
-  
+  const { storeHandler, updateHandler, publicSpaces,
+    privateSpaces, } = useFileManagerStore(state => state);
+  const allSpaces = [...publicSpaces, ...privateSpaces];
   const form = useForm({
     defaultValues: {
       title: isEdit ? initialName : fileName,
@@ -72,6 +81,15 @@ const AddFileDialog = ({
       setFileName(initialName);
     }
   }, [isEdit, initialName]);
+  // fined the space based on user selection
+  useEffect(() =>{
+    if (spaceId) {
+      const selectedSpace = allSpaces.find(space => space._id === spaceId);
+      if (selectedSpace) {
+        setSelectedSpace(selectedSpace);
+      }
+    }
+  },[spaceId])
   
   // Force set form values when component mounts
   useEffect(() => {
@@ -151,7 +169,7 @@ const AddFileDialog = ({
         },
         folder_id: type === "folder" ? id : '',
         group_id: type === "group" ? id : '',
-        space_id: type === "space" ? id : '',
+        space_id: selectedSpace.entity_type === "space" ? selectedSpace._id : '',
         attachments: []
       };
     } else if (data.filetype === "folder" || data.filetype === "group") {
@@ -173,7 +191,7 @@ const AddFileDialog = ({
           shared_teams: data.shared_teams,
           folder_id: type === "folder" ? id : '',
           group_id: type === "group" ? id : '',
-          space_id: type === "space" ? id : '',
+          space_id: selectedSpace.entity_type === "space" ? selectedSpace._id : '',
         };
       }
     } else {
@@ -305,10 +323,33 @@ const AddFileDialog = ({
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
               <DialogTitle>{isEdit ? 'Edit' : 'Create'}</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="!mb-4">
                 Please provide the necessary details to {isEdit ? 'update' : 'create'}.
               </DialogDescription>
             </DialogHeader>
+            {!type&& (<>
+              {/* <Label className="text-sm font-medium mb-2">
+                Space
+              </Label> */}
+            <Select onValueChange={setSpaceId}
+              value={spaceId}
+              className="w-full"
+              >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a space" />
+              </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {allSpaces?.map((option, index) => (
+                  <SelectItem key={index} value={option?._id}>{option?.name}</SelectItem>
+                ))}
+
+                {allSpaces?.length === 0 && <SelectItem disabled>No options available</SelectItem>}
+              </SelectGroup>
+            </SelectContent>
+            </Select>
+            </>)}
+
             <div className="py-3 w-full flex items-start flex-col gap-4">
               {!isEdit && (
                 <FormField
@@ -402,7 +443,7 @@ const AddFileDialog = ({
                   </FormItem>
                 )}
               />
-              {!space_visibility && (<>
+              {!selectedSpace?.is_private && (<>
               <FormField
                 control={form.control}
                 name="shared_members"
@@ -456,4 +497,4 @@ const AddFileDialog = ({
   );
 };
 
-export default AddFileDialog;
+export default AddMyFilesDialog;

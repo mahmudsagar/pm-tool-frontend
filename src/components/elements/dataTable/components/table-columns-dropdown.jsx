@@ -156,7 +156,7 @@ const TableColumnsDropdown = ({info, onDeleteSuccess, onEditSuccess}) => {
       setIsOpen(false);
     }
   }, [fileId, fileType, fileName, isPinned, togglePinStatus, toast]);
-
+  
   // Enhanced success handler with additional error catching
   const handleDeleteSuccess = useCallback(() => {
     console.log("Delete operation successful for item:", fileId);

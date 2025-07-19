@@ -25,14 +25,14 @@ import FolderMenu from "./DropdownMenuItems/FolderMenu";
 import DocStructure from "./DocStructure";
 import { baseUrl } from '@/utils/constants';
 
-const MenuItemFolder = ({ folder, className }) => {     
+const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {     
   const { isOpen } = useSidebar();
   const [loading, setLoading] = useState(false)
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
   const { storeDocuments, documents } = useFileManagerStore(state => state);    
-
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   useEffect(() => {
     if (isOpen) {
       setOpenItem(lastOpenItem);
@@ -43,6 +43,7 @@ const MenuItemFolder = ({ folder, className }) => {
   }, [isOpen]);  
 
   const handleDropdownToggle = (id) => {
+    console.log("🚀 ~ handleDropdownToggle ~ id:", id)
     setDropdownOpenStates(prevState => ({
       ...prevState,
       [id]: !prevState[id]
@@ -150,12 +151,15 @@ const MenuItemFolder = ({ folder, className }) => {
                   <AddFileDialog 
                     id={folder?._id} 
                     type={folder?.entity_type} 
+                    isOpen={isAddModalOpen}
+                    setIsOpen={setIsAddModalOpen}
                   />
                   <FolderMenu
                     isOpen={dropdownOpenStates}
                     onToggle={(id) => handleDropdownToggle(id)}
                     id={folder?._id}
                     type={folder?.entity_type}
+                    fileName={folder}
                   />
                 </div>
               </div>
@@ -183,8 +187,8 @@ const MenuItemFolder = ({ folder, className }) => {
                       ))
                     :(
                     <MenuEmpty key={doc._id}/> // Document Child Empty
-                  )) : (
-                  <MenuEmpty/> // Document Empty
+                  )) : ( null
+                  // <MenuEmpty/> // Document Empty
                 )                
               }
             </AccordionContent>
