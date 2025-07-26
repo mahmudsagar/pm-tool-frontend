@@ -1,21 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { useForm, Controller } from "react-hook-form";
-import { Plus } from "lucide-react";
-import useApi from '@/lib/dataFetcher';
-import { Input } from "@/components/ui/input";
-import { Label } from '@/components/ui/label';
 import { Button } from "@/components/ui/button";
-import { baseUrl } from '@/utils/constants';
-import { MultiSelect } from '@/components/ui/multi-select';
-import useFileManagerStore from "@/stores/useFileManagerStore";
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -25,6 +15,10 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from '@/components/ui/label';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -32,51 +26,57 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import ButtonLoading from './ButtonLoading';
 import { useAuth } from '@/contexts/AuthContext';
-import { ensureArray, sanitize } from '@/utils/helper';
+import useApi from '@/lib/dataFetcher';
+import useFileManagerStore from "@/stores/useFileManagerStore";
+import { baseUrl } from '@/utils/constants';
+import { ensureArray } from '@/utils/helper';
+import { Plus } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from "react-hook-form";
+import ButtonLoading from './ButtonLoading';
 
-const AddFileDialog = ({ 
-  id, 
-  type, 
+const AddFileDialog = ({
+  id,
+  type,
   space_visibility,
-  isEdit = false, 
-  initialName = '', 
-  isOpen, 
+  isEdit = false,
+  initialName = '',
+  isOpen,
   setIsOpen,
-  onEditSuccess 
-}) => {  
+  onEditSuccess
+}) => {
   const defaultFileType = 'page'; // Always default to page instead of using type
   const [isFile, setIsFile] = useState(defaultFileType);
   const [loading, setLoading] = useState(false); // Submitting Data loading
   const [fileName, setFileName] = useState(initialName || ''); // Track filename separately
-  const { data: users, callApi:userCallApi } = useApi();
-  const { data: teams, callApi:teamCallApi } = useApi();;
+  const { data: users, callApi: userCallApi } = useApi();
+  const { data: teams, callApi: teamCallApi } = useApi();
   const usersData = ensureArray(users)
   const teamsData = ensureArray(teams)
   const { storeHandler, updateHandler } = useFileManagerStore(state => state);
-  
+
   const form = useForm({
     defaultValues: {
       title: isEdit ? initialName : fileName,
       filetype: defaultFileType,
-      page_type: 'document', 
+      page_type: 'document',
       shared_members: [],
       shared_teams: []
     }
   });
-  
+
   // Update filename state when initialName changes
   useEffect(() => {
     if (isEdit && initialName) {
       setFileName(initialName);
     }
   }, [isEdit, initialName]);
-  
+
   // Force set form values when component mounts
   useEffect(() => {
     const title = isEdit ? initialName : fileName;
-    
+
     // Only reset if we have the needed data
     form.reset({
       title,
@@ -85,30 +85,30 @@ const AddFileDialog = ({
       shared_members: [],
       shared_teams: []
     }, { keepValues: true });
-    
+
     setIsFile(defaultFileType);
   }, []);
-  
+
   // Synchronize when dialog opens
   useEffect(() => {
     if (isOpen) {
       // Force update form values when dialog opens
       form.setValue("filetype", defaultFileType);
       form.setValue("page_type", "document");
-      
+
       // Preserve the title
       if (isEdit && initialName) {
         form.setValue("title", initialName);
       }
-      
+
       setIsFile(defaultFileType);
     }
   }, [isOpen, isEdit, initialName, form]);
-  
+
   const { user, token } = useAuth();
-  
+
   const userID = user?._id;
-  useEffect(() => {    
+  useEffect(() => {
     document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
 
     if (isOpen) {
@@ -213,7 +213,7 @@ const AddFileDialog = ({
         }
       } else {
         storeHandler(id, type, res.data);
-        
+
       }
       // Close the modal and reset form after successful operation
       setLoading(false);
@@ -233,7 +233,7 @@ const AddFileDialog = ({
       setIsFile(defaultFileType);
     } catch (error) {
       setLoading(false);
-      
+
     }
   };
 
@@ -316,7 +316,7 @@ const AddFileDialog = ({
                   name="filetype"
                   render={({ field }) => (
                     <RadioGroup
-                      onValueChange={(value) => {                      
+                      onValueChange={(value) => {
                         field.onChange(value);
                         setIsFile(value);
                       }}
@@ -366,10 +366,11 @@ const AddFileDialog = ({
                               <SelectTrigger>
                                 <SelectValue placeholder="File Format" />
                               </SelectTrigger>
-                              <SelectContent>                                                              
+                              <SelectContent>
                                 <SelectItem value="document">Document</SelectItem>
                                 <SelectItem value="sheet">Sheet</SelectItem>
-                                <SelectItem value="whiteboard">Whiteboard</SelectItem>                                  
+                                <SelectItem value="whiteboard">Whiteboard</SelectItem>
+                                <SelectItem value="board">Board</SelectItem>
                               </SelectContent>
                             </Select>
                           )}
@@ -390,7 +391,7 @@ const AddFileDialog = ({
                       <Input
                         placeholder="File Name"
                         {...field}
-                        value={field.value ?? fileName ?? ''} 
+                        value={field.value ?? fileName ?? ''}
                         onChange={(e) => {
                           field.onChange(e);
                           setFileName(e.target.value);
@@ -403,48 +404,48 @@ const AddFileDialog = ({
                 )}
               />
               {!space_visibility && (<>
-              <FormField
-                control={form.control}
-                name="shared_members"
-                render={({ field }) => (
-                  <FormItem className='w-full'>
-                    <FormLabel>Shared Member</FormLabel>
-                    <MultiSelect
-                      options={Array.isArray(usersData) ? usersData.map(user => ({ value: user._id, label: user.email })) : []}                      
-                      onValueChange={(value) => field.onChange(value)}
-                      placeholder="Select Member"
-                      variant="inverted"
-                      animation={2}
-                      maxCount={3}
-                      handleFormChange={field.onChange}
-                    />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="shared_teams"
-                render={({ field }) => (
-                  <FormItem className='w-full'>
-                    <FormLabel>Shared Team</FormLabel>
-                    <MultiSelect
-                      options={Array.isArray(teamsData) ? teamsData?.map(team => ({ value: team._id, label: team.name })) : []}
-                      onValueChange={(value) => field.onChange(value)}
-                      placeholder="Select Team"
-                      variant="inverted"
-                      animation={2}
-                      maxCount={3}
-                      handleFormChange={field.onChange}
-                    />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="shared_members"
+                  render={({ field }) => (
+                    <FormItem className='w-full'>
+                      <FormLabel>Shared Member</FormLabel>
+                      <MultiSelect
+                        options={Array.isArray(usersData) ? usersData.map(user => ({ value: user._id, label: user.email })) : []}
+                        onValueChange={(value) => field.onChange(value)}
+                        placeholder="Select Member"
+                        variant="inverted"
+                        animation={2}
+                        maxCount={3}
+                        handleFormChange={field.onChange}
+                      />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="shared_teams"
+                  render={({ field }) => (
+                    <FormItem className='w-full'>
+                      <FormLabel>Shared Team</FormLabel>
+                      <MultiSelect
+                        options={Array.isArray(teamsData) ? teamsData?.map(team => ({ value: team._id, label: team.name })) : []}
+                        onValueChange={(value) => field.onChange(value)}
+                        placeholder="Select Team"
+                        variant="inverted"
+                        animation={2}
+                        maxCount={3}
+                        handleFormChange={field.onChange}
+                      />
+                    </FormItem>
+                  )}
+                />
               </>)}
             </div>
             <div className="flex justify-end space-x-2">
               <Button type="submit">
-                {loading ? 
-                  <ButtonLoading text={isEdit ? 'Updating...' : 'Creating...'} flex='row' btn={true} /> : 
+                {loading ?
+                  <ButtonLoading text={isEdit ? 'Updating...' : 'Creating...'} flex='row' btn={true} /> :
                   isEdit ? "Update" : "Create"
                 }
               </Button>
