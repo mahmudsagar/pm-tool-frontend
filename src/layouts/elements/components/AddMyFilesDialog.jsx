@@ -167,7 +167,7 @@ const AddMyFilesDialog = ({
           author: "John Doe",
           keywords: ["sample", "page", "meta"]
         },
-        folder_id: type === "folder" ? id : '',
+        // folder_id: type === "folder" ? id : '',
         group_id: type === "group" ? id : '',
         space_id: selectedSpace.entity_type === "space" ? selectedSpace._id : '',
         attachments: []
