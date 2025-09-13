@@ -66,3 +66,22 @@ export function invariant(
       message,
   );
 }
+
+// This function ensures that the input is always an array.
+export function ensureArray(input) {
+  // If it's already an array, return it directly
+  if (Array.isArray(input)) {
+    return input;
+  }
+
+  // If it's an object, convert numeric keys to array
+  if (typeof input === "object" && input !== null) {
+    return Object.keys(input)
+      .filter((key) => !isNaN(Number(key))) // Only keep numeric keys
+      .sort((a, b) => Number(a) - Number(b)) // Sort numerically
+      .map((key) => input[key]); // Create array from sorted values
+  }
+
+  // Handle unexpected types (return empty array)
+  return [];
+}

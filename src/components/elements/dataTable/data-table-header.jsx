@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ChevronDown,
   ArrowDownWideNarrow,
@@ -16,11 +16,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import AddMyFilesDialog from '@/layouts/elements/components/AddMyFilesDialog';
+import { useMatches } from 'react-router-dom';
 
 const DataTableColumnHeader = ({ title, table }) => {
+  let matches = useMatches();
+  const [isOpen, setIsOpen] = useState(false);
+  const handleMyFiles = () =>{
+    setIsOpen((current) => !current);
+
+  }
   return (
     <div className="flex items-center justify-between pb-6">
+      <div className='flex items-center gap-2'>
       <h3 className='text-xl font-medium'>{title}</h3>
+        <Button variant="outline" className="flex items-center justify-center text-base gap-2 bg-none border-none focus:outline-none">
+          <Plus onClick={() => handleMyFiles()} className='w-4 h-4' />
+        </Button>
+      </div>
       <div className='menu-buttons flex items-center gap-8'>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -45,15 +58,14 @@ const DataTableColumnHeader = ({ title, table }) => {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <DropdownMenu>
-          {/* <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="flex items-center justify-center text-base gap-2 bg-none border-none focus:outline-none">
-              Add
-              <Plus className='w-4 h-4' />
-            </Button>
-          </DropdownMenuTrigger> */}
-        </DropdownMenu>
       </div>
+      {isOpen ? 
+        <AddMyFilesDialog 
+          id={matches[matches.length - 1].params.id} //last item id
+          type={matches[matches.length - 1].params.type} //last item type
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+      /> : null}
     </div>
   )
 }

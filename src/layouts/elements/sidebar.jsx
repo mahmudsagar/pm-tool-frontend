@@ -14,10 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
 import useApi from "@/lib/dataFetcher";
-import { baseUrl, userID } from '@/utils/constants';
+import { baseUrl } from '@/utils/constants';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import { useAuth } from "@/contexts/AuthContext";
-
 
 export default function Sidebar({ className }) {
   const { isOpen, toggle } = useSidebar();
@@ -25,26 +24,49 @@ export default function Sidebar({ className }) {
   const { data: users, callApi: userCallApi } = useApi();
   const { loading: spaceLoading, data: spaces, callApi: spaceCallApi } = useApi();
   const { logout, user } = useAuth();
-  
+  console.log("🚀 ~ Sidebar ~ user:", user)
   const {
     storeState,
-    spaceFiles,
     publicSpaces,
-    formatSpaces,
     privateSpaces,
+    formatSpaces,
+    hasInitializedSpaces,
+    setInitializedSpaces,
+    isSpacesLoading,
+    setSpacesLoading,
   } = useFileManagerStore(state => state);
+
   useEffect(() => {
-    if (!publicSpaces || publicSpaces.length === 0 || !privateSpaces || privateSpaces.length === 0) {
-      spaceCallApi(baseUrl + '/v1/space?user_id=' + user._id);
+    // Only proceed if user exists and spaces haven't been initialized yet
+    if (user && !user?.workspaces_flag && !isSpacesLoading) {
+      setSpacesLoading(true);
+
+      // Always fetch users data
       userCallApi(baseUrl + '/v1/user');
+
+      setInitializedSpaces(false);
+      setSpacesLoading(false);
+    }else{
+      spaceCallApi(baseUrl + '/v1/space?user_id=' + user._id);
+      setInitializedSpaces(true);
     }
-  }, [spaceCallApi, publicSpaces, privateSpaces]);
+  }, [user, hasInitializedSpaces, isSpacesLoading, userCallApi, spaceCallApi, setInitializedSpaces, setSpacesLoading]);
+
+  // Handle users data
+  useEffect(() => {
+    if (users) {
+      storeState('users', users);
+    }
+  }, [users, storeState]);
   useEffect(() => {
     if (spaces) {
       storeState('users', users);
       formatSpaces(spaces);
     }
   }, [spaces, formatSpaces]);
+  // Function to determine if user is newly registered
+
+
   const handleToggle = () => {
     setStatus(true);
     toggle();
@@ -72,17 +94,16 @@ export default function Sidebar({ className }) {
               <div className="flex gap-1.5">
                 <div className="w-12 flex flex-row-reverse justify-end items-center relative transform translate-z-0">
                   <Avatar className="w-8 h-8 relative -mr-3.5">
-                    <AvatarImage src="https://avatars.githubusercontent.com/u/124598.png" alt="@shadcn" />
-                    <AvatarFallback>PP</AvatarFallback>
-                  </Avatar>
-                  <Avatar className="w-8 h-8 relative -mr-3.5">
                     <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
                     <AvatarFallback>user</AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <h5 className="text-xs font-semibold">{user.email}</h5>
-                  {/* <span className="text-slate-600 dark:text-slate-100 text-xs">Chief Technology Officer</span> */}
+                  <h5 className="text-xs font-semibold">{user?.name ? user.name : user?.email}</h5>
+                  {/* Optional: Show loading indicator for new users */}
+                  {isSpacesLoading && (
+                    <span className="text-xs text-muted-foreground">Setting up workspace...</span>
+                  )}
                 </div>
               </div>
               <DropdownMenu>

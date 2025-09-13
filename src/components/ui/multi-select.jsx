@@ -6,6 +6,7 @@ import {
   ChevronDown,
   XIcon,
   WandSparkles,
+  AlertCircle
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -126,12 +127,15 @@ export const MultiSelect = React.forwardRef(
         commandListRef.current.scrollTop += event.deltaY;
       }
     };
-
+    // safety check for the handleFormChange callback
     React.useEffect(() => {
       if (!isPopoverOpen) {
-        handleFormChange();
+        handleFormChange && handleFormChange();
       }
-    }, [isPopoverOpen]);
+    }, [isPopoverOpen, handleFormChange]);
+
+    // Check if options array is empty
+    const isOptionsEmpty = options.length === 0;
 
     return (
       <Popover
@@ -232,57 +236,67 @@ export const MultiSelect = React.forwardRef(
             <CommandInput
               placeholder="Search..."
               onKeyDown={handleInputKeyDown}
+              disabled={isOptionsEmpty}
             />
             <CommandList
               ref={commandListRef}
               className="max-h-[200px] overflow-y-auto"
               onWheel={handleWheel}
             >
-              <CommandEmpty>No results found.</CommandEmpty>
-              <CommandGroup>
-                <CommandItem
-                  key="all"
-                  onSelect={toggleAll}
-                  className="cursor-pointer"
-                >
-                  <div
-                    className={cn(
-                      "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                      selectedValues.length === options.length
-                        ? "bg-primary text-primary-foreground"
-                        : "opacity-50 [&_svg]:invisible"
-                    )}
-                  >
-                    <CheckIcon className="h-4 w-4" />
-                  </div>
-                  <span>(Select All)</span>
-                </CommandItem>
-                {options.map((option) => {
-                  const isSelected = selectedValues.includes(option.value);
-                  return (
+              {isOptionsEmpty ? (
+                <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+                  <AlertCircle className="h-10 w-10 mb-2" />
+                  <p className="text-sm font-medium">No data available</p>
+                </div>
+              ) : (
+                <>
+                  <CommandEmpty>No results found.</CommandEmpty>
+                  <CommandGroup>
                     <CommandItem
-                      key={option.value}
-                      onSelect={() => toggleOption(option.value)}
+                      key="all"
+                      onSelect={toggleAll}
                       className="cursor-pointer"
                     >
                       <div
                         className={cn(
                           "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                          isSelected
+                          selectedValues.length === options.length
                             ? "bg-primary text-primary-foreground"
                             : "opacity-50 [&_svg]:invisible"
                         )}
                       >
                         <CheckIcon className="h-4 w-4" />
                       </div>
-                      {option.icon && (
-                        <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-                      )}
-                      <span>{option.label}</span>
+                      <span>(Select All)</span>
                     </CommandItem>
-                  );
-                })}
-              </CommandGroup>
+                    {options.map((option) => {
+                      const isSelected = selectedValues.includes(option.value);
+                      return (
+                        <CommandItem
+                          key={option.value}
+                          onSelect={() => toggleOption(option.value)}
+                          className="cursor-pointer"
+                        >
+                          <div
+                            className={cn(
+                              "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "opacity-50 [&_svg]:invisible"
+                            )}
+                          >
+                            <CheckIcon className="h-4 w-4" />
+                          </div>
+                          {option.icon && (
+                            <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span>{option.label}</span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </>
+              )}
               <CommandSeparator />
               <CommandGroup>
                 <div className="flex items-center justify-between">
