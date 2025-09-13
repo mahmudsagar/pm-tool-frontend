@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { MoreVertical } from "lucide-react";
 import { SidebarMenu } from "./SidebarMenu";
@@ -19,38 +19,47 @@ import useFileManagerStore from "@/stores/useFileManagerStore";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Sidebar({ className }) {
-  const { isOpen, toggle } = useSidebar();
-  const [status, setStatus] = useState(false);
+  const { isOpen } = useSidebar();
   const { data: users, callApi: userCallApi } = useApi();
-  const { loading: spaceLoading, data: spaces, callApi: spaceCallApi } = useApi();
-  const { logout, user } = useAuth();
+  const { data: spaces, callApi: spaceCallApi } = useApi();
+  const { logout, user, loading: authLoading } = useAuth();
   console.log("🚀 ~ Sidebar ~ user:", user)
   const {
     storeState,
-    publicSpaces,
-    privateSpaces,
     formatSpaces,
     hasInitializedSpaces,
     setInitializedSpaces,
     isSpacesLoading,
     setSpacesLoading,
+    resetInitialization,
   } = useFileManagerStore(state => state);
 
   useEffect(() => {
-    // Only proceed if user exists and spaces haven't been initialized yet
-    if (user && !user?.workspaces_flag && !isSpacesLoading) {
-      setSpacesLoading(true);
-
-      // Always fetch users data
-      userCallApi(baseUrl + '/v1/user');
-
-      setInitializedSpaces(false);
-      setSpacesLoading(false);
-    }else{
-      spaceCallApi(baseUrl + '/v1/space?user_id=' + user._id);
-      setInitializedSpaces(true);
+    // Reset spaces if user is null (logout scenario)
+    if (!user && hasInitializedSpaces) {
+      resetInitialization();
+      return;
     }
-  }, [user, hasInitializedSpaces, isSpacesLoading, userCallApi, spaceCallApi, setInitializedSpaces, setSpacesLoading]);
+
+    // Load spaces when user is available, auth is not loading, and spaces aren't already loading
+    if (user?._id && !authLoading && !isSpacesLoading) {
+      // Always reload spaces when user is available to ensure fresh data on page reload
+      console.log("Loading spaces for user:", user._id, "Initialized:", hasInitializedSpaces);
+      
+      if (!hasInitializedSpaces) {
+        setSpacesLoading(true);
+
+        // Always fetch users data first
+        userCallApi(baseUrl + '/v1/user');
+
+        // Then fetch spaces for the authenticated user
+        spaceCallApi(baseUrl + '/v1/space?user_id=' + user._id);
+        
+        // Mark as initialized
+        setInitializedSpaces(true);
+      }
+    }
+  }, [user, authLoading, hasInitializedSpaces, isSpacesLoading, userCallApi, spaceCallApi, setInitializedSpaces, setSpacesLoading, resetInitialization]);
 
   // Handle users data
   useEffect(() => {
@@ -60,18 +69,9 @@ export default function Sidebar({ className }) {
   }, [users, storeState]);
   useEffect(() => {
     if (spaces) {
-      storeState('users', users);
       formatSpaces(spaces);
     }
   }, [spaces, formatSpaces]);
-  // Function to determine if user is newly registered
-
-
-  const handleToggle = () => {
-    setStatus(true);
-    toggle();
-    setTimeout(() => setStatus(false), 500);
-  };
 
   return (
     <nav
