@@ -33,7 +33,7 @@ import useFileManagerStore from "@/stores/useFileManagerStore";
 import { baseUrl } from '@/utils/constants';
 import { ensureArray } from '@/utils/helper';
 import { Plus } from "lucide-react";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Controller, useForm } from "react-hook-form";
 import ButtonLoading from './ButtonLoading';
 
@@ -51,7 +51,6 @@ const AddMyFilesDialog = ({
   console.log("🚀 ~ AddMyFilesDialog ~ type:", type)
   console.log("🚀 ~ AddMyFilesDialog ~ space_visibility:", space_visibility)
   const defaultFileType = 'page'; // Always default to page instead of using type
-  const [isFile, setIsFile] = useState(defaultFileType);
   const [loading, setLoading] = useState(false); // Submitting Data loading
   const [fileName, setFileName] = useState(initialName || ''); // Track filename separately
   const [spaceId, setSpaceId] = useState(''); // Track space ID separately
@@ -64,7 +63,7 @@ const AddMyFilesDialog = ({
   const teamsData = ensureArray(teams)
   const { storeHandler, updateHandler, publicSpaces,
     privateSpaces, } = useFileManagerStore(state => state);
-  const allSpaces = [...(publicSpaces || []), ...(privateSpaces || [])];
+  const allSpaces = useMemo(() => [...(publicSpaces || []), ...(privateSpaces || [])], [publicSpaces, privateSpaces]);
   const form = useForm({
     defaultValues: {
       title: isEdit ? initialName : fileName,
@@ -89,7 +88,7 @@ const AddMyFilesDialog = ({
         setSelectedSpace(selectedSpace);
       }
     }
-  }, [spaceId])
+  }, [spaceId, allSpaces])
 
   // Force set form values when component mounts
   useEffect(() => {
@@ -103,9 +102,7 @@ const AddMyFilesDialog = ({
       shared_members: [],
       shared_teams: []
     }, { keepValues: true });
-
-    setIsFile(defaultFileType);
-  }, []);
+  }, [fileName, form, initialName, isEdit]);
 
   // Synchronize when dialog opens
   useEffect(() => {
@@ -118,8 +115,6 @@ const AddMyFilesDialog = ({
       if (isEdit && initialName) {
         form.setValue("title", initialName);
       }
-
-      setIsFile(defaultFileType);
     }
   }, [isOpen, isEdit, initialName, form]);
 
@@ -139,7 +134,7 @@ const AddMyFilesDialog = ({
         }
       })();
     }
-  }, [isOpen]);
+  }, [isOpen, teamCallApi, userCallApi, userID]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -149,29 +144,108 @@ const AddMyFilesDialog = ({
     method = isEdit ? 'PUT' : 'POST';
 
     if (data.filetype === "page") {
-      endpoint = "/v1/page/document";
-      documentData = isEdit ? {
-        id: id,
-        title: data.title,
-      } : {
-        user_id: userID || "66cda5dac6886719e3345c19",
-        title: data.title,
-        page_type: data.page_type,
-        entity_type: data.filetype,
-        content: {
-          text: "This is the document content"
-        },
-        summary: "This is the document summary",
-        last_updated_by: userID || "66cda5dac6886719e3345c19",
-        custom_meta: {
-          author: "John Doe",
-          keywords: ["sample", "page", "meta"]
-        },
-        // folder_id: type === "folder" ? id : '',
-        group_id: type === "group" ? id : '',
-        space_id: selectedSpace.entity_type === "space" ? selectedSpace._id : '',
-        attachments: []
-      };
+      // Handle board creation with special endpoint and payload
+      if (data.page_type === "board") {
+        endpoint = "/v1/board";
+        documentData = isEdit ? {
+          id: id,
+          name: data.title,
+        } : {
+          name: data.title, // mandatory
+          description: `Board: ${data.title}`,
+          user_id: userID || "66cda5dac6886719e3345c19", // mandatory
+          is_private: selectedSpace?.is_private ?? false,
+          shared_teams: data.shared_teams || [],
+          shared_members: data.shared_members || [],
+          custom_meta: {
+            fields: [
+              {
+                type: "select",
+                initialized: true,
+                label: "Status",
+                name: "status",
+                hasOptions: true,
+                options: [
+                  { label: "To Do", value: "todo" },
+                  { label: "In Progress", value: "in-progress" },
+                  { label: "Review", value: "review" },
+                  { label: "Done", value: "done" }
+                ]
+              },
+              {
+                type: "select",
+                initialized: true,
+                label: "Assignee",
+                name: "assignee",
+                hasOptions: true,
+                options: Array.isArray(usersData) ? usersData.map(user => ({ 
+                  label: user.name || user.email, 
+                  value: user._id 
+                })) : []
+              },
+              {
+                type: "select",
+                initialized: true,
+                label: "Priority",
+                name: "priority",
+                hasOptions: true,
+                options: [
+                  { label: "Low", value: "low" },
+                  { label: "Medium", value: "medium" },
+                  { label: "High", value: "high" },
+                  { label: "Critical", value: "critical" }
+                ]
+              },
+              {
+                type: "input",
+                initialized: true,
+                label: "Type",
+                name: "type",
+                hasOptions: false
+              },
+              {
+                type: "date",
+                initialized: true,
+                label: "Due Date",
+                name: "due_date",
+                hasOptions: false
+              },
+              {
+                type: "date",
+                initialized: true,
+                label: "Start Date",
+                name: "start_date",
+                hasOptions: false
+              }
+            ]
+          },
+          space_id: selectedSpace._id || spaceId // mandatory
+        };
+      } else {
+        endpoint = "/v1/page/document";
+        documentData = isEdit ? {
+          id: id,
+          title: data.title,
+        } : {
+          user_id: userID || "66cda5dac6886719e3345c19",
+          title: data.title,
+          page_type: data.page_type,
+          entity_type: data.filetype,
+          content: {
+            text: "This is the document content"
+          },
+          summary: "This is the document summary",
+          last_updated_by: userID || "66cda5dac6886719e3345c19",
+          custom_meta: {
+            author: "John Doe",
+            keywords: ["sample", "page", "meta"]
+          },
+          // folder_id: type === "folder" ? id : '',
+          group_id: type === "group" ? id : '',
+          space_id: selectedSpace.entity_type === "space" ? selectedSpace._id : '',
+          attachments: []
+        };
+      }
     } else if (data.filetype === "folder" || data.filetype === "group") {
       endpoint = data.filetype === "folder" ? "/v1/folder" : "/v1/group";
 
@@ -248,10 +322,8 @@ const AddMyFilesDialog = ({
 
       // Reset local state
       setFileName('');
-      setIsFile(defaultFileType);
     } catch (error) {
       setLoading(false);
-
     }
   };
 
@@ -281,7 +353,6 @@ const AddMyFilesDialog = ({
         }
 
         // Reset local state
-        setIsFile(defaultFileType);
       } else {
         // When opening, initialize form properly
         if (isEdit && initialName) {
@@ -297,7 +368,6 @@ const AddMyFilesDialog = ({
           // For create mode, ensure clean state
           form.setValue("filetype", defaultFileType);
           form.setValue("page_type", "document");
-          setIsFile(defaultFileType);
         }
       }
 
@@ -359,7 +429,6 @@ const AddMyFilesDialog = ({
                     <RadioGroup
                       onValueChange={(value) => {
                         field.onChange(value);
-                        setIsFile(value);
                       }}
                       defaultValue="page" // Hard-code "page" as the default
                       value={field.value}
@@ -388,11 +457,11 @@ const AddMyFilesDialog = ({
                   )}
                 />
               )}
-              {(isFile === 'page' || form.getValues('filetype') === 'page') && !isEdit && (
+              {form.getValues('filetype') === 'page' && !isEdit && (
                 <FormField
                   control={form.control}
                   name="page_type"
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem className="w-full">
                       <FormLabel>Type</FormLabel>
                       <FormControl>

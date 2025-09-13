@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSidebar } from "@/stores/store";
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import {
@@ -11,6 +11,7 @@ import {
   ChevronRight, 
   FileSpreadsheet,
   ChevronDownIcon,
+  LayoutGrid,
 } from 'lucide-react';
 import AddFileDialog from "./AddFileDialog";
 import {
@@ -27,6 +28,7 @@ import { baseUrl } from '@/utils/constants';
 
 const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {     
   const { isOpen } = useSidebar();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false)
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
@@ -80,6 +82,17 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
     }
   }  
 
+  // Handle navigation to show folder contents in main area
+  const handleFolderNavigation = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (folder.entity_type === 'folder' || folder.entity_type === 'group') {
+      // Navigate to home page with folder filter
+      navigate(`/?folderId=${folder._id}`);
+    }
+  };
+
   // Displaying the icon based on their file format.
   const showIcon = (file, page) => {
     switch (file) {
@@ -95,6 +108,8 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
             return <FileSpreadsheet size={20} />;
           case 'whiteboard':
             return <StickyNote size={20} />;
+          case 'board':
+            return <LayoutGrid size={20} />;
           default:
             return <FileText size={20} />;
         }
@@ -139,12 +154,12 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                     className="shrink-0 transition-transform duration-200"
                   />
                 )}
-                <Link 
-                  to={`/file-manager/${folder?.entity_type}/${folder._id}`} 
-                  className={cn('text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis', !isOpen && className)}
+                <span 
+                  onClick={handleFolderNavigation}
+                  className={cn('text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis cursor-pointer hover:text-purple-600 transition-colors', !isOpen && className)}
                 >
                   {folder.name}
-                </Link>
+                </span>
               </div>
               <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folder._id || dropdownOpenStates[folder._id] ? 'opacity-100' : ''}`}>
                 <div className="flex gap-1">
