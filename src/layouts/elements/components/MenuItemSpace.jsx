@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import MenuEmpty from "./MenuEmpty";
 import AddFileDialog from "./AddFileDialog";
 import MenuItemFolder from "./MenuItemFolder";
@@ -19,20 +20,35 @@ const MenuItemSpace = ({
 }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // State to control folder expansion
+  const navigate = useNavigate();
 
   // Handle proper display name for spaces
   const displayName = isRootSpace
     ? (spaceType === "private" ? "Private Space" : "Team Space")
     : space.name;
 
-  // Determine which add dialog to show based on space type and if it's a root space
-  const handleAddItem = () => {
-    setIsAddModalOpen(true);
+  // Handle navigation to filtered home page
+  const handleSpaceClick = () => {
+    if (isRootSpace) {
+      // For root spaces, filter by type
+      const filterType = spaceType === "private" ? "private" : "team";
+      navigate(`/?filter=${filterType}`);
+    } else {
+      // For specific spaces, filter by space ID
+      navigate(`/?spaceId=${space._id}`);
+    }
   };
 
   // Toggle expansion for root spaces and regular spaces
-  const handleToggleExpansion = () => {
+  const handleToggleExpansion = (e) => {
+    e.stopPropagation();
     setIsExpanded(!isExpanded);
+  };
+
+  // Handle add button click
+  const handleAddClick = (e) => {
+    e.stopPropagation();
+    setIsAddModalOpen(true);
   };
 
   // Determine if this space has children to show
@@ -43,10 +59,10 @@ const MenuItemSpace = ({
   return (
     <>
       <div key={space._id} className="flex items-center justify-between mb-3">
-        <div className="flex gap-2 items-center cursor-pointer" onClick={handleToggleExpansion}>
+        <div className="flex gap-2 items-center">
           {/* Show chevron icon only if there are children */}
           {hasChildren && (
-            <div className="flex items-center">
+            <div className="flex items-center cursor-pointer" onClick={handleToggleExpansion}>
               {isExpanded ? (
                 <ChevronDown className="w-4 h-4 text-gray-500" />
               ) : (
@@ -55,14 +71,16 @@ const MenuItemSpace = ({
             </div>
           )}
 
-          <img
-            src={space.is_private ? privateIcon : publicIcon}
-            alt="Space Icon"
-            width={20}
-          />
-          <h4 className="text-sm font-medium text-black dark:text-white">
-            {displayName}
-          </h4>
+          <div className="flex gap-2 items-center cursor-pointer" onClick={handleSpaceClick}>
+            <img
+              src={space.is_private ? privateIcon : publicIcon}
+              alt="Space Icon"
+              width={20}
+            />
+            <h4 className="text-sm font-medium text-black dark:text-white hover:text-purple-600 transition-colors">
+              {displayName}
+            </h4>
+          </div>
         </div>
         <div className="flex gap-2">
           {/* Show appropriate dialog based on space type and nesting level */}

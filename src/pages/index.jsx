@@ -9,11 +9,13 @@ import Spinner from '@/components/elements/spinner';
 import Document from './Document';
 import Sheet from './Sheets';
 import Whiteboard from './Whiteboard';
+import Board from './Board';
 
 const pageType = {
   document: Document,
   sheet: Sheet,
-  whiteboard: Whiteboard
+  whiteboard: Whiteboard,
+  board: Board
 }
 const Page = ({ ...props }) => {
   const { loading, data, callApi, error } = useApi();
