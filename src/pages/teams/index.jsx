@@ -25,7 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function Teams() {
   const navigate = useNavigate();
   const [teams, setTeams] = useState([]);
-  const { loading: isLoading, error, callApi } = useApi();
+  const { loading: isLoading, callApi } = useApi();
   const { user } = useAuth();
   
   useEffect(() => {
@@ -74,88 +74,54 @@ export default function Teams() {
           </Button>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Team Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Members</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Team Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Members</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={4} className="h-24 text-center">
                     Loading teams...
                   </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          ) : error || teams.length === 0 ? (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Team Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Members</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
-                      {error ? `Error: ${error}. Please try again or create a new team.` : 'No teams found.'}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-              {renderEmptyState()}
-            </>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Team Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Members</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {teams.map((team) => (
-                  <TableRow key={team._id}>
+                </TableRow>) : <>
+                {teams?.map((team) => (
+                  <TableRow key={team?._id}>
                     <TableCell className="font-medium">
-                      <Link href={`/my-teams/${team._id}`} className="hover:underline">
-                        {team.name}
+                      <Link href={`/my-teams/${team?._id}`} className="hover:underline">
+                        {team?.name}
                       </Link>
                     </TableCell>
-                    <TableCell>{team.description}</TableCell>
-                    <TableCell>{team.shared_members?.length || 0}</TableCell>
+                    <TableCell>{team?.description}</TableCell>
+                    <TableCell>{team?.shared_members?.length || 0}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => navigate(`/my-teams/edit/${team._id}`)}
+                          onClick={() => navigate(`/my-teams/edit/${team?._id}`)}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleDelete(team._id)}
+                          onClick={() => handleDelete(team?._id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+                ))}</>}
+            </TableBody>
+          </Table>
+          {(!isLoading && teams?.length == 0) && renderEmptyState()}
         </CardContent>
       </Card>
     </div>

@@ -33,6 +33,10 @@ export const routes = [
         element: <Check />
       },
       {
+        path: '/my-teams',
+        element: <Teams />
+      },
+      {
         path: '/file-manager/:type/:id',
         element: <FileManager />
         
@@ -84,10 +88,6 @@ export const routes = [
   {
     path: '/login',
     element: <LoginForm />
-  },
-  {
-    path: '/my-teams',
-    element: <Teams />
   },
   {
     path: '/teams/create',
