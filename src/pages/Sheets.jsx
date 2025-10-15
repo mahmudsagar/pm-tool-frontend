@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Copy, LucideHistory, MessageSquareMore, Save, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit }) => {
+const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, ...props }) => {
   const univerRef = useRef();
   const { toast } = useToast();
 
@@ -51,7 +51,7 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit }) =
           <LucideHistory size={20} />
         </Button>
       </Link>
-      <Link href="#" className="text-sm font-medium text-primary">
+      <Link href={`/comment/${_id}`} target="_sidebar" className="text-sm font-medium text-primary">
         <Button variant="ghost" size="icon">
           <MessageSquareMore size={20} />
         </Button>

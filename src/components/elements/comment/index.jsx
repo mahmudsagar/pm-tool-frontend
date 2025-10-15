@@ -325,12 +325,12 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
       </form>
 
       <div className="space-y-6">
-        {comments.map((comment) => (
+        {comments?.map((comment) => (
           <div
-            key={comment._id}
+            key={comment?._id}
             className="flex gap-3 group"
           >
-            {(currentDeletingId == comment._id) ?
+            {(currentDeletingId == comment?._id) ?
               <div className="flex items-center space-x-4">
                 <Skeleton className="h-12 w-12 rounded-full" />
                 <div className="space-y-2">
@@ -345,7 +345,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                   <AvatarFallback>{comment?.userInfo?.name?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  {editingId === comment._id ? (
+                  {editingId === comment?._id ? (
                     <div className="space-y-2">
                       {editLoading ?
                         <div className="flex items-center space-x-4">
@@ -363,7 +363,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                               onChange={(e) => setEditContent(e.target.value)}
                               className="flex-1"
                             />
-                            <Button onClick={() => handleUpdate(comment._id)}>Save</Button>
+                            <Button onClick={() => handleUpdate(comment?._id)}>Save</Button>
                             <Button
                               variant="outline"
                               onClick={() => {
@@ -409,9 +409,9 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                     <>
                       <div className="flex items-start justify-between">
                         <div>
-                          <p className="font-medium text-sm">{comment.userInfo?.name}</p>
+                          <p className="font-medium text-sm">{comment?.userInfo?.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {dayjs(comment.createdAt).isValid() ? dayjs(comment.createdAt).format('MMM D, YYYY h:mm A') : ''}
+                            {dayjs(comment?.createdAt).isValid() ? dayjs(comment?.createdAt).format('MMM D, YYYY h:mm A') : ''}
                           </p>
                         </div>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
@@ -444,17 +444,17 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>No</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(comment._id)}>Yes</AlertDialogAction>
+                                <AlertDialogAction onClick={() => handleDelete(comment?._id)}>Yes</AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
 
                         </div>
                       </div>
-                      <p className="mt-1 text-sm">{comment.comment_body}</p>
-                      {comment.mediaAttachments?.length > 0 && (
+                      <p className="mt-1 text-sm">{comment?.comment_body}</p>
+                      {comment?.mediaAttachments?.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
-                          {comment.mediaAttachments.filter(Boolean).map((file, index) => (
+                          {comment?.mediaAttachments?.filter(Boolean)?.map((file, index) => (
                             isImage(file) ? (
                               <div key={index} className="relative">
                                 <img
