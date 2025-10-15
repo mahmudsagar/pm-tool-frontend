@@ -342,7 +342,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
               <>
                 <Avatar className="w-8 h-8">
                   <AvatarImage src={comment?.userInfo?.url} />
-                  <AvatarFallback>{comment?.userInfo?.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{comment?.userInfo?.name?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   {editingId === comment._id ? (
