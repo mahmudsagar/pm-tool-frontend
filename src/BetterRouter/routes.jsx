@@ -7,6 +7,7 @@ import Home from "@/pages/Home";
 import Data from "@/pages/Data";
 import NotFound from "./NotFound";
 import Page from "@/pages";
+import CommentPage from "@/pages/CommentPage";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Teams from "@/pages/teams";
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -60,6 +61,10 @@ export const routes = [
       {
         path: "/whiteboard/:id",
         element: <Page />
+      },
+      {
+        path: "/comment/:id",
+        element: <CommentPage />
       }
     ]
   },

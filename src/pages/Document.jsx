@@ -48,11 +48,11 @@ const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, 
           <History size={20} />
         </Button>
       </Link>
-      {/* <Link href="#" className="text-sm font-medium text-primary"> */}
-      <Button variant="ghost" size="icon" onClick={() => setShowComments(prev => !prev)}>
-        <MessageSquareMore size={20} />
-      </Button>
-      {/* </Link> */}
+      {/* <Link href={`/comment/${_id}`} target="_sidebar" className="text-sm font-medium text-primary">
+        <Button variant="ghost" size="icon" onClick={() => setShowComments(prev => !prev)}>
+          <MessageSquareMore size={20} />
+        </Button>
+      </Link> */}
     </>
     setTopMenu({
       dropdownContent,
