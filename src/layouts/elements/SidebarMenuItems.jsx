@@ -31,8 +31,8 @@ const SidebarMenuItems = ({ className }) => {
     hasInitializedSpaces
   } = useFileManagerStore(state => state);
 
-  console.log("🚀 ~ SidebarMenuItems ~ publicSpaces:", publicSpaces);
-  console.log("🚀 ~ SidebarMenuItems ~ privateSpaces:", privateSpaces);
+  // console.log("🚀 ~ SidebarMenuItems ~ publicSpaces:", publicSpaces);
+  // console.log("🚀 ~ SidebarMenuItems ~ privateSpaces:", privateSpaces);
   // Show loading only if we haven't initialized spaces yet and are currently loading
   if (isSpacesLoading && !hasInitializedSpaces) {
     return (

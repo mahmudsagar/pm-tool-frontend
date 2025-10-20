@@ -63,12 +63,12 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("token", authToken);
         localStorage.setItem("user", JSON.stringify(userData));
         
-        toast({
-          title: "Login successful",
-          description: Array.isArray(responseData.message[0]?.success) 
-            ? responseData.message[0].success[0] 
-            : "Welcome back!",
-        });
+        // toast({
+        //   title: "Login successful",
+        //   description: Array.isArray(responseData.message[0]?.success) 
+        //     ? responseData.message[0].success[0] 
+        //     : "Welcome back!",
+        // });
         return true;
       } else {
         throw new Error("Invalid response format");
@@ -102,16 +102,16 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       
-      toast({
-        title: "Logged out",
-        description: "You have been logged out successfully",
-      });
+      // toast({
+      //   title: "Logged out",
+      //   description: "You have been logged out successfully",
+      // });
     } catch (error) {
-      toast({
-        title: "Logout error",
-        description: "You were logged out of the UI, but the server logout failed",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "Logout error",
+      //   description: "You were logged out of the UI, but the server logout failed",
+      //   variant: "destructive",
+      // });
       // Still clear the local state
       setUser(null);
       setToken(null);

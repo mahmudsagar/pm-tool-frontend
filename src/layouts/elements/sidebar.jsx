@@ -23,7 +23,7 @@ export default function Sidebar({ className }) {
   const { data: users, callApi: userCallApi } = useApi();
   const { data: spaces, callApi: spaceCallApi } = useApi();
   const { logout, user, loading: authLoading } = useAuth();
-  console.log("🚀 ~ Sidebar ~ user:", user)
+  // console.log("🚀 ~ Sidebar ~ user:", user)allChildFiles
   const {
     storeState,
     formatSpaces,
@@ -44,7 +44,7 @@ export default function Sidebar({ className }) {
     // Load spaces when user is available, auth is not loading, and spaces aren't already loading
     if (user?._id && !authLoading && !isSpacesLoading) {
       // Always reload spaces when user is available to ensure fresh data on page reload
-      console.log("Loading spaces for user:", user._id, "Initialized:", hasInitializedSpaces);
+      // console.log("Loading spaces for user:", user._id, "Initialized:", hasInitializedSpaces);
       
       if (!hasInitializedSpaces) {
         setSpacesLoading(true);

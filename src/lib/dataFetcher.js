@@ -6,14 +6,14 @@ const useApi = () => {
   const [error, setError] = useState(null);
 
   const callApi = useCallback(async (url, config = {}, onSuccess) => {
-    console.log("API Request:", { url, config });
+    // console.log("API Request:", { url, config });
     setLoading(true);
     setError(null);
     let tempData = null;
     try {
       // Get token directly from localStorage
       const token = localStorage.getItem('token');
-      console.log("Using token:", token ? "Present" : "Missing");
+      // console.log("Using token:", token ? "Present" : "Missing");
       
       // Prepare headers with the token
       const headers = {
@@ -44,11 +44,11 @@ const useApi = () => {
       }
       
       const result = await response.json();
-      console.log("API Success:", result);
+      // console.log("API Success:", result);
       setData(result.data);
       tempData = result.data;
     } catch (err) {
-      console.error("API Call Failed:", err);
+      // console.error("API Call Failed:", err);
       setError(err.message);
     } finally {
       setLoading(false);
