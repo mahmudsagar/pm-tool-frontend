@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/login', {
+      const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       // Call the logout API endpoint with token
-      await fetch(import.meta.env.BN_BASE_URL + '/v1/logout', {
+      await fetch(import.meta.env.BN_BASE_URL + '/v1/auth/logout', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (email, password, name) => {
     setLoading(true);
     try {
-      const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/register', {
+      const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
