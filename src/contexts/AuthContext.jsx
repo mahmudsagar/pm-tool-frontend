@@ -32,6 +32,18 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+
+  const removeUserSession = () => {
+    try {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      setUser(null);
+      setToken(null);
+    } catch (error) {
+      console.error("Error removing user session:", error);
+    }
+  }
+
   const login = async (email, password) => {
     setLoading(true);
     try {
@@ -97,11 +109,11 @@ export const AuthProvider = ({ children }) => {
       });
       
       // Clear user and token from state and localStorage
-      setUser(null);
-      setToken(null);
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      
+      // setUser(null);
+      // setToken(null);
+      // localStorage.removeItem("user");
+      // localStorage.removeItem("token");
+      removeUserSession()
       // toast({
       //   title: "Logged out",
       //   description: "You have been logged out successfully",
@@ -113,10 +125,11 @@ export const AuthProvider = ({ children }) => {
       //   variant: "destructive",
       // });
       // Still clear the local state
-      setUser(null);
-      setToken(null);
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      // setUser(null);
+      // setToken(null);
+      // localStorage.removeItem("user");
+      // localStorage.removeItem("token");
+      removeUserSession()
     } finally {
       setLoading(false);
     }
@@ -194,11 +207,14 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    setUser,
     token,
+    setToken,
     loading,
     login,
     logout,
     register,
+    removeUserSession,
     authFetch,
     isAuthenticated: !!token,
   };
