@@ -6,10 +6,10 @@
 
 /* customize theme */
 
-html.dark .univer-theme {
+html.dark .univer-container {
   filter: invert(1);
 }
 
-.univer-theme .univer-tooltip-inner{
+.univer-container .univer-tooltip-inner{
   max-width: 130px;
 }
