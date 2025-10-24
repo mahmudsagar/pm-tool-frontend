@@ -1,20 +1,45 @@
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import useApi from "@/lib/dataFetcher";
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useState } from "react";
 import { authBaseUrl } from "@/utils/constants";
 
 export function ProtectedRoute({ children }) {
   const { loading, token, removeUserSession } = useAuth();
-  const { loading: isTokenVerifying, callApi, error } = useApi();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isTokenVerifying, setIsTokenVerifying] = useState(true);
+  const [error, setError] = useState(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (token) {
-      callApi(authBaseUrl)
+      setError(null);
+      fetch(authBaseUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Token verification failed');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // console.log(data, 'verify token result');
+          setIsTokenVerifying(false);
+        })
+        .catch(err => {
+          setError(err);
+        })
+        .finally(() => {
+          setIsTokenVerifying(false);
+        })
+    } else {
+      setIsTokenVerifying(false);
     }
-  }, [token, callApi]);
+  }, [token]);
 
   useEffect(() => {
     if (error) {
