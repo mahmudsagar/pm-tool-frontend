@@ -32,10 +32,22 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+
+  const removeUserSession = () => {
+    try {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      setUser(null);
+      setToken(null);
+    } catch (error) {
+      console.error("Error removing user session:", error);
+    }
+  }
+
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/login', {
+      const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,12 +75,12 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("token", authToken);
         localStorage.setItem("user", JSON.stringify(userData));
         
-        toast({
-          title: "Login successful",
-          description: Array.isArray(responseData.message[0]?.success) 
-            ? responseData.message[0].success[0] 
-            : "Welcome back!",
-        });
+        // toast({
+        //   title: "Login successful",
+        //   description: Array.isArray(responseData.message[0]?.success) 
+        //     ? responseData.message[0].success[0] 
+        //     : "Welcome back!",
+        // });
         return true;
       } else {
         throw new Error("Invalid response format");
@@ -89,7 +101,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       // Call the logout API endpoint with token
-      await fetch(import.meta.env.BN_BASE_URL + '/v1/logout', {
+      await fetch(import.meta.env.BN_BASE_URL + '/v1/auth/logout', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -97,26 +109,27 @@ export const AuthProvider = ({ children }) => {
       });
       
       // Clear user and token from state and localStorage
-      setUser(null);
-      setToken(null);
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      
-      toast({
-        title: "Logged out",
-        description: "You have been logged out successfully",
-      });
+      // setUser(null);
+      // setToken(null);
+      // localStorage.removeItem("user");
+      // localStorage.removeItem("token");
+      removeUserSession()
+      // toast({
+      //   title: "Logged out",
+      //   description: "You have been logged out successfully",
+      // });
     } catch (error) {
-      toast({
-        title: "Logout error",
-        description: "You were logged out of the UI, but the server logout failed",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "Logout error",
+      //   description: "You were logged out of the UI, but the server logout failed",
+      //   variant: "destructive",
+      // });
       // Still clear the local state
-      setUser(null);
-      setToken(null);
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      // setUser(null);
+      // setToken(null);
+      // localStorage.removeItem("user");
+      // localStorage.removeItem("token");
+      removeUserSession()
     } finally {
       setLoading(false);
     }
@@ -142,7 +155,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (email, password, name) => {
     setLoading(true);
     try {
-      const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/register', {
+      const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,11 +207,14 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    setUser,
     token,
+    setToken,
     loading,
     login,
     logout,
     register,
+    removeUserSession,
     authFetch,
     isAuthenticated: !!token,
   };

@@ -70,7 +70,9 @@ export const routes = [
   },
   {
     path: '/settings',
-    element: <Settings />,
+    element: (<ProtectedRoute>
+      <Settings />
+    </ProtectedRoute>),
     children: [
       {
         path: '/settings/',
@@ -96,15 +98,21 @@ export const routes = [
   },
   {
     path: '/teams/create',
-    element: <CreateTeam />
+    element: (<ProtectedRoute>
+      <CreateTeam />
+    </ProtectedRoute>) 
   },
   {
     path: '/my-teams/:id',
-    element: <TeamDetails />
+    element: (<ProtectedRoute>
+      <TeamDetails />
+    </ProtectedRoute>) 
   },
   {
     path: '/my-teams/edit/:id',
-    element: <CreateTeam />
+    element: (<ProtectedRoute>
+      <CreateTeam />
+    </ProtectedRoute>) 
   },
   {
     path: "*",

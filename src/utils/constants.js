@@ -10,3 +10,6 @@ export const mediaBaseUrl = baseUrl + mediaEndpoint;
 
 export const commentEndpoint = '/v1/comment';
 export const commentBaseUrl = baseUrl + commentEndpoint;
+
+export const authEndpoint = '/v1/auth';
+export const authBaseUrl = baseUrl + authEndpoint;

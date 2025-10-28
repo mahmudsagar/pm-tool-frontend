@@ -166,7 +166,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
 
     const allChildFiles = data
       .flatMap((space) => {
-        console.log("Processing space:", space);
+        // console.log("Processing space:", space);
 
         if (!Array.isArray(space.childs)) return [];
 
