@@ -4,14 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { useSidebar } from "@/stores/store";
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import {
-  Users, 
-  Folder,
-  FileText, 
-  StickyNote, 
+  // Users, 
+  // Folder,
+  // FileText, 
+  // StickyNote, 
   ChevronRight, 
-  FileSpreadsheet,
+  // FileSpreadsheet,
   ChevronDownIcon,
-  LayoutGrid,
+  // LayoutGrid,
 } from 'lucide-react';
 import AddFileDialog from "./AddFileDialog";
 import {
@@ -26,6 +26,7 @@ import FolderMenu from "./DropdownMenuItems/FolderMenu";
 import DocStructure from "./DocStructure";
 import { baseUrl } from '@/utils/constants';
 import EllipsisTooltip from "@/components/common/EllipsisTooltip";
+import ShowIcon from "@/components/common/ShowIcon";
 
 const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {     
   const { isOpen } = useSidebar();
@@ -95,29 +96,29 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
   };
 
   // Displaying the icon based on their file format.
-  const showIcon = (file, page) => {
-    switch (file) {
-      case 'group':
-        return <Users size={20} />;
-      case 'folder':
-        return <Folder width={20} />;
-      case 'page':
-        switch (page) {
-          case 'document':
-            return <FileText size={20} />;
-          case 'sheet':
-            return <FileSpreadsheet size={20} />;
-          case 'whiteboard':
-            return <StickyNote size={20} />;
-          case 'board':
-            return <LayoutGrid size={20} />;
-          default:
-            return <FileText size={20} />;
-        }
-      default:
-        return <FileText size={20} className="inline" />;
-    }
-  };  
+  // const showIcon = (file, page) => {
+  //   switch (file) {
+  //     case 'group':
+  //       return <Users size={20} />;
+  //     case 'folder':
+  //       return <Folder width={20} />;
+  //     case 'page':
+  //       switch (page) {
+  //         case 'document':
+  //           return <FileText size={20} />;
+  //         case 'sheet':
+  //           return <FileSpreadsheet size={20} />;
+  //         case 'whiteboard':
+  //           return <StickyNote size={20} />;
+  //         case 'board':
+  //           return <LayoutGrid size={20} />;
+  //         default:
+  //           return <FileText size={20} />;
+  //       }
+  //     default:
+  //       return <FileText size={20} className="inline" />;
+  //   }
+  // };  
           
   return (
     <>
@@ -141,7 +142,8 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
             >
               <div className="flex justify-between items-center gap-2 overflow-hidden">
                 <span className="inline group-hover:hidden group-data-[state=open]:hidden">
-                  { showIcon(folder?.entity_type, folder?.page_type) }
+                  {/* { showIcon(folder?.entity_type, folder?.page_type) } */}
+                  <ShowIcon file={folder?.entity_type} page={folder?.page_type} />
                 </span>
                 <ChevronRight
                   strokeWidth={2.5}
@@ -200,7 +202,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                           hasChild = {true}
                           openItem={openItem}
                           isOpen = {isOpen}
-                          showIcon={showIcon}
+                          // showIcon={showIcon}
                           className = {className}
                           dropdownOpenStates = {dropdownOpenStates}
                           handleDropdownToggle = {handleDropdownToggle}
@@ -224,7 +226,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
           fileType = {folder?.page_type}
           openItem={openItem}
           isOpen = {isOpen}
-          showIcon={showIcon}
+          // showIcon={showIcon}
           className = {className}
           dropdownOpenStates = {dropdownOpenStates}
           handleDropdownToggle = {handleDropdownToggle}
