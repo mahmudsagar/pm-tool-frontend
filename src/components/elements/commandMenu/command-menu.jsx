@@ -46,7 +46,7 @@ export function CommandMenu({ ...props }) {
   const [open, setOpen] = useState(false)
   const { loading, data, callApi, error } = useApi();
   const [searchInput,setSearchInput] = useState('');
-  const results = Object.entries(data?.all || {});
+  const results = Object.entries(data?.all || {}).filter(([, list]) => list.length > 0);
 
   useEffect(() => {
     const down = (e) => {
