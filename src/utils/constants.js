@@ -13,3 +13,5 @@ export const commentBaseUrl = baseUrl + commentEndpoint;
 
 export const authEndpoint = '/v1/auth';
 export const authBaseUrl = baseUrl + authEndpoint;
+
+export const searchEndpoint = baseUrl + '/v1/search';
