@@ -159,7 +159,7 @@ export function CommandMenu({ ...props }) {
                     return (
                       <CommandItem
                         key={index}
-                        value={displayName}
+                        value={item?._id}
                         onSelect={() => {
                           runCommand(() => handleSearchItemClick(item))
                         }}
