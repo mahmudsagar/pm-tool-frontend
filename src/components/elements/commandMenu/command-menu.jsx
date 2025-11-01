@@ -95,7 +95,7 @@ export function CommandMenu({ ...props }) {
 
 
   const handleSearchItemClick = (item) => {
-    console.log(item);
+    // console.log(item);
     const { entity_type, _id } = item || {};
     if (['folder', 'group',].includes(entity_type)) {
       navigate(`/?folderId=${_id}`);

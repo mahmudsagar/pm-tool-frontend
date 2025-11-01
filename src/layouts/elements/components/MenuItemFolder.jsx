@@ -69,7 +69,13 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
     if (!documents[id]) {
       setLoading(true);
       try {
-        await fetch(baseUrl + endPoint, { method: 'GET', })
+        await fetch(baseUrl + endPoint, {
+           method: 'GET',
+           headers:{
+              'Content-Type':'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+           }
+          })
         .then((res) => res.json())
         .then(res => {
           storeDocuments(res.data, id);
