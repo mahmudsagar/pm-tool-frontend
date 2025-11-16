@@ -26,7 +26,9 @@ import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
 
 // Dummy data for now
 import { getDummyDataView } from "@/utils/dummyDataView"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams } from "react-router-dom"
+import { baseUrl } from "@/utils/constants"
 
 const layouts = [
   {
@@ -67,13 +69,78 @@ const timePeriods = [
 ]
 
 export default function Data() {
+  // Get board ID from URL params if available
+  const { id: boardId } = useParams();
+  
   // Get dynamic data with current status options
   const viewJSONData = getDummyDataView();
   const [selectedPeriod, setSelectedPeriod] = useState("5years");
   const [activeTab, setActiveTab] = useState("table");
+  const [boardData, setBoardData] = useState(null);
+  
+  // Fetch board data if boardId is present
+  useEffect(() => {
+    if (boardId) {
+      const fetchBoardData = async () => {
+        try {
+          const response = await fetch(`${baseUrl}/v1/board?id=${boardId}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.status === 'success' && result.data) {
+              setBoardData(result.data);
+            }
+          } else {
+            console.error('Failed to fetch board data');
+            setBoardData({
+              _id: boardId,
+              name: "Board",
+              description: "Failed to load board details"
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching board data:', error);
+          setBoardData({
+            _id: boardId,
+            name: "Board",
+            description: "Error loading board"
+          });
+        }
+      };
+      
+      fetchBoardData();
+    }
+  }, [boardId]);
   
   return (
     <section className="w-full flex flex-col items-center justify-center gap-4 text-center p-6">
+      {boardId && (
+        <div className="w-full text-left mb-2 border-b pb-4">
+          {boardData ? (
+            <>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                {boardData.name}
+              </h1>
+              {boardData.description && (
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {boardData.description}
+                </p>
+              )}
+            </>
+          ) : (
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            </div>
+          )}
+        </div>
+      )}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Header */}
         <div className="flex items-center justify-between border-gray-300">

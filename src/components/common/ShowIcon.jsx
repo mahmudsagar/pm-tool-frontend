@@ -6,6 +6,8 @@ const ShowIcon = ({ file, page, size = 20 }) => {
       return <Users size={size} />;
     case 'folder':
       return <Folder width={size} />;
+    case 'board':
+      return <LayoutGrid size={size} />;
     case 'page':
       switch (page) {
         case 'document':
