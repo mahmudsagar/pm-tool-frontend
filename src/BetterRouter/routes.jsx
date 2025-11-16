@@ -30,6 +30,10 @@ export const routes = [
         element: <Data />
       },
       {
+        path: '/board/:id',
+        element: <Data />
+      },
+      {
         path: '/check',
         element: <Check />
       },

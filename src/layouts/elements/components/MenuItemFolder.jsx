@@ -128,7 +128,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
           
   return (
     <>
-      { folder.entity_type !== 'page' ? (
+      { folder.entity_type !== 'page' && folder.entity_type !== 'board' ? (
         <Accordion
           type="single"
           collapsible
@@ -202,7 +202,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                         <DocStructure
                           key={item?._id}
                           docId = {item?._id}
-                          docName = {item?.title} 
+                          docName = {item?.title || item?.name} 
                           docType = {item?.entity_type}
                           fileType = { item?.page_type }
                           hasChild = {true}
@@ -227,7 +227,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
       (
         <DocStructure
           docId = {folder?._id}
-          docName = {folder?.title}
+          docName = {folder?.title || folder?.name}
           docType = {folder?.entity_type}
           fileType = {folder?.page_type}
           openItem={openItem}

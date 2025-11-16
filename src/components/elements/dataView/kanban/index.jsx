@@ -22,8 +22,8 @@ import TaskFormModal from './task-form-modal';
 import StatusFormModal from './status-form-modal';
 import useStatusStore from '@/stores/useStatusStore';
 
-export default function KanbanView({ data }) {
-  console.log({ data });
+export default function KanbanView({ data, boardId, onTaskCreate }) {
+  console.log({ data, boardId });
   
   // Get status management functions from the global store
   const { 
@@ -93,7 +93,7 @@ export default function KanbanView({ data }) {
     setTaskModalOpen(true);
   }, []);
 
-  const handleSaveTask = useCallback((taskData, isEditing) => {
+  const handleSaveTask = useCallback(async (taskData, isEditing) => {
     if (isEditing) {
       // Update existing task
       setItems(prev => {
@@ -112,14 +112,24 @@ export default function KanbanView({ data }) {
         
         return newItems;
       });
+      
+      // TODO: Call API to update task in board if boardId exists
     } else {
       // Add new task
-      setItems(prev => ({
-        ...prev,
-        [taskData.status]: [...(prev[taskData.status] || []), taskData]
-      }));
+      if (boardId && onTaskCreate) {
+        // If we're in a board context, use the parent's task creation logic
+        console.log('Calling parent onTaskCreate from kanban');
+        await onTaskCreate(taskData);
+        // The parent will handle API call and data refresh
+      } else {
+        // Demo mode - just update local state
+        setItems(prev => ({
+          ...prev,
+          [taskData.status]: [...(prev[taskData.status] || []), taskData]
+        }));
+      }
     }
-  }, []);
+  }, [boardId, onTaskCreate]);
 
   // Status management functions
   const handleEditStatus = useCallback((status) => {

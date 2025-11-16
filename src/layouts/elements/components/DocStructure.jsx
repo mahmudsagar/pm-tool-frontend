@@ -20,7 +20,13 @@ function DocStructure({
   const getLinkPath = () => {
     switch (docType) {
       case 'page':
+        // Check if it's a board page type
+        if (fileType === 'board') {
+          return `/board/${docId}`;
+        }
         return `/document/${docId}`;
+      case 'board':
+        return `/board/${docId}`;
       case 'folder':
         return `/folder/${docId}`;
       default:
