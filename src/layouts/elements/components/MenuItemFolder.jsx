@@ -4,14 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { useSidebar } from "@/stores/store";
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import {
-  Users, 
-  Folder,
-  FileText, 
-  StickyNote, 
+  // Users, 
+  // Folder,
+  // FileText, 
+  // StickyNote, 
   ChevronRight, 
-  FileSpreadsheet,
+  // FileSpreadsheet,
   ChevronDownIcon,
-  LayoutGrid,
+  // LayoutGrid,
 } from 'lucide-react';
 import AddFileDialog from "./AddFileDialog";
 import {
@@ -25,6 +25,8 @@ import MenuEmpty from "./MenuEmpty";
 import FolderMenu from "./DropdownMenuItems/FolderMenu";
 import DocStructure from "./DocStructure";
 import { baseUrl } from '@/utils/constants';
+import EllipsisTooltip from "@/components/common/EllipsisTooltip";
+import ShowIcon from "@/components/common/ShowIcon";
 
 const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {     
   const { isOpen } = useSidebar();
@@ -67,7 +69,13 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
     if (!documents[id]) {
       setLoading(true);
       try {
-        await fetch(baseUrl + endPoint, { method: 'GET', })
+        await fetch(baseUrl + endPoint, {
+           method: 'GET',
+           headers:{
+              'Content-Type':'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+           }
+          })
         .then((res) => res.json())
         .then(res => {
           storeDocuments(res.data, id);
@@ -94,29 +102,29 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
   };
 
   // Displaying the icon based on their file format.
-  const showIcon = (file, page) => {
-    switch (file) {
-      case 'group':
-        return <Users size={20} />;
-      case 'folder':
-        return <Folder width={20} />;
-      case 'page':
-        switch (page) {
-          case 'document':
-            return <FileText size={20} />;
-          case 'sheet':
-            return <FileSpreadsheet size={20} />;
-          case 'whiteboard':
-            return <StickyNote size={20} />;
-          case 'board':
-            return <LayoutGrid size={20} />;
-          default:
-            return <FileText size={20} />;
-        }
-      default:
-        return <FileText size={20} className="inline" />;
-    }
-  };  
+  // const showIcon = (file, page) => {
+  //   switch (file) {
+  //     case 'group':
+  //       return <Users size={20} />;
+  //     case 'folder':
+  //       return <Folder width={20} />;
+  //     case 'page':
+  //       switch (page) {
+  //         case 'document':
+  //           return <FileText size={20} />;
+  //         case 'sheet':
+  //           return <FileSpreadsheet size={20} />;
+  //         case 'whiteboard':
+  //           return <StickyNote size={20} />;
+  //         case 'board':
+  //           return <LayoutGrid size={20} />;
+  //         default:
+  //           return <FileText size={20} />;
+  //       }
+  //     default:
+  //       return <FileText size={20} className="inline" />;
+  //   }
+  // };  
           
   return (
     <>
@@ -128,19 +136,20 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
           value={openItem}
           onValueChange={(value) => setOpenItem(value)}
         >
-          <AccordionItem value={folder._id} className="border-none mr-1">
+          <AccordionItem value={folder._id} className="border-none mr-0">
             <AccordionTrigger
               className={cn(
-                'group relative flex h-9 justify-between px-2 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline',
+                'group relative flex h-9 justify-between pl-2 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline overflow-hidden',
               )}
               onClick={(e) => {
                 e.stopPropagation();
                 handleFolderClick(folder?._id, folder?.entity_type);
               }}
             >
-              <div className="flex justify-between items-center gap-2">
+              <div className="flex justify-between items-center gap-2 overflow-hidden">
                 <span className="inline group-hover:hidden group-data-[state=open]:hidden">
-                  { showIcon(folder?.entity_type, folder?.page_type) }
+                  {/* { showIcon(folder?.entity_type, folder?.page_type) } */}
+                  <ShowIcon file={folder?.entity_type} page={folder?.page_type} />
                 </span>
                 <ChevronRight
                   strokeWidth={2.5}
@@ -154,12 +163,17 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                     className="shrink-0 transition-transform duration-200"
                   />
                 )}
-                <span 
+                <EllipsisTooltip title={folder?.name}
+                  onClick={handleFolderNavigation}
+                  className={cn('text-sm duration-200 text-start cursor-pointer hover:text-purple-600 transition-colors flex-1', !isOpen && className)}>
+                  {folder?.name}
+                </EllipsisTooltip>
+                {/* <span 
                   onClick={handleFolderNavigation}
                   className={cn('text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis cursor-pointer hover:text-purple-600 transition-colors', !isOpen && className)}
                 >
                   {folder.name}
-                </span>
+                </span> */}
               </div>
               <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folder._id || dropdownOpenStates[folder._id] ? 'opacity-100' : ''}`}>
                 <div className="flex gap-1">
@@ -194,7 +208,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                           hasChild = {true}
                           openItem={openItem}
                           isOpen = {isOpen}
-                          showIcon={showIcon}
+                          // showIcon={showIcon}
                           className = {className}
                           dropdownOpenStates = {dropdownOpenStates}
                           handleDropdownToggle = {handleDropdownToggle}
@@ -218,7 +232,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
           fileType = {folder?.page_type}
           openItem={openItem}
           isOpen = {isOpen}
-          showIcon={showIcon}
+          // showIcon={showIcon}
           className = {className}
           dropdownOpenStates = {dropdownOpenStates}
           handleDropdownToggle = {handleDropdownToggle}

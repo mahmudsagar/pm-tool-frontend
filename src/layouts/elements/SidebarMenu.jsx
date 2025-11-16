@@ -58,7 +58,7 @@ export function SidebarMenu({ setOpen, className }) {
           </Link>
         ))}
       </div>
-      <div className="space-y-2 pt-5 pb-6 h-[calc(100%_-_80px)] overflow-y-auto overflow-x-hidden better-scrollbar">
+      <div className="space-y-2 pt-5 pb-6 h-[calc(100%_-_80px)] overflow-y-auto better-scrollbar">
         <p className="text-xs font-medium text-slate-500 pb-3 dark:text-white">Spaces</p>
         {/* Menu start */}
         <SidebarMenuItems setOpen={setOpen} className={className} />
