@@ -3,626 +3,326 @@
     "message": [
         {
             "success": [
-                "Spaces fetched successfully"
+                "Boards fetched successfully"
             ]
         }
     ],
     "data": [
         {
-            "_id": "68e2271c446ab22305d94883",
-            "name": "kasbdkj",
-            "description": "",
-            "is_private": false,
-            "shared_teams": [],
-            "shared_members": [],
-            "user_id": "68578b51b1325fc7c9b7b095",
-            "is_default": false,
-            "entity_type": "space",
-            "createdAt": "2025-10-05T08:06:51.996Z",
-            "updatedAt": "2025-10-05T08:06:51.996Z",
-            "childs": [
-                {
-                    "_id": "68e22725446ab22305d94885",
-                    "title": "asdasd",
-                    "user_id": "68578b51b1325fc7c9b7b095",
-                    "folder_id": "",
-                    "board_id": "",
-                    "space_id": "68e2271c446ab22305d94883",
-                    "group_id": "",
-                    "page_content_id": "68e22725446ab22305d94884",
-                    "custom_meta": {
-                        "values": {},
-                        "fields": []
-                    },
-                    "shared_members": [],
-                    "shared_teams": [],
-                    "attachments": [],
-                    "page_type": "document",
-                    "last_updated_by": "68578b51b1325fc7c9b7b095",
-                    "pinned": false,
-                    "entity_type": "page",
-                    "inner_comments": [],
-                    "createdAt": "2025-10-05T08:07:01.381Z",
-                    "updatedAt": "2025-11-16T10:00:57.325Z"
-                },
-                {
-                    "_id": "68e22c7b446ab22305d9488e",
-                    "name": "asjdkjkgas",
-                    "description": "Board: asjdkjkgas",
-                    "custom_meta": {
-                        "fields": [
+            "_id": "68e22c7b446ab22305d9488e",
+            "name": "asjdkjkgas",
+            "description": "Board: asjdkjkgas",
+            "custom_meta": {
+                "fields": [
+                    {
+                        "type": "select",
+                        "initialized": true,
+                        "label": "Status",
+                        "name": "status",
+                        "hasOptions": true,
+                        "options": [
                             {
-                                "type": "select",
-                                "initialized": true,
-                                "label": "Status",
-                                "name": "status",
-                                "hasOptions": true,
-                                "options": [
-                                    {
-                                        "label": "To Do",
-                                        "value": "todo"
-                                    },
-                                    {
-                                        "label": "In Progress",
-                                        "value": "in-progress"
-                                    },
-                                    {
-                                        "label": "Review",
-                                        "value": "review"
-                                    },
-                                    {
-                                        "label": "Done",
-                                        "value": "done"
-                                    }
-                                ]
+                                "label": "To Do",
+                                "value": "todo"
                             },
                             {
-                                "type": "select",
-                                "initialized": true,
-                                "label": "Assignee",
-                                "name": "assignee",
-                                "hasOptions": true,
-                                "options": [
-                                    {
-                                        "label": "mdmuhtasim.fahim@gmail.com",
-                                        "value": "66cda5dac6886719e3345c19"
-                                    },
-                                    {
-                                        "label": "muhtasim.fahim.98@gmail.com",
-                                        "value": "66e404cf089aef7c495015f4"
-                                    },
-                                    {
-                                        "label": "mahmudsagar9@gmail.com",
-                                        "value": "67eed6d4507435480d349278"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67f799bae435e40ec9ac5946"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67f79b606b502a2cdcda065f"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67f79b93c9fa4ac56d5f48b1"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67f7adb41a84e462d190432a"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67faadc9d8597bac39b47f0f"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67faae2eb574b0433bf42eda"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67faae848168b17a48081d47"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67faaf4b8168b17a48081d48"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67faaf7d94404b393ca4dfdd"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fab0b3e58fb058d5e55032"
-                                    },
-                                    {
-                                        "label": "jhon dope",
-                                        "value": "67fac35fe58fb058d5e55033"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb5a8cef0e9ba6dde607a8"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb5a9eef0e9ba6dde607a9"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb5acb109adc1a3bd7c9d7"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb5b02046b6d6cdf2b21fc"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb617049ddc68170197016"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb618f17e867c6fee6d4e4"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb61a9b1864a2eb649ab0b"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb80c24778c770d77cf1a1"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb80e24778c770d77cf1a4"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb857aa42f24dfe23da516"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb867a06f7e83da3f2610e"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb8686913f446715f7f87c"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "67fb8695913f446715f7f87f"
-                                    },
-                                    {
-                                        "label": "Malik Zubayer",
-                                        "value": "6804e7919517583b13eb5a56"
-                                    },
-                                    {
-                                        "label": "Mahmudul hasan sagar",
-                                        "value": "680ef5c17fe335533ddb6153"
-                                    },
-                                    {
-                                        "label": "Mahmudul hasan sagar",
-                                        "value": "680ef62eab42e59d8a6ada96"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "6822f1251c9d387c55c985cb"
-                                    },
-                                    {
-                                        "label": "Muhtasim Fuad Fahim",
-                                        "value": "6823019d5ae9450939ba83fd"
-                                    },
-                                    {
-                                        "label": "DEV Saheb",
-                                        "value": "6823394e4e6ea7235ad0092c"
-                                    },
-                                    {
-                                        "label": "Muhtasim",
-                                        "value": "682567bb810f2b3ae9de7922"
-                                    },
-                                    {
-                                        "label": "test team",
-                                        "value": "6827e4fd4f3ebdcddd24d73c"
-                                    },
-                                    {
-                                        "label": "Dev Saheb",
-                                        "value": "682b6341e6f62c26abf7bbf7"
-                                    },
-                                    {
-                                        "label": "Saheb Hr",
-                                        "value": "682cb1781c7a933fe9405bb5"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "682cbf376b8a51408dac9010"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "682cbf526b8a51408dac9011"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "682cbfa02792a0fffb54eebe"
-                                    },
-                                    {
-                                        "label": "dev saheb space",
-                                        "value": "683344b101ae6f8846b045ec"
-                                    },
-                                    {
-                                        "label": "Khalil Ahmed",
-                                        "value": "683345a601ae6f8846b045ed"
-                                    },
-                                    {
-                                        "label": "Khalil ",
-                                        "value": "683345cf01ae6f8846b045ee"
-                                    },
-                                    {
-                                        "label": "Md. Muhtasim Fuad Fahim",
-                                        "value": "683350877d2c4b440fae65b3"
-                                    },
-                                    {
-                                        "label": "Ahmed Faysal",
-                                        "value": "6834a1b8fb34fc6829420649"
-                                    },
-                                    {
-                                        "label": "Faysal VB",
-                                        "value": "6834a29ffb34fc682942064a"
-                                    },
-                                    {
-                                        "label": "Ahmed",
-                                        "value": "6834a9b459bcae6eaab8a32a"
-                                    },
-                                    {
-                                        "label": "Rasel Ahmed",
-                                        "value": "6835f92fdaf04adb7297d4f1"
-                                    },
-                                    {
-                                        "label": "Muna N",
-                                        "value": "683deb46af2e303ea5cf6ef1"
-                                    },
-                                    {
-                                        "label": "new user",
-                                        "value": "6850453f65e51c5c3c776c95"
-                                    },
-                                    {
-                                        "label": "Ornab",
-                                        "value": "6852a255701c9b357818ac0e"
-                                    },
-                                    {
-                                        "label": "jon vabe",
-                                        "value": "6852f35540d7842ad555f7be"
-                                    },
-                                    {
-                                        "label": "Mahmudul Hasan",
-                                        "value": "68578b51b1325fc7c9b7b095"
-                                    },
-                                    {
-                                        "label": "test test",
-                                        "value": "68c5a5950979f42beae3860a"
-                                    }
-                                ]
+                                "label": "In Progress",
+                                "value": "in-progress"
                             },
                             {
-                                "type": "select",
-                                "initialized": true,
-                                "label": "Priority",
-                                "name": "priority",
-                                "hasOptions": true,
-                                "options": [
-                                    {
-                                        "label": "Low",
-                                        "value": "low"
-                                    },
-                                    {
-                                        "label": "Medium",
-                                        "value": "medium"
-                                    },
-                                    {
-                                        "label": "High",
-                                        "value": "high"
-                                    },
-                                    {
-                                        "label": "Critical",
-                                        "value": "critical"
-                                    }
-                                ]
+                                "label": "Review",
+                                "value": "review"
                             },
                             {
-                                "type": "input",
-                                "initialized": true,
-                                "label": "Type",
-                                "name": "type",
-                                "hasOptions": false
-                            },
-                            {
-                                "type": "date",
-                                "initialized": true,
-                                "label": "Due Date",
-                                "name": "due_date",
-                                "hasOptions": false
-                            },
-                            {
-                                "type": "date",
-                                "initialized": true,
-                                "label": "Start Date",
-                                "name": "start_date",
-                                "hasOptions": false
+                                "label": "Done",
+                                "value": "done"
                             }
                         ]
                     },
-                    "shared_members": [],
-                    "shared_teams": [],
-                    "user_id": "68578b51b1325fc7c9b7b095",
-                    "space_id": "68e2271c446ab22305d94883",
-                    "group_id": "",
-                    "folder_id": "",
-                    "pinned": false,
-                    "entity_type": "board",
-                    "createdAt": "2025-10-05T08:29:47.758Z",
-                    "updatedAt": "2025-10-05T08:29:47.758Z"
-                },
-                {
-                    "_id": "6919998c181c379ab530730e",
-                    "name": "dqwakjsndkjl",
-                    "description": "",
-                    "parent_id": "",
-                    "shared_members": [],
-                    "shared_teams": [],
-                    "user_id": "68578b51b1325fc7c9b7b095",
-                    "space_id": "68e2271c446ab22305d94883",
-                    "group_id": "",
-                    "pinned": false,
-                    "entity_type": "folder",
-                    "createdAt": "2025-11-16T09:29:48.860Z",
-                    "updatedAt": "2025-11-16T09:29:48.860Z"
-                },
-                {
-                    "_id": "691999ba181c379ab530730f",
-                    "name": "mhhvjhvhj",
-                    "description": "",
-                    "parent_id": "",
-                    "shared_members": [],
-                    "shared_teams": [],
-                    "user_id": "68578b51b1325fc7c9b7b095",
-                    "space_id": "68e2271c446ab22305d94883",
-                    "group_id": "",
-                    "pinned": false,
-                    "entity_type": "folder",
-                    "createdAt": "2025-11-16T09:30:34.288Z",
-                    "updatedAt": "2025-11-16T09:30:34.288Z"
-                },
-                {
-                    "_id": "69199bd3181c379ab5307313",
-                    "title": "fqsdgfa",
-                    "user_id": "68578b51b1325fc7c9b7b095",
-                    "folder_id": "",
-                    "board_id": "",
-                    "space_id": "68e2271c446ab22305d94883",
-                    "group_id": "",
-                    "page_content_id": "69199bd3181c379ab5307312",
-                    "custom_meta": {
-                        "author": "John Doe",
-                        "keywords": [
-                            "sample",
-                            "page",
-                            "meta"
-                        ]
-                    },
-                    "shared_members": [],
-                    "shared_teams": [],
-                    "attachments": [],
-                    "page_type": "sheet",
-                    "last_updated_by": "68578b51b1325fc7c9b7b095",
-                    "pinned": false,
-                    "entity_type": "page",
-                    "inner_comments": [],
-                    "createdAt": "2025-11-16T09:39:31.516Z",
-                    "updatedAt": "2025-11-16T09:39:31.516Z"
-                },
-                {
-                    "_id": "6919a0fb181c379ab5307316",
-                    "name": "new test board",
-                    "description": "Board: new test board",
-                    "custom_meta": {
-                        "fields": [
+                    {
+                        "type": "select",
+                        "initialized": true,
+                        "label": "Assignee",
+                        "name": "assignee",
+                        "hasOptions": true,
+                        "options": [
                             {
-                                "type": "select",
-                                "initialized": true,
-                                "label": "Status",
-                                "name": "status",
-                                "hasOptions": true,
-                                "options": [
-                                    {
-                                        "label": "To Do",
-                                        "value": "todo"
-                                    },
-                                    {
-                                        "label": "In Progress",
-                                        "value": "in-progress"
-                                    },
-                                    {
-                                        "label": "Review",
-                                        "value": "review"
-                                    },
-                                    {
-                                        "label": "Done",
-                                        "value": "done"
-                                    }
-                                ]
+                                "label": "mdmuhtasim.fahim@gmail.com",
+                                "value": "66cda5dac6886719e3345c19"
                             },
                             {
-                                "type": "select",
-                                "initialized": true,
-                                "label": "Assignee",
-                                "name": "assignee",
-                                "hasOptions": true,
-                                "options": []
+                                "label": "muhtasim.fahim.98@gmail.com",
+                                "value": "66e404cf089aef7c495015f4"
                             },
                             {
-                                "type": "select",
-                                "initialized": true,
-                                "label": "Priority",
-                                "name": "priority",
-                                "hasOptions": true,
-                                "options": [
-                                    {
-                                        "label": "Low",
-                                        "value": "low"
-                                    },
-                                    {
-                                        "label": "Medium",
-                                        "value": "medium"
-                                    },
-                                    {
-                                        "label": "High",
-                                        "value": "high"
-                                    },
-                                    {
-                                        "label": "Critical",
-                                        "value": "critical"
-                                    }
-                                ]
+                                "label": "mahmudsagar9@gmail.com",
+                                "value": "67eed6d4507435480d349278"
                             },
                             {
-                                "type": "input",
-                                "initialized": true,
-                                "label": "Type",
-                                "name": "type",
-                                "hasOptions": false
+                                "label": "Ornab",
+                                "value": "67f799bae435e40ec9ac5946"
                             },
                             {
-                                "type": "date",
-                                "initialized": true,
-                                "label": "Due Date",
-                                "name": "due_date",
-                                "hasOptions": false
+                                "label": "Ornab",
+                                "value": "67f79b606b502a2cdcda065f"
                             },
                             {
-                                "type": "date",
-                                "initialized": true,
-                                "label": "Start Date",
-                                "name": "start_date",
-                                "hasOptions": false
+                                "label": "Ornab",
+                                "value": "67f79b93c9fa4ac56d5f48b1"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67f7adb41a84e462d190432a"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67faadc9d8597bac39b47f0f"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67faae2eb574b0433bf42eda"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67faae848168b17a48081d47"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67faaf4b8168b17a48081d48"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67faaf7d94404b393ca4dfdd"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fab0b3e58fb058d5e55032"
+                            },
+                            {
+                                "label": "jhon dope",
+                                "value": "67fac35fe58fb058d5e55033"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb5a8cef0e9ba6dde607a8"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb5a9eef0e9ba6dde607a9"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb5acb109adc1a3bd7c9d7"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb5b02046b6d6cdf2b21fc"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb617049ddc68170197016"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb618f17e867c6fee6d4e4"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb61a9b1864a2eb649ab0b"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb80c24778c770d77cf1a1"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb80e24778c770d77cf1a4"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb857aa42f24dfe23da516"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb867a06f7e83da3f2610e"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb8686913f446715f7f87c"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "67fb8695913f446715f7f87f"
+                            },
+                            {
+                                "label": "Malik Zubayer",
+                                "value": "6804e7919517583b13eb5a56"
+                            },
+                            {
+                                "label": "Mahmudul hasan sagar",
+                                "value": "680ef5c17fe335533ddb6153"
+                            },
+                            {
+                                "label": "Mahmudul hasan sagar",
+                                "value": "680ef62eab42e59d8a6ada96"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "6822f1251c9d387c55c985cb"
+                            },
+                            {
+                                "label": "Muhtasim Fuad Fahim",
+                                "value": "6823019d5ae9450939ba83fd"
+                            },
+                            {
+                                "label": "DEV Saheb",
+                                "value": "6823394e4e6ea7235ad0092c"
+                            },
+                            {
+                                "label": "Muhtasim",
+                                "value": "682567bb810f2b3ae9de7922"
+                            },
+                            {
+                                "label": "test team",
+                                "value": "6827e4fd4f3ebdcddd24d73c"
+                            },
+                            {
+                                "label": "Dev Saheb",
+                                "value": "682b6341e6f62c26abf7bbf7"
+                            },
+                            {
+                                "label": "Saheb Hr",
+                                "value": "682cb1781c7a933fe9405bb5"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "682cbf376b8a51408dac9010"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "682cbf526b8a51408dac9011"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "682cbfa02792a0fffb54eebe"
+                            },
+                            {
+                                "label": "dev saheb space",
+                                "value": "683344b101ae6f8846b045ec"
+                            },
+                            {
+                                "label": "Khalil Ahmed",
+                                "value": "683345a601ae6f8846b045ed"
+                            },
+                            {
+                                "label": "Khalil ",
+                                "value": "683345cf01ae6f8846b045ee"
+                            },
+                            {
+                                "label": "Md. Muhtasim Fuad Fahim",
+                                "value": "683350877d2c4b440fae65b3"
+                            },
+                            {
+                                "label": "Ahmed Faysal",
+                                "value": "6834a1b8fb34fc6829420649"
+                            },
+                            {
+                                "label": "Faysal VB",
+                                "value": "6834a29ffb34fc682942064a"
+                            },
+                            {
+                                "label": "Ahmed",
+                                "value": "6834a9b459bcae6eaab8a32a"
+                            },
+                            {
+                                "label": "Rasel Ahmed",
+                                "value": "6835f92fdaf04adb7297d4f1"
+                            },
+                            {
+                                "label": "Muna N",
+                                "value": "683deb46af2e303ea5cf6ef1"
+                            },
+                            {
+                                "label": "new user",
+                                "value": "6850453f65e51c5c3c776c95"
+                            },
+                            {
+                                "label": "Ornab",
+                                "value": "6852a255701c9b357818ac0e"
+                            },
+                            {
+                                "label": "jon vabe",
+                                "value": "6852f35540d7842ad555f7be"
+                            },
+                            {
+                                "label": "Mahmudul Hasan",
+                                "value": "68578b51b1325fc7c9b7b095"
+                            },
+                            {
+                                "label": "test test",
+                                "value": "68c5a5950979f42beae3860a"
                             }
                         ]
                     },
-                    "shared_members": [],
-                    "shared_teams": [],
-                    "user_id": "68578b51b1325fc7c9b7b095",
-                    "space_id": "68e2271c446ab22305d94883",
-                    "group_id": "",
-                    "folder_id": "",
-                    "pinned": false,
-                    "entity_type": "board",
-                    "createdAt": "2025-11-16T10:01:31.401Z",
-                    "updatedAt": "2025-11-16T10:01:31.401Z"
-                }
-            ]
-        },
-        {
-            "_id": "68e22743446ab22305d94886",
-            "name": "jhasvjhcxz",
-            "description": "",
-            "is_private": true,
-            "shared_teams": [],
-            "shared_members": [],
-            "user_id": "68578b51b1325fc7c9b7b095",
-            "is_default": false,
-            "entity_type": "space",
-            "createdAt": "2025-10-05T08:07:31.577Z",
-            "updatedAt": "2025-10-05T08:07:31.577Z",
-            "childs": [
-                {
-                    "_id": "68e22754446ab22305d94888",
-                    "title": "dajshvdhj",
-                    "user_id": "68578b51b1325fc7c9b7b095",
-                    "folder_id": "",
-                    "board_id": "",
-                    "space_id": "68e22743446ab22305d94886",
-                    "group_id": "",
-                    "page_content_id": "68e22754446ab22305d94887",
-                    "custom_meta": {
-                        "values": {},
-                        "fields": []
-                    },
-                    "shared_members": [],
-                    "shared_teams": [],
-                    "attachments": [],
-                    "page_type": "document",
-                    "last_updated_by": "68578b51b1325fc7c9b7b095",
-                    "pinned": false,
-                    "entity_type": "page",
-                    "inner_comments": [],
-                    "createdAt": "2025-10-05T08:07:48.895Z",
-                    "updatedAt": "2025-10-05T08:23:39.654Z"
-                },
-                {
-                    "_id": "68e22763446ab22305d9488a",
-                    "title": "askjdgjkas",
-                    "user_id": "68578b51b1325fc7c9b7b095",
-                    "folder_id": "",
-                    "board_id": "",
-                    "space_id": "68e22743446ab22305d94886",
-                    "group_id": "",
-                    "page_content_id": "68e22763446ab22305d94889",
-                    "custom_meta": {
-                        "values": {},
-                        "fields": []
-                    },
-                    "shared_members": [],
-                    "shared_teams": [],
-                    "attachments": [],
-                    "page_type": "document",
-                    "last_updated_by": "68578b51b1325fc7c9b7b095",
-                    "pinned": false,
-                    "entity_type": "page",
-                    "inner_comments": [],
-                    "createdAt": "2025-10-05T08:08:03.144Z",
-                    "updatedAt": "2025-10-05T08:16:25.061Z"
-                },
-                {
-                    "_id": "68e22984446ab22305d9488c",
-                    "title": "askjdgfk",
-                    "user_id": "68578b51b1325fc7c9b7b095",
-                    "folder_id": "",
-                    "board_id": "",
-                    "space_id": "68e22743446ab22305d94886",
-                    "group_id": "",
-                    "page_content_id": "68e22984446ab22305d9488b",
-                    "custom_meta": {
-                        "author": "John Doe",
-                        "keywords": [
-                            "sample",
-                            "page",
-                            "meta"
+                    {
+                        "type": "select",
+                        "initialized": true,
+                        "label": "Priority",
+                        "name": "priority",
+                        "hasOptions": true,
+                        "options": [
+                            {
+                                "label": "Low",
+                                "value": "low"
+                            },
+                            {
+                                "label": "Medium",
+                                "value": "medium"
+                            },
+                            {
+                                "label": "High",
+                                "value": "high"
+                            },
+                            {
+                                "label": "Critical",
+                                "value": "critical"
+                            }
                         ]
                     },
-                    "shared_members": [],
-                    "shared_teams": [],
-                    "attachments": [],
-                    "page_type": "sheet",
-                    "last_updated_by": "68578b51b1325fc7c9b7b095",
-                    "pinned": false,
-                    "entity_type": "page",
-                    "inner_comments": [],
-                    "createdAt": "2025-10-05T08:17:08.175Z",
-                    "updatedAt": "2025-10-05T08:17:08.175Z"
-                },
-                {
-                    "_id": "68e22b1a446ab22305d9488d",
-                    "name": "dasfdasd",
-                    "description": "",
-                    "parent_id": "",
-                    "shared_members": [],
-                    "shared_teams": [],
-                    "user_id": "68578b51b1325fc7c9b7b095",
-                    "space_id": "68e22743446ab22305d94886",
-                    "group_id": "",
-                    "pinned": false,
-                    "entity_type": "folder",
-                    "createdAt": "2025-10-05T08:23:54.326Z",
-                    "updatedAt": "2025-10-05T08:23:54.326Z"
-                }
-            ]
+                    {
+                        "type": "input",
+                        "initialized": true,
+                        "label": "Type",
+                        "name": "type",
+                        "hasOptions": false
+                    },
+                    {
+                        "type": "date",
+                        "initialized": true,
+                        "label": "Due Date",
+                        "name": "due_date",
+                        "hasOptions": false
+                    },
+                    {
+                        "type": "date",
+                        "initialized": true,
+                        "label": "Start Date",
+                        "name": "start_date",
+                        "hasOptions": false
+                    }
+                ]
+            },
+            "shared_members": [],
+            "shared_teams": [],
+            "user_id": "68578b51b1325fc7c9b7b095",
+            "space_id": "68e2271c446ab22305d94883",
+            "group_id": "",
+            "folder_id": "",
+            "pinned": false,
+            "entity_type": "board",
+            "createdAt": "2025-10-05T08:29:47.758Z",
+            "updatedAt": "2025-10-05T08:29:47.758Z",
+            "documents": []
         }
     ]
 }
