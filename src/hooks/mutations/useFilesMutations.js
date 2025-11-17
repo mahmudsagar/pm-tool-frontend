@@ -29,6 +29,8 @@ export const useCreateFile = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
       queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
       toast({ title: 'File created successfully' });
     },
     
@@ -69,6 +71,9 @@ export const useUpdateFile = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
       queryClient.invalidateQueries({ queryKey: ['documents', variables.fileId] });
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['spaces'] });
       toast({ title: 'File updated successfully' });
     },
     
@@ -133,6 +138,8 @@ export const useDeleteFile = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
       queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
       toast({ title: 'File deleted successfully' });
     },
   });

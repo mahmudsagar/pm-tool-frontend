@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { useAuth } from '@/contexts/AuthContext';
+import useAuthStore from '@/stores/useAuthStore';
 import useApi from '@/lib/dataFetcher';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import { baseUrl } from '@/utils/constants';
@@ -35,6 +35,7 @@ import { Plus } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from "react-hook-form";
 import ButtonLoading from './ButtonLoading';
+import { useQueryClient } from '@tanstack/react-query';
 
 const AddFileDialog = ({
   id,
@@ -54,6 +55,7 @@ const AddFileDialog = ({
   const usersData = ensureArray(users)
   const teamsData = ensureArray(teams)
   const { storeHandler, updateHandler } = useFileManagerStore(state => state);
+  const queryClient = useQueryClient();
 
   const form = useForm({
     defaultValues: {
@@ -100,7 +102,7 @@ const AddFileDialog = ({
     }
   }, [isOpen, isEdit, initialName, form]);
 
-  const { user, token } = useAuth();
+  const { user, token } = useAuthStore();
 
   const userID = user?._id;
   useEffect(() => {
@@ -287,8 +289,16 @@ const AddFileDialog = ({
         }
       } else {
         storeHandler(id, type, res.data);
-
       }
+      
+      // Invalidate TanStack Query cache to refresh sidebar and main section
+      queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      queryClient.invalidateQueries({ queryKey: ['spaces', userID] });
+      queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['folders', id] });
+      queryClient.invalidateQueries({ queryKey: ['groups', id] });
+      
       // Close the modal and reset form after successful operation
       setLoading(false);
       setIsOpen(false);

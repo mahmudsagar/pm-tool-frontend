@@ -15,11 +15,13 @@ import ButtonLoading from '../../ButtonLoading';
 import useApi from '@/lib/dataFetcher';
 import NotFound from '@/BetterRouter/NotFound';
 import { baseUrl } from '@/utils/constants';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Delete = ({ fileId, fileType, onToggle, onSuccess, wrapperClassName = "" }) => {
   const { callApi, error } = useApi();
   const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { deleteHandler } = useFileManagerStore(state => state);
 
@@ -46,6 +48,14 @@ const Delete = ({ fileId, fileType, onToggle, onSuccess, wrapperClassName = "" }
       await callApi(baseUrl + endPoint, { method: 'DELETE', });
       // Update the store
       deleteHandler(fileId, fileType); 
+      
+      // Invalidate TanStack Query cache to refresh all views
+      queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      
       setLoading(false); 
       setIsDialogOpen(false);
       

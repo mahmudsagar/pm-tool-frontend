@@ -73,3 +73,75 @@ export const useFileById = (fileId) => {
     enabled: !!fileId,
   });
 };
+
+/**
+ * Query hook to get folder contents by ID
+ */
+export const useFolderContents = (folderId) => {
+  return useQuery({
+    queryKey: ['folders', folderId, 'contents'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${baseUrl}/v1/folder?id=${folderId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch folder contents');
+      const result = await response.json();
+      return result.data;
+    },
+    enabled: !!folderId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+/**
+ * Query hook to get group contents by ID
+ */
+export const useGroupContents = (groupId) => {
+  return useQuery({
+    queryKey: ['groups', groupId, 'contents'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${baseUrl}/v1/group?id=${groupId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch group contents');
+      const result = await response.json();
+      return result.data;
+    },
+    enabled: !!groupId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
+/**
+ * Query hook to get space contents by ID
+ */
+export const useSpaceContents = (spaceId) => {
+  return useQuery({
+    queryKey: ['spaces', spaceId, 'contents'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${baseUrl}/v1/space?id=${spaceId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch space contents');
+      const result = await response.json();
+      return result.data;
+    },
+    enabled: !!spaceId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};

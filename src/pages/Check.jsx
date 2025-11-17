@@ -6,10 +6,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Toaster } from "@/components/ui/toaster";
-import { useAuth } from "@/contexts/AuthContext";
+import useAuthStore from "@/stores/useAuthStore";
 
 const Check = () => {
-  const { logout, user } = useAuth();
+  const { logout, user } = useAuthStore();
   const [email, setEmail] = useState("");
   const [daysLeft, setDaysLeft] = useState(30);
   const [selectedDate, setSelectedDate] = useState(null);

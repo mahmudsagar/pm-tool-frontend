@@ -27,15 +27,14 @@ const MenuItemSpace = ({
     ? (spaceType === "private" ? "Private Space" : "Team Space")
     : space.name;
 
-  // Handle navigation to filtered home page
+  // Handle navigation to filtered home page or space view
   const handleSpaceClick = () => {
     if (isRootSpace) {
-      // For root spaces, filter by type
-      const filterType = spaceType === "private" ? "private" : "team";
-      navigate(`/?filter=${filterType}`);
+      // For root spaces, stay on home page (or could navigate to a dashboard)
+      navigate(`/`);
     } else {
-      // For specific spaces, filter by space ID
-      navigate(`/?spaceId=${space._id}`);
+      // For specific spaces, navigate to space view to show contents
+      navigate(`/space/${space._id}`);
     }
   };
 

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/AuthContext';
+import useAuthStore from "@/stores/useAuthStore";
 import { Check, ChevronsUpDown, XIcon } from 'lucide-react';
 import useApi from '@/lib/dataFetcher';
 import { baseUrl } from '@/utils/constants';
@@ -24,7 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 const TeamForm = ({ team, onSubmit, isEdit = false }) => {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const [formData, setFormData] = useState({
     name: '',
     description: '',

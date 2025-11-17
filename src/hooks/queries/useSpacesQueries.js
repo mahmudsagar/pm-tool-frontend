@@ -4,9 +4,15 @@ import { baseUrl } from '@/utils/constants';
 /**
  * Fetch all spaces for the current user
  */
-const fetchSpaces = async () => {
+const fetchSpaces = async (userId) => {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${baseUrl}/v1/space`, {
+  
+  // Build URL with optional user_id query parameter
+  const url = userId 
+    ? `${baseUrl}/v1/space?user_id=${userId}`
+    : `${baseUrl}/v1/space`;
+  
+  const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
@@ -20,11 +26,13 @@ const fetchSpaces = async () => {
 
 /**
  * Query hook to get all spaces
+ * @param {string} userId - Optional user ID to filter spaces
  */
-export const useSpaces = () => {
+export const useSpaces = (userId) => {
   return useQuery({
-    queryKey: ['spaces'],
-    queryFn: fetchSpaces,
+    queryKey: ['spaces', userId],
+    queryFn: () => fetchSpaces(userId),
+    enabled: !!userId, // Only fetch when userId is available
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000,
   });

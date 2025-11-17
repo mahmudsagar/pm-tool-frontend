@@ -13,23 +13,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
-import useApi from "@/lib/dataFetcher";
-import { baseUrl } from '@/utils/constants';
+import { useSpaces, useUsers } from "@/hooks/queries/useSpacesQueries";
 import useFileManagerStore from "@/stores/useFileManagerStore";
-import { useAuth } from "@/contexts/AuthContext";
+import useAuthStore from "@/stores/useAuthStore";
 
 export default function Sidebar({ className }) {
   const { isOpen } = useSidebar();
-  const { data: users, callApi: userCallApi } = useApi();
-  const { data: spaces, callApi: spaceCallApi } = useApi();
-  const { logout, user, loading: authLoading } = useAuth();
-  // console.log("🚀 ~ Sidebar ~ user:", user)allChildFiles
+  const { logout, user } = useAuthStore();
+  
+  // Use TanStack Query hooks - automatically handles caching and refetching
+  // Pass user._id to useSpaces to filter by user
+  const { data: users } = useUsers();
+  const { data: spaces, isLoading: isSpacesLoading } = useSpaces(user?._id);
+  
   const {
     storeState,
     formatSpaces,
     hasInitializedSpaces,
     setInitializedSpaces,
-    isSpacesLoading,
     setSpacesLoading,
     resetInitialization,
   } = useFileManagerStore(state => state);
@@ -40,38 +41,29 @@ export default function Sidebar({ className }) {
       resetInitialization();
       return;
     }
+  }, [user, hasInitializedSpaces, resetInitialization]);
 
-    // Load spaces when user is available, auth is not loading, and spaces aren't already loading
-    if (user?._id && !authLoading && !isSpacesLoading) {
-      // Always reload spaces when user is available to ensure fresh data on page reload
-      // console.log("Loading spaces for user:", user._id, "Initialized:", hasInitializedSpaces);
-      
-      if (!hasInitializedSpaces) {
-        setSpacesLoading(true);
+  // Sync loading state with file manager store
+  useEffect(() => {
+    setSpacesLoading(isSpacesLoading);
+  }, [isSpacesLoading, setSpacesLoading]);
 
-        // Always fetch users data first
-        userCallApi(baseUrl + '/v1/user');
-
-        // Then fetch spaces for the authenticated user
-        spaceCallApi(baseUrl + '/v1/space?user_id=' + user._id);
-        
-        // Mark as initialized
-        setInitializedSpaces(true);
-      }
-    }
-  }, [user, authLoading, hasInitializedSpaces, isSpacesLoading, userCallApi, spaceCallApi, setInitializedSpaces, setSpacesLoading, resetInitialization]);
-
-  // Handle users data
+  // Handle users data - update store when data arrives
   useEffect(() => {
     if (users) {
       storeState('users', users);
     }
   }, [users, storeState]);
+
+  // Handle spaces data - format and store when data arrives
   useEffect(() => {
     if (spaces) {
       formatSpaces(spaces);
+      if (!hasInitializedSpaces) {
+        setInitializedSpaces(true);
+      }
     }
-  }, [spaces, formatSpaces]);
+  }, [spaces, formatSpaces, hasInitializedSpaces, setInitializedSpaces]);
 
   return (
     <nav

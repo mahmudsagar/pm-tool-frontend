@@ -95,9 +95,12 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (folder.entity_type === 'folder' || folder.entity_type === 'group') {
-      // Navigate to home page with folder filter
-      navigate(`/?folderId=${folder._id}`);
+    if (folder.entity_type === 'folder') {
+      // Navigate to folder view with ID
+      navigate(`/folder/${folder._id}`);
+    } else if (folder.entity_type === 'group') {
+      // Navigate to group view with ID
+      navigate(`/group/${folder._id}`);
     }
   };
 

@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,35 +17,19 @@ import {
 } from '@/components/ui/card';
 import { PlusIcon, Pencil, Trash2 } from 'lucide-react';
 import Link from '@/BetterRouter/Link';
-import useApi from '@/lib/dataFetcher';
-import { baseUrl } from '@/utils/constants';
-import { useAuth } from '@/contexts/AuthContext';
+import { useTeams } from '@/hooks/queries/useTeamsQueries';
+import { useDeleteTeam } from '@/hooks/mutations/useTeamsMutations';
 
 export default function Teams() {
   const navigate = useNavigate();
-  const [teams, setTeams] = useState([]);
-  const { loading: isLoading, callApi } = useApi();
-  const { user } = useAuth();
   
-  useEffect(() => {
-    // Only fetch teams when user is loaded
-    if (user?._id) {
-      fetchTeams();
-    }
-  }, [user]);
-
-  const fetchTeams = () => {
-    callApi(baseUrl + `/v1/team?user_id=${user?._id}`, {}, (data) => {
-      // API returns array of teams in data property
-      setTeams(Array.isArray(data) ? data : []);
-    });
-  };
+  // Use TanStack Query - automatic caching and refetching
+  const { data: teams = [], isLoading } = useTeams();
+  const deleteTeam = useDeleteTeam();
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this team?')) {
-      callApi(baseUrl + `/v1/team?id=${id}`, { method: 'DELETE' }, () => {
-        fetchTeams();
-      });
+      deleteTeam.mutate(id);
     }
   };
 

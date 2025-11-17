@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { useAuth } from '@/contexts/AuthContext';
+import useAuthStore from '@/stores/useAuthStore';
 import useApi from '@/lib/dataFetcher';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import { baseUrl } from '@/utils/constants';
@@ -36,6 +36,7 @@ import { Plus } from "lucide-react";
 import { useEffect, useState, useMemo } from 'react';
 import { Controller, useForm } from "react-hook-form";
 import ButtonLoading from './ButtonLoading';
+import { useQueryClient } from '@tanstack/react-query';
 
 const AddMyFilesDialog = ({
   id,
@@ -64,6 +65,7 @@ const AddMyFilesDialog = ({
   const { storeHandler, updateHandler, publicSpaces,
     privateSpaces, } = useFileManagerStore(state => state);
   const allSpaces = useMemo(() => [...(publicSpaces || []), ...(privateSpaces || [])], [publicSpaces, privateSpaces]);
+  const queryClient = useQueryClient();
   const form = useForm({
     defaultValues: {
       title: isEdit ? initialName : fileName,
@@ -118,7 +120,7 @@ const AddMyFilesDialog = ({
     }
   }, [isOpen, isEdit, initialName, form]);
 
-  const { user, token } = useAuth();
+  const { user, token } = useAuthStore();
 
   const userID = user?._id;
   useEffect(() => {
@@ -305,8 +307,16 @@ const AddMyFilesDialog = ({
         }
       } else {
         storeHandler(id, type, res.data);
-
       }
+      
+      // Invalidate TanStack Query cache to refresh sidebar and main section
+      queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      queryClient.invalidateQueries({ queryKey: ['spaces', userID] });
+      queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      
       // Close the modal and reset form after successful operation
       setLoading(false);
       setIsOpen(false);

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import useAuthStore from "@/stores/useAuthStore";
 
 const AuthContext = createContext();
 
@@ -12,25 +13,32 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  // Use Zustand store - subscribe to changes for reactive updates
+  const { 
+    user: storeUser, 
+    token: storeToken, 
+    login: storeLogin, 
+    logout: storeLogout, 
+    initializeAuth 
+  } = useAuthStore();
+  
+  const [user, setUser] = useState(storeUser);
+  const [token, setToken] = useState(storeToken);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Initialize auth from localStorage on mount
   useEffect(() => {
-    // Check if user and token are stored in localStorage on initial load
-    const storedUser = localStorage.getItem("user");
-    const storedToken = localStorage.getItem("token");
-    
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    if (storedToken) {
-      setToken(storedToken);
-    }
-    
+    initializeAuth();
     setLoading(false);
-  }, []);
+  }, [initializeAuth]);
+
+  // Keep local state in sync with Zustand store
+  useEffect(() => {
+    console.log('AuthContext: Store state changed', { storeUser, storeToken: !!storeToken });
+    setUser(storeUser);
+    setToken(storeToken);
+  }, [storeUser, storeToken]);
 
 
   const removeUserSession = () => {
@@ -67,20 +75,12 @@ export const AuthProvider = ({ children }) => {
         const authToken = responseData.data.token;
         const userData = responseData.data.user_info;
         
-        // Store token and user data
-        setToken(authToken);
-        setUser(userData);
+        console.log('AuthContext: Login successful, updating store', { user: userData._id, hasToken: !!authToken });
         
-        // Save to localStorage
-        localStorage.setItem("token", authToken);
-        localStorage.setItem("user", JSON.stringify(userData));
+        // Update Zustand store (which will trigger useEffect to update local state)
+        storeLogin(authToken, userData);
         
-        // toast({
-        //   title: "Login successful",
-        //   description: Array.isArray(responseData.message[0]?.success) 
-        //     ? responseData.message[0].success[0] 
-        //     : "Welcome back!",
-        // });
+        console.log('AuthContext: Store updated, returning true');
         return true;
       } else {
         throw new Error("Invalid response format");
@@ -108,28 +108,13 @@ export const AuthProvider = ({ children }) => {
         }
       });
       
-      // Clear user and token from state and localStorage
-      // setUser(null);
-      // setToken(null);
-      // localStorage.removeItem("user");
-      // localStorage.removeItem("token");
-      removeUserSession()
-      // toast({
-      //   title: "Logged out",
-      //   description: "You have been logged out successfully",
-      // });
+      // Clear from Zustand store (which also clears localStorage and triggers state update)
+      storeLogout();
+      removeUserSession();
     } catch (error) {
-      // toast({
-      //   title: "Logout error",
-      //   description: "You were logged out of the UI, but the server logout failed",
-      //   variant: "destructive",
-      // });
-      // Still clear the local state
-      // setUser(null);
-      // setToken(null);
-      // localStorage.removeItem("user");
-      // localStorage.removeItem("token");
-      removeUserSession()
+      // Still clear the local state even if API call fails
+      storeLogout();
+      removeUserSession();
     } finally {
       setLoading(false);
     }
@@ -175,13 +160,8 @@ export const AuthProvider = ({ children }) => {
         const authToken = responseData.data.token;
         const userData = responseData.data.user_info;
         
-        // Store token and user data
-        setToken(authToken);
-        setUser(userData);
-        
-        // Save to localStorage
-        localStorage.setItem("token", authToken);
-        localStorage.setItem("user", JSON.stringify(userData));
+        // Update Zustand store (which will trigger useEffect to update local state)
+        storeLogin(authToken, userData);
         
         toast({
           title: "Registration successful",
