@@ -22,10 +22,7 @@ const Delete = ({ fileId, fileType, onToggle, onSuccess, wrapperClassName = "" }
   const { id } = useParams();
   const location = useLocation();
 
-  const { deleteHandler, syncSpacesFromAPI } = useFileManagerStore(state => ({
-    deleteHandler: state.deleteHandler,
-    syncSpacesFromAPI: state.syncSpacesFromAPI
-  }));
+  const { deleteHandler } = useFileManagerStore(state => state);
 
   // Cleanup: always remove inert when component unmounts
   useEffect(() => {
@@ -48,27 +45,9 @@ const Delete = ({ fileId, fileType, onToggle, onSuccess, wrapperClassName = "" }
     deleteEntity(
       { entityId: fileId, entityType: fileType },
       {
-        onSuccess: async () => {
-          console.log('Delete success, fileId:', fileId, 'fileType:', fileType);
-          
+        onSuccess: () => {
           // Update the local store immediately
           deleteHandler(fileId, fileType);
-          
-          // Refresh sidebar from API to ensure deleted item is removed
-          const userId = localStorage.getItem('userId');
-          console.log('Syncing spaces for userId:', userId);
-          
-          if (userId) {
-            try {
-              const result = await syncSpacesFromAPI(userId);
-              console.log('Sync result:', result);
-            } catch (error) {
-              console.error('Error syncing spaces:', error);
-            }
-          }
-          
-          // Small delay to ensure state updates propagate
-          await new Promise(resolve => setTimeout(resolve, 100));
           
           // Close dialog
           setIsDialogOpen(false);

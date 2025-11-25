@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
-import { useSpaces, useUsers } from "@/hooks/queries/useSpacesQueries";
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import useAuthStore from "@/stores/useAuthStore";
 
@@ -21,19 +20,22 @@ export default function Sidebar({ className }) {
   const { isOpen } = useSidebar();
   const { logout, user } = useAuthStore();
   
-  // Use TanStack Query hooks - automatically handles caching and refetching
-  // Pass user._id to useSpaces to filter by user
-  const { data: users } = useUsers();
-  const { data: spaces, isLoading: isSpacesLoading } = useSpaces(user?._id);
-  
+  // Use Zustand store directly for sidebar data - updates immediately on delete
   const {
-    storeState,
-    formatSpaces,
+    publicSpaces,
+    privateSpaces,
+    isSpacesLoading,
     hasInitializedSpaces,
-    setInitializedSpaces,
-    setSpacesLoading,
+    syncSpacesFromAPI,
     resetInitialization,
   } = useFileManagerStore(state => state);
+
+  // Fetch spaces on mount if not initialized
+  useEffect(() => {
+    if (user?._id && !hasInitializedSpaces) {
+      syncSpacesFromAPI(user._id);
+    }
+  }, [user?._id, hasInitializedSpaces, syncSpacesFromAPI]);
 
   useEffect(() => {
     // Reset spaces if user is null (logout scenario)
@@ -42,28 +44,6 @@ export default function Sidebar({ className }) {
       return;
     }
   }, [user, hasInitializedSpaces, resetInitialization]);
-
-  // Sync loading state with file manager store
-  useEffect(() => {
-    setSpacesLoading(isSpacesLoading);
-  }, [isSpacesLoading, setSpacesLoading]);
-
-  // Handle users data - update store when data arrives
-  useEffect(() => {
-    if (users) {
-      storeState('users', users);
-    }
-  }, [users, storeState]);
-
-  // Handle spaces data - format and store when data arrives
-  useEffect(() => {
-    if (spaces) {
-      formatSpaces(spaces);
-      if (!hasInitializedSpaces) {
-        setInitializedSpaces(true);
-      }
-    }
-  }, [spaces, formatSpaces, hasInitializedSpaces, setInitializedSpaces]);
 
   return (
     <nav

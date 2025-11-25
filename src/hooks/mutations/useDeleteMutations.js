@@ -95,12 +95,15 @@ export const useDeleteEntity = () => {
     },
     
     onSuccess: (data, variables) => {
-      // Invalidate queries to trigger refetch when components access them
-      queryClient.invalidateQueries({ queryKey: ['spaces'] });
-      queryClient.invalidateQueries({ queryKey: ['files'] });
-      queryClient.invalidateQueries({ queryKey: ['folders'] });
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      // Invalidate all queries starting with these keys (includes parameterized queries)
+      queryClient.invalidateQueries({ 
+        predicate: (query) => 
+          query.queryKey[0] === 'spaces' ||
+          query.queryKey[0] === 'files' ||
+          query.queryKey[0] === 'folders' ||
+          query.queryKey[0] === 'groups' ||
+          query.queryKey[0] === 'documents'
+      });
       
       toast({
         title: `${variables.entityType.charAt(0).toUpperCase() + variables.entityType.slice(1)} deleted successfully`,
