@@ -204,199 +204,151 @@ const AddMyFilesDialog = ({
 
   const onSubmit = async (data) => {
     setLoading(true);
-    let endpoint, documentData, method;
-
-    // Set method based on whether we're editing or creating
-    method = isEdit ? 'PUT' : 'POST';
-
-    if (data.filetype === "page") {
-      // Handle board creation with special endpoint and payload
-      if (data.page_type === "board") {
-        endpoint = "/v1/board";
-        documentData = isEdit ? {
-          id: id,
-          name: data.title,
-        } : {
-          name: data.title, // mandatory
-          description: `Board: ${data.title}`,
-          user_id: userID || "66cda5dac6886719e3345c19", // mandatory
-          is_private: selectedSpace?.is_private ?? false,
-          shared_teams: data.shared_teams || [],
-          shared_members: data.shared_members || [],
-          custom_meta: {
-            fields: [
-              {
-                type: "select",
-                initialized: true,
-                label: "Status",
-                name: "status",
-                hasOptions: true,
-                options: [
-                  { label: "To Do", value: "todo" },
-                  { label: "In Progress", value: "in-progress" },
-                  { label: "Review", value: "review" },
-                  { label: "Done", value: "done" }
-                ]
-              },
-              {
-                type: "select",
-                initialized: true,
-                label: "Assignee",
-                name: "assignee",
-                hasOptions: true,
-                options: Array.isArray(usersData) ? usersData.map(user => ({ 
-                  label: user.name || user.email, 
-                  value: user._id 
-                })) : []
-              },
-              {
-                type: "select",
-                initialized: true,
-                label: "Priority",
-                name: "priority",
-                hasOptions: true,
-                options: [
-                  { label: "Low", value: "low" },
-                  { label: "Medium", value: "medium" },
-                  { label: "High", value: "high" },
-                  { label: "Critical", value: "critical" }
-                ]
-              },
-              {
-                type: "input",
-                initialized: true,
-                label: "Type",
-                name: "type",
-                hasOptions: false
-              },
-              {
-                type: "date",
-                initialized: true,
-                label: "Due Date",
-                name: "due_date",
-                hasOptions: false
-              },
-              {
-                type: "date",
-                initialized: true,
-                label: "Start Date",
-                name: "start_date",
-                hasOptions: false
-              }
-            ]
-          },
-          space_id: selectedSpace._id || spaceId // mandatory
-        };
-      } else {
-        endpoint = "/v1/page/document";
-        documentData = isEdit ? {
-          id: id,
-          title: data.title,
-        } : {
-          user_id: userID || "66cda5dac6886719e3345c19",
-          title: data.title,
-          page_type: data.page_type,
-          entity_type: data.filetype,
-          content: {
-            text: "This is the document content"
-          },
-          summary: "This is the document summary",
-          last_updated_by: userID || "66cda5dac6886719e3345c19",
-          custom_meta: {
-            author: "John Doe",
-            keywords: ["sample", "page", "meta"]
-          },
-          // folder_id: type === "folder" ? id : '',
-          group_id: type === "group" ? id : '',
-          space_id: selectedSpace.entity_type === "space" ? selectedSpace._id : '',
-          attachments: []
-        };
-      }
-    } else if (data.filetype === "folder" || data.filetype === "group") {
-      endpoint = data.filetype === "folder" ? "/v1/folder" : "/v1/group";
-
-      if (isEdit) {
-        endpoint += `?id=${id}`;
-        documentData = {
-          name: data.title,
-          shared_members: data.shared_members,
-          shared_teams: data.shared_teams,
-        };
-      } else {
-        documentData = {
-          user_id: userID || "66cda5dac6886719e3345c19",
-          entity_type: data.filetype,
-          name: data.title,
-          shared_members: data.shared_members,
-          shared_teams: data.shared_teams,
-          folder_id: type === "folder" ? id : '',
-          group_id: type === "group" ? id : '',
-          space_id: selectedSpace.entity_type === "space" ? selectedSpace._id : '',
-        };
-      }
-    } else {
-      setLoading(false);
-      return { error: "Invalid filetype specified" };
-    }
+    let endpoint = '';
+    let documentData = {};
+    const method = isEdit ? 'PUT' : 'POST';
 
     try {
+      if (data.filetype === 'page') {
+        if (data.page_type === 'board') {
+          endpoint = '/v1/board';
+          if (isEdit) {
+            documentData = { id, name: data.title };
+          } else {
+            documentData = {
+              name: data.title,
+              description: `Board: ${data.title}`,
+              user_id: userID || '66cda5dac6886719e3345c19',
+              is_private: selectedSpace?.is_private ?? false,
+              shared_teams: data.shared_teams || [],
+              shared_members: data.shared_members || [],
+              custom_meta: {
+                fields: [
+                  {
+                    type: 'select',
+                    initialized: true,
+                    label: 'Status',
+                    name: 'status',
+                    hasOptions: true,
+                    options: [
+                      { label: 'To Do', value: 'todo' },
+                      { label: 'In Progress', value: 'in-progress' },
+                      { label: 'Review', value: 'review' },
+                      { label: 'Done', value: 'done' },
+                    ],
+                  },
+                  {
+                    type: 'select',
+                    initialized: true,
+                    label: 'Assignee',
+                    name: 'assignee',
+                    hasOptions: true,
+                    options: Array.isArray(usersData)
+                      ? usersData.map((u) => ({ label: u.name || u.email, value: u._id }))
+                      : [],
+                  },
+                  {
+                    type: 'select',
+                    initialized: true,
+                    label: 'Priority',
+                    name: 'priority',
+                    hasOptions: true,
+                    options: [
+                      { label: 'Low', value: 'low' },
+                      { label: 'Medium', value: 'medium' },
+                      { label: 'High', value: 'high' },
+                      { label: 'Critical', value: 'critical' },
+                    ],
+                  },
+                  { type: 'input', initialized: true, label: 'Type', name: 'type', hasOptions: false },
+                  { type: 'date', initialized: true, label: 'Due Date', name: 'due_date', hasOptions: false },
+                  { type: 'date', initialized: true, label: 'Start Date', name: 'start_date', hasOptions: false },
+                ],
+              },
+              space_id: type === 'space' ? id : (selectedSpace?._id || spaceId),
+              folder_id: type === 'folder' ? id : '',
+              group_id: type === 'group' ? id : '',
+            };
+          }
+        } else {
+          // regular document/sheet/whiteboard
+          endpoint = '/v1/page/document';
+          if (isEdit) {
+            documentData = { id, title: data.title };
+          } else {
+            documentData = {
+              user_id: userID || '66cda5dac6886719e3345c19',
+              title: data.title,
+              page_type: data.page_type,
+              entity_type: data.filetype,
+              content: { text: 'This is the document content' },
+              summary: 'This is the document summary',
+              last_updated_by: userID || '66cda5dac6886719e3345c19',
+              custom_meta: { author: 'John Doe', keywords: ['sample', 'page', 'meta'] },
+              folder_id: type === 'folder' ? id : '',
+              group_id: type === 'group' ? id : '',
+              space_id: type === 'space' ? id : (selectedSpace?.entity_type === 'space' ? selectedSpace._id : ''),
+              attachments: [],
+            };
+          }
+        }
+      } else if (data.filetype === 'folder' || data.filetype === 'group') {
+        endpoint = data.filetype === 'folder' ? '/v1/folder' : '/v1/group';
+        if (isEdit) {
+          endpoint += `?id=${id}`;
+          documentData = { name: data.title, shared_members: data.shared_members, shared_teams: data.shared_teams };
+        } else {
+          documentData = {
+            user_id: userID || '66cda5dac6886719e3345c19',
+            entity_type: data.filetype,
+            name: data.title,
+            shared_members: data.shared_members,
+            shared_teams: data.shared_teams,
+            folder_id: type === 'folder' ? id : '',
+            group_id: type === 'group' ? id : '',
+            space_id: type === 'space' ? id : (selectedSpace?.entity_type === 'space' ? selectedSpace._id : ''),
+          };
+        }
+      } else {
+        setLoading(false);
+        return { error: 'Invalid filetype specified' };
+      }
+
       const response = await fetch(baseUrl + endpoint, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
+        method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(documentData),
       });
 
       const res = await response.json();
-
       if (res.error) {
-        console.error("Error saving document: ", res.error);
+        console.error('Error saving document: ', res.error);
         setLoading(false);
         return;
       }
 
       if (isEdit) {
-        // Update the store with edited data
-        const updateData = {
-          ...res.data,
-          // Ensure we have the correct name/title property based on entity type
-          ...(data.filetype === "page" ? { title: data.title } : { name: data.title })
-        };
+        const updateData = { ...res.data, ...(data.filetype === 'page' ? { title: data.title } : { name: data.title }) };
         updateHandler(id, data.filetype, updateData);
-        // Call the edit success callback if provided
-        if (onEditSuccess) {
-          onEditSuccess(res.data);
-        }
+        if (onEditSuccess) onEditSuccess(res.data);
       } else {
         storeHandler(id, type, res.data);
       }
-      
-      // Invalidate TanStack Query cache to refresh sidebar and main section
+
       queryClient.invalidateQueries({ queryKey: ['spaces'] });
       queryClient.invalidateQueries({ queryKey: ['spaces', userID] });
       queryClient.invalidateQueries({ queryKey: ['files'] });
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      
-      // Close the modal and reset form after successful operation
+
       setLoading(false);
       setIsOpen(false);
 
-      // Reset form with default values
-      form.reset({
-        title: '',
-        filetype: defaultFileType,
-        page_type: 'document',
-        shared_members: [],
-        shared_teams: []
-      });
-
-      // Reset local state
+      form.reset({ title: '', filetype: defaultFileType, page_type: 'document', shared_members: [], shared_teams: [] });
       setFileName('');
     } catch (error) {
+      console.error(error);
       setLoading(false);
     }
   };

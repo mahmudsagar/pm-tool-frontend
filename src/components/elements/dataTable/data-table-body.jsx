@@ -114,7 +114,14 @@ const DataTableColumnBody = ({ table, loading, onDataChange }) => {
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => {                    
-                    let path = cell?.row?.original?.type === 'folder' || cell?.row?.original?.type === 'group' ? `/file-manager/${cell?.row?.original?.type}/${cell?.row?.original?.id}` : `/document/${cell?.row?.original?.id}`;
+                    const original = cell?.row?.original || {};
+                    // If this is a board (either entity_type 'board' or page_type 'board'), route to /board/:id
+                    let path = `/document/${original.id}`;
+                    if (original.type === 'folder' || original.type === 'group') {
+                      path = `/file-manager/${original.type}/${original.id}`;
+                    } else if (original.type === 'board' || original.page_type === 'board') {
+                      path = `/board/${original.id}`;
+                    }
                     
                     // Check if this is the name column that contains action buttons
                     const cellContent = flexRender(cell?.column?.columnDef?.cell, cell.getContext());

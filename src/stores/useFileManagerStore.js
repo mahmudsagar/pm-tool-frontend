@@ -645,10 +645,16 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
               sheet: FileSpreadsheet,
             }[child.page_type] || FileText;
 
-      const fileName =
-        child.entity_type === "folder" || child.entity_type === "group"
-          ? child.name
-          : child.title;
+      // Choose display name robustly: folders/groups use `name`, pages usually use `title`,
+      // but board pages may use `name` on the backend. Fall back safely.
+      let fileName = '';
+      if (child.entity_type === 'folder' || child.entity_type === 'group') {
+        fileName = child.name;
+      } else if (child.page_type === 'board') {
+        fileName = child.name || child.title || '';
+      } else {
+        fileName = child.title || child.name || '';
+      }
       const usersArr = Array.isArray(get().users) ? get().users : [];
       const user = usersArr.find((user) => user._id === child.user_id);
       const modifiedUserName = user ? user.full_name : "Unknown User";
@@ -663,6 +669,9 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         sharing: child.is_private ? "Private" : "Public",
         pinned: child.pinned,
         space_id: child.space_id,
+        folder_id: child.folder_id || child.parent_id || null,
+        group_id: child.group_id || null,
+        page_type: child.page_type || null,
       };
     });
   },
@@ -716,12 +725,17 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
             name:
               child.entity_type === "folder"
                 ? child.name
-                : `${child.title}.${child.page_type}`,
+                : child.page_type === 'board'
+                ? (child.name || child.title || '')
+                : (child.title ? `${child.title}.${child.page_type}` : (child.name || '')),
             modified: formatTime(child.updatedAt),
             modifiedBy: modifiedUser,
             sharing: data[0].is_private ? "Public" : "Private",
             pinned: child.pinned,
             space_id: child.space_id,
+            folder_id: child.folder_id || child.parent_id || null,
+            group_id: child.group_id || null,
+            page_type: child.page_type || null,
           };
         })
       );
