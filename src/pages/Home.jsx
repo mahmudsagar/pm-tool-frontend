@@ -30,6 +30,7 @@ const Home = () => {
   const filterType = searchParams.get('filter');
   const spaceId = searchParams.get('spaceId');
   const folderId = searchParams.get('folderId');
+  const groupId = searchParams.get('groupId');
 
   // Determine title based on active filter
   const getPageTitle = () => {
@@ -40,7 +41,34 @@ const Home = () => {
       const space = allSpaces.find(s => s._id === spaceId);
       return space ? space.name : 'Space Files';
     }
+    // If inside a group, show the group's name if available
+    if (groupId) {
+      const allSpaces = [...(publicSpaces || []), ...(privateSpaces || [])];
+      // Search top-level spaces and their children
+      for (const space of allSpaces) {
+        if (space._id === groupId) return space.name;
+        if (Array.isArray(space.childs)) {
+          const found = space.childs.find(c => c._id === groupId && c.entity_type === 'group');
+          if (found) return found.name || found.title || 'Group Files';
+        }
+      }
+      // Fallback to spaceFiles lookup
+      const file = spaceFiles?.find(f => f.id === groupId);
+      if (file) return file.name || file.title || 'Group Files';
+      return 'Group Files';
+    }
+
+    // If inside a folder, show the folder's name if available
     if (folderId) {
+      const allSpaces = [...(publicSpaces || []), ...(privateSpaces || [])];
+      for (const space of allSpaces) {
+        if (Array.isArray(space.childs)) {
+          const found = space.childs.find(c => c._id === folderId && (c.entity_type === 'folder' || c.entity_type === 'group'));
+          if (found) return found.name || found.title || 'Folder Files';
+        }
+      }
+      const file = spaceFiles?.find(f => f.id === folderId);
+      if (file) return file.name || file.title || 'Folder Files';
       return 'Folder Files';
     }
     return 'My Files';
