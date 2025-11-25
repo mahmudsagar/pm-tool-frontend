@@ -50,6 +50,12 @@ function DataTable() {
 
   const { data: rawData, isLoading: loading } = currentQuery;
 
+  // Extract the container name (folder/group/space name)
+  const containerName = useMemo(() => {
+    if (!rawData || !rawData[0]) return 'My Files';
+    return rawData[0].name || rawData[0].title || 'My Files';
+  }, [rawData]);
+
   // Transform data for table display
   const tableData = useMemo(() => {
     if (!rawData || !rawData[0]?.childs) return [];
@@ -154,7 +160,7 @@ function DataTable() {
 
   return (
     <>
-      <DataTableColumnHeader title="My Files" table={table} />
+      <DataTableColumnHeader title={containerName} table={table} />
       <DataTableColumnBody 
         table={table} 
         loading={loading} 

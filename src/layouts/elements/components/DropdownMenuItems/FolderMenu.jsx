@@ -165,14 +165,14 @@ const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) =
             <Link2 className="w-4 h-4" />
             Copy Link
           </DropdownMenuItem>
-          <DropdownMenuItem 
+          {/* <DropdownMenuItem 
             className="flex items-center px-4 py-3 font-medium gap-3 cursor-pointer" 
             onSelect={handlePinToggle}
             disabled={pinLoading}
           >
             <Pin className="w-4 h-4" />
             {isPinned ? "Unpin" : "Pin"}
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
         </DropdownMenuGroup>
           <Delete
             fileId={id}

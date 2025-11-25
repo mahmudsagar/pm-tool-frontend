@@ -47,7 +47,6 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
   }, [isOpen]);  
 
   const handleDropdownToggle = (id) => {
-    console.log("🚀 ~ handleDropdownToggle ~ id:", id)
     setDropdownOpenStates(prevState => ({
       ...prevState,
       [id]: !prevState[id]
@@ -94,7 +93,6 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
   const handleFolderNavigation = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
     if (folder.entity_type === 'folder') {
       // Navigate to folder view with ID
       navigate(`/folder/${folder._id}`);
