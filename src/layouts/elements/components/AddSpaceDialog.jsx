@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { baseUrl } from '@/utils/constants';
-import { MultiSelect } from '@/components/ui/multi-select';
+import { RcMultiSelect } from '@/components/ui/rc-multi-select';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import {
   Dialog,
@@ -44,8 +44,12 @@ const AddSpaceDialog = ({
   const [loading, setLoading] = useState(false);
   const { data: users, callApi: userCallApi } = useApi();
   const { data: teams, callApi: teamCallApi } = useApi();
-  const usersData = ensureArray(users);
-  const teamsData = ensureArray(teams);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [teamSearchQuery, setTeamSearchQuery] = useState('');
+  const [searchedUsers, setSearchedUsers] = useState([]);
+  const [searchedTeams, setSearchedTeams] = useState([]);
+  const usersData = userSearchQuery ? ensureArray(searchedUsers) : ensureArray(users);
+  const teamsData = teamSearchQuery ? ensureArray(searchedTeams) : ensureArray(teams);
   const { createSpaceAndSync, storeHandler, updateHandler } = useFileManagerStore(state => state);
 
   const form = useForm({
@@ -81,6 +85,68 @@ const AddSpaceDialog = ({
       })();
     }
   }, [isOpen, userCallApi, teamCallApi, userID]);
+
+  const { token } = useAuthStore();
+
+  // Debounced search for users
+  useEffect(() => {
+    if (!userSearchQuery || userSearchQuery.length < 2) {
+      setSearchedUsers([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/v1/user?search=${encodeURIComponent(userSearchQuery)}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        const result = await response.json();
+        if (result.data) {
+          setSearchedUsers(result.data);
+        }
+      } catch (error) {
+        console.error('Error searching users:', error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [userSearchQuery, token]);
+
+  // Debounced search for teams
+  useEffect(() => {
+    if (!teamSearchQuery || teamSearchQuery.length < 2) {
+      setSearchedTeams([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/v1/team?user_id=${userID}&search=${encodeURIComponent(teamSearchQuery)}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        const result = await response.json();
+        if (result.data) {
+          setSearchedTeams(result.data);
+        }
+      } catch (error) {
+        console.error('Error searching teams:', error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [teamSearchQuery, userID, token]);
 
   // Update form when initialData changes (for edit mode)
   useEffect(() => {
@@ -228,14 +294,13 @@ const AddSpaceDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Shared Members</FormLabel>
-                    <MultiSelect
+                    <RcMultiSelect
                       options={Array.isArray(usersData) ? usersData.map(user => ({ value: user._id, label: user.email })) : []}
-                      onValueChange={(value) => field.onChange(value)}
-                      placeholder="Select members to share with"
-                      variant="inverted"
-                      animation={2}
-                      maxCount={3}
-                      handleFormChange={field.onChange}
+                      value={field.value}
+                      onChange={(value) => field.onChange(value)}
+                      onSearchChange={setUserSearchQuery}
+                      placeholder="Search and select members"
+                      searchPlaceholder="Type to search members..."
                     />
                     <FormMessage />
                   </FormItem>
@@ -248,14 +313,13 @@ const AddSpaceDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Shared Teams</FormLabel>
-                    <MultiSelect
+                    <RcMultiSelect
                       options={Array.isArray(teamsData) ? teamsData?.map(team => ({ value: team._id, label: team.name })) : []}
-                      onValueChange={(value) => field.onChange(value)}
-                      placeholder="Select teams to share with"
-                      variant="inverted"
-                      animation={2}
-                      maxCount={3}
-                      handleFormChange={field.onChange}
+                      value={field.value}
+                      onChange={(value) => field.onChange(value)}
+                      onSearchChange={setTeamSearchQuery}
+                      placeholder="Search and select teams"
+                      searchPlaceholder="Type to search teams..."
                     />
                     <FormMessage />
                   </FormItem>

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from '@/components/ui/label';
-import { MultiSelect } from '@/components/ui/multi-select';
+import { RcMultiSelect } from '@/components/ui/rc-multi-select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
@@ -60,8 +60,12 @@ const AddMyFilesDialog = ({
   console.log("🚀 ~ spaceId:", spaceId)
   const { data: users, callApi: userCallApi } = useApi();
   const { data: teams, callApi: teamCallApi } = useApi();
-  const usersData = ensureArray(users)
-  const teamsData = ensureArray(teams)
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [teamSearchQuery, setTeamSearchQuery] = useState('');
+  const [searchedUsers, setSearchedUsers] = useState([]);
+  const [searchedTeams, setSearchedTeams] = useState([]);
+  const usersData = userSearchQuery ? ensureArray(searchedUsers) : ensureArray(users);
+  const teamsData = teamSearchQuery ? ensureArray(searchedTeams) : ensureArray(teams);
   const { storeHandler, updateHandler, publicSpaces,
     privateSpaces, } = useFileManagerStore(state => state);
   const allSpaces = useMemo(() => [...(publicSpaces || []), ...(privateSpaces || [])], [publicSpaces, privateSpaces]);
@@ -137,6 +141,66 @@ const AddMyFilesDialog = ({
       })();
     }
   }, [isOpen, teamCallApi, userCallApi, userID]);
+
+  // Debounced search for users
+  useEffect(() => {
+    if (!userSearchQuery || userSearchQuery.length < 2) {
+      setSearchedUsers([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/v1/user?search=${encodeURIComponent(userSearchQuery)}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        const result = await response.json();
+        if (result.data) {
+          setSearchedUsers(result.data);
+        }
+      } catch (error) {
+        console.error('Error searching users:', error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [userSearchQuery, token]);
+
+  // Debounced search for teams
+  useEffect(() => {
+    if (!teamSearchQuery || teamSearchQuery.length < 2) {
+      setSearchedTeams([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/v1/team?user_id=${userID}&search=${encodeURIComponent(teamSearchQuery)}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        const result = await response.json();
+        if (result.data) {
+          setSearchedTeams(result.data);
+        }
+      } catch (error) {
+        console.error('Error searching teams:', error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [teamSearchQuery, userID, token]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -535,14 +599,13 @@ const AddMyFilesDialog = ({
                   render={({ field }) => (
                     <FormItem className='w-full'>
                       <FormLabel>Shared Member</FormLabel>
-                      <MultiSelect
+                      <RcMultiSelect
                         options={Array.isArray(usersData) ? usersData.map(user => ({ value: user._id, label: user.email })) : []}
-                        onValueChange={(value) => field.onChange(value)}
-                        placeholder="Select Member"
-                        variant="inverted"
-                        animation={2}
-                        maxCount={3}
-                        handleFormChange={field.onChange}
+                        value={field.value}
+                        onChange={(value) => field.onChange(value)}
+                        onSearchChange={setUserSearchQuery}
+                        placeholder="Search and select members"
+                        searchPlaceholder="Type to search members..."
                       />
                     </FormItem>
                   )}
@@ -553,14 +616,13 @@ const AddMyFilesDialog = ({
                   render={({ field }) => (
                     <FormItem className='w-full'>
                       <FormLabel>Shared Team</FormLabel>
-                      <MultiSelect
+                      <RcMultiSelect
                         options={Array.isArray(teamsData) ? teamsData?.map(team => ({ value: team._id, label: team.name })) : []}
-                        onValueChange={(value) => field.onChange(value)}
-                        placeholder="Select Team"
-                        variant="inverted"
-                        animation={2}
-                        maxCount={3}
-                        handleFormChange={field.onChange}
+                        value={field.value}
+                        onChange={(value) => field.onChange(value)}
+                        onSearchChange={setTeamSearchQuery}
+                        placeholder="Search and select teams"
+                        searchPlaceholder="Type to search teams..."
                       />
                     </FormItem>
                   )}

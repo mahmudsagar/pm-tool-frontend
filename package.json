@@ -79,6 +79,7 @@
     "lexical": "^0.17.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.390.0",
+    "rc-select": "^14.16.8",
     "react": "^18.2.0",
     "react-day-picker": "^8.10.1",
     "react-detectable-overflow": "^0.8.0",

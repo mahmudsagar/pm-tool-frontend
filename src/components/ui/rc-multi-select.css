@@ -1,0 +1,143 @@
+/* Custom styling for rc-select to match shadcn/ui design system */
+
+.rc-multi-select-custom {
+  width: 100%;
+}
+
+.rc-multi-select-custom .rc-select-selector {
+  min-height: 40px;
+  padding: 4px 8px !important;
+  border: 1px solid hsl(var(--input)) !important;
+  border-radius: calc(var(--radius) - 2px);
+  background-color: hsl(var(--background));
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.rc-multi-select-custom .rc-select-selector:hover {
+  border-color: hsl(var(--ring)) !important;
+}
+
+.rc-multi-select-custom.rc-select-focused .rc-select-selector {
+  border-color: hsl(var(--ring)) !important;
+  box-shadow: 0 0 0 1px hsl(var(--ring));
+  outline: none;
+}
+
+/* Search input */
+.rc-multi-select-custom .rc-select-selection-search-input {
+  color: hsl(var(--foreground)) !important;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.rc-multi-select-custom .rc-select-selection-search-input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Selected tags */
+.rc-multi-select-custom .rc-select-selection-item {
+  background-color: hsl(var(--secondary)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: calc(var(--radius) - 4px);
+  color: hsl(var(--secondary-foreground)) !important;
+  padding: 2px 8px;
+  font-size: 0.875rem;
+  margin: 2px 4px 2px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rc-multi-select-custom .rc-select-selection-item-remove {
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+}
+
+.rc-multi-select-custom .rc-select-selection-item-remove:hover {
+  color: hsl(var(--foreground));
+}
+
+/* Placeholder */
+.rc-multi-select-custom .rc-select-selection-placeholder {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* Dropdown */
+.rc-multi-select-dropdown {
+  background-color: hsl(var(--popover)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: calc(var(--radius) - 2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  padding: 4px;
+  z-index: 9999 !important;
+}
+
+.rc-multi-select-dropdown .rc-select-item {
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: hsl(var(--popover-foreground));
+  border-radius: calc(var(--radius) - 4px);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.rc-multi-select-dropdown .rc-select-item:hover {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.rc-multi-select-dropdown .rc-select-item-option-selected {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  font-weight: 500;
+}
+
+.rc-multi-select-dropdown .rc-select-item-option-active {
+  background-color: hsl(var(--accent));
+}
+
+/* Empty state */
+.rc-multi-select-dropdown .rc-select-item-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+}
+
+/* Clear button */
+.rc-multi-select-custom .rc-select-clear {
+  background-color: transparent;
+  color: hsl(var(--muted-foreground));
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.rc-multi-select-custom .rc-select-clear:hover {
+  opacity: 1;
+  color: hsl(var(--foreground));
+}
+
+/* Arrow */
+.rc-multi-select-custom .rc-select-arrow {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Disabled state */
+.rc-multi-select-custom.rc-select-disabled .rc-select-selector {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Dark mode adjustments */
+.dark .rc-multi-select-dropdown {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+}
