@@ -3,7 +3,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useFolderContents, useGroupContents, useSpaceContents } from '@/hooks/queries/useFilesQueries';
 import { useQueryClient } from '@tanstack/react-query';
-import { baseUrl } from '@/utils/constants';
+import { useDeleteEntity } from '@/hooks/mutations/useDeleteMutations';
 import {
   useReactTable,
   getCoreRowModel,
@@ -25,6 +25,7 @@ function DataTable() {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const queryClient = useQueryClient();
+  const { mutate: deleteEntity } = useDeleteEntity();
 
   // Detect type from URL path if not provided as param
   const detectedType = useMemo(() => {
@@ -82,40 +83,11 @@ function DataTable() {
     });
   }, [rawData]);
 
-  // Handler for successful deletion - invalidate queries to refetch
-  const handleDeleteSuccess = useCallback(async (fileId, fileType) => {
-    // Attempt to call backend delete API for the given file
-    try {
-      let endPoint;
-
-      if (fileType === "page") {
-        endPoint = `/v1/page/document?id=${fileId}`;
-      } else if (fileType === "folder"){
-        endPoint = `/v1/folder?id=${fileId}`;
-      } else if (fileType === "group"){
-        endPoint = `/v1/group?id=${fileId}`;
-      }
-
-      if (endPoint) {
-        const token = localStorage.getItem('token');
-        await fetch(baseUrl + endPoint, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
-      }
-    } catch (error) {
-      console.error('Error calling delete API:', error);
-    } finally {
-      // Invalidate queries to trigger refetch
-      queryClient.invalidateQueries({ queryKey: ['folders', id] });
-      queryClient.invalidateQueries({ queryKey: ['groups', id] });
-      queryClient.invalidateQueries({ queryKey: ['spaces', id] });
-      queryClient.invalidateQueries({ queryKey: ['spaces'] });
-    }
-  }, [queryClient, id]);
+  // Handler for successful deletion - uses TanStack Query mutation
+  const handleDeleteSuccess = useCallback((fileId, fileType) => {
+    // Use TanStack Query mutation which handles API call, cache invalidation, and error handling
+    deleteEntity({ entityId: fileId, entityType: fileType });
+  }, [deleteEntity]);
 
   // Handler for successful edit - invalidate queries to refetch
   const handleEditSuccess = useCallback((fileId, fileType, updatedData) => {
