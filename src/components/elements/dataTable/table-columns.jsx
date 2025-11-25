@@ -126,6 +126,26 @@ export const createColumns = (onDeleteSuccess, onEditSuccess) => [
       <div className='text-slate-500 dark:text-white'>{row.getValue("modified")}</div>
     ),
   },
+  // {
+  //   accessorKey: "modifiedBy",
+  //   header: ({ column }) => {
+  //     return (
+  //       <DropdownMenu>
+  //         <DropdownMenuTrigger asChild>
+  //           <button className="font-medium dark:text-white flex items-center justify-center gap-2 bg-none border-none focus:outline-none">
+  //             Modified By
+  //             <ChevronDown className='w-4 h-4' />
+  //           </button>
+  //         </DropdownMenuTrigger>
+  //       </DropdownMenu>
+  //     );
+  //   },
+  //   cell: ({ row }) => (
+  //     <div className='text-slate-500 dark:text-white'>{row.getValue("modifiedBy")}</div>
+  //   ),
+  // },
+
+  /*
   {
     accessorKey: "modifiedBy",
     header: ({ column }) => {
@@ -144,6 +164,7 @@ export const createColumns = (onDeleteSuccess, onEditSuccess) => [
       <div className='text-slate-500 dark:text-white'>{row.getValue("modifiedBy")}</div>
     ),
   },
+  */
   {
     accessorKey: "sharing",
     header: ({ column }) => {

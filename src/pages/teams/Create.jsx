@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import TeamForm from '@/components/teams/TeamForm';
 import useApi from '@/lib/dataFetcher';
-import { useAuth } from '@/contexts/AuthContext';
+import useAuthStore from "@/stores/useAuthStore";
 import { baseUrl } from '@/utils/constants';
 
 export default function CreateTeam() {
@@ -14,7 +14,7 @@ export default function CreateTeam() {
   const isEditMode = location.pathname.includes('/edit/') || id != null;
   
   const { callApi, loading } = useApi();
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const [team, setTeam] = useState(null);
 
   // Fetch team data if we're in edit mode

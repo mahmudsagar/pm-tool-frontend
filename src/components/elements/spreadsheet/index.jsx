@@ -1,4 +1,4 @@
-import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react'
+import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useCallback } from 'react'
 import { LocaleType,  Univer, UniverInstanceType } from '@univerjs/core'
 import { UniverDocsPlugin } from '@univerjs/docs'
 import { UniverDocsUIPlugin } from '@univerjs/docs-ui'
@@ -46,7 +46,7 @@ import '@univerjs/sheets-crosshair-highlight/lib/index.css'
 
 
 // eslint-disable-next-line react/display-name
-const UniverSheet = forwardRef(({ data }, ref) => {
+const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval = 3000 }, ref) => {
   const univerRef = useRef(null);
   const workbookRef = useRef(null);
   const containerRef = useRef(null);
@@ -59,7 +59,7 @@ const UniverSheet = forwardRef(({ data }, ref) => {
    * Initialize univer instance and workbook instance
    * @param data {IWorkbookData} document see https://univer.work/api/core/interfaces/IWorkbookData.html
    */
-  const init = (data = {}) => {
+  const init = useCallback((data = {}) => {
     if (!containerRef.current) {
       throw Error('container not initialized');
     }
@@ -109,16 +109,27 @@ const UniverSheet = forwardRef(({ data }, ref) => {
     univer.registerPlugin(UniverSheetsZenEditorPlugin)
     // create workbook instance
     workbookRef.current = univer.createUnit(UniverInstanceType.UNIVER_SHEET, data);
-  };
+    // If consumer passed a handleSubmit (page-level save), call it once after init
+    try {
+      const current = getData();
+      if (typeof handleSubmit === 'function') {
+        handleSubmit({ content: current });
+      } else if (typeof onChange === 'function') {
+        onChange(current);
+      }
+    } catch (e) {
+      // ignore if workbook not ready yet
+    }
+  }, [onChange, handleSubmit]);
 
   /**
    * Destroy univer instance and workbook instance
    */
-  const destroyUniver = () => {
+  const destroyUniver = useCallback(() => {
     // univerRef.current?.dispose();
     univerRef.current = null;
     workbookRef.current = null;
-  };
+  }, []);
 
   /**
    * Get workbook data
@@ -135,7 +146,28 @@ const UniverSheet = forwardRef(({ data }, ref) => {
     return () => {
       destroyUniver();
     };
-  }, [data]);
+  }, [data, init, destroyUniver]);
+
+  useEffect(() => {
+    // regularly persist workbook data: prefer page-level handleSubmit to reuse document API
+    if (typeof handleSubmit !== 'function' && typeof onChange !== 'function') return;
+
+    const timer = setInterval(() => {
+      if (!workbookRef.current) return;
+      try {
+        const current = getData();
+        if (typeof handleSubmit === 'function') {
+          handleSubmit({ content: current });
+        } else {
+          onChange(current);
+        }
+      } catch (e) {
+        // noop
+      }
+    }, autoSaveInterval);
+
+    return () => clearInterval(timer);
+  }, [onChange, autoSaveInterval, handleSubmit]);
 
   return <div ref={containerRef} className="univer-container" />;
 });

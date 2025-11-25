@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,67 +13,93 @@ import {
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import ButtonLoading from '../../ButtonLoading';
-import useApi from '@/lib/dataFetcher';
-import NotFound from '@/BetterRouter/NotFound';
-import { baseUrl } from '@/utils/constants';
+import { useDeleteEntity } from '@/hooks/mutations/useDeleteMutations';
 
 const Delete = ({ fileId, fileType, onToggle, onSuccess, wrapperClassName = "" }) => {
-  const { callApi, error } = useApi();
-  const [loading, setLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { mutate: deleteEntity, isPending } = useDeleteEntity();
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const location = useLocation();
 
   const { deleteHandler } = useFileManagerStore(state => state);
 
-  const handleDeleteClick = (e) => {
-    e.preventDefault();
-    setIsDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {  
-    let endPoint;
-    setLoading(true);
-
-    if (fileType === "page") {
-      endPoint = `/v1/page/document?id=${fileId}`;
-    } else if (fileType === "folder"){
-      endPoint = `/v1/folder?id=${fileId}`;
-    } else if (fileType === "group"){
-      endPoint = `/v1/group?id=${fileId}`;      
-    } else {
-      return { error: "Invalid filetype specified" };
-    }   
-
-    try {
-      await callApi(baseUrl + endPoint, { method: 'DELETE', });
-      // Update the store
-      deleteHandler(fileId, fileType); 
-      setLoading(false); 
-      setIsDialogOpen(false);
-      
-      // Call the success callback if provided
-      if (typeof onSuccess === 'function') {
-        onSuccess(fileId, fileType);
+  // Cleanup: always remove inert when component unmounts
+  useEffect(() => {
+    return () => {
+      const mainContent = document.getElementById('main-content');
+      if (mainContent) {
+        mainContent.removeAttribute('inert');
       }
-    } catch (error) {
-      setLoading(false); 
-      console.error("Error deleting data: ", error);
-    }   
+    };
+  }, []);
+
+  const confirmDelete = () => {
+    // Validate entity type
+    if (!['page', 'folder', 'group', 'space', 'board'].includes(fileType)) {
+      console.error('Invalid filetype specified for delete:', fileType);
+      return;
+    }
+
+    // Use TanStack Query mutation for delete
+    deleteEntity(
+      { entityId: fileId, entityType: fileType },
+      {
+        onSuccess: () => {
+          // Update the local store immediately
+          deleteHandler(fileId, fileType);
+          
+          // Close dialog
+          setIsDialogOpen(false);
+          
+          // Check if we're currently viewing the deleted item
+          const isViewingDeletedItem = id === fileId || location.pathname.includes(fileId);
+          
+          // Navigate to root if we're viewing the deleted item
+          if (isViewingDeletedItem) {
+            navigate('/');
+          }
+          
+          // Call the success callback if provided
+          if (typeof onSuccess === 'function') {
+            onSuccess(fileId, fileType);
+          }
+        },
+        onError: (error) => {
+          console.error("Error deleting data: ", error);
+          // Dialog stays open on error so user can retry or close manually
+        }
+      }
+    );
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     onToggle(fileId, false);
+    
+    // Ensure inert is removed
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+      mainContent.removeAttribute('inert');
+    }
   };
-
-  if (error) {
-    return <NotFound />
-  }
 
   return (
     <>
       <DropdownMenuItem
         className={`cursor-pointer flex items-center gap-2 ${wrapperClassName}`}
-        onClick={handleDeleteClick}
+        onSelect={(e) => {
+          e.preventDefault();
+          // DropdownMenu will close automatically, then open our dialog
+          setTimeout(() => {
+            setIsDialogOpen(true);
+            // Ensure inert is removed after dropdown closes
+            const mainContent = document.getElementById('main-content');
+            if (mainContent) {
+              mainContent.removeAttribute('inert');
+            }
+          }, 100);
+        }}
       >
         <Trash2 className="w-4 h-4" />
         <span>Delete</span>
@@ -90,8 +117,8 @@ const Delete = ({ fileId, fileType, onToggle, onSuccess, wrapperClassName = "" }
             <Button variant="outline" onClick={handleCloseDialog}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              {loading ? <ButtonLoading text='Deleting...' flex='row' /> : 'Delete'}
+            <Button variant="destructive" onClick={confirmDelete} disabled={isPending}>
+              {isPending ? <ButtonLoading text='Deleting...' flex='row' /> : 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,4 +1,4 @@
-import useAuthStore from '@/store/useAuthStore';
+import useAuthStore from '@/stores/useAuthStore';
 
 // Track if a token refresh is in progress
 let isRefreshing = false;

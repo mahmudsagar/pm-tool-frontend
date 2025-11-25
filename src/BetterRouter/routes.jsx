@@ -44,7 +44,18 @@ export const routes = [
       {
         path: '/file-manager/:type/:id',
         element: <FileManager />
-        
+      },
+      {
+        path: '/folder/:id',
+        element: <FileManager />
+      },
+      {
+        path: '/group/:id',
+        element: <FileManager />
+      },
+      {
+        path: '/space/:id',
+        element: <FileManager />
       },
       {
         path: '/form/*',

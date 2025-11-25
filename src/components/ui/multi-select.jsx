@@ -57,6 +57,7 @@ export const MultiSelect = React.forwardRef(
     {
       options = [],
       onChange = () => { },
+      onSearchChange,
       variant = "default",
       value = [],
       placeholder = "Select options",
@@ -72,6 +73,7 @@ export const MultiSelect = React.forwardRef(
     const [selectedValues, setSelectedValues] = React.useState(value);
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
     const [isAnimating, setIsAnimating] = React.useState(false);
+    const [searchTerm, setSearchTerm] = React.useState('');
     const commandListRef = React.useRef(null);
 
     const handleInputKeyDown = (event) => {
@@ -232,21 +234,29 @@ export const MultiSelect = React.forwardRef(
           align="start"
           onEscapeKeyDown={() => setIsPopoverOpen(false)}
         >
-          <Command>
+          <Command 
+            shouldFilter={false}
+            onValueChange={(value) => {
+              setSearchTerm(value);
+              if (onSearchChange) {
+                onSearchChange(value);
+              }
+            }}
+          >
             <CommandInput
               placeholder="Search..."
+              disabled={false}
               onKeyDown={handleInputKeyDown}
-              disabled={isOptionsEmpty}
             />
             <CommandList
               ref={commandListRef}
               className="max-h-[200px] overflow-y-auto"
               onWheel={handleWheel}
             >
-              {isOptionsEmpty ? (
+              {isOptionsEmpty && !searchTerm ? (
                 <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
                   <AlertCircle className="h-10 w-10 mb-2" />
-                  <p className="text-sm font-medium">No data available</p>
+                  <p className="text-sm font-medium">Start typing to search</p>
                 </div>
               ) : (
                 <>

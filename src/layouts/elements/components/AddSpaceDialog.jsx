@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { baseUrl } from '@/utils/constants';
-import { MultiSelect } from '@/components/ui/multi-select';
+import { RcMultiSelect } from '@/components/ui/rc-multi-select';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import {
   Dialog,
@@ -26,8 +26,10 @@ import {
   FormDescription
 } from "@/components/ui/form";
 import ButtonLoading from './ButtonLoading';
-import { useAuth } from '@/contexts/AuthContext';
+import useAuthStore from '@/stores/useAuthStore';
 import { ensureArray } from '@/utils/helper';
+import { useCreateSpace, useUpdateSpace } from '@/hooks/mutations/useSpacesMutations';
+import { useQueryClient } from '@tanstack/react-query';
 
 const AddSpaceDialog = ({
   id,
@@ -42,8 +44,12 @@ const AddSpaceDialog = ({
   const [loading, setLoading] = useState(false);
   const { data: users, callApi: userCallApi } = useApi();
   const { data: teams, callApi: teamCallApi } = useApi();
-  const usersData = ensureArray(users);
-  const teamsData = ensureArray(teams);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [teamSearchQuery, setTeamSearchQuery] = useState('');
+  const [searchedUsers, setSearchedUsers] = useState([]);
+  const [searchedTeams, setSearchedTeams] = useState([]);
+  const usersData = userSearchQuery ? ensureArray(searchedUsers) : ensureArray(users);
+  const teamsData = teamSearchQuery ? ensureArray(searchedTeams) : ensureArray(teams);
   const { createSpaceAndSync, storeHandler, updateHandler } = useFileManagerStore(state => state);
 
   const form = useForm({
@@ -57,8 +63,13 @@ const AddSpaceDialog = ({
     }
   });
 
-  const { user, token } = useAuth();
+  const { user } = useAuthStore();
   const userID = user?._id;
+  
+  // TanStack Query mutations and client
+  const createSpaceMutation = useCreateSpace();
+  const updateSpaceMutation = useUpdateSpace();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
@@ -73,7 +84,69 @@ const AddSpaceDialog = ({
         }
       })();
     }
-  }, [isOpen]);
+  }, [isOpen, userCallApi, teamCallApi, userID]);
+
+  const { token } = useAuthStore();
+
+  // Debounced search for users
+  useEffect(() => {
+    if (!userSearchQuery || userSearchQuery.length < 2) {
+      setSearchedUsers([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/v1/user?search=${encodeURIComponent(userSearchQuery)}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        const result = await response.json();
+        if (result.data) {
+          setSearchedUsers(result.data);
+        }
+      } catch (error) {
+        console.error('Error searching users:', error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [userSearchQuery, token]);
+
+  // Debounced search for teams
+  useEffect(() => {
+    if (!teamSearchQuery || teamSearchQuery.length < 2) {
+      setSearchedTeams([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${baseUrl}/v1/team?user_id=${userID}&search=${encodeURIComponent(teamSearchQuery)}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        const result = await response.json();
+        if (result.data) {
+          setSearchedTeams(result.data);
+        }
+      } catch (error) {
+        console.error('Error searching teams:', error);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [teamSearchQuery, userID, token]);
 
   // Update form when initialData changes (for edit mode)
   useEffect(() => {
@@ -91,8 +164,6 @@ const AddSpaceDialog = ({
 
   const onSubmit = async (data) => {
     setLoading(true);
-    const endpoint = "/v1/space";
-    const method = isEdit ? 'PUT' : 'POST';
 
     const spaceData = {
       name: data.name,
@@ -104,38 +175,35 @@ const AddSpaceDialog = ({
       is_default: data.is_default ?? false
     };
 
-    // For editing, add the ID parameter
-    const url = isEdit ? `${baseUrl}${endpoint}?id=${id}` : `${baseUrl}${endpoint}`;
-
     try {
-      // const response = await fetch(url, {
-      //   method: method,
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     "Authorization": `Bearer ${token}`
-      //   },
-      //   body: JSON.stringify(spaceData),
-      // });
-      const result = await createSpaceAndSync(spaceData)
-
-      if (result.error) {
-        console.error("Error saving space: ", result.error);
-        setLoading(false);
-        return;
-      }
-
       if (isEdit) {
-        // Update the store with edited data
-        await updateHandler(id, 'space', result.data);
+        // Update existing space using TanStack Query mutation
+        await updateSpaceMutation.mutateAsync({ 
+          spaceId: id, 
+          data: spaceData 
+        });
+        
+        // Update the file manager store
+        await updateHandler(id, 'space', spaceData);
 
         // Call the edit success callback if provided
         if (onEditSuccess) {
-          onEditSuccess(result.data);
+          onEditSuccess(spaceData);
         }
       } else {
-        // For creation, use the existing storeHandler
-        await storeHandler(parentId, 'space', result.data);
+        // Create new space using TanStack Query mutation
+        const result = await createSpaceMutation.mutateAsync(spaceData);
+        
+        // Update the file manager store with the new space
+        await storeHandler(parentId, 'space', result);
+        
+        // Also sync spaces from API to ensure consistency
+        await createSpaceAndSync(spaceData);
       }
+
+      // Invalidate and refetch queries to ensure UI updates
+      queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      queryClient.invalidateQueries({ queryKey: ['spaces', userID] });
 
       setLoading(false);
       setIsOpen(false);
@@ -226,14 +294,13 @@ const AddSpaceDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Shared Members</FormLabel>
-                    <MultiSelect
+                    <RcMultiSelect
                       options={Array.isArray(usersData) ? usersData.map(user => ({ value: user._id, label: user.email })) : []}
-                      onValueChange={(value) => field.onChange(value)}
-                      placeholder="Select members to share with"
-                      variant="inverted"
-                      animation={2}
-                      maxCount={3}
-                      handleFormChange={field.onChange}
+                      value={field.value}
+                      onChange={(value) => field.onChange(value)}
+                      onSearchChange={setUserSearchQuery}
+                      placeholder="Search and select members"
+                      searchPlaceholder="Type to search members..."
                     />
                     <FormMessage />
                   </FormItem>
@@ -246,14 +313,13 @@ const AddSpaceDialog = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Shared Teams</FormLabel>
-                    <MultiSelect
+                    <RcMultiSelect
                       options={Array.isArray(teamsData) ? teamsData?.map(team => ({ value: team._id, label: team.name })) : []}
-                      onValueChange={(value) => field.onChange(value)}
-                      placeholder="Select teams to share with"
-                      variant="inverted"
-                      animation={2}
-                      maxCount={3}
-                      handleFormChange={field.onChange}
+                      value={field.value}
+                      onChange={(value) => field.onChange(value)}
+                      onSearchChange={setTeamSearchQuery}
+                      placeholder="Search and select teams"
+                      searchPlaceholder="Type to search teams..."
                     />
                     <FormMessage />
                   </FormItem>

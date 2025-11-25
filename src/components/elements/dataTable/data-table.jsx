@@ -1,7 +1,9 @@
 "use client"
-import React, { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
-import useFileManagerStore from '@/stores/useFileManagerStore';
+import { useState, useCallback, useMemo } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
+import { useFolderContents, useGroupContents, useSpaceContents } from '@/hooks/queries/useFilesQueries';
+import { useQueryClient } from '@tanstack/react-query';
+import { useDeleteEntity } from '@/hooks/mutations/useDeleteMutations';
 import {
   useReactTable,
   getCoreRowModel,
@@ -13,70 +15,101 @@ import { createColumns } from './table-columns';
 import DataTablePagination from './data-table-pagination';
 import DataTableColumnBody from './data-table-body';
 import DataTableColumnHeader from './data-table-header';
+import { Folder, File } from 'lucide-react';
 
 function DataTable() {
   let { id, type } = useParams();
-  const [tableData, setTableData] = useState([]);
-  console.log("🚀 ~ DataTable ~ tableData:", tableData)
+  const location = useLocation();
   const [sorting, setSorting] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
-  const { formatTableData, documents } = useFileManagerStore(state => state);
+  const queryClient = useQueryClient();
+  const { mutate: deleteEntity } = useDeleteEntity();
 
-  // Callbacks for handling delete and edit operations
-  const handleDataChange = useCallback((updatedData, handlers) => {
-    // If we received updated data, update the table
-    if (updatedData) {
-      setTableData(updatedData);
-    }
-  }, []);
+  // Detect type from URL path if not provided as param
+  const detectedType = useMemo(() => {
+    if (type) return type;
+    
+    const path = location.pathname;
+    if (path.startsWith('/folder/')) return 'folder';
+    if (path.startsWith('/group/')) return 'group';
+    if (path.startsWith('/space/')) return 'space';
+    return null;
+  }, [type, location.pathname]);
 
-  // Handler for successful deletion
+  // Use appropriate query hook based on type
+  const folderQuery = useFolderContents(detectedType === 'folder' ? id : null);
+  const groupQuery = useGroupContents(detectedType === 'group' ? id : null);
+  const spaceQuery = useSpaceContents(detectedType === 'space' ? id : null);
+
+  // Select the appropriate query result
+  const currentQuery = detectedType === 'folder' ? folderQuery : 
+                       detectedType === 'group' ? groupQuery : 
+                       detectedType === 'space' ? spaceQuery : 
+                       { data: null, isLoading: false };
+
+  const { data: rawData, isLoading: loading } = currentQuery;
+
+  // Extract the container name (folder/group/space name)
+  const containerName = useMemo(() => {
+    if (!rawData || !rawData[0]) return 'My Files';
+    return rawData[0].name || rawData[0].title || 'My Files';
+  }, [rawData]);
+
+  // Transform data for table display
+  const tableData = useMemo(() => {
+    if (!rawData || !rawData[0]?.childs) return [];
+
+    return rawData[0].childs.map((child) => {
+      const formatTime = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleString();
+      };
+
+      return {
+        id: child._id,
+        type: child.entity_type,
+        icon: child.entity_type === 'folder' ? Folder : File,
+        name: child.entity_type === 'folder' 
+          ? child.name 
+          : `${child.title}.${child.page_type}`,
+        modified: formatTime(child.updatedAt),
+        modifiedBy: child.user_id || 'Unknown User',
+        sharing: rawData[0].is_private ? 'Private' : 'Public',
+        pinned: child.pinned,
+        space_id: child.space_id,
+      };
+    });
+  }, [rawData]);
+
+  // Handler for successful deletion - uses TanStack Query mutation
   const handleDeleteSuccess = useCallback((fileId, fileType) => {
-    // Update the UI by removing the deleted item
-    setTableData(prev => prev.filter(item => item.id !== fileId));
-  }, []);
+    // Use TanStack Query mutation which handles API call, cache invalidation, and error handling
+    deleteEntity({ entityId: fileId, entityType: fileType });
+  }, [deleteEntity]);
 
-  // Handler for successful edit
+  // Handler for successful edit - invalidate queries to refetch
   const handleEditSuccess = useCallback((fileId, fileType, updatedData) => {
-    // Update the UI by updating the edited item
-    setTableData(prev => prev.map(item => {
-      if (item.id === fileId) {
-        // If we have updated data, merge it
-        if (updatedData) {
-          return { ...item, ...updatedData };
-        }
-        // Otherwise just update the modified timestamp
-        return { 
-          ...item, 
-          modified: new Date().toLocaleString()
-        };
-      }
-      return item;
-    }));
-  }, []);
+    // Invalidate queries to trigger refetch
+    queryClient.invalidateQueries({ queryKey: ['folders', id] });
+    queryClient.invalidateQueries({ queryKey: ['groups', id] });
+    queryClient.invalidateQueries({ queryKey: ['spaces', id] });
+    queryClient.invalidateQueries({ queryKey: ['spaces'] });
+  }, [queryClient, id]);
+
+  // Callbacks for handling data changes
+  const handleDataChange = useCallback((updatedData) => {
+    // TanStack Query will handle updates automatically through cache invalidation
+    if (updatedData) {
+      queryClient.invalidateQueries({ queryKey: ['folders', id] });
+      queryClient.invalidateQueries({ queryKey: ['groups', id] });
+      queryClient.invalidateQueries({ queryKey: ['spaces', id] });
+    }
+  }, [queryClient, id]);
 
   // Create columns with handlers attached
   const columns = createColumns(handleDeleteSuccess, handleEditSuccess);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      
-      try {
-        const result = await formatTableData(id, type);
-        setTableData(result);
-        setLoading(false);      
-      } catch (error) {
-        console.error("Error fetching data: ", error);
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [id, type, formatTableData, documents]);
 
   const table = useReactTable({
     data: tableData,
@@ -99,7 +132,12 @@ function DataTable() {
 
   return (
     <>
-      <DataTableColumnHeader title="My Files" table={table} />
+      <DataTableColumnHeader 
+        title={containerName} 
+        table={table} 
+        containerId={id}
+        containerType={detectedType}
+      />
       <DataTableColumnBody 
         table={table} 
         loading={loading} 

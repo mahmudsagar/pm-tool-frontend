@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileSidebar } from "./mobile-sidebar";
-import DynamicBreadCrumb from "@/components/elements/breadcrumbs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import DynamicBreadCrumb from "@/components/elements/breadcrumbs";
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ export default function Header({ showPageTitle = true, closeBtn='', topMenu }) {
                 {closeBtn}
                 {showPageTitle ? <div className="hidden md:block">
                     <h3 className="text-base font-semibold">Better Notion</h3>
-                    <DynamicBreadCrumb />
+                    {/* <DynamicBreadCrumb /> */}
                 </div> : <div className="hidden md:block"> </div>}
 
                {showPageTitle && <div className={cn("block md:!hidden")}>

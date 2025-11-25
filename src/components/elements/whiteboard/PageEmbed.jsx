@@ -17,13 +17,13 @@ import {
 
 import useApi from "@/lib/dataFetcher"
 import { documentBaseUrl } from "@/utils/constants"
-import { useAuth } from "@/contexts/AuthContext"
+import useAuthStore from "@/stores/useAuthStore"
 
 export default function TaskEmbed({ onSelect }) {
   const [open, setOpen] = useState(false)
   const { data, loading, error, callApi } = useApi(state => state);
 
-  const {user} = useAuth();
+  const {user} = useAuthStore();
   
   useEffect(() => {
     callApi(documentBaseUrl + '?user_id=' + user._id)

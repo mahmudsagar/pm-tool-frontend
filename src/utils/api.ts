@@ -1,4 +1,4 @@
-import useAuthStore from '@/store/useAuthStore';
+import useAuthStore from '@/stores/useAuthStore';
 
 interface FetchOptions extends RequestInit {
   requireAuth?: boolean;

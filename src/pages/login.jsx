@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '@/components/auth/LoginForm';
-import useAuthStore from '@/store/useAuthStore';
+import useAuthStore from '@/stores/useAuthStore';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ export default function Login() {
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/teams');
+      navigate('/');
     }
   }, [isAuthenticated, navigate]);
 

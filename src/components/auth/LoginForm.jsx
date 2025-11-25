@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import useAuthStore from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
 
 export function LoginForm() {
@@ -11,21 +12,37 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
-  const { login, register, loading } = useAuth();
+  const { login, register, loading } = useAuthStore();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let success;
 
     if (isLogin) {
-      success = await login(email, password);
+      const result = await login(email, password);
+      if (result.success) {
+        toast({ title: "Login successful" });
+        navigate("/");
+      } else {
+        toast({ 
+          title: "Login failed", 
+          description: result.error,
+          variant: "destructive" 
+        });
+      }
     } else {
-      success = await register(email, password, name);
-    }
-
-    if (success) {
-      navigate("/");
+      const result = await register(email, password, name);
+      if (result.success) {
+        toast({ title: "Registration successful" });
+        navigate("/");
+      } else {
+        toast({ 
+          title: "Registration failed", 
+          description: result.error,
+          variant: "destructive" 
+        });
+      }
     }
   };
 
