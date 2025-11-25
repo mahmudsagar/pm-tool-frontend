@@ -10,7 +10,7 @@ export default function Login() {
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/teams');
+      navigate('/');
     }
   }, [isAuthenticated, navigate]);
 
