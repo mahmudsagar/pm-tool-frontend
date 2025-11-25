@@ -28,7 +28,8 @@ import { baseUrl } from '@/utils/constants';
 import EllipsisTooltip from "@/components/common/EllipsisTooltip";
 import ShowIcon from "@/components/common/ShowIcon";
 
-const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {     
+const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
+  if (!folder) return null;    
   const { isOpen } = useSidebar();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false)
