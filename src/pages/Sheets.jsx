@@ -1,13 +1,15 @@
 import UniverSheet from '@/components/elements/spreadsheet';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from '@/BetterRouter/Link';
 import { useToast } from '@/components/ui/use-toast';
+import { debounce } from '@/utils/helper';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Copy, LucideHistory, MessageSquareMore, Save, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, ...props }) => {
   const univerRef = useRef();
   const { toast } = useToast();
+  const [firstLoad, setFirstLoad] = useState(true);
 
   const handleSaveData = () => {
     const sheetData = univerRef.current?.getData();
@@ -17,6 +19,18 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
       description: new Date().toLocaleString(),
     })
   }
+
+  const onChange = debounce((sheetData) => {
+    if (!pageContent) {
+      return;
+    }
+
+    if (firstLoad) {
+      setFirstLoad(false);
+      return;
+    }
+    handleSubmit({ content: sheetData });
+  }, 4000);
 
   useEffect(() => {
     if (!pageContent) return;
@@ -62,10 +76,19 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
       dropdownContent,
       inlineContent
     })
+    setFirstLoad(true);
   }, [pageContent]);
   return (
-    pageContent?.content && <UniverSheet style={{ flex: 1 }} ref={univerRef} data={pageContent.content} />
-
+    pageContent?.content ? (
+        <UniverSheet
+          key={_id}
+          style={{ flex: 1 }}
+          ref={univerRef}
+          data={pageContent.content}
+          onChange={onChange}
+          handleSubmit={handleSubmit}
+        />
+    ) : null
   );
 };
 
