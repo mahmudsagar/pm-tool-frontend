@@ -32,20 +32,26 @@ const Delete = ({ fileId, fileType, onToggle, onSuccess, wrapperClassName = "" }
 
   const confirmDelete = async () => {  
     let endPoint;
-    setLoading(true);
 
     if (fileType === "page") {
       endPoint = `/v1/page/document?id=${fileId}`;
     } else if (fileType === "folder"){
       endPoint = `/v1/folder?id=${fileId}`;
     } else if (fileType === "group"){
-      endPoint = `/v1/group?id=${fileId}`;      
+      endPoint = `/v1/group?id=${fileId}`;
+    } else if (fileType === "board"){
+      endPoint = `/v1/board?id=${fileId}`;
     } else {
-      return { error: "Invalid filetype specified" };
-    }   
+      // Invalid file type: ensure we don't leave the button stuck in loading state
+      console.error('Invalid filetype specified for delete:', fileType);
+      return;
+    }
+
+    // Only set local loading after we've validated the endpoint
+    setLoading(true);
 
     try {
-      await callApi(baseUrl + endPoint, { method: 'DELETE', });
+      await callApi(baseUrl + endPoint, { method: 'DELETE' });
       // Update the store
       deleteHandler(fileId, fileType); 
       
