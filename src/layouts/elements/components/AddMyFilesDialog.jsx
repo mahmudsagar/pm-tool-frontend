@@ -446,20 +446,25 @@ const AddMyFilesDialog = ({
                     >
                       <FormLabel>Type</FormLabel>
                       <div className="flex items-center gap-3 mt-2">
+                        {/* Page option - always available */}
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="page" id="page" checked={field.value === "page"} />
                           <Label htmlFor="page" className="cursor-pointer">Page</Label>
                         </div>
-                        {(type !== 'folder' && type !== 'group') && (
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="group" id="group" checked={field.value === "group"} />
-                            <Label htmlFor="group" className="cursor-pointer">Group</Label>
-                          </div>
-                        )}
+                        
+                        {/* Folder option - available in group and space contexts */}
                         {type !== 'folder' && (
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="folder" id="folder" checked={field.value === "folder"} />
                             <Label htmlFor="folder" className="cursor-pointer">Folder</Label>
+                          </div>
+                        )}
+                        
+                        {/* Group option - only available in space context (not in folder or group) */}
+                        {type !== 'folder' && type !== 'group' && (
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="group" id="group" checked={field.value === "group"} />
+                            <Label htmlFor="group" className="cursor-pointer">Group</Label>
                           </div>
                         )}
                       </div>

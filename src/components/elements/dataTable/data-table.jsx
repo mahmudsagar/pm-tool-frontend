@@ -160,7 +160,12 @@ function DataTable() {
 
   return (
     <>
-      <DataTableColumnHeader title={containerName} table={table} />
+      <DataTableColumnHeader 
+        title={containerName} 
+        table={table} 
+        containerId={id}
+        containerType={detectedType}
+      />
       <DataTableColumnBody 
         table={table} 
         loading={loading} 

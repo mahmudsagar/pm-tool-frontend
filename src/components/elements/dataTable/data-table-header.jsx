@@ -19,13 +19,19 @@ import { Button } from "@/components/ui/button";
 import AddMyFilesDialog from '@/layouts/elements/components/AddMyFilesDialog';
 import { useMatches } from 'react-router-dom';
 
-const DataTableColumnHeader = ({ title, table }) => {
+const DataTableColumnHeader = ({ title, table, containerId, containerType }) => {
   let matches = useMatches();
   const [isOpen, setIsOpen] = useState(false);
   const handleMyFiles = () =>{
     setIsOpen((current) => !current);
 
   }
+  
+  // Determine the effective ID and type for the AddFileDialog
+  // Priority: props from DataTable > route params
+  const effectiveId = containerId || matches[matches.length - 1]?.params?.id;
+  const effectiveType = containerType || matches[matches.length - 1]?.params?.type;
+  
   return (
     <div className="flex items-center justify-between pb-6">
       <div className='flex items-center gap-2'>
@@ -61,8 +67,8 @@ const DataTableColumnHeader = ({ title, table }) => {
       </div>
       {isOpen ? 
         <AddMyFilesDialog 
-          id={matches[matches.length - 1].params.id} //last item id
-          type={matches[matches.length - 1].params.type} //last item type
+          id={effectiveId}
+          type={effectiveType}
           isOpen={isOpen}
           setIsOpen={setIsOpen}
       /> : null}

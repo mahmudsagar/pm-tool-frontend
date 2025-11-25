@@ -214,9 +214,18 @@ const Home = () => {
     },
   })
 
+  // Determine the container context for the add button
+  const containerId = effectiveFolderId || effectiveGroupId || effectiveSpaceId || null;
+  const containerType = effectiveFolderId ? 'folder' : effectiveGroupId ? 'group' : effectiveSpaceId ? 'space' : null;
+
   return (
     <section className='w-full py-9 px-6'>
-      <DataTableColumnHeader title={getPageTitle()} table={table} />
+      <DataTableColumnHeader 
+        title={getPageTitle()} 
+        table={table}
+        containerId={containerId}
+        containerType={containerType}
+      />
       <DataTableColumnBody table={table} />
     </section>
   );
