@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -21,6 +21,7 @@ import DemoKanbanCard from './demo-kanban-card';
 import TaskFormModal from './task-form-modal';
 import StatusFormModal from './status-form-modal';
 import useStatusStore from '@/stores/useStatusStore';
+import { documentBaseUrl } from '@/utils/constants';
 
 export default function KanbanView({ data, boardId, onTaskCreate }) {
   console.log({ data, boardId });
@@ -36,7 +37,6 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
   
   const [activeId, setActiveId] = useState(null);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
   const [defaultStatus, setDefaultStatus] = useState('todo');
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [editingStatus, setEditingStatus] = useState(null);
@@ -44,8 +44,11 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
   // Use dynamic columns from the status store instead of static DEFAULT_COLUMNS
   const columns = getKanbanColumns();
   
-  const [items, setItems] = useState(() => {
-    // Organize demo data into kanban columns
+  const [items, setItems] = useState({});
+
+  // Sync items with incoming data whenever data changes
+  useEffect(() => {
+    // Organize data into kanban columns
     const organizedItems = {};
     columns.forEach(column => {
       organizedItems[column.id] = [];
@@ -67,8 +70,8 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
       }
     });
 
-    return organizedItems;
-  });
+    setItems(organizedItems);
+  }, [data.property_values, columns]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -84,12 +87,6 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
   // Task management functions
   const handleAddTask = useCallback((columnId) => {
     setDefaultStatus(columnId);
-    setEditingTask(null);
-    setTaskModalOpen(true);
-  }, []);
-
-  const handleEditTask = useCallback((task) => {
-    setEditingTask(task);
     setTaskModalOpen(true);
   }, []);
 
@@ -264,7 +261,7 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
     });
   }, [findContainer, columns]);
 
-  const handleDragEnd = useCallback((event) => {
+  const handleDragEnd = useCallback(async (event) => {
     const { active, over } = event;
 
     if (!over) {
@@ -315,21 +312,45 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
       }
     }
 
-    setActiveId(null);
-
-    // Log the change for demo purposes
+    // If task moved to a different status, update via API
     const activeItem = findItemById(activeId);
-    if (activeItem && activeItem.status !== overContainer) {
+    if (activeItem && activeItem.status !== overContainer && boardId) {
       console.log(`Task ${activeItem.task_id} moved from ${activeContainer} to ${overContainer}`);
+      
+      try {
+        // Update task status in the database
+        await fetch(documentBaseUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({
+            id: activeItem.id,
+            custom_meta: {
+              ...activeItem.custom_meta,
+              values: {
+                ...activeItem.custom_meta?.values,
+                status: overContainer
+              }
+            }
+          }),
+        });
+        console.log('Task status updated successfully');
+      } catch (error) {
+        console.error('Failed to update task status:', error);
+      }
     }
-  }, [items, findContainer, findItemById, columns, reorderStatuses]);
+
+    setActiveId(null);
+  }, [items, findContainer, findItemById, columns, reorderStatuses, boardId]);
 
   const activeItem = activeId ? findItemById(activeId) : null;
   const activeColumn = activeId ? columns.find(col => col.id === activeId) : null;
 
   return (
     <div className="w-full h-full p-6">
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-2xl font-bold dark:text-white">Kanban Board - Demo Data</h2>
           <Button 
@@ -345,7 +366,7 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
         <p className="text-gray-600 dark:text-gray-400">
           Drag and drop tasks between columns, click &quot;Add task&quot; to create new tasks, manage statuses, or drag column headers to reorder them.
         </p>
-      </div>
+      </div> */}
       
       <DndContext
         sensors={sensors}
@@ -364,7 +385,6 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
                   color={column.color}
                   items={items[column.id] || []}
                   onAddTask={handleAddTask}
-                  onEditTask={handleEditTask}
                   onEditStatus={handleEditStatus}
                   isDragOverlay={false}
                 />
@@ -395,7 +415,6 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
       <TaskFormModal
         open={taskModalOpen}
         onOpenChange={setTaskModalOpen}
-        task={editingTask}
         defaultStatus={defaultStatus}
         onSave={handleSaveTask}
       />

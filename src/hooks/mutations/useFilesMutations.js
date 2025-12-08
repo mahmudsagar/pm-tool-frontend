@@ -172,3 +172,45 @@ export const useUpdateDocument = () => {
     },
   });
 };
+
+/**
+ * Mutation hook to delete a document
+ */
+export const useDeleteDocument = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (documentId) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${documentBaseUrl}?id=${documentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete document');
+      return response.json();
+    },
+    
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      toast({ title: 'Document deleted successfully' });
+    },
+    
+    onError: (error) => {
+      toast({
+        title: 'Failed to delete document',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+

@@ -61,6 +61,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import EditPropertyModal from "./EditPropertyModal";
+import Link from "@/BetterRouter/Link";
 
 // Add this new component for sortable column headers
 function DraggableColumnHeader({ header, addFilter, setEditPropertyModal }) {
@@ -267,6 +268,9 @@ export default function TableView({ data }) {
   }, [data.property_name, columnOrder]);
 
   const renderCell = (column, rowIndex) => {
+    const rowData = rows[rowIndex];
+    const isTitle = column.id === 'title';
+    
     return (
       <FormField
         control={form.control}
@@ -274,7 +278,15 @@ export default function TableView({ data }) {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              {column.columnDef.type === 'select' && column.columnDef.props?.optionsData ? (
+              {isTitle && rowData?.id ? (
+                <Link to={`/document/${rowData.id}`} target="_sidebar" className="block">
+                  <Input
+                    {...field}
+                    className="border-0 h-auto focus-visible:ring-0 rounded-false py-2 px-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                    readOnly
+                  />
+                </Link>
+              ) : column.columnDef.type === 'select' && column.columnDef.props?.optionsData ? (
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}

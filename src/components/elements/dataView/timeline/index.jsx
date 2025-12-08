@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import Link from '@/BetterRouter/Link';
 import {
   Select,
   SelectContent,
@@ -578,27 +579,27 @@ export default function TimelineView({ data }) {
                     </div>
                   )}
                   {group.tasks.map((task, taskIndex) => (
-                    <div 
-                      key={task.id}
-                      className="h-12 px-4 py-2 border-b hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center cursor-pointer"
-                      onClick={() => handleEditTask(task)}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{task.title}</div>
-                        <div className="text-xs text-gray-500 flex items-center gap-2">
-                          <span>{task.task_id}</span>
-                          {task.assignee && (
-                            <span className="flex items-center gap-1">
-                              <User className="w-3 h-3" />
-                              {task.assignee.split('_')[0]}
-                            </span>
-                          )}
+                    <Link key={task.id} to={`/document/${task.id}`} target="_sidebar">
+                      <div 
+                        className="h-12 px-4 py-2 border-b hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center cursor-pointer"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{task.title}</div>
+                          <div className="text-xs text-gray-500 flex items-center gap-2">
+                            <span>{task.task_id}</span>
+                            {task.assignee && (
+                              <span className="flex items-center gap-1">
+                                <User className="w-3 h-3" />
+                                {task.assignee.split('_')[0]}
+                              </span>
+                            )}
+                          </div>
                         </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {statusOptions.find(s => s.value === task.status)?.label || task.status}
+                        </Badge>
                       </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {statusOptions.find(s => s.value === task.status)?.label || task.status}
-                      </Badge>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ))}
@@ -796,18 +797,17 @@ export default function TimelineView({ data }) {
                         if (!position.visible) return null;
 
                         return (
-                          <div
-                            key={task.id}
-                            className={`absolute h-8 rounded border cursor-pointer group transition-all duration-200 hover:shadow-md ${getTaskColor(task)} ${getPriorityIndicator(task.priority)}`}
-                            style={{
-                              left: position.left,
-                              width: position.width,
-                              top: topPosition,
-                              zIndex: draggedTask?.id === task.id ? 20 : 5
-                            }}
-                            onMouseDown={(e) => handleTaskMouseDown(e, task, 'move')}
-                            onClick={() => handleEditTask(task)}
-                          >
+                          <Link key={task.id} to={`/document/${task.id}`} target="_sidebar">
+                            <div
+                              className={`absolute h-8 rounded border cursor-pointer group transition-all duration-200 hover:shadow-md ${getTaskColor(task)} ${getPriorityIndicator(task.priority)}`}
+                              style={{
+                                left: position.left,
+                                width: position.width,
+                                top: topPosition,
+                                zIndex: draggedTask?.id === task.id ? 20 : 5
+                              }}
+                              onMouseDown={(e) => handleTaskMouseDown(e, task, 'move')}
+                            >
                             {/* Resize handles */}
                             <div
                               className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize opacity-0 group-hover:opacity-100 bg-current"
@@ -842,6 +842,7 @@ export default function TimelineView({ data }) {
                               {task.title} • {formatDate(task.startDate)} - {formatDate(task.dueDate)}
                             </div>
                           </div>
+                          </Link>
                         );
                       })}
                     </div>

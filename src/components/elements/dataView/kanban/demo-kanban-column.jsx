@@ -18,7 +18,7 @@ import {
 import DemoKanbanCard from './demo-kanban-card';
 import { cn } from '@/lib/utils';
 
-function DemoKanbanColumn({ id, title, color, items, onAddTask, onEditTask, onEditStatus, isDragOverlay = false }) {
+function DemoKanbanColumn({ id, title, color, items, onAddTask, onEditStatus, isDragOverlay = false }) {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id,
     disabled: isDragOverlay,
@@ -104,7 +104,7 @@ function DemoKanbanColumn({ id, title, color, items, onAddTask, onEditTask, onEd
               </div>
             ) : (
               items.map((item) => (
-                <DemoKanbanCard key={item.kanbanId} item={item} onEdit={onEditTask} />
+                <DemoKanbanCard key={item.kanbanId} item={item} />
               ))
             )}
           </SortableContext>

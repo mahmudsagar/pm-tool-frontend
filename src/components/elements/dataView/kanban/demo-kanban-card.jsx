@@ -4,8 +4,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { GripVertical, Calendar, User, Flag } from 'lucide-react';
+import Link from '@/BetterRouter/Link';
 
-function DemoKanbanCard({ item, isDragOverlay = false, onEdit }) {
+function DemoKanbanCard({ item, isDragOverlay = false }) {
   const {
     attributes,
     listeners,
@@ -68,23 +69,18 @@ function DemoKanbanCard({ item, isDragOverlay = false, onEdit }) {
   };
 
   return (
-    <Card
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md",
-        isDragging && "opacity-50",
-        isDragOverlay && "shadow-lg scale-105",
-        "group" // Add group class for hover effects
-      )}
-      {...attributes}
-      onClick={(e) => {
-        // Don't trigger edit when dragging or clicking the drag handle
-        if (!isDragging && !e.target.closest('[data-drag-handle]')) {
-          onEdit?.(item);
-        }
-      }}
-    >
+    <Link to={`/document/${item.id}`} target="_sidebar">
+      <Card
+        ref={setNodeRef}
+        style={style}
+        className={cn(
+          "cursor-pointer transition-shadow hover:shadow-md",
+          isDragging && "opacity-50 cursor-grabbing",
+          isDragOverlay && "shadow-lg scale-105",
+          "group" // Add group class for hover effects
+        )}
+        {...attributes}
+      >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
@@ -109,6 +105,7 @@ function DemoKanbanCard({ item, isDragOverlay = false, onEdit }) {
           <div 
             data-drag-handle // Add data attribute for drag handle
             className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ml-2"
+            onClick={(e) => e.stopPropagation()}
             {...listeners}
           >
             <GripVertical className="w-4 h-4 text-gray-400" />
@@ -143,6 +140,7 @@ function DemoKanbanCard({ item, isDragOverlay = false, onEdit }) {
         </div>
       </CardContent>
     </Card>
+    </Link>
   );
 }
 

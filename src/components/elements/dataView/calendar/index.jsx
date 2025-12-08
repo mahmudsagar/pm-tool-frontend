@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Plus, Filter, Search, MoreHorizontal } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import Link from '@/BetterRouter/Link';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -440,11 +441,10 @@ export default function CalendarView({ data }) {
                 {/* Tasks */}
                 <div className="space-y-1">
                   {day.tasks.slice(0, 4).map((task) => (
-                    <div
-                      key={task.id}
-                      className={`group relative p-1 rounded text-xs cursor-pointer border-l-2 ${getPriorityColor(task.priority)} hover:shadow-sm transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700`}
-                      onClick={() => handleEditTask(task)}
-                    >
+                    <Link key={task.id} to={`/document/${task.id}`} target="_sidebar">
+                      <div
+                        className={`group relative p-1 rounded text-xs cursor-pointer border-l-2 ${getPriorityColor(task.priority)} hover:shadow-sm transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700`}
+                      >
                       <div className="flex items-center justify-between">
                         <span className="font-medium truncate flex-1 mr-1 text-xs">
                           {task.title}
@@ -461,8 +461,11 @@ export default function CalendarView({ data }) {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                              Edit Task
+                            <DropdownMenuItem onClick={(e) => {
+                              e.preventDefault();
+                              window.open(`/document/${task.id}`, '_sidebar');
+                            }}>
+                              Open Task
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-red-600">
                               Delete Task
@@ -482,6 +485,7 @@ export default function CalendarView({ data }) {
                         )}
                       </div>
                     </div>
+                    </Link>
                   ))}
                   
                   {day.tasks.length > 4 && (
@@ -563,23 +567,23 @@ export default function CalendarView({ data }) {
                 
                 <div className="space-y-1">
                   {day.tasks.slice(0, 6).map((task) => (
-                    <div
-                      key={task.id}
-                      className={`group relative p-1.5 rounded text-sm cursor-pointer border-l-2 ${getPriorityColor(task.priority)} hover:shadow-sm transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700`}
-                      onClick={() => handleEditTask(task)}
-                    >
-                      <div className="font-medium truncate text-sm">{task.title}</div>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Badge variant="secondary" className={`text-xs ${getStatusColor(task.status)}`}>
-                          {statusOptions.find(s => s.value === task.status)?.label || task.status}
-                        </Badge>
-                        {task.assignee && (
-                          <span className="text-xs text-gray-500 truncate max-w-20">
-                            {task.assignee.split('_')[0]}
-                          </span>
-                        )}
+                    <Link key={task.id} to={`/document/${task.id}`} target="_sidebar">
+                      <div
+                        className={`group relative p-1.5 rounded text-sm cursor-pointer border-l-2 ${getPriorityColor(task.priority)} hover:shadow-sm transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700`}
+                      >
+                        <div className="font-medium truncate text-sm">{task.title}</div>
+                        <div className="flex items-center gap-1 mt-1">
+                          <Badge variant="secondary" className={`text-xs ${getStatusColor(task.status)}`}>
+                            {statusOptions.find(s => s.value === task.status)?.label || task.status}
+                          </Badge>
+                          {task.assignee && (
+                            <span className="text-xs text-gray-500 truncate max-w-20">
+                              {task.assignee.split('_')[0]}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                   
                   {day.tasks.length > 6 && (
@@ -653,55 +657,58 @@ export default function CalendarView({ data }) {
             ) : (
               <div className="space-y-3">
                 {dayData.tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className={`group relative p-4 rounded-lg cursor-pointer border-l-4 ${getPriorityColor(task.priority)} hover:shadow-md transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700`}
-                    onClick={() => handleEditTask(task)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="font-medium text-lg mb-2">{task.title}</div>
-                        {task.description && (
-                          <div className="text-gray-600 dark:text-gray-400 mb-3">
-                            {task.description}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-3">
-                          <Badge variant="secondary" className={getStatusColor(task.status)}>
-                            {statusOptions.find(s => s.value === task.status)?.label || task.status}
-                          </Badge>
-                          <Badge variant="outline" className="capitalize">
-                            {task.priority} Priority
-                          </Badge>
-                          {task.assignee && (
-                            <span className="text-sm text-gray-500">
-                              Assigned to {task.assignee.replace(/_/g, ' ')}
-                            </span>
+                  <Link key={task.id} to={`/document/${task.id}`} target="_sidebar">
+                    <div
+                      className={`group relative p-4 rounded-lg cursor-pointer border-l-4 ${getPriorityColor(task.priority)} hover:shadow-md transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium text-lg mb-2">{task.title}</div>
+                          {task.description && (
+                            <div className="text-gray-600 dark:text-gray-400 mb-3">
+                              {task.description}
+                            </div>
                           )}
+                          <div className="flex items-center gap-3">
+                            <Badge variant="secondary" className={getStatusColor(task.status)}>
+                              {statusOptions.find(s => s.value === task.status)?.label || task.status}
+                            </Badge>
+                            <Badge variant="outline" className="capitalize">
+                              {task.priority} Priority
+                            </Badge>
+                            {task.assignee && (
+                              <span className="text-sm text-gray-500">
+                                Assigned to {task.assignee.replace(/_/g, ' ')}
+                              </span>
+                            )}
+                          </div>
                         </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e) => {
+                              e.preventDefault();
+                              window.open(`/document/${task.id}`, '_sidebar');
+                            }}>
+                              Open Task
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">
+                              Delete Task
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                            Edit Task
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            Delete Task
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

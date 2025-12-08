@@ -1,8 +1,6 @@
-import useApi from '@/lib/dataFetcher';
-import { useEffect, useState } from 'react';
-import { useLocation, useOutletContext, useParams } from 'react-router-dom';
-import { documentBaseUrl } from '@/utils/constants';
-import { debounce, sanitize } from '@/utils/helper';
+import { useState } from 'react';
+import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
+import { sanitize } from '@/utils/helper';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import NotFound from '@/BetterRouter/NotFound';
 import Spinner from '@/components/elements/spinner';
@@ -10,6 +8,8 @@ import Document from './Document';
 import Sheet from './Sheets';
 import Whiteboard from './Whiteboard';
 import Board from './Board';
+import { useDocument } from '@/hooks/queries/useFilesQueries';
+import { useUpdateDocument, useDeleteDocument } from '@/hooks/mutations/useFilesMutations';
 
 const pageType = {
   document: Document,
@@ -18,38 +18,38 @@ const pageType = {
   board: Board
 }
 const Page = ({ ...props }) => {
-  const { loading, data, callApi, error } = useApi();
   const context = useOutletContext();
   const [, setTopMenu] = context || ['', (props.setTopMenu ? props.setTopMenu : () => { })];
-  const { pathname } = useLocation()
   const { id } = useParams();
+  const navigate = useNavigate();
   const paramId = props.id || id;
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
+  // Use TanStack Query to fetch document data
+  const { data, isLoading, error } = useDocument(paramId);
+  const updateDocumentMutation = useUpdateDocument();
+  const deleteDocumentMutation = useDeleteDocument();
+
   const { page_type, ...restData } = data || {}
 
-  useEffect(debounce(() => {
-    callApi(documentBaseUrl + '?id=' + paramId)
-  }, 1000), [pathname, paramId])
-
-  const handleDelete = () => {
-    callApi(documentBaseUrl + '?id=' + paramId,
-      {
-        method: 'DELETE',
-      }, () => {
-        //window.location.reload();
-      });
+  const handleDelete = async () => {
+    try {
+      await deleteDocumentMutation.mutateAsync(paramId);
+      navigate('/'); // Navigate to home after successful deletion
+    } catch (error) {
+      console.error('Failed to delete document:', error);
+    }
   }
 
-  const handleSubmit = (value) => {
-    fetch(documentBaseUrl, {
-      method: 'PUT',
-      body: JSON.stringify({ id: data?._id, ...sanitize(value) }),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
+  const handleSubmit = async (value) => {
+    try {
+      await updateDocumentMutation.mutateAsync({
+        documentId: data?._id,
+        content: sanitize(value)
+      });
+    } catch (error) {
+      console.error('Failed to update document:', error);
+    }
   }
 
   if (error) {
@@ -66,7 +66,7 @@ const Page = ({ ...props }) => {
 
   const Component = pageType[page_type] || NotFound;
   return <div className='relative h-full'>
-    {(loading || (!data && !error)) ?
+    {(isLoading || (!data && !error)) ?
       <Spinner />
       :
       data && <Component {...componentProps} />
