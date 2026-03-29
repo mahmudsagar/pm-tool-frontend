@@ -2,14 +2,12 @@ import { useEffect } from 'react';
 import useStore from './stores/store';
 import BetterRouter from './BetterRouter';
 import { ThemeProvider } from './components/theme-provider';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from './components/ui/toaster';
 import { AuthProvider } from './contexts/AuthContext';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 const App = () => {
   const { pathname, search, href } = window.location;
 
-  const currentRoute = useStore((state) => state.currentRoute);
   const setCurrentRoute = useStore((state) => state.setCurrentRoute);
 
   useEffect(() => {
