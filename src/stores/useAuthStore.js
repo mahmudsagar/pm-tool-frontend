@@ -27,21 +27,21 @@ const useAuthStore = create(
           }
 
           const responseData = await response.json();
-          
+
           if (responseData.status === "success" && responseData.data) {
             const token = responseData.data.token;
             const user = responseData.data.user_info;
-            
-            set({ 
-              token, 
-              user, 
+
+            set({
+              token,
+              user,
               isAuthenticated: true,
               loading: false
             });
-            
+
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
-            
+
             return { success: true };
           } else {
             throw new Error("Invalid response format");
@@ -67,21 +67,21 @@ const useAuthStore = create(
           }
 
           const responseData = await response.json();
-          
+
           if (responseData.status === "success" && responseData.data) {
             const token = responseData.data.token;
             const user = responseData.data.user_info;
-            
-            set({ 
-              token, 
-              user, 
+
+            set({
+              token,
+              user,
               isAuthenticated: true,
               loading: false
             });
-            
+
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
-            
+
             return { success: true, message: responseData.message };
           } else {
             throw new Error("Invalid response format");
@@ -95,7 +95,7 @@ const useAuthStore = create(
       logout: async () => {
         const token = get().token;
         set({ loading: true });
-        
+
         try {
           // Call logout API
           await fetch(import.meta.env.BN_BASE_URL + '/v1/auth/logout', {
@@ -106,9 +106,9 @@ const useAuthStore = create(
           console.error('Logout API error:', error);
         } finally {
           // Clear state regardless of API result
-          set({ 
-            token: null, 
-            user: null, 
+          set({
+            token: null,
+            user: null,
             isAuthenticated: false,
             loading: false
           });
@@ -128,22 +128,39 @@ const useAuthStore = create(
       },
 
       // Initialize from localStorage on mount
-      initializeAuth: () => {
+      initializeAuth: async () => {
         const token = localStorage.getItem('token');
-        const userStr = localStorage.getItem('user');
-        const user = userStr ? JSON.parse(userStr) : null;
-        
-        if (token && user) {
-          set({ token, user, isAuthenticated: true });
+        const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/auth', {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+          }
+        });
+        if (response.ok) {
+          const responseData = await response.json();
+
+          if (responseData.status === "success" && responseData.data) {
+            const user = responseData.data.user_info;
+            set({ token, user, isAuthenticated: true });
+          } else {
+            set({ token: null, user: null, isAuthenticated: false });
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+          }
+        } else {
+          console.log("responseData");
+          set({ token: null, user: null, isAuthenticated: false });
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
         }
       },
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ 
-        token: state.token, 
+      partialize: (state) => ({
+        token: state.token,
         user: state.user,
-        isAuthenticated: state.isAuthenticated 
+        isAuthenticated: state.isAuthenticated
       }),
     }
   )

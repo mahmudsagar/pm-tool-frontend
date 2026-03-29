@@ -30,8 +30,10 @@ const App = () => {
   return (
     <>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <BetterRouter />
-        <Toaster />
+        <AuthProvider>
+          <BetterRouter />
+          <Toaster />
+        </AuthProvider>
       </ThemeProvider>
     </>
   );

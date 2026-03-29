@@ -42,7 +42,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
 
   // This will be called when fetching spaces from API (for existing users or after space operations)
   syncSpacesFromAPI: async (userId) => {
-    console.log("Syncing spaces from API for user:", userId);
     set({ isSpacesLoading: true });
 
     try {
