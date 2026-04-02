@@ -26,6 +26,30 @@ export const useDocument = (documentId) => {
 };
 
 /**
+ * Query hook to list documents by page id
+ */
+export const useDocuments = (pageId) => {
+  return useQuery({
+    queryKey: ['documents', 'list', pageId],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${documentBaseUrl}?id=${pageId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch documents');
+      const result = await response.json();
+      return result.data;
+    },
+    enabled: !!pageId,
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
+/**
  * Query hook to get all files with optional filters
  */
 export const useFiles = (filters = {}) => {

@@ -15,11 +15,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-import { useFiles } from "@/hooks/queries/useFilesQueries"
+import { useDocuments } from "@/hooks/queries/useFilesQueries"
 
-export default function TaskEmbed({ onSelect }) {
+export default function TaskEmbed({ onSelect, spaceId }) {
   const [open, setOpen] = useState(false)
-  const { data, isLoading, isError } = useFiles();
+  const { data, isLoading, isError } = useDocuments(spaceId);
 
   if (isLoading || isError) {
     return null;

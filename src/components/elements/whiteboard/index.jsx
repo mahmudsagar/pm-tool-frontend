@@ -20,7 +20,7 @@ import PageEmbed from "./PageEmbed";
  * @param {viewId} viewId of the current page
  * @returns 
  */
-export default function ExcalidrawRender({ content, onChange }) {
+export default function ExcalidrawRender({ content, onChange, spaceId }) {
   const { theme } = useTheme();
   const wrapperRef = useRef(null);
 
@@ -155,7 +155,7 @@ export default function ExcalidrawRender({ content, onChange }) {
           </MainMenu.Item>
         </MainMenu>
         <Footer>
-          <PageEmbed onSelect={(id) => createPageEmbed(id)} />
+          <PageEmbed spaceId={spaceId} onSelect={(id) => createPageEmbed(id)} />
         </Footer>
       </Excalidraw>
     </div>

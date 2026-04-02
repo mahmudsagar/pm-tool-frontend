@@ -11,7 +11,7 @@ import { Copy, History, MessageSquareMore, Share, Trash } from 'lucide-react';
 import "@betternotion/excalidraw/index.css";
 import { Button } from '@/components/ui/button';
 
-export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setOpenDeleteDialog ,_id}) {
+export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setOpenDeleteDialog, _id, space_id }) {
   useEffect(() => {
     if (!pageContent) return;
     const dropdownContent = <>
@@ -53,7 +53,7 @@ export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setO
 
   return (
     <div className="text-center h-full pt-16 -mt-16 overflow-hidden">
-      <ExcalidrawRender content={pageContent?.content} onChange={handleSubmit} />
+      <ExcalidrawRender content={pageContent?.content?.content} onChange={handleSubmit} spaceId={_id} />
     </div>
   )
 }
