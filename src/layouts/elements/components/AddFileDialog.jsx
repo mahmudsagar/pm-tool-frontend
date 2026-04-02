@@ -267,7 +267,9 @@ const AddFileDialog = ({
               }
             ]
           },
-          space_id: type === "space" ? id : (type === "folder" ? null : (type === "group" ? null : id)) // mandatory - use parent container id
+          space_id: type === "space" ? id : '',
+          folder_id: type === "folder" ? id : '',
+          group_id: type === "group" ? id : ''
         };
       } else {
         endpoint = "/v1/page/document";
