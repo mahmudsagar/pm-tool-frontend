@@ -27,7 +27,7 @@ import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
 // Dummy data for now
 import { getDummyDataView } from "@/utils/dummyDataView"
 import { useState, useMemo } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useSearchParams } from "react-router-dom"
 import { Plus } from "lucide-react"
 import TaskFormModal from "@/components/elements/dataView/kanban/task-form-modal"
 import { useBoard } from "@/hooks/queries/useBoardsQueries"
@@ -71,9 +71,23 @@ const timePeriods = [
   { value: "5years", label: "5 Years" },
 ]
 
-export default function Data() {
-  // Get board ID from URL params if available
-  const { id: boardId } = useParams();
+export default function Data({ id: propId, setTopMenu }) {
+  // Get board ID from URL params or props (for parallel routes)
+  const { id: paramBoardId } = useParams();
+  const [searchParams] = useSearchParams();
+  
+  // Use prop ID if provided (from parallel route), otherwise use URL param
+  let boardId = propId || paramBoardId;
+  
+  if (!boardId) {
+    // Search for board route in query params as fallback
+    for (const [key, value] of searchParams.entries()) {
+      if (value === '_sidebar' && key.startsWith('/board/')) {
+        boardId = key.replace('/board/', '');
+        break;
+      }
+    }
+  }
   
   const [selectedPeriod, setSelectedPeriod] = useState("5years");
   const [activeTab, setActiveTab] = useState("table");

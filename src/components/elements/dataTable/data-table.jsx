@@ -74,6 +74,7 @@ function DataTable({ propId, propType } = {}) {
       return {
         id: child._id,
         type: child.entity_type,
+        page_type: child.page_type,
         icon: child.entity_type === 'folder' ? Folder : File,
         name: (child.entity_type === 'folder' || child.entity_type === 'group' || child.entity_type === 'space')
           ? child.name
