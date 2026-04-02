@@ -127,31 +127,14 @@ const useAuthStore = create(
         if (user) localStorage.setItem('user', JSON.stringify(user));
       },
 
-      // Initialize from localStorage on mount
-      initializeAuth: async () => {
+      // Initialize from localStorage on mount (synchronous - no network call)
+      // Server-side validation is handled separately via TanStack Query (useInitAuth)
+      initializeAuth: () => {
         const token = localStorage.getItem('token');
-        const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/auth', {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : ''
-          }
-        });
-        if (response.ok) {
-          const responseData = await response.json();
-
-          if (responseData.status === "success" && responseData.data) {
-            const user = responseData.data.user_info;
-            set({ token, user, isAuthenticated: true });
-          } else {
-            set({ token: null, user: null, isAuthenticated: false });
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-          }
-        } else {
-          console.log("responseData");
-          set({ token: null, user: null, isAuthenticated: false });
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+        if (token) {
+          const userStr = localStorage.getItem('user');
+          const user = userStr ? JSON.parse(userStr) : null;
+          set({ token, user, isAuthenticated: true });
         }
       },
     }),

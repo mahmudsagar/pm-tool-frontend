@@ -41,15 +41,11 @@ const Page = ({ ...props }) => {
     }
   }
 
-  const handleSubmit = async (value) => {
-    try {
-      await updateDocumentMutation.mutateAsync({
-        documentId: data?._id,
-        content: sanitize(value)
-      });
-    } catch (error) {
-      console.error('Failed to update document:', error);
-    }
+  const handleSubmit = (value) => {
+    updateDocumentMutation.mutate({
+      documentId: data?._id,
+      content: sanitize(value),
+    });
   }
 
   if (error) {

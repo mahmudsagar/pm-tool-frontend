@@ -166,12 +166,41 @@ export const useUpdateDocument = () => {
       if (!response.ok) throw new Error('Failed to update document');
       return response.json();
     },
-    
-    onSuccess: (_, variables) => {
-      // Update cache directly instead of invalidating to avoid an infinite
-      // GET → re-init → auto-save → PUT loop when the spreadsheet auto-saves.
-      queryClient.setQueryData(['documents', variables.documentId], (old) =>
-        old ? { ...old, ...variables.content } : old
+
+    // Optimistically update the cache before the API responds so the UI
+    // reflects changes immediately without a round-trip.
+    onMutate: async ({ documentId, content }) => {
+      // Cancel any in-flight fetches so they don't overwrite our optimistic update.
+      await queryClient.cancelQueries({ queryKey: ['documents', documentId] });
+
+      const previousData = queryClient.getQueryData(['documents', documentId]);
+
+      // Update pageContent.content — the path all page components read from
+      // (pageContent?.content?.content) so the shape must be:
+      //   pageContent: { ...existing, content: <what the editor sent> }
+      queryClient.setQueryData(['documents', documentId], (old) =>
+        old
+          ? { ...old, pageContent: { ...old.pageContent, content } }
+          : old
+      );
+
+      return { previousData };
+    },
+
+    // Roll back the optimistic update if the API call fails.
+    onError: (_err, { documentId }, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(['documents', documentId], context.previousData);
+      }
+    },
+
+    // Confirm the cache with the final state. Avoids an infinite
+    // GET → re-init → auto-save → PUT loop in spreadsheets.
+    onSuccess: (_, { documentId, content }) => {
+      queryClient.setQueryData(['documents', documentId], (old) =>
+        old
+          ? { ...old, pageContent: { ...old.pageContent, content } }
+          : old
       );
     },
   });

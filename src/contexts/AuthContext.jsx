@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import useAuthStore from "@/stores/useAuthStore";
+import { useInitAuth } from "@/hooks/queries/useAuthQueries";
 
 const AuthContext = createContext();
 
@@ -27,11 +28,22 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Initialize auth from localStorage on mount
+  // Restore auth state from localStorage synchronously on mount
   useEffect(() => {
     initializeAuth();
-    setLoading(false);
-  }, [initializeAuth]);
+  }, []);
+
+  // Validate token against server via TanStack Query — deduplicated, no double calls
+  const { isLoading: isValidating, isError: isAuthError } = useInitAuth();
+
+  useEffect(() => {
+    if (!isValidating) setLoading(false);
+  }, [isValidating]);
+
+  // If server-side validation fails, clear the session
+  useEffect(() => {
+    if (isAuthError) storeLogout();
+  }, [isAuthError]);
 
   // Keep local state in sync with Zustand store
   useEffect(() => {
