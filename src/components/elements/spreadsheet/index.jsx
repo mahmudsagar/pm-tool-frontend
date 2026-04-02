@@ -141,12 +141,16 @@ const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval
   }, []); // Only init once on mount; key={_id} in the parent handles document switching
 
   useEffect(() => {
+    let lastSnapshot = null;
     const timer = setInterval(() => {
       if (!workbookRef.current) return;
       const { handleSubmit: hs, onChange: oc } = callbackRef.current;
       if (typeof hs !== 'function' && typeof oc !== 'function') return;
       try {
         const current = getData();
+        const snapshot = JSON.stringify(current);
+        if (snapshot === lastSnapshot) return;
+        lastSnapshot = snapshot;
         if (typeof hs === 'function') {
           hs({ content: current });
         } else {
