@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/utils/api';
 import { baseUrl, documentBaseUrl } from '@/utils/constants';
 
 /**
@@ -8,16 +9,7 @@ export const useDocument = (documentId) => {
   return useQuery({
     queryKey: ['documents', documentId],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${documentBaseUrl}?id=${documentId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch document');
-      const result = await response.json();
+      const result = await api.get(`${documentBaseUrl}?id=${documentId}`);
       return result.data;
     },
     enabled: !!documentId,
@@ -32,16 +24,7 @@ export const useDocuments = (pageId) => {
   return useQuery({
     queryKey: ['documents', 'list', pageId],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${documentBaseUrl}?id=${pageId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch documents');
-      const result = await response.json();
+      const result = await api.get(`${documentBaseUrl}?id=${pageId}`);
       return result.data;
     },
     enabled: !!pageId,
@@ -56,19 +39,9 @@ export const useFiles = (filters = {}) => {
   return useQuery({
     queryKey: ['files', filters],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
       const params = new URLSearchParams(filters).toString();
       const url = params ? `${baseUrl}/v1/files?${params}` : `${baseUrl}/v1/files`;
-      
-      const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch files');
-      const result = await response.json();
+      const result = await api.get(url);
       return result.data;
     },
     staleTime: 3 * 60 * 1000, // 3 minutes
@@ -82,16 +55,7 @@ export const useFileById = (fileId) => {
   return useQuery({
     queryKey: ['files', fileId],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/files/${fileId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch file');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/files/${fileId}`);
       return result.data;
     },
     enabled: !!fileId,
@@ -105,16 +69,7 @@ export const useFolderContents = (folderId) => {
   return useQuery({
     queryKey: ['folders', folderId, 'contents'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/folder?id=${folderId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch folder contents');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/folder?id=${folderId}`);
       return result.data;
     },
     enabled: !!folderId,
@@ -129,16 +84,7 @@ export const useGroupContents = (groupId) => {
   return useQuery({
     queryKey: ['groups', groupId, 'contents'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/group?id=${groupId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch group contents');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/group?id=${groupId}`);
       return result.data;
     },
     enabled: !!groupId,
@@ -153,16 +99,7 @@ export const useSpaceContents = (spaceId) => {
   return useQuery({
     queryKey: ['spaces', spaceId, 'contents'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/space?id=${spaceId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch space contents');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/space?id=${spaceId}`);
       return result.data;
     },
     enabled: !!spaceId,

@@ -284,7 +284,7 @@ const AddMyFilesDialog = ({
               content: { text: 'This is the document content' },
               summary: 'This is the document summary',
               last_updated_by: userID || '66cda5dac6886719e3345c19',
-              custom_meta: { author: 'John Doe', keywords: ['sample', 'page', 'meta'] },
+              custom_meta: { author: user?.name || user?.email || ''},
               folder_id: type === 'folder' ? id : '',
               group_id: type === 'group' ? id : '',
               space_id: type === 'space' ? id : (selectedSpace?.entity_type === 'space' ? selectedSpace._id : ''),
