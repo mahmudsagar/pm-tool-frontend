@@ -50,6 +50,8 @@ const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval
   const univerRef = useRef(null);
   const workbookRef = useRef(null);
   const containerRef = useRef(null);
+  const callbackRef = useRef({ onChange, handleSubmit });
+  callbackRef.current = { onChange, handleSubmit };
 
   useImperativeHandle(ref, () => ({
     getData,
@@ -109,18 +111,7 @@ const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval
     univer.registerPlugin(UniverSheetsZenEditorPlugin)
     // create workbook instance
     workbookRef.current = univer.createUnit(UniverInstanceType.UNIVER_SHEET, data);
-    // If consumer passed a handleSubmit (page-level save), call it once after init
-    try {
-      const current = getData();
-      if (typeof handleSubmit === 'function') {
-        handleSubmit({ content: current });
-      } else if (typeof onChange === 'function') {
-        onChange(current);
-      }
-    } catch (e) {
-      // ignore if workbook not ready yet
-    }
-  }, [onChange, handleSubmit]);
+  }, []);
 
   /**
    * Destroy univer instance and workbook instance
@@ -149,17 +140,16 @@ const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval
   }, [data, init, destroyUniver]);
 
   useEffect(() => {
-    // regularly persist workbook data: prefer page-level handleSubmit to reuse document API
-    if (typeof handleSubmit !== 'function' && typeof onChange !== 'function') return;
-
     const timer = setInterval(() => {
       if (!workbookRef.current) return;
+      const { handleSubmit: hs, onChange: oc } = callbackRef.current;
+      if (typeof hs !== 'function' && typeof oc !== 'function') return;
       try {
         const current = getData();
-        if (typeof handleSubmit === 'function') {
-          handleSubmit({ content: current });
+        if (typeof hs === 'function') {
+          hs({ content: current });
         } else {
-          onChange(current);
+          oc(current);
         }
       } catch (e) {
         // noop
@@ -167,7 +157,7 @@ const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval
     }, autoSaveInterval);
 
     return () => clearInterval(timer);
-  }, [onChange, autoSaveInterval, handleSubmit]);
+  }, [autoSaveInterval]);
 
   return <div ref={containerRef} className="univer-container" />;
 });
