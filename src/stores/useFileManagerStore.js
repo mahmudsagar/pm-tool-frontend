@@ -241,7 +241,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       const removeChild = (spaces) =>
         spaces?.map((space) => ({
           ...space,
-          childs: space.childs.filter(
+          childs: (space.childs || []).filter(
             (child) => !(child._id === id && child.entity_type === type)
           ),
         })) || [];

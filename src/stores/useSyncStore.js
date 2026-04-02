@@ -3,6 +3,7 @@
  */
 import { useEffect, useState } from 'react';
 import { shallow } from 'zustand/shallow';
+import { useStoreWithEqualityFn } from 'zustand/traditional';
 
 import useStore from './store';
 
@@ -10,7 +11,8 @@ const useSyncStore = () => {
   const [, setWorker] = useState(null);
   const [clientId, setClientId] = useState(null); // unique id for each tab opened in the browser
 
-  const { viewData, setViewData, count, increment, decrement, user } = useStore(
+  const { viewData, setViewData, count, increment, decrement, user } = useStoreWithEqualityFn(
+    useStore,
     (state) => ({
       viewData: state.viewData,
       setViewData: state.setViewData,

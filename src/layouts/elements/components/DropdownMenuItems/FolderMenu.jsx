@@ -124,18 +124,6 @@ const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) =
       console.error("Error in edit success callback:", error);
     }
   }, [id, type]);
-  // Enhanced success handler with additional error catching
-    const handleDeleteSuccess = useCallback(() => {      
-      // Add a small delay to ensure UI updates properly
-      setTimeout(() => {
-        // Call parent callback if provided to remove item from table
-        try {
-          onDeleteSuccess(id, type);
-        } catch (error) {
-          console.error("Error in delete success callback:", error);
-        }
-      }, 10);
-    }, [id, type]);
   return (
     <>
       <DropdownMenu open={!!isOpen[id]} onOpenChange={() => onToggle(id)}>
@@ -177,7 +165,6 @@ const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) =
           <Delete
             fileId={id}
             fileType={type}
-            onSuccess={handleDeleteSuccess}
             wrapperClassName="px-4 py-3 font-medium" 
           />
         </DropdownMenuContent>

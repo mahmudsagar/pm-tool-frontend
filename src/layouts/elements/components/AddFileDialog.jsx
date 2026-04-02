@@ -429,7 +429,7 @@ const AddFileDialog = ({
       setIsOpen(open);
     }}>
       {!isEdit && (
-        <DialogTrigger>
+        <DialogTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
