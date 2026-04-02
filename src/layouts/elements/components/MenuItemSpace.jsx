@@ -106,7 +106,7 @@ const MenuItemSpace = ({
             <SpaceMenu
               id={space?._id}
               type={space?.entity_type}
-              isPinned={space?.pinned || false}
+              initialData={space}
             />
           )}
         </div>

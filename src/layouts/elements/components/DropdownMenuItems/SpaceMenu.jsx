@@ -14,8 +14,6 @@ const SpaceMenu = ({ id, type, isPinned: initialIsPinned = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(initialIsPinned);
   const [pinLoading, setPinLoading] = useState(false);
-  const { toast } = useToast();
-  const { togglePinStatus } = useFileManagerStore();
   
   // Update pin status when dropdown opens or when initialIsPinned changes
   useEffect(() => {

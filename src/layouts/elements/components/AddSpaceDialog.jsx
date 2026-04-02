@@ -50,7 +50,7 @@ const AddSpaceDialog = ({
   const [searchedTeams, setSearchedTeams] = useState([]);
   const usersData = userSearchQuery ? ensureArray(searchedUsers) : ensureArray(users);
   const teamsData = teamSearchQuery ? ensureArray(searchedTeams) : ensureArray(teams);
-  const { createSpaceAndSync, storeHandler, updateHandler } = useFileManagerStore(state => state);
+  const { syncSpacesFromAPI, updateHandler } = useFileManagerStore(state => state);
 
   const form = useForm({
     defaultValues: {
@@ -190,13 +190,10 @@ const AddSpaceDialog = ({
         }
       } else {
         // Create new space using TanStack Query mutation
-        const result = await createSpaceMutation.mutateAsync(spaceData);
-        
-        // Update the file manager store with the new space
-        await storeHandler(parentId, 'space', result);
-        
-        // Also sync spaces from API to ensure consistency
-        await createSpaceAndSync(spaceData);
+        await createSpaceMutation.mutateAsync(spaceData);
+
+        // Sync the Zustand store so the sidebar reflects the new space
+        await syncSpacesFromAPI(userID);
       }
 
       // Invalidate and refetch queries to ensure UI updates
