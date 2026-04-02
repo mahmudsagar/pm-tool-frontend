@@ -4,7 +4,7 @@ import { Tabs, TabsContent } from '@/components/ui/tabs';
 import DataTable from '@/components/elements/dataTable/data-table';
 import { KanbanBoard } from '@/components/elements/kanban';
 
-const FileManager = () => {
+const FileManager = ({ id: propId, type: propType }) => {
   const [activeView, setActiveView] = useState('table');
 
   return (
@@ -24,7 +24,7 @@ const FileManager = () => {
         </div> */}
 
         <TabsContent value="table" className="mt-0">
-          <DataTable />
+          <DataTable propId={propId} propType={propType} />
         </TabsContent>
 
         <TabsContent value="kanban" className="mt-0">

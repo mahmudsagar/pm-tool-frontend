@@ -17,8 +17,8 @@ import DataTableColumnBody from './data-table-body';
 import DataTableColumnHeader from './data-table-header';
 import { Folder, File } from 'lucide-react';
 
-function DataTable() {
-  let { id, type } = useParams();
+function DataTable({ propId, propType } = {}) {
+  let { id: paramId, type: paramType } = useParams();
   const location = useLocation();
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -26,6 +26,10 @@ function DataTable() {
   const [rowSelection, setRowSelection] = useState({});
   const queryClient = useQueryClient();
   const { mutate: deleteEntity } = useDeleteEntity();
+
+  // Props passed from parallel route take priority over URL params
+  const id = propId || paramId;
+  const type = propType || paramType;
 
   // Detect type from URL path if not provided as param
   const detectedType = useMemo(() => {

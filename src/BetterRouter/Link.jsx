@@ -31,6 +31,9 @@ const Link = ({ onClick, layoutType = 'basic', ...props }) => {
       catch (_) {
         //
       }
+      // Delete before re-setting so this entry moves to the end of the params
+      // (last in insertion order = last in DOM = visually on top of other drawers)
+      searchParams.delete(to);
       searchParams.set(to, target);
       if (layoutType === 'split') {
         searchParams.set('layoutType', 'split');
