@@ -200,7 +200,11 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                 Array.isArray(documents[folder?._id]) && documents[folder?._id].length > 0 ? 
                   documents[folder?._id].map( doc => 
                     Array.isArray(doc.childs) && doc.childs.length > 0 ? 
-                      doc?.childs.map( item => item.entity_type === 'folder' ? (<p key={item?._id}>Folder</p>):(
+                      doc?.childs.map( item => item.entity_type === 'folder' ? (
+                        <div key={item?._id} className="ml-2.5">
+                        <MenuItemFolder folder={item} className={className} />
+                        </div>
+                      ) : (
                         <DocStructure
                           key={item?._id}
                           docId = {item?._id}
