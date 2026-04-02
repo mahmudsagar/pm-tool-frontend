@@ -79,12 +79,12 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
     setFirstLoad(true);
   }, [pageContent]);
   return (
-    pageContent?.content?.content ? (
+    pageContent ? (
         <UniverSheet
           key={_id}
           style={{ flex: 1 }}
           ref={univerRef}
-          data={pageContent.content.content}
+          data={pageContent?.content?.content || {}}
           onChange={onChange}
           handleSubmit={handleSubmit}
         />

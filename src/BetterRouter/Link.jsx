@@ -33,12 +33,14 @@ const Link = ({ onClick, layoutType = 'basic', ...props }) => {
       }
       // Delete before re-setting so this entry moves to the end of the params
       // (last in insertion order = last in DOM = visually on top of other drawers)
+      const prevSearch = searchParams.toString();
       searchParams.delete(to);
       searchParams.set(to, target);
       if (layoutType === 'split') {
         searchParams.set('layoutType', 'split');
       }
-      setSearchParams(searchParams);
+      // Use replace when the URL wouldn't actually change to avoid polluting history
+      setSearchParams(searchParams, { replace: prevSearch === searchParams.toString() });
     }
     else if (target === '_self') {
       if (currentRoute.target === "_sidebar" || currentRoute.target === "_popup") {

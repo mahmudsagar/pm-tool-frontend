@@ -83,7 +83,7 @@ const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, 
 
   return <div className='lexical-editor'>
     <LexicalComposer initialConfig={editorConfig}>
-      {pageContent?.content?.content && <Editor {...editorProps} />}
+      {pageContent && <Editor {...editorProps} />}
     </LexicalComposer>
   </div>
 }
