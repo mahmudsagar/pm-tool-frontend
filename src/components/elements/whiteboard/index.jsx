@@ -34,6 +34,7 @@ export default function ExcalidrawRender({ content, onChange, spaceId }) {
   onChangeRef.current = onChange;
   const contentRef = useRef(content);
   contentRef.current = content;
+  const debounceTimerRef = useRef(null);
   const createStickyNote = () => {
     const { scrollX, scrollY } = excalidrawAPI.getAppState();
     const newStickyNote = convertToExcalidrawElements([
@@ -106,13 +107,16 @@ export default function ExcalidrawRender({ content, onChange, spaceId }) {
       ) {
         previousSceneVersionRef.current = sceneVersion;
 
-        // Send non deleted elements to store state
-        onChangeRef.current({ content: {
-          elements: getNonDeletedElements(elements),
-          settings: {
-            locked: state?.activeTool?.locked
-          }
-        }})
+        // Send non deleted elements to store state (debounced)
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = setTimeout(() => {
+          onChangeRef.current({ content: {
+            elements: getNonDeletedElements(elements),
+            settings: {
+              locked: state?.activeTool?.locked
+            }
+          }});
+        }, 500);
       }
     }
   }, []);

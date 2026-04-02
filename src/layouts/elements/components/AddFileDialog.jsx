@@ -508,10 +508,10 @@ const AddFileDialog = ({
                                 <SelectValue placeholder="File Format" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="document">Document</SelectItem>
-                                <SelectItem value="sheet">Sheet</SelectItem>
-                                <SelectItem value="whiteboard">Whiteboard</SelectItem>
-                                <SelectItem value="board">Board</SelectItem>
+                                <SelectItem value="document" className="cursor-pointer">Document</SelectItem>
+                                <SelectItem value="sheet" className="cursor-pointer">Sheet</SelectItem>
+                                <SelectItem value="whiteboard" className="cursor-pointer">Whiteboard</SelectItem>
+                                <SelectItem value="board" className="cursor-pointer">Board</SelectItem>
                               </SelectContent>
                             </Select>
                           )}
