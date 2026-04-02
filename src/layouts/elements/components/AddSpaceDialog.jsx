@@ -72,8 +72,6 @@ const AddSpaceDialog = ({
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
-
     if (isOpen) {
       (async () => {
         try {
@@ -229,7 +227,7 @@ const AddSpaceDialog = ({
       setIsOpen(open);
     }}>
       {!isEdit && (
-        <DialogTrigger>
+        <DialogTrigger asChild>
           <Button
             variant="ghost"
             size="icon"

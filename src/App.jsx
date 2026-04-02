@@ -4,6 +4,7 @@ import BetterRouter from './BetterRouter';
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from './components/ui/toaster';
 import { AuthProvider } from './contexts/AuthContext';
+import GlobalDialogProvider from './components/GlobalDialogProvider';
 
 const App = () => {
   const { pathname, search, href } = window.location;
@@ -31,6 +32,7 @@ const App = () => {
         <AuthProvider>
           <BetterRouter />
           <Toaster />
+          <GlobalDialogProvider />
         </AuthProvider>
       </ThemeProvider>
     </>

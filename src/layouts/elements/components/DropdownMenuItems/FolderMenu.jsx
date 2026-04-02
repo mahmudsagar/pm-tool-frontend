@@ -9,14 +9,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { DeleteMenuItem, DeleteConfirmDialog } from './items/Delete';
+import Delete from './items/Delete';
 import useFileManagerStore from '@/stores/useFileManagerStore';
 import { useToast } from '@/components/ui/use-toast';
 import AddFileDialog from '../AddFileDialog';
 
 const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
     const [pinLoading, setPinLoading] = useState(false);
     const { toast } = useToast();
@@ -125,13 +124,6 @@ const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) =
       console.error("Error in edit success callback:", error);
     }
   }, [id, type]);
-  // Let the dropdown close naturally via onSelect, then open delete dialog after close animation
-    const handleDeleteClick = useCallback(() => {
-      setTimeout(() => {
-        setIsDeleteDialogOpen(true);
-      }, 150);
-    }, []);
-
   // Enhanced success handler with additional error catching
     const handleDeleteSuccess = useCallback(() => {      
       // Add a small delay to ensure UI updates properly
@@ -182,20 +174,14 @@ const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) =
             {isPinned ? "Unpin" : "Pin"}
           </DropdownMenuItem> */}
         </DropdownMenuGroup>
-          <DeleteMenuItem
-            onClick={handleDeleteClick}
+          <Delete
+            fileId={id}
+            fileType={type}
+            onSuccess={handleDeleteSuccess}
             wrapperClassName="px-4 py-3 font-medium" 
           />
         </DropdownMenuContent>
       </DropdownMenu>
-      {/* Delete Confirmation - rendered outside DropdownMenu */}
-      <DeleteConfirmDialog
-        fileId={id}
-        fileType={type}
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onSuccess={handleDeleteSuccess}
-      />
       {/* Edit Modal */}
       {isEditModalOpen && (
         <AddFileDialog
