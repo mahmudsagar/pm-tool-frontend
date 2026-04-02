@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,21 +15,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-import useApi from "@/lib/dataFetcher"
-import { documentBaseUrl } from "@/utils/constants"
-import useAuthStore from "@/stores/useAuthStore"
+import { useFiles } from "@/hooks/queries/useFilesQueries"
 
 export default function TaskEmbed({ onSelect }) {
   const [open, setOpen] = useState(false)
-  const { data, loading, error, callApi } = useApi(state => state);
+  const { data, isLoading, isError } = useFiles();
 
-  const {user} = useAuthStore();
-  
-  useEffect(() => {
-    callApi(documentBaseUrl + '?user_id=' + user._id)
-  }, [user.id])
-
-  if(loading || error) {
+  if (isLoading || isError) {
     return null;
   }
 

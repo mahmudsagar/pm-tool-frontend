@@ -168,7 +168,11 @@ export const useUpdateDocument = () => {
     },
     
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['documents', variables.documentId] });
+      // Update cache directly instead of invalidating to avoid an infinite
+      // GET → re-init → auto-save → PUT loop when the spreadsheet auto-saves.
+      queryClient.setQueryData(['documents', variables.documentId], (old) =>
+        old ? { ...old, ...variables.content } : old
+      );
     },
   });
 };

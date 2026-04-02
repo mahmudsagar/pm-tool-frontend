@@ -137,7 +137,8 @@ const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval
     return () => {
       destroyUniver();
     };
-  }, [data, init, destroyUniver]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only init once on mount; key={_id} in the parent handles document switching
 
   useEffect(() => {
     const timer = setInterval(() => {

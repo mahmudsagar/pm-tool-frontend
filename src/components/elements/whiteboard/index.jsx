@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import {
   Excalidraw,
   MainMenu,
@@ -25,13 +25,15 @@ export default function ExcalidrawRender({ content, onChange }) {
   const wrapperRef = useRef(null);
 
   const [excalidrawAPI, setExcalidrawAPI] = useState(null);
+  const setExcalidrawAPICallback = useCallback((api) => setExcalidrawAPI(api), []);
 
-  const [flags, setFlags] = useState({
-    justLoaded: true,
-    dirty: false,
-  })
-
-  const [previousSceneVersion, setPreviousSceneVersion] = useState(0);
+  // Refs for values only used in handleChange — avoids re-renders and keeps handleChange stable
+  const justLoadedRef = useRef(true);
+  const previousSceneVersionRef = useRef(0);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const contentRef = useRef(content);
+  contentRef.current = content;
   const createStickyNote = () => {
     const { scrollX, scrollY } = excalidrawAPI.getAppState();
     const newStickyNote = convertToExcalidrawElements([
@@ -73,7 +75,7 @@ export default function ExcalidrawRender({ content, onChange }) {
     }
 
     excalidrawAPI.updateScene({ elements });
-    onChange({ content: { elements, settings } })
+    onChangeRef.current({ content: { elements, settings } })
   }
 
   /**
@@ -82,7 +84,7 @@ export default function ExcalidrawRender({ content, onChange }) {
    * @param {Object} state 
    * @returns 
    */
-  const handleChange = (elements, state) => {
+  const handleChange = useCallback((elements, state) => {
     // Making sure we are not updating data during element events (drag, resize, edit etc)
     if (
       state.resizingElement === null &&
@@ -90,11 +92,8 @@ export default function ExcalidrawRender({ content, onChange }) {
       state.editingLinearElement === null
     ) {
       // disabled initialData onchange trigger
-      if (flags.justLoaded) {
-        setFlags(prev => ({
-          ...prev,
-          justLoaded: false
-        }))
+      if (justLoadedRef.current) {
+        justLoadedRef.current = false;
         return;
       }
       
@@ -102,14 +101,13 @@ export default function ExcalidrawRender({ content, onChange }) {
       const sceneVersion = getSceneVersion(elements);
 
       if (
-        (sceneVersion > 0 && sceneVersion !== previousSceneVersion) ||
-        (state?.activeTool?.locked !== content?.settings?.locked)
+        (sceneVersion > 0 && sceneVersion !== previousSceneVersionRef.current) ||
+        (!!state?.activeTool?.locked !== !!contentRef.current?.settings?.locked)
       ) {
-        setPreviousSceneVersion(sceneVersion);
+        previousSceneVersionRef.current = sceneVersion;
 
         // Send non deleted elements to store state
-
-        onChange({ content: {
+        onChangeRef.current({ content: {
           elements: getNonDeletedElements(elements),
           settings: {
             locked: state?.activeTool?.locked
@@ -117,7 +115,7 @@ export default function ExcalidrawRender({ content, onChange }) {
         }})
       }
     }
-  }
+  }, []);
 
   return (
     <div className='h-full relative' ref={wrapperRef}>
@@ -125,7 +123,7 @@ export default function ExcalidrawRender({ content, onChange }) {
         {JSON.stringify(viewData?.[viewId]?.data, null, 2)}
       </pre> */}
       <Excalidraw
-        excalidrawAPI={(api) => setExcalidrawAPI(api)}
+        excalidrawAPI={setExcalidrawAPICallback}
         initialData={{
           elements: Array.isArray(content?.elements) ? content?.elements : [],
           appState: {
