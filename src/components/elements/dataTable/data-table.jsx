@@ -71,9 +71,11 @@ function DataTable() {
         id: child._id,
         type: child.entity_type,
         icon: child.entity_type === 'folder' ? Folder : File,
-        name: child.entity_type === 'folder' 
-          ? child.name 
-          : `${child.title}.${child.page_type}`,
+        name: (child.entity_type === 'folder' || child.entity_type === 'group' || child.entity_type === 'space')
+          ? child.name
+          : child.page_type === 'board'
+          ? (child.name || child.title || '')
+          : (child.title ? `${child.title}.${child.page_type}` : (child.name || '')),
         modified: formatTime(child.updatedAt),
         modifiedBy: child.user_id || 'Unknown User',
         sharing: rawData[0].is_private ? 'Private' : 'Public',
