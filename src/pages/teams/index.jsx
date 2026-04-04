@@ -76,7 +76,7 @@ export default function Teams() {
                 {teams?.map((team) => (
                   <TableRow key={team?._id}>
                     <TableCell className="font-medium">
-                      <Link href={`/my-teams/${team?._id}`} className="hover:underline">
+                      <Link href={`/users/${team?._id}`} className="hover:underline">
                         {team?.name}
                       </Link>
                     </TableCell>
@@ -87,7 +87,7 @@ export default function Teams() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => navigate(`/my-teams/edit/${team?._id}`)}
+                          onClick={() => navigate(`/users/edit/${team?._id}`)}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>

@@ -58,7 +58,7 @@ export default function CreateTeam() {
         })
       }, (response) => {
         if (response && response.status === "success") {
-          navigate('/my-teams');
+          navigate('/users');
         }
       });
     } else {
@@ -68,7 +68,7 @@ export default function CreateTeam() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(teamData)
       }, () => {
-        navigate('/my-teams');
+        navigate('/users');
       });
     }
   };
@@ -80,7 +80,7 @@ export default function CreateTeam() {
         <Button
           variant="ghost" 
           className="mb-4"
-          onClick={() => navigate('/my-teams')}
+          onClick={() => navigate('/users')}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Teams
@@ -98,7 +98,7 @@ export default function CreateTeam() {
       <Button
         variant="ghost" 
         className="mb-4"
-        onClick={() => navigate('/my-teams')}
+        onClick={() => navigate('/users')}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Teams

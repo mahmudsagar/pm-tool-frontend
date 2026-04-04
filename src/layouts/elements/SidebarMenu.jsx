@@ -25,7 +25,7 @@ const sidebarTopLinks = [
   },
   {
     title: "Teams",
-    href: "/my-teams",
+    href: "/users",
     icon: LucideUsers,
   },
 ];

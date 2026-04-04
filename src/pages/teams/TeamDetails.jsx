@@ -59,7 +59,7 @@ export default function TeamDetails() {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this team?')) {
       deleteTeam.mutate(id, {
-        onSuccess: () => navigate('/my-teams')
+        onSuccess: () => navigate('/users')
       });
     }
   };
@@ -95,7 +95,7 @@ export default function TeamDetails() {
         data: { ...formData, _id: id }
       },
       {
-        onSuccess: () => navigate(`/my-teams/${id}`)
+        onSuccess: () => navigate(`/users/${id}`)
       }
     );
   };
@@ -103,10 +103,10 @@ export default function TeamDetails() {
   const toggleEditMode = () => {
     if (isEditMode) {
       // Exit edit mode - go back to view
-      navigate(`/my-teams/${id}`);
+      navigate(`/users/${id}`);
     } else {
       // Enter edit mode
-      navigate(`/my-teams/edit/${id}`);
+      navigate(`/users/edit/${id}`);
     }
   };
   
@@ -127,7 +127,7 @@ export default function TeamDetails() {
       <div className="flex items-center justify-between mb-4">
         <Button
           variant="ghost"
-          onClick={() => navigate('/my-teams')}
+          onClick={() => navigate('/users')}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Teams
@@ -154,7 +154,7 @@ export default function TeamDetails() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate(`/my-teams/edit/${team._id}`)}
+                onClick={() => navigate(`/users/edit/${team._id}`)}
               >
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit

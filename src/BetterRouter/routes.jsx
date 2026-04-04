@@ -38,7 +38,7 @@ export const routes = [
         element: <Check />
       },
       {
-        path: '/my-teams',
+        path: '/users',
         element: <Teams />
       },
       {
@@ -118,13 +118,13 @@ export const routes = [
     </ProtectedRoute>) 
   },
   {
-    path: '/my-teams/:id',
+    path: '/users/:id',
     element: (<ProtectedRoute>
       <TeamDetails />
     </ProtectedRoute>) 
   },
   {
-    path: '/my-teams/edit/:id',
+    path: '/users/edit/:id',
     element: (<ProtectedRoute>
       <CreateTeam />
     </ProtectedRoute>) 
