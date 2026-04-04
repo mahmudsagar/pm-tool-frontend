@@ -95,16 +95,19 @@ export function CommandMenu({ ...props }) {
 
 
   const handleSearchItemClick = (item) => {
-    // console.log(item);
-    const { entity_type, _id } = item || {};
-    if (['folder', 'group',].includes(entity_type)) {
-      navigate(`/?folderId=${_id}`);
-    } else if (['team', 'space'].includes(entity_type)) {
-      navigate(`/?spaceId=${_id}`);
-    } else if (entity_type == 'page') {
-      navigate(`/document/${_id}`);
-    } else {
-      // console.log(item, 'item click');
+    const { entity_type, page_type, _id } = item || {};
+    if (entity_type === 'folder') {
+      navigate(`/folder/${_id}`);
+    } else if (entity_type === 'group') {
+      navigate(`/group/${_id}`);
+    } else if (entity_type === 'space') {
+      navigate(`/space/${_id}`);
+    } else if (entity_type === 'page' || entity_type === 'board') {
+      if (page_type === 'board' || entity_type === 'board') {
+        navigate(`/board/${_id}`);
+      } else {
+        navigate(`/document/${_id}`);
+      }
     }
   }
 
@@ -126,7 +129,7 @@ export function CommandMenu({ ...props }) {
           <span className="text-xs text-[16px]">K</span>
         </kbd>
       </Button>
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandDialog open={open} onOpenChange={setOpen} commandProps={{ shouldFilter: false }}>
         <CommandInput placeholder="Type a command or search..." onValueChange={handleGlobalSearch}  value={searchInput} loading={loading}/>
         <CommandList>
           {results.length == 0 && <CommandEmpty>No results found.</CommandEmpty>}
