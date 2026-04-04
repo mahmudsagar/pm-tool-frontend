@@ -9,7 +9,7 @@ import NotFound from "./NotFound";
 import Page from "@/pages";
 import CommentPage from "@/pages/CommentPage";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import Teams from "@/pages/teams";
+import UsersPage from "@/pages/users";
 import { LoginForm } from "@/components/auth/LoginForm";
 import CreateTeam from "@/pages/teams/Create";
 import TeamDetails from "@/pages/teams/TeamDetails";
@@ -39,7 +39,7 @@ export const routes = [
       },
       {
         path: '/users',
-        element: <Teams />
+        element: <UsersPage />
       },
       {
         path: '/file-manager/:type/:id',
