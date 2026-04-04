@@ -19,7 +19,7 @@ import { useInitAuth } from "@/hooks/queries/useAuthQueries";
 
 export default function Sidebar({ className }) {
   const { isOpen } = useSidebar();
-  const { logout, user } = useAuthStore();
+  const { logout, user, currentWorkspace } = useAuthStore();
   const { isSuccess: isAuthReady } = useInitAuth();
   
   // Use Zustand store directly for sidebar data - updates immediately on delete
@@ -76,8 +76,9 @@ export default function Sidebar({ className }) {
                 </div>
                 <div className="flex flex-col justify-center">
                   <h5 className="text-xs font-semibold">{user?.name ? user.name : user?.email}</h5>
-                  {/* Optional: Show loading indicator for new users */}
-                  {isSpacesLoading && (
+                  {currentWorkspace?.name ? (
+                    <span className="text-xs text-muted-foreground">{currentWorkspace.name}</span>
+                  ) : isSpacesLoading && (
                     <span className="text-xs text-muted-foreground">Setting up workspace...</span>
                   )}
                 </div>

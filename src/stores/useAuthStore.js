@@ -6,6 +6,8 @@ const useAuthStore = create(
     (set, get) => ({
       token: null,
       user: null,
+      workspaces: [],
+      currentWorkspace: null,
       isAuthenticated: false,
       loading: false,
 
@@ -31,16 +33,22 @@ const useAuthStore = create(
           if (responseData.status === "success" && responseData.data) {
             const token = responseData.data.token;
             const user = responseData.data.user_info;
+            const workspaces = responseData.data.workspaces || [];
+            const currentWorkspace = workspaces[0] || null;
 
             set({
               token,
               user,
+              workspaces,
+              currentWorkspace,
               isAuthenticated: true,
               loading: false
             });
 
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('workspaces', JSON.stringify(workspaces));
+            localStorage.setItem('currentWorkspace', JSON.stringify(currentWorkspace));
 
             return { success: true };
           } else {
@@ -71,16 +79,22 @@ const useAuthStore = create(
           if (responseData.status === "success" && responseData.data) {
             const token = responseData.data.token;
             const user = responseData.data.user_info;
+            const workspaces = responseData.data.workspaces || [];
+            const currentWorkspace = workspaces[0] || null;
 
             set({
               token,
               user,
+              workspaces,
+              currentWorkspace,
               isAuthenticated: true,
               loading: false
             });
 
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('workspaces', JSON.stringify(workspaces));
+            localStorage.setItem('currentWorkspace', JSON.stringify(currentWorkspace));
 
             return { success: true, message: responseData.message };
           } else {
@@ -109,11 +123,15 @@ const useAuthStore = create(
           set({
             token: null,
             user: null,
+            workspaces: [],
+            currentWorkspace: null,
             isAuthenticated: false,
             loading: false
           });
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+          localStorage.removeItem('workspaces');
+          localStorage.removeItem('currentWorkspace');
         }
       },
 
@@ -127,6 +145,11 @@ const useAuthStore = create(
         if (user) localStorage.setItem('user', JSON.stringify(user));
       },
 
+      setCurrentWorkspace: (workspace) => {
+        set({ currentWorkspace: workspace });
+        localStorage.setItem('currentWorkspace', JSON.stringify(workspace));
+      },
+
       // Initialize from localStorage on mount (synchronous - no network call)
       // Server-side validation is handled separately via TanStack Query (useInitAuth)
       initializeAuth: () => {
@@ -134,7 +157,11 @@ const useAuthStore = create(
         if (token) {
           const userStr = localStorage.getItem('user');
           const user = userStr ? JSON.parse(userStr) : null;
-          set({ token, user, isAuthenticated: true });
+          const workspacesStr = localStorage.getItem('workspaces');
+          const workspaces = workspacesStr ? JSON.parse(workspacesStr) : [];
+          const currentWorkspaceStr = localStorage.getItem('currentWorkspace');
+          const currentWorkspace = currentWorkspaceStr ? JSON.parse(currentWorkspaceStr) : null;
+          set({ token, user, workspaces, currentWorkspace, isAuthenticated: true });
         }
       },
     }),
@@ -143,6 +170,8 @@ const useAuthStore = create(
       partialize: (state) => ({
         token: state.token,
         user: state.user,
+        workspaces: state.workspaces,
+        currentWorkspace: state.currentWorkspace,
         isAuthenticated: state.isAuthenticated
       }),
     }

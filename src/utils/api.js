@@ -39,6 +39,8 @@ async function fetcher(
   const { requireAuth = true, ...fetchOptions } = options;
   const token = useAuthStore.getState().token;
   
+  const currentWorkspace = useAuthStore.getState().currentWorkspace;
+
   const headers = {
     'Content-Type': 'application/json',
     ...fetchOptions.headers,
@@ -47,6 +49,11 @@ async function fetcher(
   // Add authorization header if token exists and auth is required
   if (requireAuth && token) {
     headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Add workspace header if a current workspace is selected
+  if (currentWorkspace?._id) {
+    headers['X-Workspace-ID'] = currentWorkspace._id;
   }
 
   const response = await fetch(url, {
