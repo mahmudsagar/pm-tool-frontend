@@ -15,10 +15,12 @@ import { Button } from "@/components/ui/button";
 import Link from "@/BetterRouter/Link";
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import useAuthStore from "@/stores/useAuthStore";
+import { useInitAuth } from "@/hooks/queries/useAuthQueries";
 
 export default function Sidebar({ className }) {
   const { isOpen } = useSidebar();
   const { logout, user } = useAuthStore();
+  const { isSuccess: isAuthReady } = useInitAuth();
   
   // Use Zustand store directly for sidebar data - updates immediately on delete
   const {
@@ -30,12 +32,14 @@ export default function Sidebar({ className }) {
     resetInitialization,
   } = useFileManagerStore(state => state);
 
-  // Fetch spaces on mount if not initialized
+  // Only fetch spaces after auth has been validated server-side.
+  // user._id is available immediately from persisted Zustand state, but we must
+  // wait for the auth token to be confirmed before making any authenticated requests.
   useEffect(() => {
-    if (user?._id && !hasInitializedSpaces) {
+    if (isAuthReady && user?._id && !hasInitializedSpaces) {
       syncSpacesFromAPI(user._id);
     }
-  }, [user?._id, hasInitializedSpaces, syncSpacesFromAPI]);
+  }, [isAuthReady, user?._id, hasInitializedSpaces, syncSpacesFromAPI]);
 
   useEffect(() => {
     // Reset spaces if user is null (logout scenario)
