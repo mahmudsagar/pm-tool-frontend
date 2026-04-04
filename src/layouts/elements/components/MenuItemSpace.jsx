@@ -30,8 +30,12 @@ const MenuItemSpace = ({
   // Handle navigation to filtered home page or space view
   const handleSpaceClick = () => {
     if (isRootSpace) {
-      // For root spaces, stay on home page (or could navigate to a dashboard)
-      navigate(`/`);
+      // For root spaces, navigate to home with the appropriate filter
+      if (spaceType === 'private') {
+        navigate('/?filter=private');
+      } else {
+        navigate('/?filter=team');
+      }
     } else {
       // For specific spaces, navigate to space view to show contents
       navigate(`/space/${space._id}`);

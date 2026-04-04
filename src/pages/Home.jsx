@@ -130,7 +130,7 @@ const Home = () => {
         // Check if file belongs to private space
         return file.space_id && allPrivateSpaceIds.has(file.space_id) ||
                file.folder_id && allPrivateSpaceIds.has(file.folder_id) ||
-               allPrivateSpaceIds.has(file._id);
+               allPrivateSpaceIds.has(file.id);
       });
     } else if (filterType === 'team') {
       const allPublicSpaceIds = new Set();
@@ -148,7 +148,7 @@ const Home = () => {
         // Check if file belongs to public space
         return file.space_id && allPublicSpaceIds.has(file.space_id) ||
                file.folder_id && allPublicSpaceIds.has(file.folder_id) ||
-               allPublicSpaceIds.has(file._id);
+               allPublicSpaceIds.has(file.id);
       });
     }
 
