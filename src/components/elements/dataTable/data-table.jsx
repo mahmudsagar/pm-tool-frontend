@@ -12,7 +12,6 @@ import {
   getPaginationRowModel,
 } from "@tanstack/react-table";
 import { createColumns } from './table-columns';
-import DataTablePagination from './data-table-pagination';
 import DataTableColumnBody from './data-table-body';
 import DataTableColumnHeader from './data-table-header';
 import { Folder, File } from 'lucide-react';
@@ -78,8 +77,8 @@ function DataTable({ propId, propType } = {}) {
         icon: child.entity_type === 'folder' ? Folder : File,
         name: (child.entity_type === 'folder' || child.entity_type === 'group' || child.entity_type === 'space')
           ? child.name
-          : child.page_type === 'board'
-          ? (child.name || child.title || '')
+          : child.entity_type === 'board'
+          ? (child.name ? `${child.name}.board` : (child.title ? `${child.title}.board` : ''))
           : (child.title ? `${child.title}.${child.page_type}` : (child.name || '')),
         modified: formatTime(child.updatedAt),
         modifiedBy: child.user_id || 'Unknown User',

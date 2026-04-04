@@ -7,6 +7,7 @@ import {
   FileText,
   StickyNote,
   FileSpreadsheet,
+  LayoutGrid,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.BN_BASE_URL + "/v1";
@@ -642,6 +643,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
               document: FileText,
               whiteboard: StickyNote,
               sheet: FileSpreadsheet,
+              board: LayoutGrid,
             }[child.page_type] || FileText;
 
       // Choose display name robustly: folders/groups use `name`, pages usually use `title`,

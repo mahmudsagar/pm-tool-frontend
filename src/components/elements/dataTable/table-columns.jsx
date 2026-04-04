@@ -4,6 +4,7 @@ import {
   ChevronDown,
   ArrowDownZA,
 } from 'lucide-react';
+import ShowIcon from '@/components/common/ShowIcon';
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -77,11 +78,14 @@ export const createColumns = (onDeleteSuccess, onEditSuccess) => [
         </DropdownMenu>
       );
     },
-    cell: ({ row }) => (
+    cell: ({ row }) => {
+      // Handle icon display - if type is null but page_type is set, treat as 'page'
+      const fileType = row.original.type || (row.original.page_type ? 'page' : undefined);
+      return (
       <div className="group flex items-center gap-8">
         <div className='flex items-center gap-3'>
-          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-            <row.original.icon className="w-5 h-5 text-purple-700" />
+          <div className="w-10 h-10 rounded-full flex items-center justify-center">
+            <ShowIcon file={fileType} page={row.original.page_type} size={20} />
           </div>
           <span>{row.getValue("name")}</span>
         </div>
@@ -106,7 +110,8 @@ export const createColumns = (onDeleteSuccess, onEditSuccess) => [
           {/* <TableColumnsShare title={row.getValue("name") || ''} /> */}
         </div>
       </div>
-    ),
+    );
+    },
   },
   {
     accessorKey: "modified",

@@ -10,7 +10,6 @@ import {
 import { flexRender } from "@tanstack/react-table";
 import TableLoading from './components/table-loading';
 import Link from '@/BetterRouter/Link';
-import { createColumns } from './table-columns';
 
 const DataTableColumnBody = ({ table, loading, onDataChange }) => {
   // Store a local copy of data for instant updates
