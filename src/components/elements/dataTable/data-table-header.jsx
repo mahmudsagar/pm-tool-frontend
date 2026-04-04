@@ -8,11 +8,14 @@ import {
   ArrowDownZA,
   CircleX,
   Plus,
+  Globe,
+  Lock,
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -49,7 +52,7 @@ const DataTableColumnHeader = ({ title, table, containerId, containerType }) => 
               <ChevronDown className='w-4 h-4' />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end">
             <DropdownMenuItem className="flex items-center gap-2 font-medium" onClick={() => table.getColumn("name").toggleSorting(true)}>
               <ArrowUpAZ className='w-4 h-4' />
               Asc
@@ -58,9 +61,21 @@ const DataTableColumnHeader = ({ title, table, containerId, containerType }) => 
               <ArrowDownZA className='w-4 h-4' />
               Desc
             </DropdownMenuItem>
-            <DropdownMenuItem className="flex items-center gap-2 font-medium" onClick={() => setSorting([])}>
-              <CircleX className='w-4 h-4' />
+            <DropdownMenuItem className="flex items-center gap-2 font-medium" onClick={() => table.resetSorting()}>                <CircleX className='w-4 h-4' />
               Unsorted
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="flex items-center gap-2 font-medium" onClick={() => table.getColumn("sharing")?.setFilterValue("Public")}>
+              <Globe className='w-4 h-4' />
+              Public
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center gap-2 font-medium" onClick={() => table.getColumn("sharing")?.setFilterValue("Private")}>
+              <Lock className='w-4 h-4' />
+              Private
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center gap-2 font-medium" onClick={() => table.getColumn("sharing")?.setFilterValue(undefined)}>
+              <CircleX className='w-4 h-4' />
+              All
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

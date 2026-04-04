@@ -180,12 +180,19 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
           return b.pinned - a.pinned;
         });
 
+        // Propagate is_private from the parent space to each child so that
+        // children of private spaces are always treated as private.
+        const childsWithPrivacy = sortedChilds.map((child) => ({
+          ...child,
+          is_private: space.is_private ?? child.is_private,
+        }));
+
         categorizedSpaces[target].push({
           ...space,
-          childs: sortedChilds, // Keep all children but sorted by pinned status
+          childs: childsWithPrivacy,
         });
 
-        return space.childs;
+        return childsWithPrivacy;
       })
       .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
@@ -346,11 +353,34 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       // Adding data to privateSpaces, but avoid adding if it's inside a folder/group
       const updatedPrivateSpaces = addChild(state.privateSpaces);
 
+      // Also update spaceFiles so the home page list stays in sync.
+      // spaceFiles contains direct children of spaces — add the new item when
+      // its parent is a space (not a nested folder/group).
+      let updatedSpaceFiles = state.spaceFiles;
+      if (type === 'space' && Array.isArray(state.spaceFiles)) {
+        // Inherit is_private from the parent space so the new item is correctly
+        // shown as Private/Public without waiting for a full sync.
+        const allSpaces = [
+          ...(state.publicSpaces || []),
+          ...(state.privateSpaces || []),
+        ];
+        const parentSpace = allSpaces.find((s) => s._id === id);
+        const newDataWithPrivacy = {
+          ...newData,
+          is_private: parentSpace?.is_private ?? newData.is_private,
+        };
+        const [formatted] = get().convertTableFormat([newDataWithPrivacy]);
+        if (formatted) {
+          updatedSpaceFiles = [formatted, ...state.spaceFiles];
+        }
+      }
+
       // Return updated state
       return {
         documents: updatedDocuments,
         publicSpaces: updatedPublicSpaces,
         privateSpaces: updatedPrivateSpaces,
+        spaceFiles: updatedSpaceFiles,
       };
     });
   },

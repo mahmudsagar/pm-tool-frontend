@@ -283,43 +283,47 @@ const AddSpaceDialog = ({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="shared_members"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Shared Members</FormLabel>
-                    <RcMultiSelect
-                      options={Array.isArray(usersData) ? usersData.map(user => ({ value: user._id, label: user.email })) : []}
-                      value={field.value}
-                      onChange={(value) => field.onChange(value)}
-                      onSearchChange={setUserSearchQuery}
-                      placeholder="Search and select members"
-                      searchPlaceholder="Type to search members..."
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!space_visibility && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="shared_members"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Shared Members</FormLabel>
+                        <RcMultiSelect
+                          options={Array.isArray(usersData) ? usersData.map(user => ({ value: user._id, label: user.email })) : []}
+                          value={field.value}
+                          onChange={(value) => field.onChange(value)}
+                          onSearchChange={setUserSearchQuery}
+                          placeholder="Search and select members"
+                          searchPlaceholder="Type to search members..."
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="shared_teams"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Shared Teams</FormLabel>
-                    <RcMultiSelect
-                      options={Array.isArray(teamsData) ? teamsData?.map(team => ({ value: team._id, label: team.name })) : []}
-                      value={field.value}
-                      onChange={(value) => field.onChange(value)}
-                      onSearchChange={setTeamSearchQuery}
-                      placeholder="Search and select teams"
-                      searchPlaceholder="Type to search teams..."
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="shared_teams"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Shared Teams</FormLabel>
+                        <RcMultiSelect
+                          options={Array.isArray(teamsData) ? teamsData?.map(team => ({ value: team._id, label: team.name })) : []}
+                          value={field.value}
+                          onChange={(value) => field.onChange(value)}
+                          onSearchChange={setTeamSearchQuery}
+                          placeholder="Search and select teams"
+                          searchPlaceholder="Type to search teams..."
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
             </div>
             <div className="flex justify-end space-x-2 pt-4">
               <Button variant="outline" type="button" onClick={() => setIsOpen(false)}>
