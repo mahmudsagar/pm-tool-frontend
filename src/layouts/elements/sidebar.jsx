@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -16,11 +17,26 @@ import Link from "@/BetterRouter/Link";
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import useAuthStore from "@/stores/useAuthStore";
 import { useInitAuth } from "@/hooks/queries/useAuthQueries";
+import useDialogStore from "@/stores/useDialogStore";
+import WorkspaceManagerContent from "./components/WorkspaceManagerModal";
+import WorkspaceSwitcher from "./components/WorkspaceSwitcher";
 
 export default function Sidebar({ className }) {
   const { isOpen } = useSidebar();
   const { logout, user, currentWorkspace } = useAuthStore();
   const { isSuccess: isAuthReady } = useInitAuth();
+  const openDialog = useDialogStore((s) => s.openDialog);
+
+  const openWorkspaceManager = () => {
+    setTimeout(() => {
+      openDialog({
+        type: 'dialog',
+        title: 'Workspaces',
+        content: <WorkspaceManagerContent />,
+        closeOnClickOutside: true,
+      });
+    }, 0);
+  };
   
   // Use Zustand store directly for sidebar data - updates immediately on delete
   const {
@@ -77,7 +93,11 @@ export default function Sidebar({ className }) {
                 <div className="flex flex-col justify-center">
                   <h5 className="text-xs font-semibold">{user?.name ? user.name : user?.email}</h5>
                   {currentWorkspace?.name ? (
-                    <span className="text-xs text-muted-foreground">{currentWorkspace.name}</span>
+                    <WorkspaceSwitcher>
+                      <button className="text-xs text-muted-foreground hover:text-foreground text-left truncate max-w-[120px]">
+                        {currentWorkspace.name}
+                      </button>
+                    </WorkspaceSwitcher>
                   ) : isSpacesLoading && (
                     <span className="text-xs text-muted-foreground">Setting up workspace...</span>
                   )}
@@ -94,6 +114,10 @@ export default function Sidebar({ className }) {
                   <DropdownMenuItem>
                     <Link href="/">Profile</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={openWorkspaceManager}>
+                    Workspaces
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     <Button variant="ghost" size="xs" onClick={logout}>
                       Logout

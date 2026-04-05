@@ -150,6 +150,11 @@ const useAuthStore = create(
         localStorage.setItem('currentWorkspace', JSON.stringify(workspace));
       },
 
+      setWorkspaces: (workspaces) => {
+        set({ workspaces });
+        localStorage.setItem('workspaces', JSON.stringify(workspaces));
+      },
+
       // Initialize from localStorage on mount (synchronous - no network call)
       // Server-side validation is handled separately via TanStack Query (useInitAuth)
       initializeAuth: () => {

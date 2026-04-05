@@ -90,14 +90,17 @@ function DialogInstance({ dialog }) {
   return (
     <Dialog open onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent
+        aria-describedby={dialog.description ? undefined : undefined}
         onInteractOutside={(e) => {
           if (!dialog.closeOnClickOutside) e.preventDefault();
         }}
       >
         <DialogHeader>
           <DialogTitle>{dialog.title}</DialogTitle>
-          {dialog.description && (
+          {dialog.description ? (
             <DialogDescription>{dialog.description}</DialogDescription>
+          ) : (
+            <DialogDescription className="sr-only" />
           )}
         </DialogHeader>
         {dialog.content}
