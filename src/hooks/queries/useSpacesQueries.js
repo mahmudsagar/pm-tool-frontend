@@ -50,7 +50,14 @@ export const useSearchWorkspaceMembers = (search) => {
     queryKey: ['workspace-members', 'search', search],
     queryFn: async () => {
       const result = await api.get(`${baseUrl}/v1/workspace/member?search=${encodeURIComponent(search)}`);
-      return result.data ?? [];
+      const d = result.data;
+      if (!d) return [];
+      // Flatten { owner, members } shape into a single array
+      if (Array.isArray(d)) return d;
+      const list = [];
+      if (d.owner) list.push(d.owner);
+      if (Array.isArray(d.members)) list.push(...d.members);
+      return list;
     },
     enabled: search.trim().length > 0,
     staleTime: 30 * 1000,
@@ -69,6 +76,27 @@ export const useSearchUsers = (search) => {
     },
     enabled: search.trim().length > 0,
     staleTime: 30 * 1000,
+  });
+};
+
+/**
+ * Query hook to get all workspace members
+ */
+export const useWorkspaceMembers = () => {
+  return useQuery({
+    queryKey: ['workspace-members'],
+    queryFn: async () => {
+      const result = await api.get(`${baseUrl}/v1/workspace/member`);
+      const d = result.data;
+      if (!d) return [];
+      // Flatten { owner, members } shape into a single array
+      if (Array.isArray(d)) return d;
+      const list = [];
+      if (d.owner) list.push(d.owner);
+      if (Array.isArray(d.members)) list.push(...d.members);
+      return list;
+    },
+    staleTime: 5 * 60 * 1000,
   });
 };
 

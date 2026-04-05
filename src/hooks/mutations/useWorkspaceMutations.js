@@ -46,6 +46,7 @@ export const useAddWorkspaceMember = () => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-members'] });
       toast({ title: 'Member added to workspace successfully' });
     },
 

@@ -6,7 +6,7 @@ import { baseUrl } from '@/utils/constants';
  * Fetch all teams for the current user
  */
 const fetchTeams = async () => {
-  const result = await api.get(`${baseUrl}/v1/team`);
+  const result = await api.get(`${baseUrl}/v1/workspace/team`);
   return result.data;
 };
 

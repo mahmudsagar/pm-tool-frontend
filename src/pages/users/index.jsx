@@ -57,7 +57,7 @@ import {
 } from '@/components/ui/command';
 import { PlusIcon, Pencil, Trash2, Check, ChevronsUpDown, XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUsers, useSearchUsers, useSearchWorkspaceMembers } from '@/hooks/queries/useSpacesQueries';
+import { useUsers, useWorkspaceMembers, useSearchUsers, useSearchWorkspaceMembers } from '@/hooks/queries/useSpacesQueries';
 import { useTeams } from '@/hooks/queries/useTeamsQueries';
 import { useCreateUser, useUpdateUser, useDeleteUser } from '@/hooks/mutations/useUsersMutations';
 import { useCreateTeam, useUpdateTeam, useDeleteTeam } from '@/hooks/mutations/useTeamsMutations';
@@ -203,7 +203,9 @@ function TeamFormDialog({ open, onOpenChange, team }) {
   const [memberSearch, setMemberSearch] = useState('');
   const [debouncedMemberSearch, setDebouncedMemberSearch] = useState('');
   const [memberDropdownOpen, setMemberDropdownOpen] = useState(false);
-  const [memberMap, setMemberMap] = useState({});
+  const [memberMap, setMemberMap] = useState(() =>
+    currentUser?._id ? { [currentUser._id]: currentUser } : {}
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedMemberSearch(memberSearch), 300);
@@ -330,14 +332,17 @@ function TeamFormDialog({ open, onOpenChange, team }) {
                 </div>
               )}
             </div>
-            {/* {form.shared_members.length > 0 && (
+            {form.shared_members.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {form.shared_members.map((memberId) => {
                   const u = memberMap[memberId];
+                  
                   return (
                     <Badge key={memberId} variant="secondary" className="flex items-center gap-1">
-                      {u?.email || memberId}
-                      {currentUser?._id !== memberId && (
+                      {u?.email || u?.name || memberId}
+                      {currentUser?._id === memberId ? (
+                        <span className="ml-1 text-xs text-muted-foreground">(you)</span>
+                      ) : (
                         <button type="button" onClick={() => removeMember(memberId)}>
                           <XIcon className="h-3 w-3" />
                         </button>
@@ -345,8 +350,8 @@ function TeamFormDialog({ open, onOpenChange, team }) {
                     </Badge>
                   );
                 })}
-              </div> 
-            )}*/}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -533,7 +538,7 @@ function DeleteConfirmDialog({ open, onOpenChange, onConfirm, count = 1, isPendi
 // ─── Members Tab ──────────────────────────────────────────────────────────────
 
 function MembersTab() {
-  const { data: users = [], isLoading } = useUsers();
+  const { data: users = [], isLoading } = useWorkspaceMembers();
   const deleteUser = useDeleteUser();
 
   const [selected, setSelected] = useState([]);
@@ -596,7 +601,6 @@ function MembersTab() {
             </TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -624,18 +628,8 @@ function MembersTab() {
                 </TableCell>
                 <TableCell className="font-medium">{user.name || '—'}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  {user.role && (
-                    <Badge variant="outline" className="capitalize">
-                      {user.role}
-                    </Badge>
-                  )}
-                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(user)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
                     <Button variant="destructive" size="sm" onClick={() => openDeleteSingle(user._id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>

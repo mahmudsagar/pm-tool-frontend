@@ -51,6 +51,7 @@ export const useDeleteUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['workspace-members'] });
       toast({ title: 'User deleted successfully' });
     },
     onError: (error) => {
