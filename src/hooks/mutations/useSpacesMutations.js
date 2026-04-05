@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -11,18 +12,7 @@ export const useCreateSpace = () => {
 
   return useMutation({
     mutationFn: async (spaceData) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/space`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(spaceData),
-      });
-      
-      if (!response.ok) throw new Error('Failed to create space');
-      const result = await response.json();
+      const result = await api.post(`${baseUrl}/v1/space`, spaceData);
       return result.data;
     },
     
@@ -50,18 +40,7 @@ export const useUpdateSpace = () => {
 
   return useMutation({
     mutationFn: async ({ spaceId, data }) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/space/${spaceId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update space');
-      const result = await response.json();
+      const result = await api.put(`${baseUrl}/v1/space/${spaceId}`, data);
       return result.data;
     },
     
@@ -90,17 +69,7 @@ export const useDeleteSpace = () => {
 
   return useMutation({
     mutationFn: async (spaceId) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/space/${spaceId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete space');
-      return response.json();
+      return api.delete(`${baseUrl}/v1/space/${spaceId}`);
     },
     
     onSuccess: () => {

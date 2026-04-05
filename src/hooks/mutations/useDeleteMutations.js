@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { baseUrl } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
+import useAuthStore from '@/stores/useAuthStore';
 
 /**
  * Universal delete mutation hook for all entity types
@@ -13,6 +14,7 @@ export const useDeleteEntity = () => {
   return useMutation({
     mutationFn: async ({ entityId, entityType }) => {
       const token = localStorage.getItem('token');
+      const { currentWorkspace } = useAuthStore.getState();
       
       // Determine the correct endpoint based on entity type
       let endpoint;
@@ -41,6 +43,7 @@ export const useDeleteEntity = () => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
+          ...(currentWorkspace?._id && { 'X-Workspace-ID': currentWorkspace._id }),
         },
       });
       

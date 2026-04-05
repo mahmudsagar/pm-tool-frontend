@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -11,18 +12,7 @@ export const useCreateTeam = () => {
 
   return useMutation({
     mutationFn: async (teamData) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/team`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(teamData),
-      });
-      
-      if (!response.ok) throw new Error('Failed to create team');
-      const result = await response.json();
+      const result = await api.post(`${baseUrl}/v1/team`, teamData);
       return result.data;
     },
     
@@ -50,18 +40,7 @@ export const useUpdateTeam = () => {
 
   return useMutation({
     mutationFn: async ({ teamId, data }) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/team/${teamId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update team');
-      const result = await response.json();
+      const result = await api.put(`${baseUrl}/v1/team/${teamId}`, data);
       return result.data;
     },
     
@@ -90,17 +69,7 @@ export const useDeleteTeam = () => {
 
   return useMutation({
     mutationFn: async (teamId) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/team/${teamId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete team');
-      return response.json();
+      return api.delete(`${baseUrl}/v1/team/${teamId}`);
     },
     
     onSuccess: () => {
@@ -127,18 +96,7 @@ export const useAddTeamMember = () => {
 
   return useMutation({
     mutationFn: async ({ teamId, userId }) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/team/${teamId}/members`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to add team member');
-      return response.json();
+      return api.post(`${baseUrl}/v1/team/${teamId}/members`, { userId });
     },
     
     onSuccess: (_, variables) => {
@@ -166,17 +124,7 @@ export const useRemoveTeamMember = () => {
 
   return useMutation({
     mutationFn: async ({ teamId, userId }) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/team/${teamId}/members/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to remove team member');
-      return response.json();
+      return api.delete(`${baseUrl}/v1/team/${teamId}/members/${userId}`);
     },
     
     onSuccess: (_, variables) => {

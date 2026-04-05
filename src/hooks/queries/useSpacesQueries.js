@@ -1,26 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
 
 /**
  * Fetch all spaces for the current user
  */
 const fetchSpaces = async (userId) => {
-  const token = localStorage.getItem('token');
-  
-  // Build URL with optional user_id query parameter
-  const url = userId 
+  const url = userId
     ? `${baseUrl}/v1/space?user_id=${userId}`
     : `${baseUrl}/v1/space`;
-  
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  
-  if (!response.ok) throw new Error('Failed to fetch spaces');
-  const result = await response.json();
+  const result = await api.get(url);
   return result.data;
 };
 
@@ -45,16 +34,7 @@ export const useSpaceById = (spaceId) => {
   return useQuery({
     queryKey: ['spaces', spaceId],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/space/${spaceId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch space');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/space/${spaceId}`);
       return result.data;
     },
     enabled: !!spaceId,
@@ -69,18 +49,7 @@ export const useSearchWorkspaceMembers = (search) => {
   return useQuery({
     queryKey: ['workspace-members', 'search', search],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(
-        `${baseUrl}/v1/workspace/member?search=${encodeURIComponent(search)}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) throw new Error('Failed to search workspace members');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/workspace/member?search=${encodeURIComponent(search)}`);
       return result.data ?? [];
     },
     enabled: search.trim().length > 0,
@@ -95,18 +64,7 @@ export const useSearchUsers = (search) => {
   return useQuery({
     queryKey: ['users', 'search', search],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(
-        `${baseUrl}/v1/user?search=${encodeURIComponent(search)}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) throw new Error('Failed to search users');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/user?search=${encodeURIComponent(search)}`);
       return result.data ?? [];
     },
     enabled: search.trim().length > 0,
@@ -121,16 +79,7 @@ export const useUsers = () => {
   return useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/user`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch users');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/user`);
       return result.data;
     },
     staleTime: 10 * 60 * 1000, // 10 minutes - users don't change often

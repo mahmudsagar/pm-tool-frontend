@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/utils/api';
 import { baseUrl, documentBaseUrl } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -11,18 +12,7 @@ export const useCreateFile = () => {
 
   return useMutation({
     mutationFn: async (fileData) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(documentBaseUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(fileData),
-      });
-      
-      if (!response.ok) throw new Error('Failed to create file');
-      const result = await response.json();
+      const result = await api.post(documentBaseUrl, fileData);
       return result.data;
     },
     
@@ -53,18 +43,7 @@ export const useUpdateFile = () => {
 
   return useMutation({
     mutationFn: async ({ fileId, data }) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/files/${fileId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update file');
-      const result = await response.json();
+      const result = await api.put(`${baseUrl}/v1/files/${fileId}`, data);
       return result.data;
     },
     
@@ -96,17 +75,7 @@ export const useDeleteFile = () => {
 
   return useMutation({
     mutationFn: async (fileId) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/files/${fileId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete file');
-      return response.json();
+      return api.delete(`${baseUrl}/v1/files/${fileId}`);
     },
     
     onMutate: async (fileId) => {
@@ -153,18 +122,8 @@ export const useUpdateDocument = () => {
 
   return useMutation({
     mutationFn: async ({ documentId, content }) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(documentBaseUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ id: documentId, content }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update document');
-      return response.json();
+      const result = await api.put(documentBaseUrl, { id: documentId, content });
+      return result;
     },
 
     // Optimistically update the cache before the API responds so the UI
@@ -215,17 +174,7 @@ export const useDeleteDocument = () => {
 
   return useMutation({
     mutationFn: async (documentId) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${documentBaseUrl}?id=${documentId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete document');
-      return response.json();
+      return api.delete(`${documentBaseUrl}?id=${documentId}`);
     },
     
     onSuccess: () => {

@@ -27,6 +27,7 @@ export const useAddWorkspaceMember = () => {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
+          'X-Workspace-ID': currentWorkspace._id,
         },
         body: JSON.stringify(payload),
       });

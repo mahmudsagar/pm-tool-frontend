@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -11,18 +12,7 @@ export const useCreateBoardTask = () => {
 
   return useMutation({
     mutationFn: async ({ boardId, taskData }) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/page/document`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(taskData),
-      });
-      
-      if (!response.ok) throw new Error('Failed to create task');
-      const result = await response.json();
+      const result = await api.post(`${baseUrl}/v1/page/document`, taskData);
       return result.data;
     },
     
@@ -59,18 +49,7 @@ export const useUpdateBoard = () => {
 
   return useMutation({
     mutationFn: async ({ boardId, data }) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/board?id=${boardId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) throw new Error('Failed to update board');
-      const result = await response.json();
+      const result = await api.put(`${baseUrl}/v1/board?id=${boardId}`, data);
       return result.data;
     },
     
@@ -99,17 +78,7 @@ export const useDeleteBoard = () => {
 
   return useMutation({
     mutationFn: async (boardId) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/board?id=${boardId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to delete board');
-      return response.json();
+      return api.delete(`${baseUrl}/v1/board?id=${boardId}`);
     },
     
     onSuccess: () => {

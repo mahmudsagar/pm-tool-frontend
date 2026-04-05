@@ -221,7 +221,12 @@ function TeamFormDialog({ open, onOpenChange, team }) {
       });
       setMemberSearch('');
       setDebouncedMemberSearch('');
-      setMemberMap({});
+      // Seed map with current user so their badge shows email, not raw ID
+      if (currentUser?._id) {
+        setMemberMap({ [currentUser._id]: currentUser });
+      } else {
+        setMemberMap({});
+      }
     }
     onOpenChange(isOpen);
   };
@@ -325,7 +330,7 @@ function TeamFormDialog({ open, onOpenChange, team }) {
                 </div>
               )}
             </div>
-            {form.shared_members.length > 0 && (
+            {/* {form.shared_members.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {form.shared_members.map((memberId) => {
                   const u = memberMap[memberId];
@@ -340,8 +345,8 @@ function TeamFormDialog({ open, onOpenChange, team }) {
                     </Badge>
                   );
                 })}
-              </div>
-            )}
+              </div> 
+            )}*/}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
 
 /**
@@ -8,16 +9,7 @@ export const useBoard = (boardId) => {
   return useQuery({
     queryKey: ['boards', boardId],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/board?id=${boardId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch board');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/board?id=${boardId}`);
       return result.data;
     },
     enabled: !!boardId,
@@ -32,16 +24,7 @@ export const useBoards = () => {
   return useQuery({
     queryKey: ['boards'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/board`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch boards');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/board`);
       return result.data;
     },
     staleTime: 3 * 60 * 1000,

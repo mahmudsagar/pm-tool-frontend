@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -8,18 +9,7 @@ export const useCreateUser = () => {
 
   return useMutation({
     mutationFn: async (userData) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) throw new Error('Failed to create user');
-      const result = await response.json();
+      const result = await api.post(`${baseUrl}/v1/user`, userData);
       return result.data;
     },
     onSuccess: () => {
@@ -38,18 +28,7 @@ export const useUpdateUser = () => {
 
   return useMutation({
     mutationFn: async ({ userId, data }) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/user/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error('Failed to update user');
-      const result = await response.json();
+      const result = await api.put(`${baseUrl}/v1/user/${userId}`, data);
       return result.data;
     },
     onSuccess: () => {
@@ -68,17 +47,7 @@ export const useDeleteUser = () => {
 
   return useMutation({
     mutationFn: async (userId) => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/user/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to delete user');
-      return response.json();
+      return api.delete(`${baseUrl}/v1/user/${userId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });

@@ -1,20 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
+import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
 
 /**
  * Fetch all teams for the current user
  */
 const fetchTeams = async () => {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${baseUrl}/v1/team`, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-  
-  if (!response.ok) throw new Error('Failed to fetch teams');
-  const result = await response.json();
+  const result = await api.get(`${baseUrl}/v1/team`);
   return result.data;
 };
 
@@ -36,16 +28,7 @@ export const useTeamById = (teamId) => {
   return useQuery({
     queryKey: ['teams', teamId],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/team/${teamId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch team');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/team/${teamId}`);
       return result.data;
     },
     enabled: !!teamId,
@@ -60,16 +43,7 @@ export const useTeamMembers = (teamId) => {
   return useQuery({
     queryKey: ['teams', teamId, 'members'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${baseUrl}/v1/team/${teamId}/members`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch team members');
-      const result = await response.json();
+      const result = await api.get(`${baseUrl}/v1/team/${teamId}/members`);
       return result.data;
     },
     enabled: !!teamId,
