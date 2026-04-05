@@ -40,8 +40,6 @@ export default function Sidebar({ className }) {
   
   // Use Zustand store directly for sidebar data - updates immediately on delete
   const {
-    publicSpaces,
-    privateSpaces,
     isSpacesLoading,
     hasInitializedSpaces,
     syncSpacesFromAPI,

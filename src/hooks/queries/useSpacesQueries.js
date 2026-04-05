@@ -63,6 +63,58 @@ export const useSpaceById = (spaceId) => {
 };
 
 /**
+ * Query hook to search workspace members by email/name
+ */
+export const useSearchWorkspaceMembers = (search) => {
+  return useQuery({
+    queryKey: ['workspace-members', 'search', search],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${baseUrl}/v1/workspace/member?search=${encodeURIComponent(search)}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) throw new Error('Failed to search workspace members');
+      const result = await response.json();
+      return result.data ?? [];
+    },
+    enabled: search.trim().length > 0,
+    staleTime: 30 * 1000,
+  });
+};
+
+/**
+ * Query hook to search users by email/name (for workspace member picker)
+ */
+export const useSearchUsers = (search) => {
+  return useQuery({
+    queryKey: ['users', 'search', search],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `${baseUrl}/v1/user?search=${encodeURIComponent(search)}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!response.ok) throw new Error('Failed to search users');
+      const result = await response.json();
+      return result.data ?? [];
+    },
+    enabled: search.trim().length > 0,
+    staleTime: 30 * 1000,
+  });
+};
+
+/**
  * Query hook to get users (for space management)
  */
 export const useUsers = () => {

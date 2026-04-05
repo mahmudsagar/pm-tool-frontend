@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Tabs,
   TabsContent,
@@ -57,10 +57,11 @@ import {
 } from '@/components/ui/command';
 import { PlusIcon, Pencil, Trash2, Check, ChevronsUpDown, XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUsers } from '@/hooks/queries/useSpacesQueries';
+import { useUsers, useSearchUsers, useSearchWorkspaceMembers } from '@/hooks/queries/useSpacesQueries';
 import { useTeams } from '@/hooks/queries/useTeamsQueries';
 import { useCreateUser, useUpdateUser, useDeleteUser } from '@/hooks/mutations/useUsersMutations';
 import { useCreateTeam, useUpdateTeam, useDeleteTeam } from '@/hooks/mutations/useTeamsMutations';
+import { useAddWorkspaceMember } from '@/hooks/mutations/useWorkspaceMutations';
 import useAuthStore from '@/stores/useAuthStore';
 
 // ─── User Form ────────────────────────────────────────────────────────────────
@@ -188,18 +189,28 @@ function UserFormDialog({ open, onOpenChange, user }) {
 
 // ─── Team Form Dialog ─────────────────────────────────────────────────────────
 
-function TeamFormDialog({ open, onOpenChange, team, allUsers }) {
+function TeamFormDialog({ open, onOpenChange, team }) {
   const isEdit = !!team;
   const { user: currentUser } = useAuthStore();
   const createTeam = useCreateTeam();
   const updateTeam = useUpdateTeam();
-  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const [form, setForm] = useState({
     name: team?.name || '',
     description: team?.description || '',
     shared_members: team?.shared_members || (currentUser?._id ? [currentUser._id] : []),
   });
+  const [memberSearch, setMemberSearch] = useState('');
+  const [debouncedMemberSearch, setDebouncedMemberSearch] = useState('');
+  const [memberDropdownOpen, setMemberDropdownOpen] = useState(false);
+  const [memberMap, setMemberMap] = useState({});
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedMemberSearch(memberSearch), 300);
+    return () => clearTimeout(timer);
+  }, [memberSearch]);
+
+  const { data: memberResults = [], isFetching: fetchingMembers } = useSearchWorkspaceMembers(debouncedMemberSearch);
 
   const handleOpen = (isOpen) => {
     if (isOpen) {
@@ -208,23 +219,27 @@ function TeamFormDialog({ open, onOpenChange, team, allUsers }) {
         description: team?.description || '',
         shared_members: team?.shared_members || (currentUser?._id ? [currentUser._id] : []),
       });
+      setMemberSearch('');
+      setDebouncedMemberSearch('');
+      setMemberMap({});
     }
     onOpenChange(isOpen);
   };
 
-  const addMember = (userId) => {
-    if (!form.shared_members.includes(userId)) {
-      setForm((prev) => ({ ...prev, shared_members: [...prev.shared_members, userId] }));
-    }
-    setPopoverOpen(false);
+  const toggleMember = (u) => {
+    setMemberMap((prev) => ({ ...prev, [u._id]: u }));
+    setForm((prev) => ({
+      ...prev,
+      shared_members: prev.shared_members.includes(u._id)
+        ? prev.shared_members.filter((id) => id !== u._id)
+        : [...prev.shared_members, u._id],
+    }));
   };
 
   const removeMember = (userId) => {
     if (currentUser && userId === currentUser._id) return;
     setForm((prev) => ({ ...prev, shared_members: prev.shared_members.filter((id) => id !== userId) }));
   };
-
-  const getUserById = (userId) => allUsers?.find((u) => u._id === userId);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -239,6 +254,7 @@ function TeamFormDialog({ open, onOpenChange, team, allUsers }) {
   };
 
   const isPending = createTeam.isPending || updateTeam.isPending;
+  const showMemberDropdown = memberDropdownOpen && debouncedMemberSearch.length > 0;
 
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
@@ -267,41 +283,52 @@ function TeamFormDialog({ open, onOpenChange, team, allUsers }) {
           </div>
           <div className="space-y-2">
             <Label>Members</Label>
-            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" role="combobox" className="w-full justify-between">
-                  Add members...
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Search by email..." />
-                  <CommandEmpty>No user found.</CommandEmpty>
-                  <CommandGroup className="max-h-48 overflow-y-auto">
-                    {(allUsers || []).map((u) => (
-                      <CommandItem
-                        key={u._id}
-                        value={u.email || u._id}
-                        onSelect={() => addMember(u._id)}
-                      >
-                        <Check
-                          className={cn(
-                            'mr-2 h-4 w-4',
-                            form.shared_members.includes(u._id) ? 'opacity-100' : 'opacity-0'
-                          )}
-                        />
-                        {u.email || u._id}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
+            <div className="relative">
+              <Input
+                placeholder="Search workspace members..."
+                value={memberSearch}
+                onChange={(e) => { setMemberSearch(e.target.value); setMemberDropdownOpen(true); }}
+                onFocus={() => setMemberDropdownOpen(true)}
+                onBlur={() => setTimeout(() => setMemberDropdownOpen(false), 150)}
+                autoComplete="off"
+              />
+              {showMemberDropdown && (
+                <div className="absolute z-50 w-full mt-1 rounded-md border bg-popover shadow-md">
+                  {fetchingMembers ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">Searching...</div>
+                  ) : memberResults.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">No members found.</div>
+                  ) : (
+                    <ul className="max-h-48 overflow-y-auto py-1">
+                      {memberResults.map((u) => (
+                        <li
+                          key={u._id}
+                          onMouseDown={(e) => { e.preventDefault(); toggleMember(u); }}
+                          className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Check
+                            className={cn(
+                              'h-4 w-4 shrink-0',
+                              form.shared_members.includes(u._id) ? 'opacity-100' : 'opacity-0'
+                            )}
+                          />
+                          <div className="flex flex-col min-w-0">
+                            <span className="truncate">{u.email}</span>
+                            {u.name && (
+                              <span className="text-xs text-muted-foreground truncate">{u.name}</span>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
             {form.shared_members.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {form.shared_members.map((memberId) => {
-                  const u = getUserById(memberId);
+                  const u = memberMap[memberId];
                   return (
                     <Badge key={memberId} variant="secondary" className="flex items-center gap-1">
                       {u?.email || memberId}
@@ -322,6 +349,144 @@ function TeamFormDialog({ open, onOpenChange, team, allUsers }) {
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? 'Saving...' : isEdit ? 'Update' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Add Workspace Member Dialog ─────────────────────────────────────────────
+
+function AddWorkspaceMemberDialog({ open, onOpenChange }) {
+  const addMember = useAddWorkspaceMember();
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  /** @type {[Array<{_id: string, email: string, name?: string}>, Function]} */
+  const [selected, setSelected] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data: searchResults = [], isFetching } = useSearchUsers(debouncedSearch);
+
+  const handleOpen = (isOpen) => {
+    if (!isOpen) {
+      setSearch('');
+      setDebouncedSearch('');
+      setSelected([]);
+      setDropdownOpen(false);
+    }
+    onOpenChange(isOpen);
+  };
+
+  const toggleUser = (user) => {
+    setSelected((prev) =>
+      prev.some((u) => u._id === user._id)
+        ? prev.filter((u) => u._id !== user._id)
+        : [...prev, user]
+    );
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    let completed = 0;
+    selected.forEach((user) => {
+      addMember.mutate(
+        { email: user.email },
+        {
+          onSettled: () => {
+            completed++;
+            if (completed === selected.length) handleOpen(false);
+          },
+        }
+      );
+    });
+  };
+
+  const showDropdown = dropdownOpen && (isFetching || debouncedSearch.length > 0);
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Member to Workspace</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Search users by email</Label>
+            <div className="relative">
+              <Input
+                placeholder="Type email to search..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setDropdownOpen(true);
+                }}
+                onFocus={() => setDropdownOpen(true)}
+                onBlur={() => setTimeout(() => setDropdownOpen(false), 150)}
+                autoComplete="off"
+              />
+              {showDropdown && (
+                <div className="absolute z-50 w-full mt-1 rounded-md border bg-popover shadow-md">
+                  {isFetching ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">Searching...</div>
+                  ) : searchResults.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">No users found.</div>
+                  ) : (
+                    <ul className="max-h-48 overflow-y-auto py-1">
+                      {searchResults.map((u) => (
+                        <li
+                          key={u._id}
+                          onMouseDown={(e) => { e.preventDefault(); toggleUser(u); }}
+                          className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Check
+                            className={cn(
+                              'h-4 w-4 shrink-0',
+                              selected.some((s) => s._id === u._id) ? 'opacity-100' : 'opacity-0'
+                            )}
+                          />
+                          <div className="flex flex-col min-w-0">
+                            <span className="truncate">{u.email}</span>
+                            {u.name && (
+                              <span className="text-xs text-muted-foreground truncate">{u.name}</span>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {selected.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {selected.map((u) => (
+                <Badge key={u._id} variant="secondary" className="flex items-center gap-1">
+                  {u.email}
+                  <button type="button" onClick={() => toggleUser(u)}>
+                    <XIcon className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => handleOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={addMember.isPending || selected.length === 0}>
+              {addMember.isPending
+                ? 'Adding...'
+                : `Add ${selected.length > 1 ? `${selected.length} ` : ''}Member${selected.length !== 1 ? 's' : ''}`}
             </Button>
           </DialogFooter>
         </form>
@@ -367,8 +532,8 @@ function MembersTab() {
   const deleteUser = useDeleteUser();
 
   const [selected, setSelected] = useState([]);
-  const [userDialog, setUserDialog] = useState({ open: false, user: null });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, ids: [] });
+  const [memberDialog, setMemberDialog] = useState(false);
 
   const toggleSelect = (id) => {
     setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
@@ -378,8 +543,7 @@ function MembersTab() {
     setSelected(selected.length === users.length ? [] : users.map((u) => u._id));
   };
 
-  const openAdd = () => setUserDialog({ open: true, user: null });
-  const openEdit = (user) => setUserDialog({ open: true, user });
+  const openEdit = (user) => {};
   const openDeleteSingle = (id) => setDeleteDialog({ open: true, ids: [id] });
   const openDeleteBulk = () => setDeleteDialog({ open: true, ids: selected });
 
@@ -410,7 +574,7 @@ function MembersTab() {
             </Button>
           )}
         </div>
-        <Button onClick={openAdd}>
+        <Button onClick={() => setMemberDialog(true)}>
           <PlusIcon className="mr-2 h-4 w-4" />
           Add Member
         </Button>
@@ -478,10 +642,9 @@ function MembersTab() {
         </TableBody>
       </Table>
 
-      <UserFormDialog
-        open={userDialog.open}
-        onOpenChange={(open) => setUserDialog((prev) => ({ ...prev, open }))}
-        user={userDialog.user}
+      <AddWorkspaceMemberDialog
+        open={memberDialog}
+        onOpenChange={setMemberDialog}
       />
 
       <DeleteConfirmDialog
@@ -499,7 +662,6 @@ function MembersTab() {
 
 function TeamsTab() {
   const { data: teams = [], isLoading } = useTeams();
-  const { data: allUsers = [] } = useUsers();
   const deleteTeam = useDeleteTeam();
 
   const [selected, setSelected] = useState([]);
@@ -614,7 +776,6 @@ function TeamsTab() {
         open={teamDialog.open}
         onOpenChange={(open) => setTeamDialog((prev) => ({ ...prev, open }))}
         team={teamDialog.team}
-        allUsers={allUsers}
       />
 
       <DeleteConfirmDialog
