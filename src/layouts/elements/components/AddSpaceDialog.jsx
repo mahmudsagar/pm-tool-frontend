@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from "react-hook-form";
-import { Plus } from "lucide-react";
+import { Plus, Check, XIcon } from "lucide-react";
 import useApi from '@/lib/dataFetcher';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { baseUrl } from '@/utils/constants';
-import { RcMultiSelect } from '@/components/ui/rc-multi-select';
+
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { useSearchWorkspaceMembers } from '@/hooks/queries/useSpacesQueries';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import {
   Dialog,
@@ -42,14 +45,18 @@ const AddSpaceDialog = ({
   parentId = null
 }) => {
   const [loading, setLoading] = useState(false);
-  const { data: users, callApi: userCallApi } = useApi();
   const { data: teams, callApi: teamCallApi } = useApi();
-  const [userSearchQuery, setUserSearchQuery] = useState('');
-  const [teamSearchQuery, setTeamSearchQuery] = useState('');
-  const [searchedUsers, setSearchedUsers] = useState([]);
+  const [teamSearch, setTeamSearch] = useState('');
+  const [debouncedTeamSearch, setDebouncedTeamSearch] = useState('');
   const [searchedTeams, setSearchedTeams] = useState([]);
-  const usersData = userSearchQuery ? ensureArray(searchedUsers) : ensureArray(users);
-  const teamsData = teamSearchQuery ? ensureArray(searchedTeams) : ensureArray(teams);
+  const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
+  const [teamMap, setTeamMap] = useState({});
+  const [fetchingTeams, setFetchingTeams] = useState(false);
+  const teamsData = debouncedTeamSearch ? ensureArray(searchedTeams) : ensureArray(teams);
+  const [memberSearch, setMemberSearch] = useState('');
+  const [debouncedMemberSearch, setDebouncedMemberSearch] = useState('');
+  const [memberDropdownOpen, setMemberDropdownOpen] = useState(false);
+  const [memberMap, setMemberMap] = useState({});
   const { syncSpacesFromAPI, updateHandler } = useFileManagerStore(state => state);
 
   const form = useForm({
@@ -63,7 +70,7 @@ const AddSpaceDialog = ({
     }
   });
 
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
   const userID = user?._id;
   
   // TanStack Query mutations and client
@@ -75,58 +82,64 @@ const AddSpaceDialog = ({
     if (isOpen) {
       (async () => {
         try {
-          await userCallApi(baseUrl + '/v1/user');
           await teamCallApi(baseUrl + '/v1/team?user_id=' + userID);
         } catch (error) {
           console.error("Error fetching data:", error);
         }
       })();
     }
-  }, [isOpen, userCallApi, teamCallApi, userID]);
+  }, [isOpen, teamCallApi, userID]);
 
-  const { token } = useAuthStore();
-
-  // Debounced search for users
+  // Debounced search for workspace members
   useEffect(() => {
-    if (!userSearchQuery || userSearchQuery.length < 2) {
-      setSearchedUsers([]);
-      return;
-    }
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `${baseUrl}/v1/user?search=${encodeURIComponent(userSearchQuery)}`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        );
-        const result = await response.json();
-        if (result.data) {
-          setSearchedUsers(result.data);
-        }
-      } catch (error) {
-        console.error('Error searching users:', error);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [userSearchQuery, token]);
+    const timer = setTimeout(() => setDebouncedMemberSearch(memberSearch), 300);
+    return () => clearTimeout(timer);
+  }, [memberSearch]);
 
   // Debounced search for teams
   useEffect(() => {
-    if (!teamSearchQuery || teamSearchQuery.length < 2) {
+    const timer = setTimeout(() => setDebouncedTeamSearch(teamSearch), 300);
+    return () => clearTimeout(timer);
+  }, [teamSearch]);
+
+  const { data: memberResults = [], isFetching: fetchingMembers } = useSearchWorkspaceMembers(debouncedMemberSearch);
+
+  const toggleMemberInForm = (u) => {
+    setMemberMap((prev) => ({ ...prev, [u._id]: u }));
+    const current = form.getValues('shared_members');
+    form.setValue(
+      'shared_members',
+      current.includes(u._id)
+        ? current.filter((id) => id !== u._id)
+        : [...current, u._id],
+      { shouldDirty: true }
+    );
+  };
+
+  const toggleTeamInForm = (team) => {
+    setTeamMap((prev) => ({ ...prev, [team._id]: team }));
+    const current = form.getValues('shared_teams');
+    form.setValue(
+      'shared_teams',
+      current.includes(team._id)
+        ? current.filter((id) => id !== team._id)
+        : [...current, team._id],
+      { shouldDirty: true }
+    );
+  };
+
+  // Fetch teams when debouncedTeamSearch changes
+  useEffect(() => {
+    if (!debouncedTeamSearch || debouncedTeamSearch.length < 2) {
       setSearchedTeams([]);
       return;
     }
 
-    const timeoutId = setTimeout(async () => {
+    const fetchTeams = async () => {
+      setFetchingTeams(true);
       try {
         const response = await fetch(
-          `${baseUrl}/v1/team?user_id=${userID}&search=${encodeURIComponent(teamSearchQuery)}`,
+          `${baseUrl}/v1/team?user_id=${userID}&search=${encodeURIComponent(debouncedTeamSearch)}`,
           {
             headers: {
               'Content-Type': 'application/json',
@@ -140,11 +153,13 @@ const AddSpaceDialog = ({
         }
       } catch (error) {
         console.error('Error searching teams:', error);
+      } finally {
+        setFetchingTeams(false);
       }
-    }, 300);
+    };
 
-    return () => clearTimeout(timeoutId);
-  }, [teamSearchQuery, userID, token]);
+    fetchTeams();
+  }, [debouncedTeamSearch, userID, token]);
 
   // Update form when initialData changes (for edit mode)
   useEffect(() => {
@@ -220,6 +235,12 @@ const AddSpaceDialog = ({
           shared_members: [],
           shared_teams: []
         });
+        setMemberSearch('');
+        setDebouncedMemberSearch('');
+        setMemberMap({});
+        setTeamSearch('');
+        setDebouncedTeamSearch('');
+        setTeamMap({});
       }
       setIsOpen(open);
     }}>
@@ -291,14 +312,66 @@ const AddSpaceDialog = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Shared Members</FormLabel>
-                        <RcMultiSelect
-                          options={Array.isArray(usersData) ? usersData.map(user => ({ value: user._id, label: user.email })) : []}
-                          value={field.value}
-                          onChange={(value) => field.onChange(value)}
-                          onSearchChange={setUserSearchQuery}
-                          placeholder="Search and select members"
-                          searchPlaceholder="Type to search members..."
-                        />
+                        <div className="relative">
+                          <Input
+                            placeholder="Search workspace members..."
+                            value={memberSearch}
+                            onChange={(e) => { setMemberSearch(e.target.value); setMemberDropdownOpen(true); }}
+                            onFocus={() => setMemberDropdownOpen(true)}
+                            onBlur={() => setTimeout(() => setMemberDropdownOpen(false), 150)}
+                            autoComplete="off"
+                          />
+                          {memberDropdownOpen && debouncedMemberSearch.length > 0 && (
+                            <div className="absolute z-50 w-full mt-1 rounded-md border bg-popover shadow-md">
+                              {fetchingMembers ? (
+                                <div className="px-3 py-2 text-sm text-muted-foreground">Searching...</div>
+                              ) : memberResults.length === 0 ? (
+                                <div className="px-3 py-2 text-sm text-muted-foreground">No members found.</div>
+                              ) : (
+                                <ul className="max-h-48 overflow-y-auto py-1">
+                                  {memberResults.map((u) => (
+                                    <li
+                                      key={u._id}
+                                      onMouseDown={(e) => { e.preventDefault(); toggleMemberInForm(u); }}
+                                      className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                                    >
+                                      <Check
+                                        className={cn(
+                                          'h-4 w-4 shrink-0',
+                                          field.value.includes(u._id) ? 'opacity-100' : 'opacity-0'
+                                        )}
+                                      />
+                                      <div className="flex flex-col min-w-0">
+                                        <span className="truncate">{u.email}</span>
+                                        {u.name && (
+                                          <span className="text-xs text-muted-foreground truncate">{u.name}</span>
+                                        )}
+                                      </div>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {field.value.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {field.value.map((memberId) => {
+                              const u = memberMap[memberId];
+                              return (
+                                <Badge key={memberId} variant="secondary" className="flex items-center gap-1">
+                                  {u?.email || u?.name || memberId}
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => { e.preventDefault(); field.onChange(field.value.filter((id) => id !== memberId)); }}
+                                  >
+                                    <XIcon className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -310,14 +383,61 @@ const AddSpaceDialog = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Shared Teams</FormLabel>
-                        <RcMultiSelect
-                          options={Array.isArray(teamsData) ? teamsData?.map(team => ({ value: team._id, label: team.name })) : []}
-                          value={field.value}
-                          onChange={(value) => field.onChange(value)}
-                          onSearchChange={setTeamSearchQuery}
-                          placeholder="Search and select teams"
-                          searchPlaceholder="Type to search teams..."
-                        />
+                        <div className="relative">
+                          <Input
+                            placeholder="Search teams..."
+                            value={teamSearch}
+                            onChange={(e) => { setTeamSearch(e.target.value); setTeamDropdownOpen(true); }}
+                            onFocus={() => setTeamDropdownOpen(true)}
+                            onBlur={() => setTimeout(() => setTeamDropdownOpen(false), 150)}
+                            autoComplete="off"
+                          />
+                          {teamDropdownOpen && (
+                            <div className="absolute z-50 w-full mt-1 rounded-md border bg-popover shadow-md">
+                              {fetchingTeams ? (
+                                <div className="px-3 py-2 text-sm text-muted-foreground">Searching...</div>
+                              ) : teamsData.length === 0 ? (
+                                <div className="px-3 py-2 text-sm text-muted-foreground">No teams found.</div>
+                              ) : (
+                                <ul className="max-h-48 overflow-y-auto py-1">
+                                  {teamsData.map((team) => (
+                                    <li
+                                      key={team._id}
+                                      onMouseDown={(e) => { e.preventDefault(); toggleTeamInForm(team); }}
+                                      className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                                    >
+                                      <Check
+                                        className={cn(
+                                          'h-4 w-4 shrink-0',
+                                          field.value.includes(team._id) ? 'opacity-100' : 'opacity-0'
+                                        )}
+                                      />
+                                      <span className="truncate">{team.name}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        {field.value.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {field.value.map((teamId) => {
+                              const t = teamMap[teamId];
+                              return (
+                                <Badge key={teamId} variant="secondary" className="flex items-center gap-1">
+                                  {t?.name || teamId}
+                                  <button
+                                    type="button"
+                                    onMouseDown={(e) => { e.preventDefault(); field.onChange(field.value.filter((id) => id !== teamId)); }}
+                                  >
+                                    <XIcon className="h-3 w-3" />
+                                  </button>
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
