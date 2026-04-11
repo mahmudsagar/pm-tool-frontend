@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
-import Link from '@/BetterRouter/Link';
+// eslint-disable-next-line no-restricted-imports
+import { Link } from 'react-router-dom';
 import FolderMenu from './DropdownMenuItems/FolderMenu';
 import EllipsisTooltip from '@/components/common/EllipsisTooltip';
 import ShowIcon from '@/components/common/ShowIcon';
@@ -16,7 +17,7 @@ function DocStructure({
   className, 
   dropdownOpenStates, 
   handleDropdownToggle 
-}) {  
+}) {
   const getLinkPath = () => {
     switch (docType) {
       case 'page':
