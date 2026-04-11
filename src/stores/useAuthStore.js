@@ -155,6 +155,11 @@ const useAuthStore = create(
         if (user) localStorage.setItem('user', JSON.stringify(user));
       },
 
+      isOwner: () => {
+        const { currentWorkspace } = get();
+        return currentWorkspace?.role === 'owner';
+      },
+
       setCurrentWorkspace: (workspace) => {
         set({ currentWorkspace: workspace });
         localStorage.setItem('currentWorkspace', JSON.stringify(workspace));

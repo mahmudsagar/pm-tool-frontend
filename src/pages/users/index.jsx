@@ -540,6 +540,8 @@ function DeleteConfirmDialog({ open, onOpenChange, onConfirm, count = 1, isPendi
 function MembersTab() {
   const { data: users = [], isLoading } = useWorkspaceMembers();
   const deleteUser = useDeleteUser();
+  const { isOwner } = useAuthStore();
+  const canManage = isOwner();
 
   const [selected, setSelected] = useState([]);
   const [deleteDialog, setDeleteDialog] = useState({ open: false, ids: [] });
@@ -577,31 +579,35 @@ function MembersTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          {selected.length > 0 && (
+          {canManage && selected.length > 0 && (
             <Button variant="destructive" size="sm" onClick={openDeleteBulk}>
               <Trash2 className="mr-2 h-4 w-4" />
               Delete {selected.length} selected
             </Button>
           )}
         </div>
-        <Button onClick={() => setMemberDialog(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" />
-          Add Member
-        </Button>
+        {canManage && (
+          <Button onClick={() => setMemberDialog(true)}>
+            <PlusIcon className="mr-2 h-4 w-4" />
+            Add Member
+          </Button>
+        )}
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-10">
-              <Checkbox
-                checked={users.length > 0 && selected.length === users.length}
-                onCheckedChange={toggleAll}
-              />
-            </TableHead>
+            {canManage && (
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={users.length > 0 && selected.length === users.length}
+                  onCheckedChange={toggleAll}
+                />
+              </TableHead>
+            )}
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            {canManage && <TableHead className="text-right">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -620,21 +626,25 @@ function MembersTab() {
           ) : (
             users.map((user) => (
               <TableRow key={user._id}>
-                <TableCell>
-                  <Checkbox
-                    checked={selected.includes(user._id)}
-                    onCheckedChange={() => toggleSelect(user._id)}
-                  />
-                </TableCell>
+                {canManage && (
+                  <TableCell>
+                    <Checkbox
+                      checked={selected.includes(user._id)}
+                      onCheckedChange={() => toggleSelect(user._id)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="font-medium">{user.name || '—'}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="destructive" size="sm" onClick={() => openDeleteSingle(user._id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+                {canManage && (
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="destructive" size="sm" onClick={() => openDeleteSingle(user._id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
@@ -662,6 +672,8 @@ function MembersTab() {
 function TeamsTab() {
   const { data: teams = [], isLoading } = useTeams();
   const deleteTeam = useDeleteTeam();
+  const { isOwner } = useAuthStore();
+  const canManage = isOwner();
 
   const [selected, setSelected] = useState([]);
   const [teamDialog, setTeamDialog] = useState({ open: false, team: null });
@@ -700,32 +712,36 @@ function TeamsTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          {selected.length > 0 && (
+          {canManage && selected.length > 0 && (
             <Button variant="destructive" size="sm" onClick={openDeleteBulk}>
               <Trash2 className="mr-2 h-4 w-4" />
               Delete {selected.length} selected
             </Button>
           )}
         </div>
-        <Button onClick={openAdd}>
-          <PlusIcon className="mr-2 h-4 w-4" />
-          Add Team
-        </Button>
+        {canManage && (
+          <Button onClick={openAdd}>
+            <PlusIcon className="mr-2 h-4 w-4" />
+            Add Team
+          </Button>
+        )}
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-10">
-              <Checkbox
-                checked={teams.length > 0 && selected.length === teams.length}
-                onCheckedChange={toggleAll}
-              />
-            </TableHead>
+            {canManage && (
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={teams.length > 0 && selected.length === teams.length}
+                  onCheckedChange={toggleAll}
+                />
+              </TableHead>
+            )}
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Members</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            {canManage && <TableHead className="text-right">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -744,27 +760,31 @@ function TeamsTab() {
           ) : (
             teams.map((team) => (
               <TableRow key={team._id}>
-                <TableCell>
-                  <Checkbox
-                    checked={selected.includes(team._id)}
-                    onCheckedChange={() => toggleSelect(team._id)}
-                  />
-                </TableCell>
+                {canManage && (
+                  <TableCell>
+                    <Checkbox
+                      checked={selected.includes(team._id)}
+                      onCheckedChange={() => toggleSelect(team._id)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="font-medium">{team.name}</TableCell>
                 <TableCell className="max-w-xs truncate text-muted-foreground">
                   {team.description || '—'}
                 </TableCell>
                 <TableCell>{team.shared_members?.length || 0}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(team)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => openDeleteSingle(team._id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+                {canManage && (
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => openEdit(team)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => openDeleteSingle(team._id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
