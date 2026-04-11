@@ -26,6 +26,7 @@ import FolderMenu from "./DropdownMenuItems/FolderMenu";
 import DocStructure from "./DocStructure";
 import { baseUrl } from '@/utils/constants';
 import { api } from '@/utils/api';
+import { useQueryClient } from '@tanstack/react-query';
 import EllipsisTooltip from "@/components/common/EllipsisTooltip";
 import ShowIcon from "@/components/common/ShowIcon";
 
@@ -38,6 +39,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
   const { storeDocuments, documents } = useFileManagerStore(state => state);    
+  const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   useEffect(() => {
     if (isOpen) {
@@ -56,29 +58,24 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
   };  
 
   const handleFolderClick = async (id, type) => {    
-    let endPoint;
     setOpenItem(openItem === id ? "" : id);
-    
-    if (type === "folder"){
-      endPoint = `/v1/folder?id=${id}`;
-    } else if (type === "group"){
-      endPoint = `/v1/group?id=${id}`;      
-    } else {
-      return { error: "Invalid filetype specified!" };
-    }
     
     if (!documents[id]) {
       setLoading(true);
       try {
-        const res = await api.get(baseUrl + endPoint);
-        storeDocuments(res.data, id);
-        setLoading(false);
+        const queryKey = type === 'folder' ? ['folders', id, 'contents'] : ['groups', id, 'contents'];
+        const endpoint = type === 'folder' ? `/v1/folder?id=${id}` : `/v1/group?id=${id}`;
+        const result = await queryClient.fetchQuery({
+          queryKey,
+          queryFn: () => api.get(baseUrl + endpoint),
+          staleTime: 2 * 60 * 1000,
+        });
+        storeDocuments(result?.data, id);
       } catch (error) {
-        console.error("Get document error: " + error);  
-        setLoading(false);      
+        console.error('Get document error: ' + error);
       } finally {
         setLoading(false);
-      }      
+      }
     }
   }  
 

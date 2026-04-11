@@ -21,8 +21,7 @@ import DemoKanbanCard from './demo-kanban-card';
 import TaskFormModal from './task-form-modal';
 import StatusFormModal from './status-form-modal';
 import useStatusStore from '@/stores/useStatusStore';
-import { documentBaseUrl } from '@/utils/constants';
-import { api } from '@/utils/api';
+import { useUpdateDocumentMeta } from '@/hooks/mutations/useFilesMutations';
 
 export default function KanbanView({ data, boardId, onTaskCreate }) {
   console.log({ data, boardId });
@@ -35,6 +34,7 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
     deleteStatus,
     reorderStatuses
   } = useStatusStore();
+  const updateDocumentMeta = useUpdateDocumentMeta();
   
   const [activeId, setActiveId] = useState(null);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
@@ -320,8 +320,8 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
       
       try {
         // Update task status in the database
-        await api.put(documentBaseUrl, {
-          id: activeItem.id,
+        await updateDocumentMeta.mutateAsync({
+          documentId: activeItem.id,
           custom_meta: {
             ...activeItem.custom_meta,
             values: {

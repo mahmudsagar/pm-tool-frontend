@@ -1,30 +1,17 @@
-import useApi from '@/lib/dataFetcher';
-import { useEffect, } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
-import { documentBaseUrl } from '@/utils/constants';
-import { debounce } from '@/utils/helper';
+import { useParams } from 'react-router-dom';
+import { useDocument } from '@/hooks/queries/useFilesQueries';
 import NotFound from '@/BetterRouter/NotFound';
 import Spinner from '@/components/elements/spinner';
 import Comment from '@/components/elements/comment';
 
 const CommentPage = ({ ...props }) => {
-  const { loading, data, callApi, error } = useApi();
-  const { pathname } = useLocation()
   const { id } = useParams();
   const paramId = props.id || id;
+  const { data, isLoading, isError } = useDocument(paramId);
 
-  useEffect(() => {
-    const debouncedCallApi = debounce(() => {
-      callApi(documentBaseUrl + '?id=' + paramId)
-    }, 1000);
-    debouncedCallApi();
-  }, [pathname, paramId, callApi]);
-
-
-  if (error) {
+  if (isError) {
     return <NotFound />
   }
-
 
   const commentProps = {
     page_id: data?._id,
@@ -32,10 +19,9 @@ const CommentPage = ({ ...props }) => {
     comments: data?.comments || []
   }
 
-
   return (
     <div className='relative h-full'>
-      {(loading || (!data && !error)) ?
+      {(isLoading || (!data && !isError)) ?
         <Spinner />
         :
         data && (

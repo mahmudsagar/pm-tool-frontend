@@ -4,49 +4,24 @@ import { LucideCommand, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import React, { useCallback, useEffect, useState } from "react";
-import { debounce } from "@/utils/helper";
-import useApi from "@/lib/dataFetcher";
-import { searchEndpoint } from "@/utils/constants";
+import { useGlobalSearch } from "@/hooks/queries/useFilesQueries";
 import publicIcon from '@/assets/images/public.svg';
 import ShowIcon from "@/components/common/ShowIcon";
-
-// const links = [
-//   {
-//     title: "Documentation",
-//     href: "#",
-//   },
-//   {
-//     title: "Components",
-//     href: "#",
-//   },
-//   {
-//     title: "Blocks",
-//     href: "#",
-//   },
-//   {
-//     title: "Charts",
-//     href: "#",
-//   },
-//   {
-//     title: "Themes",
-//     href: "#",
-//   },
-//   {
-//     title: "Examples",
-//     href: "#",
-//   },
-//   {
-//     title: "Colors",
-//     href: "#",
-//   },
-// ]
 
 export function CommandMenu({ ...props }) {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
-  const { loading, data, callApi, error } = useApi();
-  const [searchInput,setSearchInput] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const { data, isFetching } = useGlobalSearch(debouncedSearch);
   const results = Object.entries(data?.all || {}).filter(([, list]) => list.length > 0);
+
+  // Debounce the search input
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchInput), 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     const down = (e) => {
@@ -59,12 +34,10 @@ export function CommandMenu({ ...props }) {
         ) {
           return
         }
-
         e.preventDefault()
         setOpen((open) => !open)
       }
     }
-
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [])
@@ -74,25 +47,11 @@ export function CommandMenu({ ...props }) {
     command()
   }, [])
 
-  const handleGlobalSearch = (value) => {
-    setSearchInput(value)
-    const debouncedCallApi = debounce(() => {
-      console.log(searchEndpoint + `?query=${value}`);
-      let url = searchEndpoint;
-      if (value) {
-        url += `?query=${value}`
-      }
-      callApi(url)
-    }, 500);
-    debouncedCallApi();
-  }
-
   const groupKey = {
     folders: 'folder',
     pages: 'page',
     groups: 'group',
   }
-
 
   const handleSearchItemClick = (item) => {
     const { entity_type, page_type, _id } = item || {};
@@ -130,7 +89,7 @@ export function CommandMenu({ ...props }) {
         </kbd>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen} commandProps={{ shouldFilter: false }}>
-        <CommandInput placeholder="Type a command or search..." onValueChange={handleGlobalSearch}  value={searchInput} loading={loading}/>
+        <CommandInput placeholder="Type a command or search..." onValueChange={setSearchInput} value={searchInput} loading={isFetching}/>
         <CommandList>
           {results.length == 0 && <CommandEmpty>No results found.</CommandEmpty>}
           {results.map(([group, list], index) => {

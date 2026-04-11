@@ -3,6 +3,127 @@ import { api } from '@/utils/api';
 import { baseUrl, documentBaseUrl } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
 
+const invalidateFileQueries = (queryClient) => {
+  queryClient.invalidateQueries({ queryKey: ['files'] });
+  queryClient.invalidateQueries({ queryKey: ['spaces'] });
+  queryClient.invalidateQueries({ queryKey: ['documents'] });
+  queryClient.invalidateQueries({ queryKey: ['folders'] });
+  queryClient.invalidateQueries({ queryKey: ['groups'] });
+};
+
+/**
+ * Create a document/page/sheet/whiteboard via /v1/page/document
+ */
+export const useCreateDocument = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (data) => {
+      const result = await api.post(documentBaseUrl, data);
+      return result;
+    },
+    onSuccess: () => {
+      invalidateFileQueries(queryClient);
+    },
+    onError: (error) => {
+      toast({ title: 'Failed to create document', description: error.message, variant: 'destructive' });
+    },
+  });
+};
+
+/**
+ * Update a document/board/folder/group title or name.
+ * Pass entity: 'page' | 'board' | 'folder' | 'group'
+ */
+export const useUpdateEntityTitle = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async ({ entity, id, title }) => {
+      const endpointMap = {
+        page: `${documentBaseUrl}`,
+        board: `${baseUrl}/v1/board`,
+        folder: `${baseUrl}/v1/folder?id=${id}`,
+        group: `${baseUrl}/v1/group?id=${id}`,
+      };
+      const bodyMap = {
+        page: { id, title },
+        board: { id, name: title },
+        folder: { name: title },
+        group: { name: title },
+      };
+      const result = await api.put(endpointMap[entity], bodyMap[entity]);
+      return result;
+    },
+    onSuccess: () => {
+      invalidateFileQueries(queryClient);
+    },
+    onError: (error) => {
+      toast({ title: 'Failed to update', description: error.message, variant: 'destructive' });
+    },
+  });
+};
+
+/**
+ * Create a board via /v1/board
+ */
+export const useCreateBoard = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (data) => {
+      const result = await api.post(`${baseUrl}/v1/board`, data);
+      return result;
+    },
+    onSuccess: () => {
+      invalidateFileQueries(queryClient);
+    },
+    onError: (error) => {
+      toast({ title: 'Failed to create board', description: error.message, variant: 'destructive' });
+    },
+  });
+};
+
+/**
+ * Create a folder via /v1/folder
+ */
+export const useCreateFolder = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (data) => {
+      const result = await api.post(`${baseUrl}/v1/folder`, data);
+      return result;
+    },
+    onSuccess: () => {
+      invalidateFileQueries(queryClient);
+    },
+    onError: (error) => {
+      toast({ title: 'Failed to create folder', description: error.message, variant: 'destructive' });
+    },
+  });
+};
+
+/**
+ * Create a group via /v1/group
+ */
+export const useCreateGroup = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (data) => {
+      const result = await api.post(`${baseUrl}/v1/group`, data);
+      return result;
+    },
+    onSuccess: () => {
+      invalidateFileQueries(queryClient);
+    },
+    onError: (error) => {
+      toast({ title: 'Failed to create group', description: error.message, variant: 'destructive' });
+    },
+  });
+};
+
 /**
  * Mutation hook to create a new file/document
  */
@@ -161,6 +282,23 @@ export const useUpdateDocument = () => {
           ? { ...old, pageContent: { ...old.pageContent, content } }
           : old
       );
+    },
+  });
+};
+
+/**
+ * Mutation hook to update document custom_meta (e.g. kanban field values)
+ * Pass { documentId, custom_meta }
+ */
+export const useUpdateDocumentMeta = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ documentId, custom_meta }) => {
+      const result = await api.put(documentBaseUrl, { id: documentId, custom_meta });
+      return result;
+    },
+    onSuccess: (_, { documentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['documents', documentId] });
     },
   });
 };

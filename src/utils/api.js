@@ -42,7 +42,8 @@ async function fetcher(
   const currentWorkspace = useAuthStore.getState().currentWorkspace;
 
   const headers = {
-    'Content-Type': 'application/json',
+    // Don't set Content-Type for FormData — the browser sets it with the boundary
+    ...(!(fetchOptions.body instanceof FormData) && { 'Content-Type': 'application/json' }),
     ...fetchOptions.headers,
   };
 
@@ -121,5 +122,13 @@ export const api = {
     fetcher(url, { ...options, method: 'PUT', body: JSON.stringify(data) }),
     
   delete: (url, options) => 
+    fetcher(url, { ...options, method: 'DELETE' }),
+
+  // For multipart/form-data uploads — does NOT stringify the body
+  upload: (url, formData, options) =>
+    fetcher(url, { ...options, method: 'POST', body: formData }),
+
+  // For deleting media resources
+  deleteMedia: (url, options) =>
     fetcher(url, { ...options, method: 'DELETE' }),
 };

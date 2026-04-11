@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Plus, Check, XIcon } from "lucide-react";
-import useApi from '@/lib/dataFetcher';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { baseUrl } from '@/utils/constants';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useSearchWorkspaceMembers } from '@/hooks/queries/useSpacesQueries';
+import { useTeamsByUser, useSearchTeams } from '@/hooks/queries/useTeamsQueries';
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import {
   Dialog,
@@ -45,14 +44,16 @@ const AddSpaceDialog = ({
   parentId = null
 }) => {
   const [loading, setLoading] = useState(false);
-  const { data: teams, callApi: teamCallApi } = useApi();
   const [teamSearch, setTeamSearch] = useState('');
   const [debouncedTeamSearch, setDebouncedTeamSearch] = useState('');
-  const [searchedTeams, setSearchedTeams] = useState([]);
   const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
   const [teamMap, setTeamMap] = useState({});
-  const [fetchingTeams, setFetchingTeams] = useState(false);
-  const teamsData = debouncedTeamSearch ? ensureArray(searchedTeams) : ensureArray(teams);
+  const { user, currentWorkspace } = useAuthStore();
+  const userID = user?._id;
+  const { data: allTeams } = useTeamsByUser(userID);
+  const { data: searchedTeams } = useSearchTeams(userID, debouncedTeamSearch.length >= 2 ? debouncedTeamSearch : '');
+  const teamsData = debouncedTeamSearch.length >= 2 ? ensureArray(searchedTeams) : ensureArray(allTeams);
+  const fetchingTeams = false;
   const [memberSearch, setMemberSearch] = useState('');
   const [debouncedMemberSearch, setDebouncedMemberSearch] = useState('');
   const [memberDropdownOpen, setMemberDropdownOpen] = useState(false);
@@ -70,25 +71,14 @@ const AddSpaceDialog = ({
     }
   });
 
-  const { user, token, currentWorkspace } = useAuthStore();
-  const userID = user?._id;
-  
   // TanStack Query mutations and client
   const createSpaceMutation = useCreateSpace();
   const updateSpaceMutation = useUpdateSpace();
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (isOpen) {
-      (async () => {
-        try {
-          await teamCallApi(baseUrl + '/v1/team?user_id=' + userID);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        }
-      })();
-    }
-  }, [isOpen, teamCallApi, userID]);
+    document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
+  }, [isOpen]);
 
   // Debounced search for workspace members
   useEffect(() => {
@@ -128,39 +118,7 @@ const AddSpaceDialog = ({
     );
   };
 
-  // Fetch teams when debouncedTeamSearch changes
-  useEffect(() => {
-    if (!debouncedTeamSearch || debouncedTeamSearch.length < 2) {
-      setSearchedTeams([]);
-      return;
-    }
-
-    const fetchTeams = async () => {
-      setFetchingTeams(true);
-      try {
-        const response = await fetch(
-          `${baseUrl}/v1/team?user_id=${userID}&search=${encodeURIComponent(debouncedTeamSearch)}`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-              ...(currentWorkspace?._id ? { 'X-Workspace-ID': currentWorkspace._id } : {})
-            }
-          }
-        );
-        const result = await response.json();
-        if (result.data) {
-          setSearchedTeams(result.data);
-        }
-      } catch (error) {
-        console.error('Error searching teams:', error);
-      } finally {
-        setFetchingTeams(false);
-      }
-    };
-
-    fetchTeams();
-  }, [debouncedTeamSearch, userID, token]);
+  // Fetch teams when debouncedTeamSearch changes — handled by useSearchTeams query above
 
   // Update form when initialData changes (for edit mode)
   useEffect(() => {

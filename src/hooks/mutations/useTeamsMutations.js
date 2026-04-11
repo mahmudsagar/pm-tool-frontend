@@ -40,7 +40,7 @@ export const useUpdateTeam = () => {
 
   return useMutation({
     mutationFn: async ({ teamId, data }) => {
-      const result = await api.put(`${baseUrl}/v1/team/${teamId}`, data);
+      const result = await api.put(`${baseUrl}/v1/team?id=${teamId}`, data);
       return result.data;
     },
     

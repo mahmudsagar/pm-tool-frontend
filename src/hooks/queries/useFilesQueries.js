@@ -1,6 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/utils/api';
-import { baseUrl, documentBaseUrl } from '@/utils/constants';
+import { baseUrl, documentBaseUrl, searchEndpoint } from '@/utils/constants';
+
+/**
+ * Query hook for global search across documents, folders, spaces etc.
+ */
+export const useGlobalSearch = (query) => {
+  return useQuery({
+    queryKey: ['search', query],
+    queryFn: async () => {
+      const result = await api.get(`${searchEndpoint}?query=${encodeURIComponent(query)}`);
+      return result.data ?? {};
+    },
+    enabled: !!query && query.trim().length > 0,
+    staleTime: 30 * 1000,
+  });
+};
 
 /**
  * Query hook to get a specific document by ID

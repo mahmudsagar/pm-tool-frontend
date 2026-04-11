@@ -27,15 +27,15 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import useAuthStore from '@/stores/useAuthStore';
-import useApi from '@/lib/dataFetcher';
 import useFileManagerStore from "@/stores/useFileManagerStore";
-import { baseUrl } from '@/utils/constants';
+import { useUsers, useSearchUsers } from '@/hooks/queries/useSpacesQueries';
+import { useTeamsByUser, useSearchTeams } from '@/hooks/queries/useTeamsQueries';
 import { ensureArray } from '@/utils/helper';
 import { Plus } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from "react-hook-form";
 import ButtonLoading from './ButtonLoading';
-import { useQueryClient } from '@tanstack/react-query';
+import { useCreateDocument, useCreateBoard, useCreateFolder, useCreateGroup, useUpdateEntityTitle } from '@/hooks/mutations/useFilesMutations';
 
 const AddFileDialog = ({
   id,
@@ -50,16 +50,22 @@ const AddFileDialog = ({
   const defaultFileType = 'page'; // Always default to page instead of using type
   const [loading, setLoading] = useState(false); // Submitting Data loading
   const [fileName, setFileName] = useState(initialName || ''); // Track filename separately
-  const { data: users, callApi: userCallApi } = useApi();
-  const { data: teams, callApi: teamCallApi } = useApi();
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [teamSearchQuery, setTeamSearchQuery] = useState('');
-  const [searchedUsers, setSearchedUsers] = useState([]);
-  const [searchedTeams, setSearchedTeams] = useState([]);
-  const usersData = userSearchQuery ? ensureArray(searchedUsers) : ensureArray(users);
-  const teamsData = teamSearchQuery ? ensureArray(searchedTeams) : ensureArray(teams);
+  const { user } = useAuthStore();
+  const userID = user?._id;
+  const { data: allUsers } = useUsers();
+  const { data: allTeams } = useTeamsByUser(userID);
+  const { data: searchedUsers } = useSearchUsers(userSearchQuery.length >= 2 ? userSearchQuery : '');
+  const { data: searchedTeams } = useSearchTeams(userID, teamSearchQuery.length >= 2 ? teamSearchQuery : '');
+  const usersData = userSearchQuery.length >= 2 ? ensureArray(searchedUsers) : ensureArray(allUsers);
+  const teamsData = teamSearchQuery.length >= 2 ? ensureArray(searchedTeams) : ensureArray(allTeams);
   const { storeHandler, updateHandler } = useFileManagerStore(state => state);
-  const queryClient = useQueryClient();
+  const createDocumentMutation = useCreateDocument();
+  const createBoardMutation = useCreateBoard();
+  const createFolderMutation = useCreateFolder();
+  const createGroupMutation = useCreateGroup();
+  const updateEntityTitleMutation = useUpdateEntityTitle();
 
   const form = useForm({
     defaultValues: {
@@ -106,284 +112,93 @@ const AddFileDialog = ({
     }
   }, [isOpen, isEdit, initialName, form]);
 
-  const { user, token, currentWorkspace } = useAuthStore();
-
-  const userID = user?._id;
   useEffect(() => {
     document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
-
-    if (isOpen) {
-      (async () => {
-        try {
-          await userCallApi(baseUrl + '/v1/user');
-          await teamCallApi(baseUrl + '/v1/team?user_id=' + userID);
-        } catch (error) {
-          console.error("Error fetching User data:", error);
-        }
-      })();
-    }
-  }, [isOpen, userCallApi, teamCallApi, userID]);
-
-  // Debounced search for users
-  useEffect(() => {
-    if (!userSearchQuery || userSearchQuery.length < 2) {
-      setSearchedUsers([]);
-      return;
-    }
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `${baseUrl}/v1/user?search=${encodeURIComponent(userSearchQuery)}`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-              ...(currentWorkspace?._id ? { 'X-Workspace-ID': currentWorkspace._id } : {})
-            }
-          }
-        );
-        const result = await response.json();
-        if (result.data) {
-          setSearchedUsers(result.data);
-        }
-      } catch (error) {
-        console.error('Error searching users:', error);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [userSearchQuery, token]);
-
-  // Debounced search for teams
-  useEffect(() => {
-    if (!teamSearchQuery || teamSearchQuery.length < 2) {
-      setSearchedTeams([]);
-      return;
-    }
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        const response = await fetch(
-          `${baseUrl}/v1/team?user_id=${userID}&search=${encodeURIComponent(teamSearchQuery)}`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-              ...(currentWorkspace?._id ? { 'X-Workspace-ID': currentWorkspace._id } : {})
-            }
-          }
-        );
-        const result = await response.json();
-        if (result.data) {
-          setSearchedTeams(result.data);
-        }
-      } catch (error) {
-        console.error('Error searching teams:', error);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [teamSearchQuery, userID, token]);
+  }, [isOpen]);
 
   const onSubmit = async (data) => {
     setLoading(true);
-    let endpoint, documentData, method;
+    try {
+      let res;
 
-    // Set method based on whether we're editing or creating
-    method = isEdit ? 'PUT' : 'POST';
-
-    if (data.filetype === "page") {
-      // Handle board creation with special endpoint and payload
-      if (data.page_type === "board") {
-        endpoint = "/v1/board";
-        documentData = isEdit ? {
-          id: id,
+      if (isEdit) {
+        // All edits just rename — use a single mutation
+        const entity = data.page_type === 'board' ? 'board'
+          : data.filetype === 'folder' ? 'folder'
+          : data.filetype === 'group' ? 'group'
+          : 'page';
+        res = await updateEntityTitleMutation.mutateAsync({ entity, id, title: data.title });
+        const updateData = {
+          ...res?.data,
+          ...(entity === 'page' ? { title: data.title } : { name: data.title }),
+        };
+        updateHandler(id, data.filetype, updateData);
+        if (onEditSuccess) onEditSuccess(res?.data);
+      } else if (data.filetype === 'page' && data.page_type === 'board') {
+        const boardData = {
           name: data.title,
-        } : {
-          name: data.title, // mandatory
           description: `Board: ${data.title}`,
-          user_id: userID || "66cda5dac6886719e3345c19", // mandatory
+          user_id: userID,
           is_private: space_visibility ?? false,
           shared_teams: data.shared_teams || [],
           shared_members: data.shared_members || [],
           custom_meta: {
             fields: [
-              {
-                type: "select",
-                initialized: true,
-                label: "Status",
-                name: "status",
-                hasOptions: true,
-                options: [
-                  { label: "To Do", value: "todo" },
-                  { label: "In Progress", value: "in-progress" },
-                  { label: "Review", value: "review" },
-                  { label: "Done", value: "done" }
-                ]
-              },
-              {
-                type: "select",
-                initialized: true,
-                label: "Assignee",
-                name: "assignee",
-                hasOptions: true,
-                options: Array.isArray(usersData) ? usersData.map(user => ({ 
-                  label: user.name || user.email, 
-                  value: user._id 
-                })) : []
-              },
-              {
-                type: "select",
-                initialized: true,
-                label: "Priority",
-                name: "priority",
-                hasOptions: true,
-                options: [
-                  { label: "Low", value: "low" },
-                  { label: "Medium", value: "medium" },
-                  { label: "High", value: "high" },
-                  { label: "Critical", value: "critical" }
-                ]
-              },
-              {
-                type: "input",
-                initialized: true,
-                label: "Type",
-                name: "type",
-                hasOptions: false
-              },
-              {
-                type: "date",
-                initialized: true,
-                label: "Due Date",
-                name: "due_date",
-                hasOptions: false
-              },
-              {
-                type: "date",
-                initialized: true,
-                label: "Start Date",
-                name: "start_date",
-                hasOptions: false
-              }
-            ]
+              { type: 'select', initialized: true, label: 'Status', name: 'status', hasOptions: true, options: [{ label: 'To Do', value: 'todo' }, { label: 'In Progress', value: 'in-progress' }, { label: 'Review', value: 'review' }, { label: 'Done', value: 'done' }] },
+              { type: 'select', initialized: true, label: 'Assignee', name: 'assignee', hasOptions: true, options: Array.isArray(usersData) ? usersData.map(u => ({ label: u.name || u.email, value: u._id })) : [] },
+              { type: 'select', initialized: true, label: 'Priority', name: 'priority', hasOptions: true, options: [{ label: 'Low', value: 'low' }, { label: 'Medium', value: 'medium' }, { label: 'High', value: 'high' }, { label: 'Critical', value: 'critical' }] },
+              { type: 'input', initialized: true, label: 'Type', name: 'type', hasOptions: false },
+              { type: 'date', initialized: true, label: 'Due Date', name: 'due_date', hasOptions: false },
+              { type: 'date', initialized: true, label: 'Start Date', name: 'start_date', hasOptions: false },
+            ],
           },
-          space_id: type === "space" ? id : '',
-          folder_id: type === "folder" ? id : '',
-          group_id: type === "group" ? id : ''
+          space_id: type === 'space' ? id : '',
+          folder_id: type === 'folder' ? id : '',
+          group_id: type === 'group' ? id : '',
         };
-      } else {
-        endpoint = "/v1/page/document";
-        documentData = isEdit ? {
-          id: id,
-          title: data.title,
-        } : {
-          user_id: userID || "66cda5dac6886719e3345c19",
+        res = await createBoardMutation.mutateAsync(boardData);
+        storeHandler(id, type, res?.data);
+      } else if (data.filetype === 'page') {
+        const docData = {
+          user_id: userID,
           title: data.title,
           page_type: data.page_type,
           entity_type: data.filetype,
-          content: {
-            text: "This is the document content"
-          },
-          summary: "This is the document summary",
-          last_updated_by: userID || "66cda5dac6886719e3345c19",
-          custom_meta: {
-            author: user?.name || user?.email || '',
-          },
-          folder_id: type === "folder" ? id : '',
-          group_id: type === "group" ? id : '',
-          space_id: type === "space" ? id : '',
-          attachments: []
+          content: { text: 'This is the document content' },
+          summary: 'This is the document summary',
+          last_updated_by: userID,
+          custom_meta: { author: user?.name || user?.email || '' },
+          folder_id: type === 'folder' ? id : '',
+          group_id: type === 'group' ? id : '',
+          space_id: type === 'space' ? id : '',
+          attachments: [],
         };
-      }
-    } else if (data.filetype === "folder" || data.filetype === "group") {
-      endpoint = data.filetype === "folder" ? "/v1/folder" : "/v1/group";
-
-      if (isEdit) {
-        endpoint += `?id=${id}`;
-        documentData = {
-          name: data.title,
-          shared_members: data.shared_members,
-          shared_teams: data.shared_teams,
-        };
-      } else {
-        documentData = {
-          user_id: userID || "66cda5dac6886719e3345c19",
-          entity_type: data.filetype,
-          name: data.title,
-          shared_members: data.shared_members,
-          shared_teams: data.shared_teams,
-          folder_id: type === "folder" ? id : '',
-          group_id: type === "group" ? id : '',
-          space_id: type === "space" ? id : '',
-        };
-      }
-    } else {
-      setLoading(false);
-      return { error: "Invalid filetype specified" };
-    }
-
-    try {
-      const response = await fetch(baseUrl + endpoint, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          ...(currentWorkspace?._id ? { 'X-Workspace-ID': currentWorkspace._id } : {})
-        },
-        body: JSON.stringify(documentData),
-      });
-
-      const res = await response.json();
-
-      if (res.error) {
-        console.error("Error saving document: ", res.error);
-        setLoading(false);
-        return;
+        res = await createDocumentMutation.mutateAsync(docData);
+        storeHandler(id, type, res?.data);
+      } else if (data.filetype === 'folder') {
+        res = await createFolderMutation.mutateAsync({
+          user_id: userID, entity_type: 'folder', name: data.title,
+          shared_members: data.shared_members, shared_teams: data.shared_teams,
+          folder_id: type === 'folder' ? id : '', group_id: type === 'group' ? id : '', space_id: type === 'space' ? id : '',
+        });
+        storeHandler(id, type, res?.data);
+      } else if (data.filetype === 'group') {
+        res = await createGroupMutation.mutateAsync({
+          user_id: userID, entity_type: 'group', name: data.title,
+          shared_members: data.shared_members, shared_teams: data.shared_teams,
+          folder_id: type === 'folder' ? id : '', group_id: type === 'group' ? id : '', space_id: type === 'space' ? id : '',
+        });
+        storeHandler(id, type, res?.data);
       }
 
-      if (isEdit) {
-        // Update the store with edited data
-        const updateData = {
-          ...res.data,
-          // Ensure we have the correct name/title property based on entity type
-          ...(data.filetype === "page" ? { title: data.title } : { name: data.title })
-        };
-        updateHandler(id, data.filetype, updateData);
-        // Call the edit success callback if provided
-        if (onEditSuccess) {
-          onEditSuccess(res.data);
-        }
-      } else {
-        storeHandler(id, type, res.data);
-      }
-      
-      // Invalidate TanStack Query cache to refresh sidebar and main section
-      queryClient.invalidateQueries({ queryKey: ['spaces'] });
-      queryClient.invalidateQueries({ queryKey: ['spaces', userID] });
-      queryClient.invalidateQueries({ queryKey: ['files'] });
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      queryClient.invalidateQueries({ queryKey: ['folders', id] });
-      queryClient.invalidateQueries({ queryKey: ['groups', id] });
-      
-      // Close the modal and reset form after successful operation
-      setLoading(false);
       setIsOpen(false);
-
-      // Reset form with default values
-      form.reset({
-        title: '',
-        filetype: defaultFileType,
-        page_type: 'document',
-        shared_members: [],
-        shared_teams: []
-      });
-
-      // Reset local state        setFileName('');
-      } catch (error) {
-        setLoading(false);
-      }
+      form.reset({ title: '', filetype: defaultFileType, page_type: 'document', shared_members: [], shared_teams: [] });
+      setFileName('');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

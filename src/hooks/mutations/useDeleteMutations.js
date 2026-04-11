@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { baseUrl } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
-import useAuthStore from '@/stores/useAuthStore';
+import { api } from '@/utils/api';
 
 /**
  * Universal delete mutation hook for all entity types
@@ -13,9 +13,6 @@ export const useDeleteEntity = () => {
 
   return useMutation({
     mutationFn: async ({ entityId, entityType }) => {
-      const token = localStorage.getItem('token');
-      const { currentWorkspace } = useAuthStore.getState();
-      
       // Determine the correct endpoint based on entity type
       let endpoint;
       switch (entityType) {
@@ -38,24 +35,10 @@ export const useDeleteEntity = () => {
           throw new Error(`Invalid entity type: ${entityType}`);
       }
 
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          ...(currentWorkspace?._id && { 'X-Workspace-ID': currentWorkspace._id }),
-        },
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to delete ${entityType}: ${errorText}`);
-      }
-      
-      const result = await response.json();
+      const result = await api.delete(endpoint);
       
       // Check if API returned an error in the response body
-      if (result.error) {
+      if (result?.error) {
         throw new Error(result.error);
       }
       

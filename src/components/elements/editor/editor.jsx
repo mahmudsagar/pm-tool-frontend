@@ -39,8 +39,8 @@ import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import useApi from '@/lib/dataFetcher';
 import { mediaBaseUrl } from '@/utils/constants';
+import { useUploadMedia, useDeleteMedia } from '@/hooks/mutations/useCommentsMutations';
 import Spinner from '../spinner';
 import { sanitize } from '@/utils/helper';
 import { cn } from '@/lib/utils';
@@ -62,7 +62,9 @@ const EMPTY_CONTENT =
 const placeholder = 'Enter some rich text...';
 export default function Editor({ title, content, page_id, user_id, custom_meta, comments, mediaAttachments, onChange, showComments, setShowComments }) {
   const [editor] = useLexicalComposerContext()
-  const { loading: imageLoading, data: imageData, callApi: uploadImage } = useApi();
+  const uploadMediaMutation = useUploadMedia();
+  const deleteMediaMutation = useDeleteMedia();
+  const imageLoading = uploadMediaMutation.isPending || deleteMediaMutation.isPending;
   const [floatingAnchorElem, setFloatingAnchorElem] =
     useState(null);
   const [isSmallWidthViewport, setIsSmallWidthViewport] =
@@ -110,38 +112,22 @@ export default function Editor({ title, content, page_id, user_id, custom_meta, 
     };
   }, [isSmallWidthViewport]);
 
-  const coverImageUploadHandler = (files) => {
+  const coverImageUploadHandler = async (files) => {
     const file = files[0];
-    const formData = new FormData()
-    formData.append('media_type', 'cover_photo')
-    formData.append('reference_id', page_id)
-    formData.append('caption', ' ')
-    formData.append('reference_for', 'page')
+    const formData = new FormData();
+    formData.append('media_type', 'cover_photo');
+    formData.append('reference_id', page_id);
+    formData.append('caption', ' ');
+    formData.append('reference_for', 'page');
+    formData.append('file', file.File ?? file);
+    const result = await uploadMediaMutation.mutateAsync(formData);
+    if (result?.url) setCoverImage(result);
+  };
 
-    formData.append('file', file.File)
-    if (file) {
-      uploadImage(mediaBaseUrl, {
-        method: 'POST',
-        body: formData
-      })
-    }
-  }
-
-  useEffect(() => {
-    if (imageData?.url) {
-      setCoverImage(imageData)
-    }
-  }, [imageData])
-
-  const handleCoverRemove = () => {
-    uploadImage(mediaBaseUrl + '?id=' + coverImage?._id + '&reference_for=page',
-      {
-        method: 'DELETE'
-      }, () => {
-
-        setCoverImage(null)
-      })
-  }
+  const handleCoverRemove = async () => {
+    await deleteMediaMutation.mutateAsync({ mediaId: coverImage?._id, referenceFor: 'page' });
+    setCoverImage(null);
+  };
 
   return (
     <div className="editor-container relative">

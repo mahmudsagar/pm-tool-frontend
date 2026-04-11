@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Paperclip, Edit2, Trash2, X, SendHorizonal } from "lucide-react";
-import useApi from '@/lib/dataFetcher';
 import { commentBaseUrl, mediaBaseUrl } from '@/utils/constants';
 import { Skeleton } from '@/components/ui/skeleton';
 import useSyncStore from '@/stores/useSyncStore';
@@ -12,6 +11,13 @@ import { sanitize } from '@/utils/helper';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import dayjs from 'dayjs';
 import ButtonLoading from '@/layouts/elements/components/ButtonLoading';
+import {
+  useCreateComment,
+  useUpdateComment,
+  useDeleteComment,
+  useUploadMedia,
+  useDeleteMedia,
+} from '@/hooks/mutations/useCommentsMutations';
 
 export default function CommentSection({ user_id, page_id, comments: initialComments }) {
   const [comments, setComments] = useState(initialComments || []);
@@ -20,8 +26,6 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
   const [editAttachments, setEditAttachments] = useState([]);
-  const { callApi: fetchComments } = useApi();
-  const { callApi: deleteComment } = useApi();
   const [currentDeletingId, setCurrentDeletingId] = useState(null);
   const [currentMediaDeletingId, setCurrentMediaDeletingId] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
@@ -29,95 +33,76 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   const fileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
 
+  const createCommentMutation = useCreateComment();
+  const updateCommentMutation = useUpdateComment();
+  const deleteCommentMutation = useDeleteComment();
+  const uploadMediaMutation = useUploadMedia();
+  const deleteMediaMutation = useDeleteMedia();
+
   const { user } = useSyncStore();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!newComment.trim() && newAttachments.length === 0) return;
 
-    const comment = {
-      comment_body: newComment,
-      page_id,
-      user_id,
-    };
-
     saveComment({
-      commentBaseUrl,
-      mediaBaseUrl,
-      commentBody: comment,
+      commentBody: { comment_body: newComment, page_id, user_id },
       attachments: newAttachments,
     });
-
   }
 
-  const saveComment = ({ method = 'POST', commentBaseUrl, mediaBaseUrl, commentBody, attachments }) => {
+  const saveComment = async ({ method = 'POST', commentBody, attachments }) => {
     if (method === 'PUT') setEditLoading(true);
     else setLoading(true);
 
-    fetchComments(commentBaseUrl, {
-      method,
-      body: JSON.stringify(commentBody),
-    }, (commentResponse) => {
-      setNewComment('');
-      if (attachments.length === 0) {
+    try {
+      const commentResponse = method === 'PUT'
+        ? await updateCommentMutation.mutateAsync(commentBody)
+        : await createCommentMutation.mutateAsync(commentBody);
 
+      setNewComment('');
+
+      if (!attachments || attachments.length === 0) {
         if (method === 'PUT') {
-          setComments(comments.map(comment =>
-            comment._id === commentResponse?._id
-              ? { ...comment, ...sanitize(commentResponse) }
-              : comment
+          setComments(comments.map(c =>
+            c._id === commentResponse?._id ? { ...c, ...sanitize(commentResponse) } : c
           ));
-        }
-        else {
-          setComments([...comments, sanitize(commentResponse)]);
-        }
-        setLoading(false);
-        if (method === 'PUT') {
-          setEditLoading(false);
           setEditingId(null);
           setEditAttachments([]);
+        } else {
+          setComments([...comments, sanitize(commentResponse)]);
         }
         return;
       }
 
-      const formData = new FormData()
-      formData.append('media_type', 'comment_attachment')
-      formData.append('reference_id', commentResponse?._id)
-      formData.append('caption', ' ')
-      formData.append('reference_for', 'comment')
-
+      const formData = new FormData();
+      formData.append('media_type', 'comment_attachment');
+      formData.append('reference_id', commentResponse?._id);
+      formData.append('caption', ' ');
+      formData.append('reference_for', 'comment');
       for (let i = 0; i < attachments.length; i++) {
-        if (attachments[i] instanceof File)
-          formData.append('file', attachments[i])
+        if (attachments[i] instanceof File) formData.append('file', attachments[i]);
       }
 
-      fetchComments(mediaBaseUrl, {
-        method: 'POST',
-        body: formData,
-      }, (mediaResponse) => {
-        setLoading(false);
-        if (method === 'PUT') {
-          setEditLoading(false);
-          setEditingId(null);
-          setEditAttachments([]);
-        }
-        const newComment = commentResponse;
-        newComment.mediaAttachments = Array.isArray(mediaResponse) ? mediaResponse : [mediaResponse];
+      const mediaResponse = await uploadMediaMutation.mutateAsync(formData);
+      const saved = commentResponse;
+      saved.mediaAttachments = Array.isArray(mediaResponse) ? mediaResponse : [mediaResponse];
 
-        if (method === 'PUT') {
-          setComments(comments.map(comment =>
-            comment._id === commentResponse?._id
-              ? { ...comment, ...sanitize(commentResponse) }
-              : comment
-          ));
-        }
-        else {
-          setComments([...comments, sanitize(commentResponse)]);
-        }
-        setNewAttachments([]);
-      });
-    });
-  }
+      if (method === 'PUT') {
+        setComments(comments.map(c =>
+          c._id === commentResponse?._id ? { ...c, ...sanitize(commentResponse) } : c
+        ));
+        setEditingId(null);
+        setEditAttachments([]);
+      } else {
+        setComments([...comments, sanitize(commentResponse)]);
+      }
+      setNewAttachments([]);
+    } finally {
+      setLoading(false);
+      setEditLoading(false);
+    }
+  };
 
   const handleEdit = (comment) => {
     setEditingId(comment._id);
@@ -125,31 +110,18 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
     setEditAttachments([...sanitize(comment.mediaAttachments, 'array')]);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     setCurrentDeletingId(id);
-    deleteComment(`${commentBaseUrl}?id=${id}`, {
-      method: 'DELETE',
-    }, () => {
-      setCurrentDeletingId(null);
-      setComments(comments.filter(comment => comment._id !== id));
-    });
+    await deleteCommentMutation.mutateAsync(id);
+    setCurrentDeletingId(null);
+    setComments(comments.filter(comment => comment._id !== id));
   };
 
   const handleUpdate = (id) => {
     if (!editContent.trim() && editAttachments.length === 0) return;
-
-    setEditLoading(true);
-
     saveComment({
       method: 'PUT',
-      commentBaseUrl,
-      mediaBaseUrl,
-      commentBody: {
-        id,
-        comment_body: editContent,
-        page_id,
-        user_id
-      },
+      commentBody: { id, comment_body: editContent, page_id, user_id },
       attachments: editAttachments.filter(file => file instanceof File),
     });
   };
@@ -192,9 +164,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
         URL.revokeObjectURL(attachment.url);
       }
       setCurrentMediaDeletingId(attachment._id);
-      deleteComment(`${mediaBaseUrl}?id=${attachment._id}&reference_for=comment`, {
-        method: 'DELETE',
-      }, () => {
+      deleteMediaMutation.mutateAsync({ mediaId: attachment._id, referenceFor: 'comment' }).then(() => {
         setCurrentMediaDeletingId(null);
         setEditAttachments(editAttachments.filter((_, i) => i !== index));
       });

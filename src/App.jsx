@@ -3,7 +3,6 @@ import useStore from './stores/store';
 import BetterRouter from './BetterRouter';
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from './components/ui/toaster';
-import { AuthProvider } from './contexts/AuthContext';
 import GlobalDialogProvider from './components/GlobalDialogProvider';
 
 const App = () => {
@@ -29,11 +28,9 @@ const App = () => {
   return (
     <>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <AuthProvider>
           <BetterRouter />
           <Toaster />
           <GlobalDialogProvider />
-        </AuthProvider>
       </ThemeProvider>
     </>
   );
