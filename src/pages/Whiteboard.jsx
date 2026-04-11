@@ -11,7 +11,7 @@ import { Copy, History, MessageSquareMore, Share, Trash } from 'lucide-react';
 import "@betternotion/excalidraw/index.css";
 import { Button } from '@/components/ui/button';
 
-export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setOpenDeleteDialog, _id, space_id }) {
+export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setOpenDeleteDialog, _id, space_id, onOpenHistory }) {
   useEffect(() => {
     if (!pageContent) return;
     const dropdownContent = <>
@@ -33,11 +33,9 @@ export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setO
     </>
 
     const inlineContent = <>
-      <Link href="#" className="text-sm font-medium text-primary">
-        <Button variant="ghost" size="icon">
-          <History size={20} />
-        </Button>
-      </Link>
+      <Button variant="ghost" size="icon" onClick={onOpenHistory}>
+        <History size={20} />
+      </Button>
       <Link href={`/comment/${_id}`} target="_sidebar" className="text-sm font-medium text-primary">
         <Button variant="ghost" size="icon">
           <MessageSquareMore size={20} />
@@ -53,7 +51,7 @@ export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setO
 
   return (
     <div className="text-center h-full pt-16 -mt-16 overflow-hidden">
-      <ExcalidrawRender content={pageContent?.content?.content} onChange={handleSubmit} spaceId={_id} />
+      <ExcalidrawRender content={pageContent?.content} onChange={handleSubmit} spaceId={_id} />
     </div>
   )
 }

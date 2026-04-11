@@ -255,12 +255,13 @@ export const useUpdateDocument = () => {
 
       const previousData = queryClient.getQueryData(['documents', documentId]);
 
-      // Update pageContent.content — the path all page components read from
-      // (pageContent?.content?.content) so the shape must be:
-      //   pageContent: { ...existing, content: <what the editor sent> }
+      // The BE unwraps nested content wrappers, so the DB stores the inner
+      // value (e.g. rest.content after unwrap). Mirror that here so the
+      // cache shape matches what GET returns.
+      const actualContent = content?.content ?? content;
       queryClient.setQueryData(['documents', documentId], (old) =>
         old
-          ? { ...old, pageContent: { ...old.pageContent, content } }
+          ? { ...old, pageContent: { ...old.pageContent, content: actualContent } }
           : old
       );
 
@@ -277,9 +278,10 @@ export const useUpdateDocument = () => {
     // Confirm the cache with the final state. Avoids an infinite
     // GET → re-init → auto-save → PUT loop in spreadsheets.
     onSuccess: (_, { documentId, content }) => {
+      const actualContent = content?.content ?? content;
       queryClient.setQueryData(['documents', documentId], (old) =>
         old
-          ? { ...old, pageContent: { ...old.pageContent, content } }
+          ? { ...old, pageContent: { ...old.pageContent, content: actualContent } }
           : old
       );
     },

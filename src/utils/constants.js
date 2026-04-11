@@ -15,3 +15,6 @@ export const authEndpoint = '/v1/auth';
 export const authBaseUrl = baseUrl + authEndpoint;
 
 export const searchEndpoint = baseUrl + '/v1/search';
+
+export const historyEndpoint = '/v1/page/history';
+export const historyBaseUrl = baseUrl + historyEndpoint;

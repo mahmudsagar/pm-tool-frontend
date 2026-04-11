@@ -29,6 +29,8 @@ import {
   Users,
   RotateCcw,
   Loader2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { usePageHistory } from '@/hooks/queries/useHistoryQueries';
 import { useRollbackVersion } from '@/hooks/mutations/useHistoryMutations';
@@ -70,6 +72,39 @@ function formatDate(dateStr) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function ContentChange({ words, simpleLabel, preview, fullText }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasFullText = fullText && fullText.length > 0;
+  const displayText = expanded ? fullText : preview;
+
+  return (
+    <div className="break-words space-y-0.5">
+      <div>
+        <span className="font-medium">Content</span>
+        {words != null && <span className="opacity-70"> &middot; ~{words} word{words !== 1 ? 's' : ''}</span>}
+        {simpleLabel && <span> &mdash; {simpleLabel}</span>}
+        {!preview && !simpleLabel && !hasFullText && words == null && <span> was modified</span>}
+      </div>
+      {(displayText || hasFullText) && (
+        <div className="text-[11px] leading-relaxed bg-muted/50 rounded px-1.5 py-1 space-y-1">
+          <p className={`italic opacity-80 whitespace-pre-wrap ${!expanded ? 'line-clamp-3' : ''}`}>
+            &ldquo;{displayText || fullText}&rdquo;
+          </p>
+          {hasFullText && fullText.length > 120 && (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="flex items-center gap-0.5 text-[10px] font-medium text-primary hover:underline"
+            >
+              {expanded ? <><ChevronUp size={10} /> Show less</> : <><ChevronDown size={10} /> Show full content</>}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ChangeSummary({ changes }) {
   if (!changes || Object.keys(changes).length === 0) return null;
   const entries = Object.entries(changes).filter(([key]) => key !== 'note' && key !== 'restored_from_version');
@@ -82,23 +117,18 @@ function ChangeSummary({ changes }) {
         if (field === 'content') {
           const desc = value?.description;
           const isDocObj = desc && typeof desc === 'object';
+          const fullText = isDocObj ? desc.text : null;
           const preview = isDocObj ? desc.preview : null;
           const words = isDocObj ? desc.words : null;
           const simpleLabel = typeof desc === 'string' ? desc : null;
           return (
-            <div key={field} className="break-words space-y-0.5">
-              <div>
-                <span className="font-medium">Content</span>
-                {words != null && <span className="opacity-70"> &middot; ~{words} word{words !== 1 ? 's' : ''}</span>}
-                {simpleLabel && <span> &mdash; {simpleLabel}</span>}
-                {!preview && !simpleLabel && words == null && <span> was modified</span>}
-              </div>
-              {preview && (
-                <p className="text-[11px] leading-relaxed bg-muted/50 rounded px-1.5 py-1 line-clamp-3 italic opacity-80">
-                  &ldquo;{preview}{preview.length >= 120 ? '\u2026' : '\u201d'}
-                </p>
-              )}
-            </div>
+            <ContentChange
+              key={field}
+              words={words}
+              simpleLabel={simpleLabel}
+              preview={preview}
+              fullText={fullText}
+            />
           );
         }
         if (value?.from !== undefined && value?.to !== undefined) {

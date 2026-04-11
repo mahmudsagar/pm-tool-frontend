@@ -2,7 +2,6 @@ import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { useEffect, useState } from 'react';
 import { debounce } from '@/utils/helper';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import Link from '@/BetterRouter/Link';
 import { Copy, History, MessageSquareMore, Share, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PlaygroundNodes from '@/components/elements/editor/nodes/PlaygroundNodes';
@@ -20,7 +19,7 @@ const editorConfig = {
   theme: PlaygroundEditorTheme,
 };
 let firstLoad = true;
-const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, ...rest }) => {
+const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, onOpenHistory, ...rest }) => {
   const [showComments, setShowComments] = useState(false);
   useEffect(() => {
     if (!pageContent) return;
@@ -43,11 +42,9 @@ const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, 
     </>
 
     const inlineContent = <>
-      <Link href="#" className="text-sm font-medium text-primary">
-        <Button variant="ghost" size="icon">
-          <History size={20} />
-        </Button>
-      </Link>
+      <Button variant="ghost" size="icon" onClick={onOpenHistory}>
+        <History size={20} />
+      </Button>
       {/* <Link href={`/comment/${_id}`} target="_sidebar" className="text-sm font-medium text-primary">
         <Button variant="ghost" size="icon" onClick={() => setShowComments(prev => !prev)}>
           <MessageSquareMore size={20} />
@@ -74,7 +71,7 @@ const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, 
 
   const editorProps = {
     page_id: _id,
-    content: pageContent?.content?.content,
+    content: pageContent?.content,
     onChange,
     showComments,
     setShowComments,

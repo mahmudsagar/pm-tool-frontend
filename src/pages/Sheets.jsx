@@ -6,7 +6,7 @@ import { debounce } from '@/utils/helper';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Copy, LucideHistory, MessageSquareMore, Save, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, ...props }) => {
+const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, onOpenHistory, ...props }) => {
   const univerRef = useRef();
   const { toast } = useToast();
   const [firstLoad, setFirstLoad] = useState(true);
@@ -60,11 +60,9 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
     </>
 
     const inlineContent = <>
-      <Link href="#" className="text-sm font-medium text-primary">
-        <Button variant="ghost" size="icon">
-          <LucideHistory size={20} />
-        </Button>
-      </Link>
+      <Button variant="ghost" size="icon" onClick={onOpenHistory}>
+        <LucideHistory size={20} />
+      </Button>
       <Link href={`/comment/${_id}`} target="_sidebar" className="text-sm font-medium text-primary">
         <Button variant="ghost" size="icon">
           <MessageSquareMore size={20} />
@@ -84,7 +82,7 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
           key={_id}
           style={{ flex: 1 }}
           ref={univerRef}
-          data={pageContent?.content?.content || {}}
+          data={pageContent?.content || {}}
           onChange={onChange}
           handleSubmit={handleSubmit}
         />

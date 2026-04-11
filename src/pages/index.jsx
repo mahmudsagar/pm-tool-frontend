@@ -10,6 +10,7 @@ import Whiteboard from './Whiteboard';
 import Board from './Board';
 import { useDocument } from '@/hooks/queries/useFilesQueries';
 import { useUpdateDocument, useDeleteDocument } from '@/hooks/mutations/useFilesMutations';
+import HistoryPanel from '@/components/elements/HistoryPanel';
 
 const pageType = {
   document: Document,
@@ -24,6 +25,7 @@ const Page = ({ ...props }) => {
   const navigate = useNavigate();
   const paramId = props.id || id;
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Use TanStack Query to fetch document data
   const { data, isLoading, error } = useDocument(paramId);
@@ -56,7 +58,8 @@ const Page = ({ ...props }) => {
     ...restData,
     setTopMenu,
     setOpenDeleteDialog,
-    handleSubmit
+    handleSubmit,
+    onOpenHistory: () => setHistoryOpen(true),
   }
 
 
@@ -67,6 +70,10 @@ const Page = ({ ...props }) => {
       :
       data && <Component {...componentProps} />
     }
+
+    {paramId && page_type !== 'board' && (
+      <HistoryPanel pageId={paramId} open={historyOpen} onOpenChange={setHistoryOpen} />
+    )}
 
     <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
       <AlertDialogContent>
