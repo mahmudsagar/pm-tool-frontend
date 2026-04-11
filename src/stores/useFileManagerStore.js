@@ -642,6 +642,13 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         options.headers["Authorization"] = `Bearer ${token}`;
       }
 
+      // Add workspace header if a current workspace is selected
+      try {
+        const workspaceRaw = typeof window !== "undefined" ? localStorage.getItem("currentWorkspace") : null;
+        const workspaceId = workspaceRaw ? JSON.parse(workspaceRaw)?._id : null;
+        if (workspaceId) options.headers["X-Workspace-ID"] = workspaceId;
+      } catch (_) { /* ignore parse errors */ }
+
       if (data && method !== "GET") {
         options.body = JSON.stringify(data);
       }

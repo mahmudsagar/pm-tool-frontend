@@ -25,6 +25,7 @@ import MenuEmpty from "./MenuEmpty";
 import FolderMenu from "./DropdownMenuItems/FolderMenu";
 import DocStructure from "./DocStructure";
 import { baseUrl } from '@/utils/constants';
+import { api } from '@/utils/api';
 import EllipsisTooltip from "@/components/common/EllipsisTooltip";
 import ShowIcon from "@/components/common/ShowIcon";
 
@@ -69,18 +70,9 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
     if (!documents[id]) {
       setLoading(true);
       try {
-        await fetch(baseUrl + endPoint, {
-           method: 'GET',
-           headers:{
-              'Content-Type':'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-           }
-          })
-        .then((res) => res.json())
-        .then(res => {
-          storeDocuments(res.data, id);
-          setLoading(false);
-        });
+        const res = await api.get(baseUrl + endPoint);
+        storeDocuments(res.data, id);
+        setLoading(false);
       } catch (error) {
         console.error("Get document error: " + error);  
         setLoading(false);      

@@ -113,6 +113,12 @@ const useStatusStore = create(subscribeWithSelector((set, get) => ({
     });
   },
 
+  // Reset store to defaults (called on logout)
+  reset: () => {
+    localStorage.removeItem('appStatuses');
+    set({ statuses: DEFAULT_STATUSES });
+  },
+
   // Delete functionality for File, Folder
   deleteHandler: (id, type) => {
     set((state) => {

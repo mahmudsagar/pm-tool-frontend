@@ -124,7 +124,7 @@ const AddMyFilesDialog = ({
     }
   }, [isOpen, isEdit, initialName, form]);
 
-  const { user, token } = useAuthStore();
+  const { user, token, currentWorkspace } = useAuthStore();
 
   const userID = user?._id;
   useEffect(() => {
@@ -156,7 +156,8 @@ const AddMyFilesDialog = ({
           {
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+              'Authorization': `Bearer ${token}`,
+              ...(currentWorkspace?._id ? { 'X-Workspace-ID': currentWorkspace._id } : {})
             }
           }
         );
@@ -186,7 +187,8 @@ const AddMyFilesDialog = ({
           {
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+              'Authorization': `Bearer ${token}`,
+              ...(currentWorkspace?._id ? { 'X-Workspace-ID': currentWorkspace._id } : {})
             }
           }
         );
@@ -316,7 +318,11 @@ const AddMyFilesDialog = ({
 
       const response = await fetch(baseUrl + endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          ...(currentWorkspace?._id ? { 'X-Workspace-ID': currentWorkspace._id } : {})
+        },
         body: JSON.stringify(documentData),
       });
 

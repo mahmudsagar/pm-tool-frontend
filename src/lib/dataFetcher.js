@@ -25,6 +25,13 @@ const useApi = () => {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
+
+      // Add workspace header if a current workspace is selected
+      try {
+        const workspaceRaw = localStorage.getItem('currentWorkspace');
+        const workspaceId = workspaceRaw ? JSON.parse(workspaceRaw)?._id : null;
+        if (workspaceId) headers['X-Workspace-ID'] = workspaceId;
+      } catch (_) { /* ignore parse errors */ }
       
       const updatedConfig = {
         ...config,

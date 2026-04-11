@@ -14,6 +14,11 @@ async function apiFetch(url, method, body, token) {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   };
+  try {
+    const workspaceRaw = localStorage.getItem('currentWorkspace');
+    const workspaceId = workspaceRaw ? JSON.parse(workspaceRaw)?._id : null;
+    if (workspaceId) opts.headers['X-Workspace-ID'] = workspaceId;
+  } catch (_) { /* ignore */ }
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(url, opts);
   if (!res.ok) {

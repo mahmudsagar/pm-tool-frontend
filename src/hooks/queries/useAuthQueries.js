@@ -13,14 +13,7 @@ export const useInitAuth = () => {
   return useQuery({
     queryKey: ['auth', 'init'],
     queryFn: async () => {
-      const response = await fetch(authBaseUrl, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) throw new Error('Auth validation failed');
-      const data = await response.json();
+      const data = await api.get(authBaseUrl);
       if (data.status === 'success' && data.data) {
         const { setUser, setToken } = useAuthStore.getState();
         setUser(data.data.user_info);

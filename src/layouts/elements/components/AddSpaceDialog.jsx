@@ -70,7 +70,7 @@ const AddSpaceDialog = ({
     }
   });
 
-  const { user, token } = useAuthStore();
+  const { user, token, currentWorkspace } = useAuthStore();
   const userID = user?._id;
   
   // TanStack Query mutations and client
@@ -143,7 +143,8 @@ const AddSpaceDialog = ({
           {
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+              'Authorization': `Bearer ${token}`,
+              ...(currentWorkspace?._id ? { 'X-Workspace-ID': currentWorkspace._id } : {})
             }
           }
         );

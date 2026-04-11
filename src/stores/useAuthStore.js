@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { queryClient } from '@/lib/queryClient';
+import useFileManagerStore from '@/stores/useFileManagerStore';
+import useStatusStore from '@/stores/useStatusStore';
+import useStore from '@/stores/store';
 
 const useAuthStore = create(
   persist(
@@ -132,6 +136,12 @@ const useAuthStore = create(
           localStorage.removeItem('user');
           localStorage.removeItem('workspaces');
           localStorage.removeItem('currentWorkspace');
+          // Clear all TanStack Query cache so the next user doesn't see stale data
+          queryClient.clear();
+          // Reset all Zustand stores that hold user-specific data
+          useFileManagerStore.getState().resetInitialization();
+          useStatusStore.getState().reset();
+          useStore.getState().reset();
         }
       },
 

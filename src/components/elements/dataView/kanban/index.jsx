@@ -22,6 +22,7 @@ import TaskFormModal from './task-form-modal';
 import StatusFormModal from './status-form-modal';
 import useStatusStore from '@/stores/useStatusStore';
 import { documentBaseUrl } from '@/utils/constants';
+import { api } from '@/utils/api';
 
 export default function KanbanView({ data, boardId, onTaskCreate }) {
   console.log({ data, boardId });
@@ -319,22 +320,15 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
       
       try {
         // Update task status in the database
-        await fetch(documentBaseUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify({
-            id: activeItem.id,
-            custom_meta: {
-              ...activeItem.custom_meta,
-              values: {
-                ...activeItem.custom_meta?.values,
-                status: overContainer
-              }
+        await api.put(documentBaseUrl, {
+          id: activeItem.id,
+          custom_meta: {
+            ...activeItem.custom_meta,
+            values: {
+              ...activeItem.custom_meta?.values,
+              status: overContainer
             }
-          }),
+          }
         });
         console.log('Task status updated successfully');
       } catch (error) {

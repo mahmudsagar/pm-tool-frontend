@@ -26,6 +26,12 @@ const useStore = create(subscribeWithSelector((set) => ({
 
   currentRoute: {},
   setCurrentRoute: (pageDetail) => set({ currentRoute: pageDetail }),
+
+  // Reset all user data (called on logout)
+  reset: () => {
+    localStorage.removeItem('BetterNotionStorage');
+    set({ viewData: {}, count: 0, currentRoute: {} });
+  },
 })));
 
 export const useSidebar = create((set) => ({
