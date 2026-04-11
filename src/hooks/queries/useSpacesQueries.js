@@ -71,7 +71,7 @@ export const useSearchUsers = (search) => {
   return useQuery({
     queryKey: ['users', 'search', search],
     queryFn: async () => {
-      const result = await api.get(`${baseUrl}/v1/user?search=${encodeURIComponent(search)}`);
+      const result = await api.get(`${baseUrl}/v1/workspace/member?search=${encodeURIComponent(search)}`);
       return result.data ?? [];
     },
     enabled: search.trim().length > 0,
@@ -107,8 +107,8 @@ export const useUsers = () => {
   return useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const result = await api.get(`${baseUrl}/v1/user`);
-      return result.data;
+      const result = await api.get(`${baseUrl}/v1/workspace/member`);
+      return result.data ?? [];
     },
     staleTime: 10 * 60 * 1000, // 10 minutes - users don't change often
   });
