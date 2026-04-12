@@ -82,13 +82,13 @@ export const getDummyDataView = () => {
       },
       {
           "type": "date",
-          "label": "Due Date",
-          "name": "due_date"
+          "label": "Start Date",
+          "name": "start_date"
       },
       {
           "type": "date",
-          "label": "Start Date",
-          "name": "start_date"
+          "label": "Due Date",
+          "name": "due_date"
       },
       {
           "type": "text",

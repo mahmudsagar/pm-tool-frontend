@@ -150,21 +150,33 @@ const AddMyFilesDialog = ({
         updateHandler(id, data.filetype, updateData);
         if (onEditSuccess) onEditSuccess(res?.data);
       } else if (data.filetype === 'page' && data.page_type === 'board') {
+        const isPrivateBoard = selectedSpace?.is_private ?? false;
+        // For private boards, always include owner in shared_members
+        const baseSharedMembers = data.shared_members || [];
+        const effectiveSharedMembers = isPrivateBoard
+          ? [...new Set([...baseSharedMembers, userID])]
+          : baseSharedMembers;
+        const selectedMemberOptions = effectiveSharedMembers
+          .map(memberId => {
+            const u = Array.isArray(usersData) ? usersData.find(usr => usr._id === memberId) : null;
+            return u ? { label: u.name || u.email, value: u._id } : null;
+          })
+          .filter(Boolean);
         res = await createBoardMutation.mutateAsync({
           name: data.title,
           description: `Board: ${data.title}`,
           user_id: userID,
-          is_private: selectedSpace?.is_private ?? false,
+          is_private: isPrivateBoard,
           shared_teams: data.shared_teams || [],
-          shared_members: data.shared_members || [],
+          shared_members: effectiveSharedMembers,
           custom_meta: {
             fields: [
               { type: 'select', initialized: true, label: 'Status', name: 'status', hasOptions: true, options: [{ label: 'To Do', value: 'todo' }, { label: 'In Progress', value: 'in-progress' }, { label: 'Review', value: 'review' }, { label: 'Done', value: 'done' }] },
-              { type: 'select', initialized: true, label: 'Assignee', name: 'assignee', hasOptions: true, options: Array.isArray(usersData) ? usersData.map(u => ({ label: u.name || u.email, value: u._id })) : [] },
+              { type: 'select', initialized: true, label: 'Assignee', name: 'assignee', hasOptions: true, options: selectedMemberOptions },
               { type: 'select', initialized: true, label: 'Priority', name: 'priority', hasOptions: true, options: [{ label: 'Low', value: 'low' }, { label: 'Medium', value: 'medium' }, { label: 'High', value: 'high' }, { label: 'Critical', value: 'critical' }] },
               { type: 'input', initialized: true, label: 'Type', name: 'type', hasOptions: false },
-              { type: 'date', initialized: true, label: 'Due Date', name: 'due_date', hasOptions: false },
               { type: 'date', initialized: true, label: 'Start Date', name: 'start_date', hasOptions: false },
+              { type: 'date', initialized: true, label: 'Due Date', name: 'due_date', hasOptions: false },
             ],
           },
           space_id: spaceId_,

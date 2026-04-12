@@ -62,6 +62,8 @@ import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import EditPropertyModal from "./EditPropertyModal";
 import Link from "@/BetterRouter/Link";
+import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete";
+import { DatePickerWithRange } from "@/components/elements/editor/dynamicInput/daterangepicker";
 
 // Add this new component for sortable column headers
 function DraggableColumnHeader({ header, addFilter, setEditPropertyModal }) {
@@ -139,7 +141,7 @@ function DraggableColumnHeader({ header, addFilter, setEditPropertyModal }) {
   );
 }
 
-export default function TableView({ data }) {
+export default function TableView({ data, assigneeOptions = [] }) {
   const [sorting, setSorting] = useState([]);
   const [columnOrder, setColumnOrder] = useState([]);
   const [filters, setFilters] = useState([]);
@@ -153,6 +155,26 @@ export default function TableView({ data }) {
   const [rows, setRows] = useState(data.property_values);
   const [rowSelection, setRowSelection] = useState({});
   const [editPropertyModal, setEditPropertyModal] = useState({ open: false, property: null });
+
+  // Sync rows when data from the server changes (e.g. after task creation)
+  useEffect(() => {
+    setRows(data.property_values);
+    form.reset({ rows: data.property_values });
+  }, [data.property_values]);
+
+  // Sync columns when data changes (e.g. dynamic-select options updated)
+  useEffect(() => {
+    setTableColumns(prev =>
+      data.property_name.map(col => {
+        const existing = prev.find(p => p.name === col.name);
+        return {
+          ...col,
+          deleted: existing?.deleted ?? false,
+          hidden: existing?.hidden ?? false,
+        };
+      })
+    );
+  }, [data.property_name]);
 
   const form = useForm({
     defaultValues: {
@@ -271,6 +293,7 @@ export default function TableView({ data }) {
     const rowData = rows[rowIndex];
     const isTitle = column.id === 'title';
     
+    
     return (
       <FormField
         control={form.control}
@@ -286,28 +309,42 @@ export default function TableView({ data }) {
                     readOnly
                   />
                 </Link>
-              ) : column.columnDef.type === 'select' && column.columnDef.props?.optionsData ? (
-                <Select
+              ) : column.columnDef.type === 'daterange' ? (
+                <DatePickerWithRange
                   value={field.value}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger className="w-full border-0 px-4 py-2 h-auto focus:ring-0">
-                    <SelectValue placeholder="Select...">
-                      {column.columnDef.props.optionsData.find(opt => opt.value === field.value)?.label}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {column.columnDef.props.optionsData.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
+                  onChange={field.onChange}
+                  className="border-0 h-auto rounded-none"
+                />
+              ) : (column.columnDef.type === 'select' || column.columnDef.type === 'dynamic-select') ? (() => {
+                // For dynamic-select use the live assigneeOptions prop;
+                // for regular select fall back to the pre-built optionsData.
+                const options =
+                  column.columnDef.type === 'dynamic-select'
+                    ? assigneeOptions
+                    : (column.columnDef.props?.optionsData ?? assigneeOptions);
+                return (
+                  <Select
+                    value={field.value || ''}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger className="w-full border-0 px-4 py-2 h-auto focus:ring-0 test-select">
+                      <SelectValue placeholder="Select...">
+                        {options.find(opt => opt.value === field.value)?.label}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {options.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                );
+              })() : (
                 <Input
                   {...field}
-                  className="border-0 h-auto focus-visible:ring-0 rounded-false py-2 px-4"
+                  className="border-0 h-auto focus-visible:ring-0 rounded-false py-2 px-4 test"
                 />
               )}
             </FormControl>
@@ -394,12 +431,11 @@ export default function TableView({ data }) {
                       <DropdownMenuItem onClick={() => duplicateRows([row.index])}>
                         Duplicate
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => deleteRows([row.index])}
-                        className="text-destructive"
-                      >
-                        Delete
-                      </DropdownMenuItem>
+                      <Delete
+                        fileId={row.original.id}
+                        fileType="page"
+                        onSuccess={() => deleteRows([row.index])}
+                      />
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <div className={`px-2 ${!row.getIsSelected() ? 'opacity-0 group-hover:opacity-100' : ''} transition-opacity`}>
@@ -466,11 +502,13 @@ export default function TableView({ data }) {
                   <TableCell className="w-[120px]"></TableCell>
                 </TableRow>
               ))}
+              {/* {rows.length >= 20 && (
               <TableRow>
                 <TableCell className="py-3 block">
                   Load More
                 </TableCell>
               </TableRow>
+              )} */}
             </TableBody>
           </Table>
         </div>

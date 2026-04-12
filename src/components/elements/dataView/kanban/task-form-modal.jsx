@@ -85,12 +85,14 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
     } else if (open) {
       // Creating new task
       const defaultDueDate = defaultDate ? defaultDate.toISOString().split('T')[0] : '';
+      // Auto-select assignee when there is only one option (e.g. private board with owner only)
+      const defaultAssignee = assigneeOptions.length === 1 ? assigneeOptions[0].value : '';
       form.reset({
         title: '',
         description: '',
         status: defaultStatus,
         priority: 'medium',
-        assignee: '',
+        assignee: defaultAssignee,
         due_date: defaultDueDate,
         start_date: '',
         sprint: 'sprint-1',
@@ -152,13 +154,14 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
                   <FormItem className="md:col-span-2">
                     <FormLabel>Title *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter task title" {...field} required />
+                      <Input placeholder="Enter task title" {...field} required autoFocus />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {isEditing && (
               <FormField
                 control={form.control}
                 name="description"
@@ -176,7 +179,9 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
                   </FormItem>
                 )}
               />
+              )}
 
+              {isEditing && (<>
               <FormField
                 control={form.control}
                 name="status"
@@ -336,6 +341,7 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
                   </FormItem>
                 )}
               />
+              </>)}
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">

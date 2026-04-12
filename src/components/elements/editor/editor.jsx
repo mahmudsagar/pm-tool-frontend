@@ -60,7 +60,7 @@ const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
-export default function Editor({ title, content, page_id, user_id, custom_meta, comments, mediaAttachments, onChange, showComments, setShowComments }) {
+export default function Editor({ title, content, page_id, user_id, custom_meta, comments, mediaAttachments, onChange, showComments, setShowComments, assigneeOptions = [] }) {
   const [editor] = useLexicalComposerContext()
   const uploadMediaMutation = useUploadMedia();
   const deleteMediaMutation = useDeleteMedia();
@@ -172,7 +172,7 @@ export default function Editor({ title, content, page_id, user_id, custom_meta, 
             {title || "Document title"}
           </h1>
         </div>
-        <DynamicInput initialData={custom_meta} onChange={(custom_meta) => {
+        <DynamicInput initialData={custom_meta} assigneeOptions={assigneeOptions} onChange={(custom_meta) => {
           setCurrentCustomFields(custom_meta);
           handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta, inner_comments: currentComments });
         }} />

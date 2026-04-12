@@ -16,17 +16,19 @@ export const useCreateBoardTask = () => {
       return result.data;
     },
     
-    onSuccess: async (_, variables) => {
-      // Invalidate and refetch immediately to show new task
-      await queryClient.invalidateQueries({ 
-        queryKey: ['boards', variables.boardId],
-        refetchType: 'active'
+    onSuccess: (data, variables) => {
+      // Directly push the new document into the cached board — no refetch needed
+      queryClient.setQueryData(['boards', variables.boardId], (oldData) => {
+        if (!oldData) return oldData;
+
+        const appendDoc = (board) => ({
+          ...board,
+          documents: [...(board.documents || []), data],
+        });
+
+        return Array.isArray(oldData) ? oldData.map(appendDoc) : appendDoc(oldData);
       });
-      await queryClient.refetchQueries({ 
-        queryKey: ['boards', variables.boardId],
-        type: 'active'
-      });
-      queryClient.invalidateQueries({ queryKey: ['boards'] });
+
       toast({ title: 'Task created successfully' });
     },
     

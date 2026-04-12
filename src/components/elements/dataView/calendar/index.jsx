@@ -29,7 +29,7 @@ const MONTHS = [
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function CalendarView({ data }) {
+export default function CalendarView({ data, assigneeOptions = [] }) {
   const { getStatusOptions } = useStatusStore();
   const statusOptions = getStatusOptions();
   
@@ -729,6 +729,7 @@ export default function CalendarView({ data }) {
         defaultStatus="todo"
         defaultDate={selectedDate}
         onSave={handleSaveTask}
+        assigneeOptions={assigneeOptions}
       />
     </div>
   );

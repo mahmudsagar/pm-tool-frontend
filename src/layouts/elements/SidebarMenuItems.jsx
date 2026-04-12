@@ -1,5 +1,6 @@
 import { Separator } from "@/components/ui/separator";
 import useFileManagerStore from "@/stores/useFileManagerStore";
+import useAuthStore from "@/stores/useAuthStore";
 import MenuItemSpace from "./components/MenuItemSpace";
 import MenuLoading from "./components/MenuLoading";
 
@@ -30,6 +31,7 @@ const SidebarMenuItems = ({ className }) => {
     isSpacesLoading,
     hasInitializedSpaces
   } = useFileManagerStore(state => state);
+  const isOwner = useAuthStore(state => state.isOwner)();
 
   // console.log("🚀 ~ SidebarMenuItems ~ publicSpaces:", publicSpaces);
   // console.log("🚀 ~ SidebarMenuItems ~ privateSpaces:", privateSpaces);
@@ -58,17 +60,21 @@ const SidebarMenuItems = ({ className }) => {
   // Always show the default spaces, even if no API spaces are loaded
   return (
     <div className="block mb-5">
-      {/* Private Space - Static root with dynamic children */}
-      <MenuItemSpace
-        key={defaultPrivateSpace._id}
-        space={defaultPrivateSpace}
-        isRootSpace={true}
-        spaceType="private"
-        className={className}
-        // Pass all private spaces as children of this root space
-        childSpaces={sortedPrivateSpaces}
-      />
-      <Separator className="my-4" />
+      {/* Private Space - Only visible to workspace owners */}
+      {isOwner && (
+        <>
+          <MenuItemSpace
+            key={defaultPrivateSpace._id}
+            space={defaultPrivateSpace}
+            isRootSpace={true}
+            spaceType="private"
+            className={className}
+            // Pass all private spaces as children of this root space
+            childSpaces={sortedPrivateSpaces}
+          />
+          <Separator className="my-4" />
+        </>
+      )}
       {/* Team Space - Static root with dynamic children */}
       <MenuItemSpace
         key={defaultTeamSpace._id}

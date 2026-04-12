@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useOutletContext, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { sanitize } from '@/utils/helper';
 import useDialog from '@/hooks/useDialog';
@@ -12,6 +12,8 @@ import { useDocument } from '@/hooks/queries/useFilesQueries';
 import { useUpdateDocument, useDeleteDocument } from '@/hooks/mutations/useFilesMutations';
 import HistoryPanel from '@/components/elements/HistoryPanel';
 import { useQueryClient } from '@tanstack/react-query';
+import { useUsers } from '@/hooks/queries/useSpacesQueries';
+import { useTeams } from '@/hooks/queries/useTeamsQueries';
 
 const pageType = {
   document: Document,
@@ -38,6 +40,38 @@ const Page = ({ ...props }) => {
   const deleteDocumentMutation = useDeleteDocument();
 
   const { page_type, ...restData } = data || {}
+
+  // Compute live assignee options for board documents so DynamicInput
+  // can render the 'dynamic-select' assignee field with the correct users.
+  const { data: allUsers } = useUsers();
+  const { data: allTeams } = useTeams();
+  const assigneeOptions = useMemo(() => {
+    const usersArray = Array.isArray(allUsers) ? allUsers : [];
+    if (!usersArray.length || !data?.board_id) return [];
+
+    if (data?.is_private) {
+      return usersArray
+        .filter(u => u._id === data?.user_id)
+        .map(u => ({ label: u.name || u.email, value: u._id }));
+    }
+
+    const hasSharedMembers = (data?.shared_members?.length ?? 0) > 0;
+    const hasSharedTeams = (data?.shared_teams?.length ?? 0) > 0;
+
+    if (!hasSharedMembers && !hasSharedTeams) {
+      return usersArray.map(u => ({ label: u.name || u.email, value: u._id }));
+    }
+
+    const allowedIds = new Set(data?.shared_members || []);
+    const teamsArray = Array.isArray(allTeams) ? allTeams : [];
+    for (const teamId of (data?.shared_teams || [])) {
+      const team = teamsArray.find(t => t._id === teamId);
+      if (team?.shared_members) team.shared_members.forEach(id => allowedIds.add(id));
+    }
+    return usersArray
+      .filter(u => allowedIds.has(u._id))
+      .map(u => ({ label: u.name || u.email, value: u._id }));
+  }, [data, allUsers, allTeams]);
 
   const handleDelete = async () => {
     try {
@@ -96,6 +130,7 @@ const Page = ({ ...props }) => {
     setOpenDeleteDialog: openDeleteDialog,
     handleSubmit,
     onOpenHistory: () => setHistoryOpen(true),
+    assigneeOptions,
   }
 
 

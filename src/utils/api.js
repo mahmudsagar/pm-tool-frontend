@@ -1,5 +1,22 @@
 import useAuthStore from '@/stores/useAuthStore';
 
+// Checks if a parsed response body signals a JWT/auth error
+const isJwtError = (json) => {
+  if (!json) return false;
+  // { status: "failed", message: [{error: ["jwt expired"]}] }
+  if (json.status === 'failed') {
+    const errors = json?.message?.flatMap(m => m?.error ?? []) ?? [];
+    return errors.some(e => typeof e === 'string' && e.toLowerCase().includes('jwt'));
+  }
+  return false;
+};
+
+// Clears auth state and hard-redirects to login
+const forceLogout = () => {
+  useAuthStore.getState().logout();
+  window.location.replace('/login');
+};
+
 // Track if a token refresh is in progress
 let isRefreshing = false;
 let refreshPromise = null;
@@ -100,6 +117,19 @@ async function fetcher(
   }
 
   if (!response.ok) {
+    // For 400/401 auth errors, parse the body to check for JWT expiry
+    // The server sometimes sends 400 instead of 401 for expired tokens
+    if (requireAuth && (response.status === 400 || response.status === 401)) {
+      let body = null;
+      try { body = await response.json(); } catch (_) { /* ignore parse errors */ }
+      if (body) {
+        const isAuthFailed = isJwtError(body);
+        if (isAuthFailed) {
+          forceLogout();
+          throw new Error('Authentication expired. Please log in again.');
+        }
+      }
+    }
     throw new Error(`API Error: ${response.statusText}`);
   }
 
@@ -108,7 +138,16 @@ async function fetcher(
     return null;
   }
 
-  return response.json();
+  const json = await response.json();
+
+  // The server sometimes returns 200 with { status: "failed", message: [{error: ["jwt expired"]}] }
+  // instead of a proper 401. Detect this and force logout.
+  if (requireAuth && isJwtError(json)) {
+    forceLogout();
+    throw new Error('Authentication expired. Please log in again.');
+  }
+
+  return json;
 }
 
 export const api = {

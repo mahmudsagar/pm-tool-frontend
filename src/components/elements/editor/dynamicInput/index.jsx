@@ -33,6 +33,11 @@ const SelectField = ({ options, onChange, value, ...props }) => {
   </Select>
 };
 
+// Wrapper so dynamic-select fields can receive live options injected from outside.
+const DynamicSelectField = ({ dynamicOptions = [], onChange, value, ...props }) => (
+  <SelectField options={dynamicOptions} onChange={onChange} value={value} {...props} />
+);
+
 
 const fieldTypes = [
   { type: 'input', label: 'Input', hasOptions: false },
@@ -47,12 +52,13 @@ const fields = {
   input: Input,
   number: InputNumber,
   select: SelectField,
+  'dynamic-select': DynamicSelectField,
   multiSelect: MultiSelect,
   date: DatePicker,
   daterange: DatePickerWithRange
 }
 
-const Field = ({ field, control, onChange, handleFormChange }) => {
+const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [] }) => {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState(field.label);
   const [actionType, setActionType] = useState('edit');
@@ -62,7 +68,13 @@ const Field = ({ field, control, onChange, handleFormChange }) => {
   const [changedField, setChangedField] = useState({});
 
   const Component = fields[field.type] || Input;
-  const { hasOptions, initialized, ...passableProps } = field;
+  const { hasOptions, initialized, source, ...passableProps } = field;
+
+  // For dynamic-select fields, inject the live options via a dedicated prop
+  // so the component doesn't need to know about the board context itself.
+  const extraProps = (field.type === 'dynamic-select')
+    ? { dynamicOptions: assigneeOptions }
+    : {};
 
   useEffect(() => {
     if (!field.initialized) {
@@ -185,7 +197,7 @@ const Field = ({ field, control, onChange, handleFormChange }) => {
           }
           return <FormItem>
             <FormControl>
-              <Component className="outline-none w-full h-8" {...passableProps} {...formField} />
+              <Component className="outline-none w-full h-8" {...passableProps} {...formField} {...extraProps} />
             </FormControl>
           </FormItem>
         }}
@@ -213,7 +225,7 @@ const FieldList = ({ handleCreateField }) => {
 }
 
 
-const DynamicInput = ({ initialData, onChange }) => {
+const DynamicInput = ({ initialData, onChange, assigneeOptions = [] }) => {
   const { fields = [], values = {} } = sanitize(initialData);
   const [customFields, setCustomFields] = useState(fields); // List of added fields
   const form = useForm({
@@ -275,7 +287,7 @@ const DynamicInput = ({ initialData, onChange }) => {
       <form onChange={handleFormChange} onSubmit={e => e.preventDefault()}>
         <table className='w-full mt-3'>
           <tbody>
-            {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} handleFormChange={handleFormChange} />
+            {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} handleFormChange={handleFormChange} assigneeOptions={assigneeOptions} />
             )}
           </tbody>
         </table>

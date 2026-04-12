@@ -33,6 +33,7 @@ import TaskFormModal from "@/components/elements/dataView/kanban/task-form-modal
 import { useBoard } from "@/hooks/queries/useBoardsQueries"
 import { useCreateBoardTask } from "@/hooks/mutations/useBoardsMutations"
 import { useUsers } from "@/hooks/queries/useSpacesQueries"
+import { useTeams } from "@/hooks/queries/useTeamsQueries"
 
 const layouts = [
   {
@@ -98,6 +99,7 @@ export default function Data({ id: propId, setTopMenu }) {
   const { data: rawBoardData, isLoading } = useBoard(boardId);
   const createTaskMutation = useCreateBoardTask();
   const { data: allUsers } = useUsers();
+  const { data: allTeams } = useTeams();
   
   // Extract board data from array if needed
   const boardData = useMemo(() => {
@@ -105,17 +107,44 @@ export default function Data({ id: propId, setTopMenu }) {
     return Array.isArray(rawBoardData) ? rawBoardData[0] : rawBoardData;
   }, [rawBoardData]);
 
-  // Derive assignee options dynamically from the board's current shared_members
+  // Derive assignee options based on board visibility and sharing:
+  // - Private board: only the owner (auto-assigned)
+  // - Public board with shared_members or shared_teams: only those members + team members
+  // - Public board with no sharing restrictions: all workspace users
   const assigneeOptions = useMemo(() => {
-    if (!boardData?.shared_members?.length || !allUsers) return [];
     const usersArray = Array.isArray(allUsers) ? allUsers : [];
-    return boardData.shared_members
-      .map(memberId => {
-        const user = usersArray.find(u => u._id === memberId);
-        return user ? { label: user.name || user.email, value: user._id } : null;
-      })
-      .filter(Boolean);
-  }, [boardData?.shared_members, allUsers]);
+    if (!usersArray.length) return [];
+
+    // Private board: only the owner
+    if (boardData?.is_private) {
+      return usersArray
+        .filter(u => u._id === boardData?.user_id)
+        .map(u => ({ label: u.name || u.email, value: u._id }));
+    }
+
+    // Public board: check if restricted to specific members/teams
+    const hasSharedMembers = (boardData?.shared_members?.length ?? 0) > 0;
+    const hasSharedTeams = (boardData?.shared_teams?.length ?? 0) > 0;
+
+    if (!hasSharedMembers && !hasSharedTeams) {
+      // No restrictions — all workspace users
+      return usersArray.map(u => ({ label: u.name || u.email, value: u._id }));
+    }
+
+    // Collect allowed user IDs from shared_members + members of shared_teams
+    const allowedIds = new Set(boardData?.shared_members || []);
+    const teamsArray = Array.isArray(allTeams) ? allTeams : [];
+    for (const teamId of (boardData?.shared_teams || [])) {
+      const team = teamsArray.find(t => t._id === teamId);
+      if (team?.shared_members) {
+        team.shared_members.forEach(id => allowedIds.add(id));
+      }
+    }
+
+    return usersArray
+      .filter(u => allowedIds.has(u._id))
+      .map(u => ({ label: u.name || u.email, value: u._id }));
+  }, [boardData, allUsers, allTeams]);
   
   // Shared function to create a task (used by both modal and kanban)
   const createTask = async (taskData) => {
@@ -132,7 +161,7 @@ export default function Data({ id: propId, setTopMenu }) {
       const customMetaValues = {};
       
       // Get all task data fields except the core fields
-      const coreFields = ['title', 'description', 'id', 'task_id', 'kanbanId'];
+      const coreFields = ['title', 'description', 'id', 'task_id', 'kanbanId', 'custom_meta'];
       Object.keys(taskData).forEach(key => {
         if (!coreFields.includes(key) && taskData[key] !== undefined) {
           customMetaValues[key] = taskData[key];
@@ -194,14 +223,19 @@ export default function Data({ id: propId, setTopMenu }) {
     // Add each custom field from board metadata
     customFields.forEach(field => {
       const propertyField = {
+        // Keep original type ('dynamic-select', 'select', 'date', etc.)
+        // 'input' is the legacy name for a text field
         type: field.type === 'input' ? 'text' : field.type,
         label: field.label,
         name: field.name
       };
 
-      // Add options data for select fields
-      if (field.name === 'assignee' && field.hasOptions) {
-        // Use dynamic assignee options derived from current shared_members
+      // Resolve dynamic-select fields based on their source
+      if (field.type === 'dynamic-select' && field.source === 'board-members') {
+        // Assignee-like fields: options derived from board visibility/sharing
+        propertyField.props = { optionsData: assigneeOptions };
+      } else if (field.name === 'assignee' && field.hasOptions) {
+        // Backward compat: old boards with static assignee options
         propertyField.props = { optionsData: assigneeOptions };
       } else if (field.hasOptions && field.options) {
         propertyField.props = {
@@ -226,7 +260,7 @@ export default function Data({ id: propId, setTopMenu }) {
       // Add custom field values
       customFields.forEach(field => {
         const value = doc.custom_meta?.values?.[field.name];
-        taskData[field.name] = value || (field.type === 'select' ? '' : null);
+        taskData[field.name] = value || ((field.type === 'select' || field.type === 'dynamic-select') ? '' : null);
       });
 
       // Add timestamps
@@ -329,7 +363,7 @@ export default function Data({ id: propId, setTopMenu }) {
                 {...(layout.type === "calendar" && { timePeriod: selectedPeriod })}
                 boardId={boardId}
                 onTaskCreate={createTask}
-                {...(layout.type === "kanban" && { assigneeOptions })}
+                assigneeOptions={assigneeOptions}
               />
             )}
           </TabsContent>

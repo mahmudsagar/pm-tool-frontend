@@ -139,8 +139,17 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
       if (boardId && onTaskCreate) {
         // If we're in a board context, use the parent's task creation logic
         console.log('Calling parent onTaskCreate from kanban');
+        // Optimistically add the task to local state immediately so it's visible
+        // without waiting for the query refetch
+        setItems(prev => ({
+          ...prev,
+          [taskData.status]: [...(prev[taskData.status] || []), {
+            ...taskData,
+            kanbanId: taskData.kanbanId || `demo-${taskData.id}`,
+          }]
+        }));
         await onTaskCreate(taskData);
-        // The parent will handle API call and data refresh
+        // Query refetch in onTaskCreate will sync canonical server data
       } else {
         // Demo mode - just update local state
         setItems(prev => ({

@@ -20,7 +20,7 @@ const editorConfig = {
   theme: PlaygroundEditorTheme,
 };
 let firstLoad = true;
-const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, ...rest }) => {
+const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, assigneeOptions = [], ...rest }) => {
   const [showComments, setShowComments] = useState(false);
   useEffect(() => {
     if (!pageContent) return;
@@ -77,6 +77,7 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, .
     onChange,
     showComments,
     setShowComments,
+    assigneeOptions,
     ...rest
   }
 

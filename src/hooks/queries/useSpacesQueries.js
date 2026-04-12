@@ -67,13 +67,26 @@ export const useSearchWorkspaceMembers = (search) => {
 /**
  * Query hook to search users by email/name (for workspace member picker)
  */
+// Shared helper: flatten { owner, members } API response into a flat array.
+// Used as a TanStack Query `select` so it runs on BOTH fresh fetches AND
+// stale/cached data — no hard-refresh required.
+const flattenMembers = (data) => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  const list = [];
+  if (data.owner) list.push(data.owner);
+  if (Array.isArray(data.members)) list.push(...data.members);
+  return list;
+};
+
 export const useSearchUsers = (search) => {
   return useQuery({
     queryKey: ['users', 'search', search],
     queryFn: async () => {
       const result = await api.get(`${baseUrl}/v1/workspace/member?search=${encodeURIComponent(search)}`);
-      return result.data ?? [];
+      return result.data ?? null;
     },
+    select: flattenMembers,
     enabled: search.trim().length > 0,
     staleTime: 30 * 1000,
   });
@@ -87,15 +100,9 @@ export const useWorkspaceMembers = () => {
     queryKey: ['workspace-members'],
     queryFn: async () => {
       const result = await api.get(`${baseUrl}/v1/workspace/member`);
-      const d = result.data;
-      if (!d) return [];
-      // Flatten { owner, members } shape into a single array
-      if (Array.isArray(d)) return d;
-      const list = [];
-      if (d.owner) list.push(d.owner);
-      if (Array.isArray(d.members)) list.push(...d.members);
-      return list;
+      return result.data ?? null;
     },
+    select: flattenMembers,
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -108,8 +115,9 @@ export const useUsers = () => {
     queryKey: ['users'],
     queryFn: async () => {
       const result = await api.get(`${baseUrl}/v1/workspace/member`);
-      return result.data ?? [];
+      return result.data ?? null;
     },
+    select: flattenMembers,
     staleTime: 10 * 60 * 1000, // 10 minutes - users don't change often
   });
 };

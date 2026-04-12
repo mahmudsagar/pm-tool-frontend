@@ -45,7 +45,7 @@ const TASK_HEIGHT = 32;
 const HEADER_HEIGHT = 80;
 const ROW_HEIGHT = 48;
 
-export default function TimelineView({ data, boardId }) {
+export default function TimelineView({ data, boardId, assigneeOptions = [] }) {
   const { getStatusOptions } = useStatusStore();
   const statusOptions = getStatusOptions();
   const updateDocumentMeta = useUpdateDocumentMeta();
@@ -1011,6 +1011,7 @@ export default function TimelineView({ data, boardId }) {
         defaultStatus="todo"
         defaultDate={selectedDate}
         onSave={handleSaveTask}
+        assigneeOptions={assigneeOptions}
       />
     </div>
   );
