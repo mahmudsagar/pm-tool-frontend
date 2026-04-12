@@ -5,7 +5,7 @@ const Drawer = ({ children, header = '', contentClassName = '', ...props }) => {
 
 
   return <Sheet {...props}>
-    <SheetContent  closeBtn={false} className={cn("w-[600px] sm:w-[740px] lg:max-w-screen-lg overflow-y-scroll max-h-screen", contentClassName)} onInteractOutside={(e) => {
+    <SheetContent  closeBtn={false} className={cn("w-full md:w-[70vw] md:max-w-[60vw] overflow-y-scroll max-h-screen", contentClassName)} onInteractOutside={(e) => {
       e.preventDefault();
     }}>
       <SheetHeader>

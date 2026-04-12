@@ -1,4 +1,6 @@
 // import useSyncStore from "@/stores/useSyncStore"
+
+const EMPTY_ASSIGNEE_OPTIONS = [];
 import { 
   LayoutGrid, 
   Table,
@@ -7,6 +9,8 @@ import {
   ChevronDown,
   Copy,
   Share,
+  Layers,
+  X,
 } from "lucide-react"
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -97,6 +101,7 @@ export default function Data({ id: propId, setTopMenu }) {
   const [selectedPeriod, setSelectedPeriod] = useState("5years");
   const [activeTab, setActiveTab] = useState("table");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [groupBy, setGroupBy] = useState(null); // null = no grouping | { name, label, type }
   
   // Use TanStack Query to fetch board data
   const { data: rawBoardData, isLoading } = useBoard(boardId);
@@ -116,7 +121,7 @@ export default function Data({ id: propId, setTopMenu }) {
   // - Public board with no sharing restrictions: all workspace users
   const assigneeOptions = useMemo(() => {
     const usersArray = Array.isArray(allUsers) ? allUsers : [];
-    if (!usersArray.length) return [];
+    if (!usersArray.length) return EMPTY_ASSIGNEE_OPTIONS;
 
     // Private board: only the owner
     if (boardData?.is_private) {
@@ -301,6 +306,12 @@ export default function Data({ id: propId, setTopMenu }) {
       customFields,
     };
   }, [boardData, assigneeOptions]);
+
+  // Fields that can be used as group-by options (exclude identity/text fields)
+  const groupByOptions = useMemo(() => {
+    const excluded = ['task_id', 'title', 'description'];
+    return boardTasks.property_name.filter(f => !excluded.includes(f.name));
+  }, [boardTasks.property_name]);
   
   return (
     <section className="w-full flex flex-col items-center justify-center gap-4 text-center p-6">
@@ -327,7 +338,7 @@ export default function Data({ id: propId, setTopMenu }) {
       )}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Header */}
-        <div className="flex items-center justify-between border-gray-300">
+        <div className="flex items-center justify-between border-gray-300 mb-5">
           <div className="flex items-center gap-4">
             <TabsList>
               {/* Tabs */}
@@ -374,6 +385,50 @@ export default function Data({ id: propId, setTopMenu }) {
           </div>
         </div>
 
+        {/* Sub-toolbar: group-by selector shown below the tabs strip */}
+        <div className="flex items-center gap-3 py-2 border-b mb-4 text-sm">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`flex items-center gap-1 h-7 px-2 text-xs ${groupBy ? 'text-primary' : 'text-muted-foreground'}`}
+              >
+                <Layers className="h-3.5 w-3.5" />
+                Group by
+                {groupBy && <span className="font-semibold ml-1">{groupBy.label}</span>}
+                <ChevronDown className="h-3 w-3 ml-0.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem
+                onClick={() => setGroupBy(null)}
+                className={!groupBy ? 'bg-accent' : ''}
+              >
+                No grouping
+              </DropdownMenuItem>
+              {groupByOptions.map(opt => (
+                <DropdownMenuItem
+                  key={opt.name}
+                  onClick={() => setGroupBy(opt)}
+                  className={groupBy?.name === opt.name ? 'bg-accent' : ''}
+                >
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {groupBy && (
+            <button
+              onClick={() => setGroupBy(null)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-3 w-3" /> Clear
+            </button>
+          )}
+        </div>
+
         {/* Tabs Content */}
         {layouts?.map((layout) => (
           <TabsContent key={layout.type} value={layout.type}>
@@ -388,6 +443,7 @@ export default function Data({ id: propId, setTopMenu }) {
                 boardId={boardId}
                 onTaskCreate={createTask}
                 assigneeOptions={assigneeOptions}
+                groupBy={groupBy}
               />
             )}
           </TabsContent>

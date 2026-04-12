@@ -7,7 +7,6 @@ import Spinner from '@/components/elements/spinner';
 import Document from './Document';
 import Sheet from './Sheets';
 import Whiteboard from './Whiteboard';
-import Board from './Board';
 import { useDocument } from '@/hooks/queries/useFilesQueries';
 import { useUpdateDocument, useDeleteDocument } from '@/hooks/mutations/useFilesMutations';
 import HistoryPanel from '@/components/elements/HistoryPanel';
@@ -19,7 +18,6 @@ const pageType = {
   document: Document,
   sheet: Sheet,
   whiteboard: Whiteboard,
-  board: Board
 }
 const Page = ({ ...props }) => {
   const context = useOutletContext();

@@ -1,13 +1,5 @@
 "use client"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -29,8 +21,9 @@ import {
   flexRender,
   getSortedRowModel,
 } from "@tanstack/react-table"
-import { useState, useEffect } from "react"
-import { ArrowUpIcon, ArrowDownIcon, GripVertical, PlusIcon, CopyIcon } from "lucide-react"
+import { useState, useEffect, useMemo, useCallback } from "react"
+import { useSearchParams } from "react-router-dom"
+import { ArrowUpIcon, ArrowDownIcon, GripVertical, PlusIcon, CopyIcon, Circle, ChevronRight } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,8 +47,6 @@ import {
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import TablePropertiesMenu from "@/components/elements/dataView/TablePropertiesMenu";
-
 import TableFilter from "@/components/elements/dataView/filter"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
@@ -64,6 +55,8 @@ import EditPropertyModal from "./EditPropertyModal";
 import Link from "@/BetterRouter/Link";
 import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete";
 import { DatePickerWithRange } from "@/components/elements/editor/dynamicInput/daterangepicker";
+
+const EMPTY_ASSIGNEE_OPTIONS = [];
 
 // Add this new component for sortable column headers
 function DraggableColumnHeader({ header, addFilter, setEditPropertyModal }) {
@@ -86,65 +79,137 @@ function DraggableColumnHeader({ header, addFilter, setEditPropertyModal }) {
 
   
   return (
-    <TableHead ref={setNodeRef} style={style} key={header.id}>
-      <div className="h-full w-full">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="w-full h-full">
-            <div className="flex items-center justify-between gap-2 px-2 py-1">
-              <div className="flex items-center gap-2">
-                {flexRender(
-                  header.column.columnDef.header,
-                  header.getContext()
-                )}
-                {{
-                  asc: <ArrowUpIcon className="h-4 w-4" />,
-                  desc: <ArrowDownIcon className="h-4 w-4" />,
-                }[header.column.getIsSorted()] ?? null}
-              </div>
-              <div 
-                {...attributes} 
-                {...listeners} 
-                className="cursor-grab active:cursor-grabbing"
-              >
-                <GripVertical className="h-4 w-4 opacity-50 hover:opacity-100" />
-              </div>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="w-36 shrink-0"
+    >
+      <DropdownMenu>
+        <DropdownMenuTrigger className="w-full">
+          <div className="flex items-center gap-1 px-2 py-2 text-xs font-medium text-muted-foreground">
+            {flexRender(header.column.columnDef.header, header.getContext())}
+            {{
+              asc: <ArrowUpIcon className="h-3 w-3" />,
+              desc: <ArrowDownIcon className="h-3 w-3" />,
+            }[header.column.getIsSorted()] ?? null}
+            <div {...attributes} {...listeners} className="ml-auto cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100">
+              <GripVertical className="h-3 w-3" />
             </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => {
-              console.log(header.column.columnDef);
-              setEditPropertyModal({
-                open: true,
-                property: {
-                  ...header.column.columnDef,
-                  label: header.column.columnDef.header, // ensure label is set from header
-                  name: header.column.columnDef.accessorKey || header.column.columnDef.id // set name from accessorKey or id
-                }
-              })
-            }}>
-              Edit property
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => addFilter(header, 'ascending')}>
-              Add ascending
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => addFilter(header, 'descending')}>
-              Add descending
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              Filter
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </TableHead>
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => setEditPropertyModal({
+            open: true,
+            property: {
+              ...header.column.columnDef,
+              label: header.column.columnDef.header,
+              name: header.column.columnDef.accessorKey || header.column.columnDef.id
+            }
+          })}>
+            Edit property
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => addFilter(header, 'ascending')}>Add ascending</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => addFilter(header, 'descending')}>Add descending</DropdownMenuItem>
+          <DropdownMenuItem>Filter</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
-export default function TableView({ data, assigneeOptions = [] }) {
+function AddTaskRow() {
+  return (
+    <div className="flex items-center gap-2 px-[52px] py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40 cursor-pointer transition-colors border-t">
+      <PlusIcon className="h-4 w-4" />
+      Add Task
+    </div>
+  );
+}
+
+function HeaderRow({ sensors, handleDragEnd, table, addFilter, setEditPropertyModal, addNewColumn }) {
+  return (
+    <div className="flex items-center border-b text-xs text-muted-foreground select-none">
+      <div className="w-[52px] shrink-0" />
+      <div className="flex-1 min-w-[200px] px-3 py-2 font-medium">Name</div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext
+          items={table.getHeaderGroups()[0]?.headers.map(h => h.id) ?? []}
+          strategy={horizontalListSortingStrategy}
+        >
+          {table.getHeaderGroups()[0]?.headers
+            .filter(h => h.id !== 'title' && h.id !== 'task_id' && h.id !== 'description')
+            .map(header => (
+              <DraggableColumnHeader
+                key={header.id}
+                header={header}
+                addFilter={addFilter}
+                setEditPropertyModal={setEditPropertyModal}
+              />
+            ))}
+        </SortableContext>
+      </DndContext>
+      <div className="w-10 flex items-center justify-center">
+        <button type="button" onClick={addNewColumn} className="p-1 hover:bg-accent rounded-sm">
+          <PlusIcon className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick }) {
+  const rowData = rows[row.index];
+  const isSelected = row.getIsSelected();
+
+  return (
+    <div
+      className={`flex items-center group min-h-[36px] hover:bg-accent/40 transition-colors cursor-pointer ${isSelected ? 'bg-primary/10' : ''}`}
+      onClick={() => onRowClick(row)}
+    >
+      <div
+        className={`w-5 flex items-center justify-center pl-2 shrink-0 ${!isSelected ? 'opacity-0 group-hover:opacity-100' : ''} transition-opacity`}
+        onClick={e => e.stopPropagation()}
+      >
+        <Checkbox checked={isSelected} onCheckedChange={(value) => row.toggleSelected(!!value)} />
+      </div>
+      <div className="w-7 flex items-center justify-center shrink-0" onClick={e => e.stopPropagation()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 transition-opacity p-1">
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => duplicateRows([row.index])}>Duplicate</DropdownMenuItem>
+            <Delete fileId={rowData?.id} fileType="page" onSuccess={() => deleteRows([row.index])} />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div className="w-5 flex items-center justify-center shrink-0">
+        <Circle className="h-3.5 w-3.5 fill-green-500 text-green-500" />
+      </div>
+      <div className="flex-1 min-w-[200px]">
+        <span className="block truncate px-3 py-2 text-sm hover:text-primary">
+          {row.getValue('title') || 'Untitled'}
+        </span>
+      </div>
+      {row.getVisibleCells()
+        .filter(cell => cell.column.id !== 'title' && cell.column.id !== 'task_id' && cell.column.id !== 'description')
+        .map(cell => (
+          <div key={cell.id} className="w-36 shrink-0 text-sm" onClick={e => e.stopPropagation()}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </div>
+        ))}
+      <div className="w-10 shrink-0" />
+    </div>
+  );
+}
+
+export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIONS, groupBy = null }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sorting, setSorting] = useState([]);
   const [columnOrder, setColumnOrder] = useState([]);
   const [filters, setFilters] = useState([]);
+  const [collapsedGroups, setCollapsedGroups] = useState({});
   const [tableColumns, setTableColumns] = useState(
     data.property_name.map(col => ({
       ...col,
@@ -164,16 +229,24 @@ export default function TableView({ data, assigneeOptions = [] }) {
 
   // Sync columns when data changes (e.g. dynamic-select options updated)
   useEffect(() => {
-    setTableColumns(prev =>
-      data.property_name.map(col => {
+    setTableColumns(prev => {
+      const next = data.property_name.map(col => {
         const existing = prev.find(p => p.name === col.name);
         return {
           ...col,
           deleted: existing?.deleted ?? false,
           hidden: existing?.hidden ?? false,
         };
-      })
-    );
+      });
+      // Bail out if names/types haven't changed to avoid a spurious re-render
+      if (
+        next.length === prev.length &&
+        next.every((col, i) => col.name === prev[i]?.name && col.type === prev[i]?.type)
+      ) {
+        return prev;
+      }
+      return next;
+    });
   }, [data.property_name]);
 
   const form = useForm({
@@ -383,6 +456,83 @@ export default function TableView({ data, assigneeOptions = [] }) {
     onRowSelectionChange: setRowSelection,
   });
 
+  // Build bucketed groups when groupBy is active
+  const groupedRows = useMemo(() => {
+    if (!groupBy) return null;
+    const tableRows = table.getRowModel().rows;
+
+    // Resolve the full options list for this field so every possible value
+    // gets a group even when no row currently holds that value.
+    const fieldDef = tableColumns.find(c => c.name === groupBy.name);
+    const options =
+      groupBy.type === 'dynamic-select'
+        ? assigneeOptions
+        : (fieldDef?.props?.optionsData ?? []);
+
+    // Pre-seed every known option as an empty bucket (preserves options order)
+    const buckets = {};
+    const order = [];
+    options.forEach(opt => {
+      const key = String(opt.value);
+      buckets[key] = [];
+      order.push(key);
+    });
+
+    // Place each row into the matching bucket (or the unset bucket)
+    tableRows.forEach(row => {
+      const rawVal = row.getValue(groupBy.name);
+      const key = rawVal != null && rawVal !== '' ? String(rawVal) : '__unset__';
+      if (!buckets[key]) {
+        buckets[key] = [];
+        order.push(key);
+      }
+      buckets[key].push(row);
+    });
+
+    // Always include the "unset" bucket last (even if empty)
+    if (!buckets['__unset__']) {
+      buckets['__unset__'] = [];
+      order.push('__unset__');
+    }
+
+    return order.map(key => ({
+      value: key,
+      label:
+        key === '__unset__'
+          ? `No ${groupBy.label}`
+          : (options.find(o => o.value === key)?.label || key),
+      count: buckets[key].length,
+      rows: buckets[key],
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupBy, rows, tableColumns, assigneeOptions]);
+
+  // Toggle a group's collapsed state
+  const toggleGroup = (groupValue) => {
+    setCollapsedGroups(prev => ({ ...prev, [groupValue]: !prev[groupValue] }));
+  };
+
+  // Accent colours for group headers — cycles when there are more groups than colours
+  const GROUP_COLORS = [
+    'text-blue-500 fill-blue-500',
+    'text-emerald-500 fill-emerald-500',
+    'text-orange-500 fill-orange-500',
+    'text-violet-500 fill-violet-500',
+    'text-rose-500 fill-rose-500',
+    'text-amber-500 fill-amber-500',
+    'text-cyan-500 fill-cyan-500',
+    'text-pink-500 fill-pink-500',
+  ];
+
+  const handleRowClick = useCallback((row) => {
+    const rowData = rows[row.index];
+    if (!rowData?.id) return;
+    const to = `/document/${rowData.id}`;
+    searchParams.delete(to);
+    searchParams.set(to, '_sidebar');
+    setSearchParams(searchParams);
+  }, [rows, searchParams, setSearchParams]);
+
   return (
     <Form {...form}>
       <form>
@@ -391,128 +541,77 @@ export default function TableView({ data, assigneeOptions = [] }) {
           onRemoveFilter={removeFilter}
           columns={tableColumns}
         />
-        
+
         {/* Bulk actions bar */}
         {Object.keys(rowSelection).length > 0 && (
           <div className="h-10 mb-2 flex items-center gap-2 px-2 border rounded-md">
             <span className="text-sm text-muted-foreground">
               {Object.keys(rowSelection).length} selected
             </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => duplicateRows()}
-            >
+            <Button variant="ghost" size="sm" onClick={() => duplicateRows()}>
               <CopyIcon className="h-4 w-4 mr-2" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => deleteRows()}
-              className="text-destructive"
-            >
+            <Button variant="ghost" size="sm" onClick={() => deleteRows()} className="text-destructive">
               <Trash2 className="h-4 w-4 mr-2" />
             </Button>
           </div>
         )}
 
-        {/* Table with floating menu */}
-        <div className="relative flex gap-2">
-          {/* Floating menu */}
-          <div className="flex flex-col pt-10">
-            <div className="flex flex-col gap-[1px]">
-              {table.getRowModel().rows.map((row) => (
-                <div key={row.id} className="flex items-center h-10 group">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 transition-opacity p-2">
-                      <GripVertical className="h-4 w-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => duplicateRows([row.index])}>
-                        Duplicate
-                      </DropdownMenuItem>
-                      <Delete
-                        fileId={row.original.id}
-                        fileType="page"
-                        onSuccess={() => deleteRows([row.index])}
+        {/* Scrollable table area */}
+        <div className="overflow-x-auto w-full">
+          {groupedRows ? (
+            /* ── GROUPED VIEW ─────────────────────────────────────────── */
+            <div>
+              {groupedRows.map((group, groupIndex) => {
+                const isCollapsed = collapsedGroups[group.value] ?? false;
+                const colorClass = GROUP_COLORS[groupIndex % GROUP_COLORS.length];
+                return (
+                  <div key={group.value} className="mb-4">
+                    {/* Group header bar */}
+                    <div
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-accent/30 cursor-pointer select-none"
+                      onClick={() => toggleGroup(group.value)}
+                    >
+                      <ChevronRight
+                        className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-150 ${!isCollapsed ? 'rotate-90' : ''}`}
                       />
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <div className={`px-2 ${!row.getIsSelected() ? 'opacity-0 group-hover:opacity-100' : ''} transition-opacity`}>
-                    <Checkbox
-                      checked={row.getIsSelected()}
-                      onCheckedChange={(value) => row.toggleSelected(!!value)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                      <Circle className={`h-3 w-3 ${colorClass}`} />
+                      <span className="text-sm font-semibold">{group.label}</span>
+                      <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-tight">
+                        {group.count}
+                      </span>
+                    </div>
 
-          {/* Table */}
-          <Table className="border flex-1">
-            <TableHeader>
-              <DndContext 
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext 
-                  items={table.getHeaderGroups()[0].headers.map(h => h.id)}
-                  strategy={horizontalListSortingStrategy}
-                >
-                  <TableRow>
-                    {table.getHeaderGroups()[0].headers.map((header) => (
-                      <DraggableColumnHeader 
-                        setEditPropertyModal={setEditPropertyModal}
-                        addFilter={addFilter} 
-                        key={header.id} 
-                        header={header} 
-                      />
-                    ))}
-                    
-                    {/* Add menu and plus button as the last column */}
-                    <TableHead className="w-[120px]">
-                      <div className="flex items-center justify-between px-2 py-1">
-                        <button 
-                          onClick={addNewColumn}
-                          className="p-1 hover:bg-gray-100 rounded-sm"
-                          type="button"
-                        >
-                          <PlusIcon className="h-4 w-4" />
-                        </button>
-                        <TablePropertiesMenu 
-                          properties={tableColumns} 
-                          setProperties={setTableColumns} 
-                        />
-                      </div>
-                    </TableHead>
-                  </TableRow>
-                </SortableContext>
-              </DndContext>
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="divide-x">
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-left p-0">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                  <TableCell className="w-[120px]"></TableCell>
-                </TableRow>
-              ))}
-              {/* {rows.length >= 20 && (
-              <TableRow>
-                <TableCell className="py-3 block">
-                  Load More
-                </TableCell>
-              </TableRow>
-              )} */}
-            </TableBody>
-          </Table>
+                    {!isCollapsed && (
+                      <>
+                        {/* Per-group column header */}
+                        <HeaderRow sensors={sensors} handleDragEnd={handleDragEnd} table={table} addFilter={addFilter} setEditPropertyModal={setEditPropertyModal} addNewColumn={addNewColumn} />
+                        {/* Rows */}
+                        <div className="divide-y">
+                          {group.rows.map(row => <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} />)}
+                        </div>
+                        <AddTaskRow />
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* ── FLAT VIEW ────────────────────────────────────────────── */
+            <>
+              <HeaderRow sensors={sensors} handleDragEnd={handleDragEnd} table={table} addFilter={addFilter} setEditPropertyModal={setEditPropertyModal} addNewColumn={addNewColumn} />
+              <div className="divide-y">
+                {table.getRowModel().rows.map(row => (
+                  <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} />
+                ))}
+              </div>
+              <AddTaskRow />
+            </>
+          )}
         </div>
       </form>
+
       <EditPropertyModal
         open={editPropertyModal.open}
         property={editPropertyModal.property}

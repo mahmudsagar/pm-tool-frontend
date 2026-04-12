@@ -23,9 +23,9 @@ import StatusFormModal from './status-form-modal';
 import useStatusStore from '@/stores/useStatusStore';
 import { useUpdateDocumentMeta } from '@/hooks/mutations/useFilesMutations';
 
-export default function KanbanView({ data, boardId, onTaskCreate, assigneeOptions = [] }) {
-  console.log({ data, boardId });
-  
+const EMPTY_ASSIGNEE_OPTIONS = [];
+
+export default function KanbanView({ data, boardId, onTaskCreate, assigneeOptions = EMPTY_ASSIGNEE_OPTIONS, groupBy = null }) {
   // Get status management functions from the global store
   const statuses = useStatusStore(state => state.statuses);
   const addStatus = useStatusStore(state => state.addStatus);
@@ -46,15 +46,50 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
   // findItemById or findContainer to determine the original column at end time.
   const dragSourceRef = useRef(null);
   
-  // Memoize columns so the reference is stable — prevents the sync useEffect
-  // below from firing on every render and resetting items mid-drag.
-  const columns = useMemo(() =>
-    statuses.map(status => ({
+  // When groupBy prop is active, derive columns from its unique values;
+  // otherwise fall back to the status store.
+  const columns = useMemo(() => {
+    if (groupBy) {
+      // Resolve full options list for this field
+      const fieldDef = data.property_name?.find(f => f.name === groupBy.name);
+      const options =
+        groupBy.type === 'dynamic-select'
+          ? assigneeOptions
+          : (fieldDef?.props?.optionsData ?? []);
+
+      // Start with every known option so empty groups still appear
+      const seen = new Set();
+      const cols = options.map(opt => {
+        seen.add(String(opt.value));
+        return { id: String(opt.value), title: opt.label, color: 'bg-slate-100' };
+      });
+
+      // Append any values found in data that aren't in the options list
+      data.property_values.forEach(item => {
+        const val = item[groupBy.name];
+        const key = val != null && val !== '' ? String(val) : '__unset__';
+        if (!seen.has(key)) {
+          seen.add(key);
+          const label = key === '__unset__' ? `No ${groupBy.label}` : key;
+          cols.push({ id: key, title: label, color: 'bg-slate-100' });
+        }
+      });
+
+      // Always include the unset bucket
+      if (!seen.has('__unset__')) {
+        cols.push({ id: '__unset__', title: `No ${groupBy.label}`, color: 'bg-slate-100' });
+      }
+
+      return cols.length === 0
+        ? [{ id: '__unset__', title: `No ${groupBy.label}`, color: 'bg-slate-100' }]
+        : cols;
+    }
+    return statuses.map(status => ({
       id: status.id || status.value,
       title: status.title || status.label,
       color: status.color || 'bg-slate-100',
-    })),
-  [statuses]);
+    }));
+  }, [groupBy, data.property_values, data.property_name, statuses, assigneeOptions]);
   
   const [items, setItems] = useState({});
 
@@ -66,24 +101,26 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
       organizedItems[column.id] = [];
     });
 
-    // Group items by status
+    // Group items by the active groupBy field (or status as default)
+    const groupField = groupBy ? groupBy.name : 'status';
     data.property_values.forEach((item) => {
-      const status = item.status || 'todo';
+      const val = item[groupField];
+      const key = val != null && val !== '' ? String(val) : '__unset__';
       const kanbanItem = {
         ...item,
         kanbanId: `demo-${item.id}`, // Unique ID for drag and drop
       };
 
-      if (organizedItems[status]) {
-        organizedItems[status].push(kanbanItem);
+      if (organizedItems[key] !== undefined) {
+        organizedItems[key].push(kanbanItem);
       } else {
-        // Fallback to first column if status doesn't exist
+        // Fallback to first column if value doesn't match any column
         organizedItems[columns[0]?.id || 'todo'].push(kanbanItem);
       }
     });
 
     setItems(organizedItems);
-  }, [data.property_values, columns]);
+  }, [data.property_values, columns, groupBy]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -138,7 +175,6 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
       // Add new task
       if (boardId && onTaskCreate) {
         // If we're in a board context, use the parent's task creation logic
-        console.log('Calling parent onTaskCreate from kanban');
         // Optimistically add the task to local state immediately so it's visible
         // without waiting for the query refetch
         setItems(prev => ({
