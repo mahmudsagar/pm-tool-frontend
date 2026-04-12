@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/select';
 import useStatusStore from '@/stores/useStatusStore';
 
-function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo", defaultDate = null, onSave }) {
+function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo", defaultDate = null, onSave, assigneeOptions = [] }) {
   // Get status options from the global store
   const { getStatusOptions } = useStatusStore();
   const statusOptions = getStatusOptions();
@@ -37,13 +37,6 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
     { label: "Medium", value: "medium" },
     { label: "High", value: "high" },
     { label: "Critical", value: "critical" }
-  ];
-
-  const assigneeOptions = [
-    { label: "Muhtasim Fuad Fahim", value: "muhtasim_fuad_fahim" },
-    { label: "Mahmudul Hasan", value: "mahmudul_hasan" },
-    { label: "Sarah Johnson", value: "sarah_johnson" },
-    { label: "Alex Chen", value: "alex_chen" }
   ];
 
   const sprintOptions = [
@@ -68,6 +61,7 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
       priority: 'medium',
       assignee: '',
       due_date: '',
+      start_date: '',
       sprint: 'sprint-1',
       type: 'feature'
     }
@@ -84,6 +78,7 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
         priority: task.priority || 'medium',
         assignee: task.assignee || '',
         due_date: task.due_date || '',
+        start_date: task.start_date || '',
         sprint: task.sprint || 'sprint-1',
         type: task.type || 'feature'
       });
@@ -97,6 +92,7 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
         priority: 'medium',
         assignee: '',
         due_date: defaultDueDate,
+        start_date: '',
         sprint: 'sprint-1',
         type: 'feature'
       });
@@ -249,6 +245,20 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
                         </span>
                       )}
                     </FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="start_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>

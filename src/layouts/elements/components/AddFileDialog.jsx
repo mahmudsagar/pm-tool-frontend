@@ -135,6 +135,14 @@ const AddFileDialog = ({
         updateHandler(id, data.filetype, updateData);
         if (onEditSuccess) onEditSuccess(res?.data);
       } else if (data.filetype === 'page' && data.page_type === 'board') {
+        // Build assignee options from selected shared_members for dynamic reference
+        const selectedMemberOptions = (data.shared_members || [])
+          .map(memberId => {
+            const user = usersData?.find(u => u._id === memberId);
+            return user ? { label: user.name || user.email, value: user._id } : null;
+          })
+          .filter(Boolean);
+
         const boardData = {
           name: data.title,
           description: `Board: ${data.title}`,
@@ -145,7 +153,7 @@ const AddFileDialog = ({
           custom_meta: {
             fields: [
               { type: 'select', initialized: true, label: 'Status', name: 'status', hasOptions: true, options: [{ label: 'To Do', value: 'todo' }, { label: 'In Progress', value: 'in-progress' }, { label: 'Review', value: 'review' }, { label: 'Done', value: 'done' }] },
-              { type: 'select', initialized: true, label: 'Assignee', name: 'assignee', hasOptions: true, options: Array.isArray(usersData) ? usersData.map(u => ({ label: u.name || u.email, value: u._id })) : [] },
+              { type: 'select', initialized: true, label: 'Assignee', name: 'assignee', hasOptions: true, options: selectedMemberOptions },
               { type: 'select', initialized: true, label: 'Priority', name: 'priority', hasOptions: true, options: [{ label: 'Low', value: 'low' }, { label: 'Medium', value: 'medium' }, { label: 'High', value: 'high' }, { label: 'Critical', value: 'critical' }] },
               { type: 'input', initialized: true, label: 'Type', name: 'type', hasOptions: false },
               { type: 'date', initialized: true, label: 'Due Date', name: 'due_date', hasOptions: false },

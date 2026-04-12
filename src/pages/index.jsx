@@ -47,6 +47,7 @@ const Page = ({ ...props }) => {
     updateDocumentMutation.mutate({
       documentId: data?._id,
       content: sanitize(value),
+      boardId: data?.board_id,
     });
   }
 

@@ -23,7 +23,7 @@ import StatusFormModal from './status-form-modal';
 import useStatusStore from '@/stores/useStatusStore';
 import { useUpdateDocumentMeta } from '@/hooks/mutations/useFilesMutations';
 
-export default function KanbanView({ data, boardId, onTaskCreate }) {
+export default function KanbanView({ data, boardId, onTaskCreate, assigneeOptions = [] }) {
   console.log({ data, boardId });
   
   // Get status management functions from the global store
@@ -328,7 +328,8 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
               ...activeItem.custom_meta?.values,
               status: overContainer
             }
-          }
+          },
+          boardId,
         });
         console.log('Task status updated successfully');
       } catch (error) {
@@ -411,6 +412,7 @@ export default function KanbanView({ data, boardId, onTaskCreate }) {
         onOpenChange={setTaskModalOpen}
         defaultStatus={defaultStatus}
         onSave={handleSaveTask}
+        assigneeOptions={assigneeOptions}
       />
 
       <StatusFormModal

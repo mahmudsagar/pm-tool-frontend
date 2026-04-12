@@ -32,6 +32,7 @@ import { Plus } from "lucide-react"
 import TaskFormModal from "@/components/elements/dataView/kanban/task-form-modal"
 import { useBoard } from "@/hooks/queries/useBoardsQueries"
 import { useCreateBoardTask } from "@/hooks/mutations/useBoardsMutations"
+import { useUsers } from "@/hooks/queries/useSpacesQueries"
 
 const layouts = [
   {
@@ -96,12 +97,25 @@ export default function Data({ id: propId, setTopMenu }) {
   // Use TanStack Query to fetch board data
   const { data: rawBoardData, isLoading } = useBoard(boardId);
   const createTaskMutation = useCreateBoardTask();
+  const { data: allUsers } = useUsers();
   
   // Extract board data from array if needed
   const boardData = useMemo(() => {
     if (!rawBoardData) return null;
     return Array.isArray(rawBoardData) ? rawBoardData[0] : rawBoardData;
   }, [rawBoardData]);
+
+  // Derive assignee options dynamically from the board's current shared_members
+  const assigneeOptions = useMemo(() => {
+    if (!boardData?.shared_members?.length || !allUsers) return [];
+    const usersArray = Array.isArray(allUsers) ? allUsers : [];
+    return boardData.shared_members
+      .map(memberId => {
+        const user = usersArray.find(u => u._id === memberId);
+        return user ? { label: user.name || user.email, value: user._id } : null;
+      })
+      .filter(Boolean);
+  }, [boardData?.shared_members, allUsers]);
   
   // Shared function to create a task (used by both modal and kanban)
   const createTask = async (taskData) => {
@@ -186,7 +200,10 @@ export default function Data({ id: propId, setTopMenu }) {
       };
 
       // Add options data for select fields
-      if (field.hasOptions && field.options) {
+      if (field.name === 'assignee' && field.hasOptions) {
+        // Use dynamic assignee options derived from current shared_members
+        propertyField.props = { optionsData: assigneeOptions };
+      } else if (field.hasOptions && field.options) {
         propertyField.props = {
           optionsData: field.options
         };
@@ -223,7 +240,7 @@ export default function Data({ id: propId, setTopMenu }) {
       tasks: propertyValues,
       customFields,
     };
-  }, [boardData]);
+  }, [boardData, assigneeOptions]);
   
   return (
     <section className="w-full flex flex-col items-center justify-center gap-4 text-center p-6">
@@ -310,6 +327,7 @@ export default function Data({ id: propId, setTopMenu }) {
                 {...(layout.type === "calendar" && { timePeriod: selectedPeriod })}
                 boardId={boardId}
                 onTaskCreate={createTask}
+                {...(layout.type === "kanban" && { assigneeOptions })}
               />
             )}
           </TabsContent>
@@ -321,6 +339,7 @@ export default function Data({ id: propId, setTopMenu }) {
         open={isTaskModalOpen}
         onOpenChange={setIsTaskModalOpen}
         onSave={createTask}
+        assigneeOptions={assigneeOptions}
       />
     </section>
   )

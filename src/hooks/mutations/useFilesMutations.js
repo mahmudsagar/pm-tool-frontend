@@ -242,7 +242,7 @@ export const useUpdateDocument = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ documentId, content }) => {
+    mutationFn: async ({ documentId, content, boardId }) => {
       const result = await api.put(documentBaseUrl, { id: documentId, content });
       return result;
     },
@@ -277,30 +277,38 @@ export const useUpdateDocument = () => {
 
     // Confirm the cache with the final state. Avoids an infinite
     // GET → re-init → auto-save → PUT loop in spreadsheets.
-    onSuccess: (_, { documentId, content }) => {
+    onSuccess: (_, { documentId, content, boardId }) => {
       const actualContent = content?.content ?? content;
       queryClient.setQueryData(['documents', documentId], (old) =>
         old
           ? { ...old, pageContent: { ...old.pageContent, content: actualContent } }
           : old
       );
+      // If this document belongs to a board, invalidate the board query so
+      // the kanban view reflects status/field changes in real-time.
+      if (boardId) {
+        queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
+      }
     },
   });
 };
 
 /**
  * Mutation hook to update document custom_meta (e.g. kanban field values)
- * Pass { documentId, custom_meta }
+ * Pass { documentId, custom_meta, boardId? }
  */
 export const useUpdateDocumentMeta = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ documentId, custom_meta }) => {
+    mutationFn: async ({ documentId, custom_meta, boardId }) => {
       const result = await api.put(documentBaseUrl, { id: documentId, custom_meta });
       return result;
     },
-    onSuccess: (_, { documentId }) => {
+    onSuccess: (_, { documentId, boardId }) => {
       queryClient.invalidateQueries({ queryKey: ['documents', documentId] });
+      if (boardId) {
+        queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
+      }
     },
   });
 };
