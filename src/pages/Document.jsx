@@ -2,7 +2,8 @@ import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { useEffect, useState } from 'react';
 import { debounce } from '@/utils/helper';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Copy, History, MessageSquareMore, Share, Trash } from 'lucide-react';
+import { Copy, ExternalLink, History, Maximize2, MessageSquareMore } from 'lucide-react';
+import Delete from '@/layouts/elements/components/DropdownMenuItems/items/Delete';
 import { Button } from '@/components/ui/button';
 import PlaygroundNodes from '@/components/elements/editor/nodes/PlaygroundNodes';
 import PlaygroundEditorTheme from '@/components/elements/editor/themes/PlaygroundEditorTheme';
@@ -19,14 +20,19 @@ const editorConfig = {
   theme: PlaygroundEditorTheme,
 };
 let firstLoad = true;
-const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, onOpenHistory, ...rest }) => {
+const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, ...rest }) => {
   const [showComments, setShowComments] = useState(false);
   useEffect(() => {
     if (!pageContent) return;
     const dropdownContent = <>
-      <DropdownMenuItem className="cursor-pointer">
+      <DropdownMenuItem className="cursor-pointer" onClick={() => window.open(`/document/${_id}`, '_blank')}>
         <div className='flex items-center gap-1'>
-          <Share size={12} /> Share
+          <ExternalLink size={12} /> Open in new tab
+        </div>
+      </DropdownMenuItem>
+      <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = `/document/${_id}`}>
+        <div className='flex items-center gap-1'>
+          <Maximize2 size={12} /> Open in full mode
         </div>
       </DropdownMenuItem>
       <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/document/${_id}`)}>
@@ -34,11 +40,7 @@ const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, 
           <Copy size={12} /> Copy link
         </div>
       </DropdownMenuItem>
-      <DropdownMenuItem className="cursor-pointer" onClick={() => setOpenDeleteDialog(true)}>
-        <div className='flex items-center gap-1'>
-          <Trash size={12} /> Delete this document
-        </div>
-      </DropdownMenuItem>
+      <Delete fileId={_id} fileType="page" />
     </>
 
     const inlineContent = <>
@@ -55,7 +57,7 @@ const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, 
       dropdownContent,
       inlineContent
     })
-  }, [pageContent, setOpenDeleteDialog, setTopMenu]);
+  }, [pageContent, setTopMenu]);
 
   const onChange = debounce((value) => {
     if (!pageContent) {

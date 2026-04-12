@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import useSyncStore from '@/stores/useSyncStore';
 import Spinner from '../spinner';
 import { sanitize } from '@/utils/helper';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import useDialog from '@/hooks/useDialog';
 import dayjs from 'dayjs';
 import ButtonLoading from '@/layouts/elements/components/ButtonLoading';
 import {
@@ -38,6 +38,7 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   const deleteCommentMutation = useDeleteComment();
   const uploadMediaMutation = useUploadMedia();
   const deleteMediaMutation = useDeleteMedia();
+  const { confirm } = useDialog();
 
   const { user } = useSyncStore();
 
@@ -393,31 +394,27 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive"
-
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure to delete?</AlertDialogTitle>
-                                {/* <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete your account
-                                and remove your data from our servers.
-                              </AlertDialogDescription> */}
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>No</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(comment?._id)}>Yes</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive"
+                            onClick={() => {
+                              setTimeout(() => {
+                                if (document.activeElement instanceof HTMLElement) {
+                                  document.activeElement.blur();
+                                }
+                                confirm({
+                                  title: 'Are you absolutely sure to delete?',
+                                  confirmLabel: 'Yes',
+                                  cancelLabel: 'No',
+                                  confirmVariant: 'destructive',
+                                  onConfirm: () => handleDelete(comment?._id),
+                                });
+                              }, 150);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
 
                         </div>
                       </div>

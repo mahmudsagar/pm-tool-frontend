@@ -46,7 +46,15 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
           <Copy size={12} /> Copy link
         </div>
       </DropdownMenuItem>
-      <DropdownMenuItem className="cursor-pointer" onClick={() => setOpenDeleteDialog(true)}>
+      <DropdownMenuItem className="cursor-pointer" onSelect={(e) => {
+        e.preventDefault();
+        setTimeout(() => {
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
+          setOpenDeleteDialog(true);
+        }, 150);
+      }}>
         <div className='flex items-center gap-1'>
           <Trash size={12} /> Delete this sheet
         </div>

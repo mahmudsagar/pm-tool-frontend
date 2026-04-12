@@ -20,16 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,6 +53,7 @@ import { useCreateUser, useUpdateUser, useDeleteUser } from '@/hooks/mutations/u
 import { useCreateTeam, useUpdateTeam, useDeleteTeam } from '@/hooks/mutations/useTeamsMutations';
 import { useAddWorkspaceMember } from '@/hooks/mutations/useWorkspaceMutations';
 import useAuthStore from '@/stores/useAuthStore';
+import useDialog from '@/hooks/useDialog';
 
 // ─── User Form ────────────────────────────────────────────────────────────────
 
@@ -505,36 +496,6 @@ function AddWorkspaceMemberDialog({ open, onOpenChange }) {
   );
 }
 
-// ─── Delete Confirm ───────────────────────────────────────────────────────────
-
-function DeleteConfirmDialog({ open, onOpenChange, onConfirm, count = 1, isPending }) {
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            {count > 1
-              ? `This will permanently delete ${count} items.`
-              : 'This will permanently delete this item.'}
-            {' '}This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            disabled={isPending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {isPending ? 'Deleting...' : 'Delete'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
-
 // ─── Members Tab ──────────────────────────────────────────────────────────────
 
 function MembersTab() {
@@ -542,9 +503,9 @@ function MembersTab() {
   const deleteUser = useDeleteUser();
   const { isOwner } = useAuthStore();
   const canManage = isOwner();
+  const { confirm } = useDialog();
 
   const [selected, setSelected] = useState([]);
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, ids: [] });
   const [memberDialog, setMemberDialog] = useState(false);
 
   const toggleSelect = (id) => {
@@ -556,23 +517,42 @@ function MembersTab() {
   };
 
   const openEdit = (user) => {};
-  const openDeleteSingle = (id) => setDeleteDialog({ open: true, ids: [id] });
-  const openDeleteBulk = () => setDeleteDialog({ open: true, ids: selected });
-
-  const handleDeleteConfirm = () => {
-    const ids = deleteDialog.ids;
-    let completed = 0;
-    ids.forEach((id) => {
-      deleteUser.mutate(id, {
-        onSettled: () => {
-          completed++;
-          if (completed === ids.length) {
-            setDeleteDialog({ open: false, ids: [] });
-            setSelected([]);
-          }
+  const openDeleteSingle = (id) => {
+    setTimeout(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      confirm({
+        title: 'Are you sure?',
+        description: 'This will permanently delete this member. This action cannot be undone.',
+        confirmLabel: 'Delete',
+        cancelLabel: 'Cancel',
+        confirmVariant: 'destructive',
+        onConfirm: async () => {
+          await deleteUser.mutateAsync(id);
+          setSelected((prev) => prev.filter((x) => x !== id));
         },
       });
-    });
+    }, 150);
+  };
+  const openDeleteBulk = () => {
+    const ids = [...selected];
+    setTimeout(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      confirm({
+        title: 'Are you sure?',
+        description: `This will permanently delete ${ids.length} ${ids.length > 1 ? 'members' : 'member'}. This action cannot be undone.`,
+        confirmLabel: 'Delete',
+        cancelLabel: 'Cancel',
+        confirmVariant: 'destructive',
+        onConfirm: async () => {
+          await Promise.all(ids.map((id) => deleteUser.mutateAsync(id)));
+          setSelected([]);
+        },
+      });
+    }, 150);
   };
 
   return (
@@ -655,14 +635,6 @@ function MembersTab() {
         open={memberDialog}
         onOpenChange={setMemberDialog}
       />
-
-      <DeleteConfirmDialog
-        open={deleteDialog.open}
-        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
-        onConfirm={handleDeleteConfirm}
-        count={deleteDialog.ids.length}
-        isPending={deleteUser.isPending}
-      />
     </div>
   );
 }
@@ -674,10 +646,10 @@ function TeamsTab() {
   const deleteTeam = useDeleteTeam();
   const { isOwner } = useAuthStore();
   const canManage = isOwner();
+  const { confirm } = useDialog();
 
   const [selected, setSelected] = useState([]);
   const [teamDialog, setTeamDialog] = useState({ open: false, team: null });
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, ids: [] });
 
   const toggleSelect = (id) => {
     setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
@@ -689,23 +661,42 @@ function TeamsTab() {
 
   const openAdd = () => setTeamDialog({ open: true, team: null });
   const openEdit = (team) => setTeamDialog({ open: true, team });
-  const openDeleteSingle = (id) => setDeleteDialog({ open: true, ids: [id] });
-  const openDeleteBulk = () => setDeleteDialog({ open: true, ids: selected });
-
-  const handleDeleteConfirm = () => {
-    const ids = deleteDialog.ids;
-    let completed = 0;
-    ids.forEach((id) => {
-      deleteTeam.mutate(id, {
-        onSettled: () => {
-          completed++;
-          if (completed === ids.length) {
-            setDeleteDialog({ open: false, ids: [] });
-            setSelected([]);
-          }
+  const openDeleteSingle = (id) => {
+    setTimeout(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      confirm({
+        title: 'Are you sure?',
+        description: 'This will permanently delete this team. This action cannot be undone.',
+        confirmLabel: 'Delete',
+        cancelLabel: 'Cancel',
+        confirmVariant: 'destructive',
+        onConfirm: async () => {
+          await deleteTeam.mutateAsync(id);
+          setSelected((prev) => prev.filter((x) => x !== id));
         },
       });
-    });
+    }, 150);
+  };
+  const openDeleteBulk = () => {
+    const ids = [...selected];
+    setTimeout(() => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      confirm({
+        title: 'Are you sure?',
+        description: `This will permanently delete ${ids.length} ${ids.length > 1 ? 'teams' : 'team'}. This action cannot be undone.`,
+        confirmLabel: 'Delete',
+        cancelLabel: 'Cancel',
+        confirmVariant: 'destructive',
+        onConfirm: async () => {
+          await Promise.all(ids.map((id) => deleteTeam.mutateAsync(id)));
+          setSelected([]);
+        },
+      });
+    }, 150);
   };
 
   return (
@@ -795,14 +786,6 @@ function TeamsTab() {
         open={teamDialog.open}
         onOpenChange={(open) => setTeamDialog((prev) => ({ ...prev, open }))}
         team={teamDialog.team}
-      />
-
-      <DeleteConfirmDialog
-        open={deleteDialog.open}
-        onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
-        onConfirm={handleDeleteConfirm}
-        count={deleteDialog.ids.length}
-        isPending={deleteTeam.isPending}
       />
     </div>
   );
