@@ -19,7 +19,7 @@ export function CommandMenu({ ...props }) {
 
   // Debounce the search input
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchInput), 400);
+    const timer = setTimeout(() => setDebouncedSearch(searchInput), 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
 

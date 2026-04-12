@@ -24,13 +24,21 @@ import useDialogStore from '@/stores/useDialogStore';
 function AlertDialogInstance({ dialog }) {
   const closeDialog = useDialogStore((s) => s.closeDialog);
   const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+    // Wait for Radix exit animation to finish before unmounting,
+    // otherwise the overlay/aria-hidden is never cleaned up.
+    setTimeout(() => closeDialog(dialog.id), 200);
+  }, [dialog.id, closeDialog]);
 
   const handleCancel = useCallback(() => {
     if (typeof dialog.onCancel === 'function') {
       dialog.onCancel();
     }
-    closeDialog(dialog.id);
-  }, [dialog, closeDialog]);
+    close();
+  }, [dialog, close]);
 
   const handleConfirm = useCallback(async () => {
     if (typeof dialog.onConfirm === 'function') {
@@ -44,11 +52,11 @@ function AlertDialogInstance({ dialog }) {
         }
       }
     }
-    closeDialog(dialog.id);
-  }, [dialog, closeDialog]);
+    close();
+  }, [dialog, close]);
 
   return (
-    <AlertDialog open onOpenChange={(open) => { if (!open) handleCancel(); }}>
+    <AlertDialog open={isOpen} onOpenChange={(open) => { if (!open) handleCancel(); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{dialog.title}</AlertDialogTitle>
@@ -79,16 +87,22 @@ function AlertDialogInstance({ dialog }) {
  */
 function DialogInstance({ dialog }) {
   const closeDialog = useDialogStore((s) => s.closeDialog);
+  const [isOpen, setIsOpen] = useState(true);
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+    setTimeout(() => closeDialog(dialog.id), 200);
+  }, [dialog.id, closeDialog]);
 
   const handleClose = useCallback(() => {
     if (typeof dialog.onCancel === 'function') {
       dialog.onCancel();
     }
-    closeDialog(dialog.id);
-  }, [dialog, closeDialog]);
+    close();
+  }, [dialog, close]);
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!open) handleClose(); }}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent
         aria-describedby={dialog.description ? undefined : undefined}
         onInteractOutside={(e) => {
@@ -109,7 +123,7 @@ function DialogInstance({ dialog }) {
             <Button variant="outline" onClick={handleClose}>
               {dialog.cancelLabel}
             </Button>
-            <Button variant={dialog.confirmVariant} onClick={() => { dialog.onConfirm(); closeDialog(dialog.id); }}>
+            <Button variant={dialog.confirmVariant} onClick={() => { dialog.onConfirm(); close(); }}>
               {dialog.confirmLabel}
             </Button>
           </DialogFooter>
