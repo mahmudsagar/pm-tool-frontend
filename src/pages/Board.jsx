@@ -5,6 +5,8 @@ import {
   Calendar,
   BarChart3,
   ChevronDown,
+  Copy,
+  Share,
 } from "lucide-react"
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -22,6 +24,7 @@ import TimelineView from "@/components/elements/dataView/timeline"
 import CalendarView from "@/components/elements/dataView/calendar"
 import { TabsContent } from "@radix-ui/react-tabs"
 import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
+import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete"
 
 // Dummy data for now - could be replaced with board-specific data
 import { getDummyDataView } from "@/utils/dummyDataView"
@@ -67,8 +70,22 @@ const timePeriods = [
 const Board = ({ _id, title, setTopMenu, custom_meta }) => {
   // Set the top menu for board pages
   useEffect(() => {
-    setTopMenu && setTopMenu('board');
-  }, [setTopMenu]);
+    if (!setTopMenu) return;
+    const dropdownContent = <>
+      <DropdownMenuItem className="cursor-pointer">
+        <div className='flex items-center gap-1'>
+          <Share size={12} /> Share
+        </div>
+      </DropdownMenuItem>
+      <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/document/${_id}`)}>
+        <div className='flex items-center gap-1'>
+          <Copy size={12} /> Copy link
+        </div>
+      </DropdownMenuItem>
+      <Delete fileId={_id} fileType="board" />
+    </>;
+    setTopMenu({ dropdownContent });
+  }, [_id, setTopMenu]);
 
   // Get dynamic data with current status options
   const viewJSONData = getDummyDataView();

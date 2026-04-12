@@ -5,6 +5,8 @@ import {
   Calendar,
   BarChart3,
   ChevronDown,
+  Copy,
+  Share,
 } from "lucide-react"
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -26,12 +28,13 @@ import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
 
 // Dummy data for now
 import { getDummyDataView } from "@/utils/dummyDataView"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
 import { Plus } from "lucide-react"
 import TaskFormModal from "@/components/elements/dataView/kanban/task-form-modal"
 import { useBoard } from "@/hooks/queries/useBoardsQueries"
 import { useCreateBoardTask } from "@/hooks/mutations/useBoardsMutations"
+import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete"
 import { useUsers } from "@/hooks/queries/useSpacesQueries"
 import { useTeams } from "@/hooks/queries/useTeamsQueries"
 
@@ -145,7 +148,28 @@ export default function Data({ id: propId, setTopMenu }) {
       .filter(u => allowedIds.has(u._id))
       .map(u => ({ label: u.name || u.email, value: u._id }));
   }, [boardData, allUsers, allTeams]);
-  
+
+  // Register Share / Copy link / Delete in the page-level header (sidebar or full-page)
+  useEffect(() => {
+    if (!setTopMenu) return;
+
+    const dropdownContent = <>
+      <DropdownMenuItem className="cursor-pointer">
+        <div className='flex items-center gap-1'>
+          <Share size={12} /> Share
+        </div>
+      </DropdownMenuItem>
+      <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/board/${boardId}`)}>
+        <div className='flex items-center gap-1'>
+          <Copy size={12} /> Copy link
+        </div>
+      </DropdownMenuItem>
+      <Delete fileId={boardId} fileType="board" />
+    </>;
+
+    setTopMenu({ dropdownContent });
+  }, [boardId, setTopMenu]);
+
   // Shared function to create a task (used by both modal and kanban)
   const createTask = async (taskData) => {
     if (!boardId) {
