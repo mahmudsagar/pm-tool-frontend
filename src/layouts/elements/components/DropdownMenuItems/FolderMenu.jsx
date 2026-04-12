@@ -37,8 +37,12 @@ const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) =
       const baseUrl = window.location.origin;
       let fileLink = '';
       
-      if (type === 'folder' || type === 'group') {
-        fileLink = `${baseUrl}/file-manager/${type}/${id}`;
+      if (type === 'folder') {
+        fileLink = `${baseUrl}/folder/${id}`;
+      } else if (type === 'group') {
+        fileLink = `${baseUrl}/group/${id}`;
+      } else if (type === 'board') {
+        fileLink = `${baseUrl}/board/${id}`;
       } else {
         fileLink = `${baseUrl}/document/${id}`;
       }

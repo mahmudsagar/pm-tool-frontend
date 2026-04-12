@@ -29,7 +29,7 @@ const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, 
           <Share size={12} /> Share
         </div>
       </DropdownMenuItem>
-      <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(location.href)}>
+      <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/document/${_id}`)}>
         <div className='flex items-center gap-1'>
           <Copy size={12} /> Copy link
         </div>

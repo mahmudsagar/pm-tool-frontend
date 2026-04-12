@@ -1,21 +1,61 @@
-import { matchRoutes, useSearchParams } from "react-router-dom";
+import { matchRoutes, useSearchParams, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import Drawer from "../Drawer";
 import { routes } from "../routes";
 import Header from "@/layouts/elements/header";
 import './style.scss';
 import { SheetClose } from "@/components/ui/sheet";
-import { X } from "lucide-react";
+import { X, Maximize2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const ParallelRoutePage = ({ path, target }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [open, setOpen] = useState(true);
-  const [topMenu, setTopMenu] = useState({
-    dropdownContent: null,
-    inlineContent: null
-  })
+  const [pageTopMenu, setPageTopMenu] = useState({ dropdownContent: null, inlineContent: null });
+  const navigate = useNavigate();
   /** will implement modal later, has some issues with the dialog component */
   const Container = target === '_popup' ? Drawer : Drawer;
+
+  const handleExpandFullMode = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete(path);
+    setSearchParams(newParams, { replace: true });
+    navigate(path);
+  };
+
+  const setTopMenu = (menu) => {
+    if (menu && typeof menu === 'object') {
+      setPageTopMenu(menu);
+    }
+  };
+
+  const closeBtn = (
+    <div className="flex items-center gap-1">
+      <SheetClose className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary flex items-center justify-center w-7 h-7">
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </SheetClose>
+    </div>
+  );
+
+  const topMenu = {
+    ...pageTopMenu,
+    inlineContent: (
+      <>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-sm opacity-70 hover:opacity-100 w-7 h-7"
+          onClick={handleExpandFullMode}
+          title="Open in full mode"
+          >
+          <Maximize2 className="h-4 w-4" />
+          <span className="sr-only">Open in full mode</span>
+        </Button>
+        {pageTopMenu?.inlineContent}
+      </>
+    ),
+  };
 
 
 
@@ -50,13 +90,7 @@ const ParallelRoutePage = ({ path, target }) => {
     return '';
   }
   return <Container {...containerProps}>
-    <Header topMenu={topMenu} showPageTitle={false} closeBtn={
-      <SheetClose
-        className="sheet-close-btn absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetClose>
-    } />
+    <Header topMenu={topMenu} showPageTitle={false} closeBtn={closeBtn} />
 
     {React.cloneElement(route.element, { ...params, setTopMenu })}
   </Container>

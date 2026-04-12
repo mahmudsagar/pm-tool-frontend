@@ -41,7 +41,7 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
       {/* <DropdownMenuItem className="cursor-pointer" onClick={() => window.print()}>
         Print... <MenubarShortcut>⌘P</MenubarShortcut>
       </DropdownMenuItem> */}
-      <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(location.href)}>
+      <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/sheet/${_id}`)}>
         <div className='flex items-center gap-1'>
           <Copy size={12} /> Copy link
         </div>
