@@ -300,14 +300,21 @@ export const useUpdateDocument = () => {
 export const useUpdateDocumentMeta = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ documentId, custom_meta, boardId }) => {
+    mutationFn: async ({ documentId, custom_meta }) => {
       const result = await api.put(documentBaseUrl, { id: documentId, custom_meta });
       return result;
     },
     onSuccess: (_, { documentId, boardId }) => {
       queryClient.invalidateQueries({ queryKey: ['documents', documentId] });
       if (boardId) {
-        queryClient.invalidateQueries({ queryKey: ['boards', boardId] });
+        queryClient.invalidateQueries({
+          queryKey: ['boards', boardId],
+          refetchType: 'active',
+        });
+        queryClient.refetchQueries({
+          queryKey: ['boards', boardId],
+          type: 'active',
+        });
       }
     },
   });

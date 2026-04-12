@@ -33,6 +33,7 @@ import {
 import { Input } from '@/components/ui/input';
 import TaskFormModal from '../kanban/task-form-modal';
 import useStatusStore from '@/stores/useStatusStore';
+import { useUpdateDocumentMeta } from '@/hooks/mutations/useFilesMutations';
 
 const ZOOM_LEVELS = [
   { key: 'days', label: 'Days', dayWidth: 40, dateFormat: 'MMM d' },
@@ -44,9 +45,10 @@ const TASK_HEIGHT = 32;
 const HEADER_HEIGHT = 80;
 const ROW_HEIGHT = 48;
 
-export default function TimelineView({ data }) {
+export default function TimelineView({ data, boardId }) {
   const { getStatusOptions } = useStatusStore();
   const statusOptions = getStatusOptions();
+  const updateDocumentMeta = useUpdateDocumentMeta();
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [zoomLevel, setZoomLevel] = useState(ZOOM_LEVELS[0]);
@@ -61,11 +63,14 @@ export default function TimelineView({ data }) {
   );
   const [draggedTask, setDraggedTask] = useState(null);
   const [dragHandle, setDragHandle] = useState(null);
+  const [localTaskDates, setLocalTaskDates] = useState({});
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
   
   const timelineRef = useRef(null);
   const scrollContainerRef = useRef(null);
+  const dragRef = useRef(null);
+  const didDragRef = useRef(false);
 
   // Get tasks from data
   const tasks = useMemo(() => {
@@ -175,47 +180,41 @@ export default function TimelineView({ data }) {
     return dates;
   }, [currentDate, zoomLevel]);
 
-  // Calculate task position and width
+  // Calculate task position and width using direct date arithmetic so tasks
+  // outside the pre-generated date array are still placed correctly.
   const getTaskPosition = useCallback((task) => {
+    if (!dateRange.length) return { left: 0, width: 0, visible: false };
+
     const startDate = new Date(task.startDate);
     const endDate = new Date(task.dueDate);
-    
-    let startIndex = -1;
-    let duration = 1;
-    
+    const rangeStart = dateRange[0];
+
+    let left, duration;
+
     if (zoomLevel.key === 'months') {
-      startIndex = dateRange.findIndex(date => 
-        date.getFullYear() === startDate.getFullYear() && 
-        date.getMonth() === startDate.getMonth()
-      );
-      
-      const monthsDiff = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
-                        (endDate.getMonth() - startDate.getMonth());
+      const monthOffset =
+        (startDate.getFullYear() - rangeStart.getFullYear()) * 12 +
+        (startDate.getMonth() - rangeStart.getMonth());
+      left = monthOffset * zoomLevel.dayWidth;
+      const monthsDiff =
+        (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+        (endDate.getMonth() - startDate.getMonth());
       duration = Math.max(1, monthsDiff || 1);
-      
     } else if (zoomLevel.key === 'weeks') {
-      // Find which week the task starts in
-      startIndex = dateRange.findIndex(weekStart => {
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        return startDate >= weekStart && startDate <= weekEnd;
-      });
-      
-      const weeksDiff = Math.ceil((endDate - startDate) / (7 * 24 * 60 * 60 * 1000));
-      duration = Math.max(1, weeksDiff);
-      
+      const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+      left = ((startDate - rangeStart) / msPerWeek) * zoomLevel.dayWidth;
+      duration = Math.max(1, Math.ceil((endDate - startDate) / msPerWeek));
     } else {
       // Days view
-      startIndex = dateRange.findIndex(date => 
-        date.toDateString() === startDate.toDateString()
-      );
-      duration = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
+      const msPerDay = 1000 * 60 * 60 * 24;
+      left = ((startDate - rangeStart) / msPerDay) * zoomLevel.dayWidth;
+      duration = Math.max(1, Math.ceil((endDate - startDate) / msPerDay));
     }
-    
+
     return {
-      left: startIndex >= 0 ? startIndex * zoomLevel.dayWidth : 0,
+      left,
       width: Math.max(zoomLevel.dayWidth, duration * zoomLevel.dayWidth),
-      visible: startIndex >= 0 || startIndex + duration >= 0
+      visible: true,
     };
   }, [dateRange, zoomLevel]);
 
@@ -260,49 +259,154 @@ export default function TimelineView({ data }) {
   };
 
   // Drag and resize handlers
-  const handleTaskMouseDown = (e, task, handle = 'move') => {
+  const handleTaskMouseDown = useCallback((e, task, handle = 'move') => {
+    if (e.button !== 0) return;
     e.preventDefault();
+
+    const rect = timelineRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const scrollLeft = scrollContainerRef.current?.scrollLeft ?? 0;
+    const startMouseX = e.clientX - rect.left + scrollLeft;
+
+    dragRef.current = {
+      task,
+      handle,
+      startMouseX,
+      initialStartDate: new Date(task.startDate),
+      initialDueDate: new Date(task.dueDate),
+      pendingDates: null,
+    };
+    didDragRef.current = false;
     setDraggedTask(task);
     setDragHandle(handle);
-    
-    const onMouseMove = (e) => {
-      // Calculate new position based on mouse movement
-      const rect = timelineRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      
-      const mouseX = e.clientX - rect.left;
-      const dayIndex = Math.floor(mouseX / zoomLevel.dayWidth);
-      
-      if (dayIndex >= 0 && dayIndex < dateRange.length) {
-        const newDate = dateRange[dayIndex];
-        
+
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const msPerWeek = 7 * msPerDay;
+
+    const onMouseMove = (moveEvent) => {
+      const ref = dragRef.current;
+      if (!ref) return;
+
+      const currentRect = timelineRef.current?.getBoundingClientRect();
+      if (!currentRect) return;
+
+      const currentScrollLeft = scrollContainerRef.current?.scrollLeft ?? 0;
+      const currentMouseX = moveEvent.clientX - currentRect.left + currentScrollLeft;
+      const deltaX = currentMouseX - ref.startMouseX;
+
+      if (Math.abs(deltaX) < 3) return;
+      didDragRef.current = true;
+
+      let newStartDate, newDueDate;
+
+      if (zoomLevel.key === 'days') {
+        const deltaDays = Math.round(deltaX / zoomLevel.dayWidth);
         if (handle === 'move') {
-          // Move entire task
-          const duration = task.dueDate - task.startDate;
-          console.log('Moving task to:', newDate);
-          // Update task dates here
-        } else if (handle === 'resize-left') {
-          // Resize from start
-          console.log('Resizing task start to:', newDate);
-          // Update task start date here
+          newStartDate = new Date(ref.initialStartDate.getTime() + deltaDays * msPerDay);
+          const dur = ref.initialDueDate.getTime() - ref.initialStartDate.getTime();
+          newDueDate = new Date(newStartDate.getTime() + dur);
         } else if (handle === 'resize-right') {
-          // Resize from end
-          console.log('Resizing task end to:', newDate);
-          // Update task due date here
+          newStartDate = ref.initialStartDate;
+          newDueDate = new Date(ref.initialDueDate.getTime() + deltaDays * msPerDay);
+          if (newDueDate <= newStartDate) newDueDate = new Date(newStartDate.getTime() + msPerDay);
+        } else if (handle === 'resize-left') {
+          newStartDate = new Date(ref.initialStartDate.getTime() + deltaDays * msPerDay);
+          newDueDate = ref.initialDueDate;
+          if (newStartDate >= newDueDate) newStartDate = new Date(newDueDate.getTime() - msPerDay);
+        }
+      } else if (zoomLevel.key === 'weeks') {
+        const deltaWeeks = Math.round(deltaX / zoomLevel.dayWidth);
+        if (handle === 'move') {
+          newStartDate = new Date(ref.initialStartDate.getTime() + deltaWeeks * msPerWeek);
+          const dur = ref.initialDueDate.getTime() - ref.initialStartDate.getTime();
+          newDueDate = new Date(newStartDate.getTime() + dur);
+        } else if (handle === 'resize-right') {
+          newStartDate = ref.initialStartDate;
+          newDueDate = new Date(ref.initialDueDate.getTime() + deltaWeeks * msPerWeek);
+          if (newDueDate <= newStartDate) newDueDate = new Date(newStartDate.getTime() + msPerWeek);
+        } else if (handle === 'resize-left') {
+          newStartDate = new Date(ref.initialStartDate.getTime() + deltaWeeks * msPerWeek);
+          newDueDate = ref.initialDueDate;
+          if (newStartDate >= newDueDate) newStartDate = new Date(newDueDate.getTime() - msPerWeek);
+        }
+      } else {
+        // months
+        const deltaMonths = Math.round(deltaX / zoomLevel.dayWidth);
+        if (handle === 'move') {
+          newStartDate = new Date(ref.initialStartDate);
+          newStartDate.setMonth(newStartDate.getMonth() + deltaMonths);
+          const endMonthDiff =
+            (ref.initialDueDate.getFullYear() - ref.initialStartDate.getFullYear()) * 12 +
+            (ref.initialDueDate.getMonth() - ref.initialStartDate.getMonth());
+          newDueDate = new Date(newStartDate);
+          newDueDate.setMonth(newDueDate.getMonth() + endMonthDiff);
+        } else if (handle === 'resize-right') {
+          newStartDate = ref.initialStartDate;
+          newDueDate = new Date(ref.initialDueDate);
+          newDueDate.setMonth(newDueDate.getMonth() + deltaMonths);
+          if (newDueDate <= newStartDate) {
+            newDueDate = new Date(newStartDate);
+            newDueDate.setMonth(newDueDate.getMonth() + 1);
+          }
+        } else if (handle === 'resize-left') {
+          newStartDate = new Date(ref.initialStartDate);
+          newStartDate.setMonth(newStartDate.getMonth() + deltaMonths);
+          newDueDate = ref.initialDueDate;
+          if (newStartDate >= newDueDate) {
+            newStartDate = new Date(newDueDate);
+            newStartDate.setMonth(newStartDate.getMonth() - 1);
+          }
         }
       }
+
+      if (newStartDate && newDueDate) {
+        ref.pendingDates = { startDate: newStartDate, dueDate: newDueDate };
+        setLocalTaskDates(prev => ({
+          ...prev,
+          [ref.task.id]: { startDate: newStartDate, dueDate: newDueDate },
+        }));
+      }
     };
-    
-    const onMouseUp = () => {
-      setDraggedTask(null);
-      setDragHandle(null);
+
+    const onMouseUp = async () => {
+      const ref = dragRef.current;
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
+      setDraggedTask(null);
+      setDragHandle(null);
+
+      if (ref?.pendingDates && boardId) {
+        const { startDate, dueDate } = ref.pendingDates;
+        try {
+          await updateDocumentMeta.mutateAsync({
+            documentId: ref.task.id,
+            custom_meta: {
+              ...ref.task.custom_meta,
+              values: {
+                ...ref.task.custom_meta?.values,
+                start_date: startDate.toISOString().split('T')[0],
+                due_date: dueDate.toISOString().split('T')[0],
+              },
+            },
+            boardId,
+          });
+        } catch {
+          // Revert optimistic update on error
+          setLocalTaskDates(prev => {
+            const next = { ...prev };
+            delete next[ref.task.id];
+            return next;
+          });
+        }
+      }
+
+      dragRef.current = null;
     };
-    
+
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
-  };
+  }, [zoomLevel, boardId, updateDocumentMeta]);
 
   // Get task color based on status
   const getTaskColor = (task) => {
@@ -791,7 +895,8 @@ export default function TimelineView({ data }) {
                   return (
                     <div key={groupIndex}>
                       {group.tasks.map((task, taskIndex) => {
-                        const position = getTaskPosition(task);
+                        const effectiveTask = { ...task, ...(localTaskDates[task.id] || {}) };
+                        const position = getTaskPosition(effectiveTask);
                         const topPosition = (groupIndex > 0 ? groupedTasks.slice(0, groupIndex).reduce((acc, g) => acc + g.tasks.length * ROW_HEIGHT + (groupBy !== 'none' ? 32 : 0), 0) : 0) + taskIndex * ROW_HEIGHT + taskOffset + 8;
                         
                         if (!position.visible) return null;
@@ -807,6 +912,13 @@ export default function TimelineView({ data }) {
                                 zIndex: draggedTask?.id === task.id ? 20 : 5
                               }}
                               onMouseDown={(e) => handleTaskMouseDown(e, task, 'move')}
+                              onClick={(e) => {
+                                if (didDragRef.current) {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  didDragRef.current = false;
+                                }
+                              }}
                             >
                             {/* Resize handles */}
                             <div
@@ -839,7 +951,7 @@ export default function TimelineView({ data }) {
 
                             {/* Task tooltip */}
                             <div className="absolute bottom-full left-0 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-30 whitespace-nowrap">
-                              {task.title} • {formatDate(task.startDate)} - {formatDate(task.dueDate)}
+                              {task.title} • {formatDate(effectiveTask.startDate)} - {formatDate(effectiveTask.dueDate)}
                             </div>
                           </div>
                           </Link>
