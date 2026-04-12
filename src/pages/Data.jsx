@@ -219,6 +219,8 @@ export default function Data({ id: propId, setTopMenu }) {
         task_id: `TASK-${String(index + 1).padStart(3, '0')}`,
         title: doc.title || doc.name || 'Untitled Task',
         description: doc.description || '',
+        // Preserve raw custom_meta so drag-and-drop can merge values correctly
+        custom_meta: doc.custom_meta || { fields: [], values: {} },
       };
 
       // Add custom field values

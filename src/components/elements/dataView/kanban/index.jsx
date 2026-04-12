@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -27,13 +27,12 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
   console.log({ data, boardId });
   
   // Get status management functions from the global store
-  const { 
-    getKanbanColumns, 
-    addStatus, 
-    updateStatus, 
-    deleteStatus,
-    reorderStatuses
-  } = useStatusStore();
+  const statuses = useStatusStore(state => state.statuses);
+  const addStatus = useStatusStore(state => state.addStatus);
+  const updateStatus = useStatusStore(state => state.updateStatus);
+  const deleteStatus = useStatusStore(state => state.deleteStatus);
+  const reorderStatuses = useStatusStore(state => state.reorderStatuses);
+
   const updateDocumentMeta = useUpdateDocumentMeta();
   
   const [activeId, setActiveId] = useState(null);
@@ -41,9 +40,21 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
   const [defaultStatus, setDefaultStatus] = useState('todo');
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [editingStatus, setEditingStatus] = useState(null);
+
+  // Ref to track where a drag started — needed because handleDragOver updates
+  // item state (and status) before handleDragEnd runs, so we can't rely on
+  // findItemById or findContainer to determine the original column at end time.
+  const dragSourceRef = useRef(null);
   
-  // Use dynamic columns from the status store instead of static DEFAULT_COLUMNS
-  const columns = getKanbanColumns();
+  // Memoize columns so the reference is stable — prevents the sync useEffect
+  // below from firing on every render and resetting items mid-drag.
+  const columns = useMemo(() =>
+    statuses.map(status => ({
+      id: status.id || status.value,
+      title: status.title || status.label,
+      color: status.color || 'bg-slate-100',
+    })),
+  [statuses]);
   
   const [items, setItems] = useState({});
 
@@ -93,7 +104,7 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
 
   const handleSaveTask = useCallback(async (taskData, isEditing) => {
     if (isEditing) {
-      // Update existing task
+      // Update existing task in local state
       setItems(prev => {
         const newItems = { ...prev };
         
@@ -111,7 +122,18 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
         return newItems;
       });
       
-      // TODO: Call API to update task in board if boardId exists
+      // Persist to API when in board context and custom_meta is available
+      if (boardId && taskData.custom_meta) {
+        try {
+          await updateDocumentMeta.mutateAsync({
+            documentId: taskData.id,
+            custom_meta: taskData.custom_meta,
+            boardId,
+          });
+        } catch (error) {
+          console.error('Failed to update task:', error);
+        }
+      }
     } else {
       // Add new task
       if (boardId && onTaskCreate) {
@@ -127,7 +149,7 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
         }));
       }
     }
-  }, [boardId, onTaskCreate]);
+  }, [boardId, onTaskCreate, updateDocumentMeta]);
 
   // Status management functions
   const handleEditStatus = useCallback((status) => {
@@ -191,8 +213,11 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
   }, [items]);
 
   const handleDragStart = useCallback((event) => {
-    setActiveId(event.active.id);
-  }, []);
+    const id = event.active.id;
+    setActiveId(id);
+    // Record original container before handleDragOver mutates items state
+    dragSourceRef.current = findContainer(id);
+  }, [findContainer]);
 
   const handleDragOver = useCallback((event) => {
     const { active, over } = event;
@@ -211,8 +236,8 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
       return;
     }
 
-    if (isActiveColumn || isOverColumn) {
-      // Don't allow mixing column and task dragging
+    // If dragging a column over a task, don't process as task movement
+    if (isActiveColumn) {
       return;
     }
 
@@ -265,6 +290,10 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
   const handleDragEnd = useCallback(async (event) => {
     const { active, over } = event;
 
+    // Always consume the source ref
+    const sourceContainer = dragSourceRef.current;
+    dragSourceRef.current = null;
+
     if (!over) {
       setActiveId(null);
       return;
@@ -283,62 +312,58 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
 
       if (oldIndex !== newIndex) {
         reorderStatuses(oldIndex, newIndex);
-        console.log(`Column ${activeId} reordered from position ${oldIndex} to ${newIndex}`);
       }
 
       setActiveId(null);
       return;
     }
 
-    // Handle task reordering
-    const activeContainer = findContainer(activeId);
+    // Determine the destination container
     const overContainer = findContainer(overId) || overId;
 
-    if (!activeContainer || !overContainer) {
+    if (!sourceContainer || !overContainer) {
       setActiveId(null);
       return;
     }
 
-    if (activeContainer === overContainer) {
-      // Reordering within the same container
-      const items_in_container = items[activeContainer];
-      const oldIndex = items_in_container.findIndex(item => item.kanbanId === activeId);
-      const newIndex = items_in_container.findIndex(item => item.kanbanId === overId);
+    if (sourceContainer === overContainer) {
+      // Reordering within the same column — handleDragOver didn't touch items
+      // for same-container moves, so we apply the final order here.
+      const containerItems = items[overContainer] || [];
+      const oldIndex = containerItems.findIndex(item => item.kanbanId === activeId);
+      const newIndex = containerItems.findIndex(item => item.kanbanId === overId);
 
-      if (oldIndex !== newIndex) {
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
         setItems(prev => ({
           ...prev,
-          [overContainer]: arrayMove(items_in_container, oldIndex, newIndex)
+          [overContainer]: arrayMove(containerItems, oldIndex, newIndex)
         }));
       }
-    }
-
-    // If task moved to a different status, update via API
-    const activeItem = findItemById(activeId);
-    if (activeItem && activeItem.status !== overContainer && boardId) {
-      console.log(`Task ${activeItem.task_id} moved from ${activeContainer} to ${overContainer}`);
-      
-      try {
-        // Update task status in the database
-        await updateDocumentMeta.mutateAsync({
-          documentId: activeItem.id,
-          custom_meta: {
-            ...activeItem.custom_meta,
-            values: {
-              ...activeItem.custom_meta?.values,
-              status: overContainer
-            }
-          },
-          boardId,
-        });
-        console.log('Task status updated successfully');
-      } catch (error) {
-        console.error('Failed to update task status:', error);
+    } else if (boardId) {
+      // Cross-column move — handleDragOver already updated items state visually.
+      // Now persist the new status to the API.
+      const activeItem = findItemById(activeId);
+      if (activeItem) {
+        try {
+          await updateDocumentMeta.mutateAsync({
+            documentId: activeItem.id,
+            custom_meta: {
+              ...activeItem.custom_meta,
+              values: {
+                ...activeItem.custom_meta?.values,
+                status: overContainer,
+              }
+            },
+            boardId,
+          });
+        } catch (error) {
+          console.error('Failed to update task status:', error);
+        }
       }
     }
 
     setActiveId(null);
-  }, [items, findContainer, findItemById, columns, reorderStatuses, boardId]);
+  }, [items, findContainer, findItemById, columns, reorderStatuses, boardId, updateDocumentMeta]);
 
   const activeItem = activeId ? findItemById(activeId) : null;
   const activeColumn = activeId ? columns.find(col => col.id === activeId) : null;

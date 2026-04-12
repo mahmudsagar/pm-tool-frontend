@@ -67,7 +67,7 @@ const Document = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, 
       return;
     }
     handleSubmit(value);
-  }, 4000);
+  }, 1000);
 
   const editorProps = {
     page_id: _id,

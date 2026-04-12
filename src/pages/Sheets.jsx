@@ -30,7 +30,7 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
       return;
     }
     handleSubmit({ content: sheetData });
-  }, 4000);
+  }, 1000);
 
   useEffect(() => {
     if (!pageContent) return;

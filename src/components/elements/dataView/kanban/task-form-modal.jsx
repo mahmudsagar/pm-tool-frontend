@@ -104,11 +104,31 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
     const taskId = task?.task_id || `BNH-${String(Math.floor(Math.random() * 1000) + 100).padStart(3, '0')}`;
     const id = task?.id || `task-${Date.now()}`;
 
+    // When editing, preserve the existing custom_meta and update only the values
+    // controlled by this form so unrelated fields are never silently dropped.
+    const existingCustomMeta = task?.custom_meta;
+    const updatedCustomMeta = existingCustomMeta
+      ? {
+          ...existingCustomMeta,
+          values: {
+            ...existingCustomMeta.values,
+            status: data.status,
+            priority: data.priority,
+            assignee: data.assignee,
+            due_date: data.due_date,
+            start_date: data.start_date,
+            type: data.type,
+            sprint: data.sprint,
+          },
+        }
+      : undefined;
+
     const taskData = {
       ...data,
       id,
       task_id: taskId,
-      kanbanId: `demo-${id}` // For kanban functionality
+      kanbanId: `demo-${id}`,
+      ...(updatedCustomMeta ? { custom_meta: updatedCustomMeta } : {}),
     };
 
     onSave(taskData, isEditing);
@@ -234,6 +254,20 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
 
               <FormField
                 control={form.control}
+                name="start_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="due_date"
                 render={({ field }) => (
                   <FormItem>
@@ -245,20 +279,6 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
                         </span>
                       )}
                     </FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="start_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
