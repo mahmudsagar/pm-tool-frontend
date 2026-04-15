@@ -28,6 +28,7 @@ import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete
 
 // Dummy data for now - could be replaced with board-specific data
 import { getDummyDataView } from "@/utils/dummyDataView"
+import dummyDataView from "@/utils/dummyDataView"
 
 const layouts = [
   {
@@ -88,7 +89,7 @@ const Board = ({ _id, title, setTopMenu, custom_meta }) => {
   }, [_id, setTopMenu]);
 
   // Get dynamic data with current status options
-  const viewJSONData = getDummyDataView();
+  const viewJSONData = dummyDataView;
   const [selectedPeriod, setSelectedPeriod] = useState("month");
   const [activeTab, setActiveTab] = useState("kanban"); // Default to kanban for boards
 

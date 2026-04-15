@@ -219,10 +219,18 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
   const [rowSelection, setRowSelection] = useState({});
   const [editPropertyModal, setEditPropertyModal] = useState({ open: false, property: null });
 
+  const form = useForm({
+    defaultValues: {
+      rows: data.property_values
+    }
+  });
+
   // Sync rows when data from the server changes (e.g. after task creation)
   useEffect(() => {
     setRows(data.property_values);
-    form.reset({ rows: data.property_values });
+    // Only reset the form if the row count or IDs have changed to avoid
+    // triggering react-hook-form re-renders on every parent re-render.
+    form.reset({ rows: data.property_values }, { keepDirtyValues: false });
   }, [data.property_values]);
 
   // Sync columns when data changes (e.g. dynamic-select options updated)
@@ -246,12 +254,6 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
       return next;
     });
   }, [data.property_name]);
-
-  const form = useForm({
-    defaultValues: {
-      rows: rows
-    }
-  });
 
   // Function to add a new column
   const addNewColumn = () => {
@@ -376,6 +378,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
                 <Link to={`/document/${rowData.id}`} target="_sidebar" className="block">
                   <Input
                     {...field}
+                    id={field.name}
                     className="border-0 h-auto focus-visible:ring-0 rounded-false py-2 px-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                     readOnly
                   />
@@ -384,7 +387,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
                 <DatePickerWithRange
                   value={field.value}
                   onChange={field.onChange}
-                  className="border-0 h-auto rounded-none"
+                  className="border-0 h-auto rounded-none bg-transparent"
                 />
               ) : (column.columnDef.type === 'select' || column.columnDef.type === 'dynamic-select') ? (() => {
                 // For dynamic-select use the live assigneeOptions prop;
@@ -398,7 +401,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
                     value={field.value || ''}
                     onValueChange={field.onChange}
                   >
-                    <SelectTrigger className="w-full border-0 px-4 py-2 h-auto focus:ring-0 test-select">
+                    <SelectTrigger id={field.name} className="w-full border-0 px-4 py-2 h-auto focus:ring-0 test-select">
                       <SelectValue placeholder="Select...">
                         {options.find(opt => opt.value === field.value)?.label}
                       </SelectValue>
@@ -415,6 +418,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
               })() : (
                 <Input
                   {...field}
+                  id={field.name}
                   className="border-0 h-auto focus-visible:ring-0 rounded-false py-2 px-4 test"
                 />
               )}
@@ -426,7 +430,8 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
   }
 
   // Update columns to filter out deleted and hidden properties
-  const columns = tableColumns
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const columns = useMemo(() => tableColumns
     .filter(column => !column.deleted && !column.hidden)
     .map((column) => ({
       id: column.name,
@@ -436,7 +441,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
       props: column.props,
       cell: ({ column, row }) => renderCell(column, row.index),
       enableSorting: true,
-    }));
+    })), [tableColumns, rows, assigneeOptions]); // eslint-disable-line
 
   const table = useReactTable({
     data: rows, // Use rows state instead of data.property_values

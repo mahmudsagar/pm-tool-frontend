@@ -31,7 +31,6 @@ import { TabsContent } from "@radix-ui/react-tabs"
 import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
 
 // Dummy data for now
-import { getDummyDataView } from "@/utils/dummyDataView"
 import { useState, useMemo, useEffect } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
 import { Plus } from "lucide-react"
@@ -438,7 +437,7 @@ export default function Data({ id: propId, setTopMenu }) {
               </div>
             ) : (
               <layout.element 
-                data={boardId && boardTasks ? boardTasks : getDummyDataView()} 
+                data={boardTasks} 
                 {...(layout.type === "calendar" && { timePeriod: selectedPeriod })}
                 boardId={boardId}
                 onTaskCreate={createTask}
