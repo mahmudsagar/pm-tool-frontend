@@ -164,16 +164,14 @@ function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick }) {
 
   return (
     <div
-      className={`flex items-center group min-h-[36px] hover:bg-accent/40 transition-colors cursor-pointer ${isSelected ? 'bg-primary/10' : ''}`}
-      onClick={() => onRowClick(row)}
+      className={`flex items-center group min-h-[36px] hover:bg-accent/40 transition-colors ${isSelected ? 'bg-primary/10' : ''}`}
     >
       <div
         className={`w-5 flex items-center justify-center pl-2 shrink-0 ${!isSelected ? 'opacity-0 group-hover:opacity-100' : ''} transition-opacity`}
-        onClick={e => e.stopPropagation()}
       >
         <Checkbox checked={isSelected} onCheckedChange={(value) => row.toggleSelected(!!value)} />
       </div>
-      <div className="w-7 flex items-center justify-center shrink-0" onClick={e => e.stopPropagation()}>
+      <div className="w-7 flex items-center justify-center shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger className="opacity-0 group-hover:opacity-100 transition-opacity p-1">
             <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
@@ -187,7 +185,7 @@ function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick }) {
       <div className="w-5 flex items-center justify-center shrink-0">
         <Circle className="h-3.5 w-3.5 fill-green-500 text-green-500" />
       </div>
-      <div className="flex-1 min-w-[200px]">
+      <div className="flex-1 min-w-[200px] cursor-pointer" onClick={() => onRowClick(row)}>
         <span className="block truncate px-3 py-2 text-sm hover:text-primary">
           {row.getValue('title') || 'Untitled'}
         </span>
@@ -195,7 +193,7 @@ function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick }) {
       {row.getVisibleCells()
         .filter(cell => cell.column.id !== 'title' && cell.column.id !== 'task_id' && cell.column.id !== 'description')
         .map(cell => (
-          <div key={cell.id} className="w-36 shrink-0 text-sm" onClick={e => e.stopPropagation()}>
+          <div key={cell.id} className="w-36 shrink-0 text-sm">
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </div>
         ))}
@@ -535,7 +533,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
 
   return (
     <Form {...form}>
-      <form>
+      <form onSubmit={e => e.preventDefault()}>
         <TableFilter 
           filters={filters}
           onRemoveFilter={removeFilter}
