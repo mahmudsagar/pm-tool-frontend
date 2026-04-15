@@ -55,11 +55,11 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
       // Arrow keys for navigation
       if (event.key === 'ArrowLeft' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
-        navigateMonth(-1);
+        navigate(-1);
       }
       if (event.key === 'ArrowRight' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
-        navigateMonth(1);
+        navigate(1);
       }
       // T for today
       if (event.key === 't' && !event.target.matches('input, textarea')) {
@@ -176,10 +176,16 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
   const dayData = getDayData();
 
   // Navigation functions
-  const navigateMonth = (direction) => {
+  const navigate = (direction) => {
     setCurrentDate(prev => {
       const newDate = new Date(prev);
-      newDate.setMonth(prev.getMonth() + direction);
+      if (view === 'day') {
+        newDate.setDate(prev.getDate() + direction);
+      } else if (view === 'week') {
+        newDate.setDate(prev.getDate() + direction * 7);
+      } else {
+        newDate.setMonth(prev.getMonth() + direction);
+      }
       return newDate;
     });
   };
@@ -244,18 +250,26 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
           <div className="flex items-center gap-4">
             <h2 className="text-2xl font-bold dark:text-white">Calendar View</h2>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigateMonth(-1)}>
+              <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <Button variant="outline" size="sm" onClick={goToToday}>
                 Today
               </Button>
-              <Button variant="outline" size="sm" onClick={() => navigateMonth(1)}>
+              <Button variant="outline" size="sm" onClick={() => navigate(1)}>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
             <h3 className="text-lg font-medium">
-              {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
+              {view === 'day' && currentDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              {view === 'week' && (() => {
+                const start = new Date(currentDate);
+                start.setDate(currentDate.getDate() - currentDate.getDay());
+                const end = new Date(start);
+                end.setDate(start.getDate() + 6);
+                return `${start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`;
+              })()}
+              {view === 'month' && `${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
             </h3>
           </div>
           
@@ -307,67 +321,6 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
               {filteredTasks.filter(t => new Date(t.date) < new Date() && t.status !== 'done').length}
             </div>
           </div>
-        </div>
-
-        {/* Filters and Search */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 flex-1">
-            <Search className="w-4 h-4 text-gray-500" />
-            <Input
-              placeholder="Search tasks... (Cmd+K to add)"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-xs"
-            />
-            <span className="text-sm text-gray-500 hidden lg:block">
-              💡 Click any date or double-click to create tasks
-            </span>
-          </div>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {statusOptions.map(status => (
-                <SelectItem key={status.value} value={status.value}>
-                  {status.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                View Options
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <div className="px-2 py-1.5 text-sm font-medium">Show Statuses</div>
-              <DropdownMenuSeparator />
-              {statusOptions.map(status => (
-                <DropdownMenuCheckboxItem
-                  key={status.value}
-                  checked={visibleStatuses[status.value] !== false}
-                  onCheckedChange={() => handleStatusToggle(status.value)}
-                >
-                  <Badge variant="secondary" className={`mr-2 ${getStatusColor(status.value)}`}>
-                    {status.label}
-                  </Badge>
-                </DropdownMenuCheckboxItem>
-              ))}
-              <DropdownMenuSeparator />
-              <div className="px-2 py-1.5 text-xs text-gray-500">
-                <div>Shortcuts:</div>
-                <div>• Cmd+K: New task</div>
-                <div>• T: Go to today</div>
-                <div>• Cmd+←/→: Navigate months</div>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 

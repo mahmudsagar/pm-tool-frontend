@@ -68,17 +68,6 @@ const layouts = [
   },
 ]
 
-const timePeriods = [
-  { value: "hours", label: "Hours" },
-  { value: "day", label: "Day" },
-  { value: "week", label: "Week" },
-  { value: "biweek", label: "Bi-week" },
-  { value: "month", label: "Month" },
-  { value: "quarter", label: "Quarter" },
-  { value: "year", label: "Year" },
-  { value: "5years", label: "5 Years" },
-]
-
 export default function Data({ id: propId, setTopMenu }) {
   // Get board ID from URL params or props (for parallel routes)
   const { id: paramBoardId } = useParams();
@@ -97,7 +86,6 @@ export default function Data({ id: propId, setTopMenu }) {
     }
   }
   
-  const [selectedPeriod, setSelectedPeriod] = useState("5years");
   const [activeTab, setActiveTab] = useState("table");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [groupBy, setGroupBy] = useState(null); // null = no grouping | { name, label, type }
@@ -349,28 +337,7 @@ export default function Data({ id: propId, setTopMenu }) {
               ))}
             </TabsList>
             
-            {/* Time Period Dropdown - only show for calendar view */}
-            {activeTab === "calendar" && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    {timePeriods.find(p => p.value === selectedPeriod)?.label}
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-32">
-                  {timePeriods.map((period) => (
-                    <DropdownMenuItem
-                      key={period.value}
-                      onClick={() => setSelectedPeriod(period.value)}
-                      className={selectedPeriod === period.value ? "bg-accent" : ""}
-                    >
-                      {period.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+
           </div>
           <div className="flex items-center gap-2">
             <Button 
@@ -438,7 +405,6 @@ export default function Data({ id: propId, setTopMenu }) {
             ) : (
               <layout.element 
                 data={boardTasks} 
-                {...(layout.type === "calendar" && { timePeriod: selectedPeriod })}
                 boardId={boardId}
                 onTaskCreate={createTask}
                 assigneeOptions={assigneeOptions}
