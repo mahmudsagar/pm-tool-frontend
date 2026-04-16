@@ -17,17 +17,21 @@ export const useCreateBoardTask = () => {
     },
     
     onSuccess: (data, variables) => {
-      // Directly push the new document into the cached board — no refetch needed
-      queryClient.setQueryData(['boards', variables.boardId], (oldData) => {
-        if (!oldData) return oldData;
+      // The board query key includes viewState as the 3rd segment, so we use
+      // a predicate to match all cached entries for this board regardless of viewState.
+      queryClient.setQueriesData(
+        { predicate: (query) => query.queryKey[0] === 'boards' && query.queryKey[1] === variables.boardId },
+        (oldData) => {
+          if (!oldData) return oldData;
 
-        const appendDoc = (board) => ({
-          ...board,
-          documents: [...(board.documents || []), data],
-        });
+          const appendDoc = (board) => ({
+            ...board,
+            documents: [...(board.documents || []), data],
+          });
 
-        return Array.isArray(oldData) ? oldData.map(appendDoc) : appendDoc(oldData);
-      });
+          return Array.isArray(oldData) ? oldData.map(appendDoc) : appendDoc(oldData);
+        }
+      );
 
       toast({ title: 'Task created successfully' });
     },
@@ -38,6 +42,54 @@ export const useCreateBoardTask = () => {
         description: error.message,
         variant: 'destructive',
       });
+    },
+  });
+};
+
+/**
+ * Mutation hook to update a task's custom_meta values in a board document
+ */
+export const useUpdateBoardTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ boardId, taskId, custom_meta }) => {
+      let userId = null;
+      try {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const u = JSON.parse(userStr);
+          userId = u?._id || u?.id || null;
+        }
+      } catch (_) { /* ignore */ }
+
+      const result = await api.put(`${baseUrl}/v1/page/document?id=${taskId}`, {
+        id: taskId,
+        custom_meta,
+        last_updated_by: userId,
+      });
+      return result.data;
+    },
+
+    onSuccess: (data, variables) => {
+      // Optimistically update the cached board documents
+      queryClient.setQueriesData(
+        { predicate: (query) => query.queryKey[0] === 'boards' && query.queryKey[1] === variables.boardId },
+        (oldData) => {
+          if (!oldData) return oldData;
+
+          const updateDoc = (board) => ({
+            ...board,
+            documents: (board.documents || []).map(doc =>
+              doc._id === variables.taskId
+                ? { ...doc, custom_meta: variables.custom_meta }
+                : doc
+            ),
+          });
+
+          return Array.isArray(oldData) ? oldData.map(updateDoc) : updateDoc(oldData);
+        }
+      );
     },
   });
 };

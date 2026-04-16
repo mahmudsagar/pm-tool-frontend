@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { GripVertical, Calendar, User, Flag } from 'lucide-react';
 import Link from '@/BetterRouter/Link';
 
-function DemoKanbanCard({ item, isDragOverlay = false, assigneeOptions = [] }) {
+function KanbanCard({ item, isDragOverlay = false, assigneeOptions = [] }) {
   const {
     attributes,
     listeners,
@@ -141,4 +141,4 @@ function DemoKanbanCard({ item, isDragOverlay = false, assigneeOptions = [] }) {
   );
 }
 
-export default DemoKanbanCard;
+export default KanbanCard;

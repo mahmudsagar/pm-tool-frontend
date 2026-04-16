@@ -32,12 +32,12 @@ import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
 import BoardSubheaderControls from "@/components/elements/dataView/BoardSubheaderControls"
 
 // Dummy data for now
-import { useState, useMemo, useEffect, useRef } from "react"
+import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
 import { Plus } from "lucide-react"
 import TaskFormModal from "@/components/elements/dataView/kanban/task-form-modal"
 import { useBoard } from "@/hooks/queries/useBoardsQueries"
-import { useCreateBoardTask, useUpdateBoard } from "@/hooks/mutations/useBoardsMutations"
+import { useCreateBoardTask, useUpdateBoard, useUpdateBoardTask } from "@/hooks/mutations/useBoardsMutations"
 import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete"
 import { useUsers } from "@/hooks/queries/useSpacesQueries"
 import { useTeams } from "@/hooks/queries/useTeamsQueries"
@@ -104,6 +104,7 @@ export default function Data({ id: propId, setTopMenu }) {
   const { data: rawBoardData, isLoading } = useBoard(boardId, debouncedView);
   const createTaskMutation = useCreateBoardTask();
   const updateBoardMutation = useUpdateBoard();
+  const updateTaskMutation = useUpdateBoardTask();
   const { data: allUsers } = useUsers();
   const { data: allTeams } = useTeams();
   
@@ -185,6 +186,20 @@ export default function Data({ id: propId, setTopMenu }) {
 
     setTopMenu({ dropdownContent });
   }, [boardId, setTopMenu]);
+
+  // Handle inline cell edits from the table — persist changed custom_meta value to the server
+  const handleCellChange = useCallback((rowData, fieldName, newValue) => {
+    if (!rowData?.id || !boardId) return;
+    const existingMeta = rowData.custom_meta || { fields: boardData?.custom_meta?.fields || [], values: {} };
+    const updatedMeta = {
+      ...existingMeta,
+      values: {
+        ...(existingMeta.values || {}),
+        [fieldName]: newValue,
+      },
+    };
+    updateTaskMutation.mutate({ boardId, taskId: rowData.id, custom_meta: updatedMeta });
+  }, [boardId, boardData, updateTaskMutation]);
 
   // Shared function to create a task (used by both modal and kanban)
   const createTask = async (taskData) => {
@@ -467,6 +482,7 @@ export default function Data({ id: propId, setTopMenu }) {
                 data={boardTasks} 
                 boardId={boardId}
                 onTaskCreate={createTask}
+                onCellChange={handleCellChange}
                 assigneeOptions={assigneeOptions}
                 groupBy={groupBy}
               />

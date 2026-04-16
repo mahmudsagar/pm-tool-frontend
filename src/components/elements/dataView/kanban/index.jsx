@@ -16,8 +16,8 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import DemoKanbanColumn from './demo-kanban-column';
-import DemoKanbanCard from './demo-kanban-card';
+import KanbanColumn from './kanban-column';
+import KanbanCard from './kanban-card';
 import TaskFormModal from './task-form-modal';
 import StatusFormModal from './status-form-modal';
 import useStatusStore from '@/stores/useStatusStore';
@@ -443,7 +443,7 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
           <SortableContext items={columns.map(col => col.id)} strategy={horizontalListSortingStrategy}>
             <div className="flex gap-6 pb-6 w-max min-w-full">
               {columns.map(column => (
-                <DemoKanbanColumn
+                <KanbanColumn
                   key={column.id}
                   id={column.id}
                   title={column.title}
@@ -452,6 +452,7 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
                   onAddTask={handleAddTask}
                   onEditStatus={handleEditStatus}
                   isDragOverlay={false}
+                  assigneeOptions={assigneeOptions}
                 />
               ))}
             </div>
@@ -461,7 +462,7 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
         <DragOverlay>
           {activeColumn ? (
             <div className="w-80 opacity-90 transform rotate-1 shadow-lg">
-              <DemoKanbanColumn
+              <KanbanColumn
                 id={activeColumn.id}
                 title={activeColumn.title}
                 color={activeColumn.color}
@@ -471,7 +472,7 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
             </div>
           ) : activeItem ? (
             <Card className="opacity-90 transform rotate-3 shadow-lg">
-              <DemoKanbanCard item={activeItem} isDragOverlay />
+              <KanbanCard item={activeItem} isDragOverlay assigneeOptions={assigneeOptions} />
             </Card>
           ) : null}
         </DragOverlay>

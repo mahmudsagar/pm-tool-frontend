@@ -15,10 +15,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import DemoKanbanCard from './demo-kanban-card';
+import KanbanCard from './kanban-card';
 import { cn } from '@/lib/utils';
 
-function DemoKanbanColumn({ id, title, color, items, onAddTask, onEditStatus, isDragOverlay = false, assigneeOptions = [] }) {
+function KanbanColumn({ id, title, color, items, onAddTask, onEditStatus, isDragOverlay = false, assigneeOptions = [] }) {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id,
     disabled: isDragOverlay,
@@ -104,7 +104,7 @@ function DemoKanbanColumn({ id, title, color, items, onAddTask, onEditStatus, is
               </div>
             ) : (
               items.map((item) => (
-                <DemoKanbanCard key={item.kanbanId} item={item} assigneeOptions={assigneeOptions} />
+                <KanbanCard key={item.kanbanId} item={item} assigneeOptions={assigneeOptions} />
               ))
             )}
           </SortableContext>
@@ -128,4 +128,4 @@ function DemoKanbanColumn({ id, title, color, items, onAddTask, onEditStatus, is
   );
 }
 
-export default DemoKanbanColumn;
+export default KanbanColumn;

@@ -118,9 +118,12 @@ function DraggableColumnHeader({ header, addFilter, setEditPropertyModal }) {
   );
 }
 
-function AddTaskRow() {
+function AddTaskRow({ onClick }) {
   return (
-    <div className="flex items-center gap-2 px-[52px] py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40 cursor-pointer transition-colors border-t">
+    <div
+      className="flex items-center gap-2 px-[52px] py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40 cursor-pointer transition-colors border-t"
+      onClick={onClick}
+    >
       <PlusIcon className="h-4 w-4" />
       Add Task
     </div>
@@ -202,7 +205,7 @@ function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick }) {
   );
 }
 
-export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIONS, groupBy = null }) {
+export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIONS, groupBy = null, onCellChange, onTaskCreate }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sorting, setSorting] = useState([]);
   const [columnOrder, setColumnOrder] = useState([]);
@@ -365,7 +368,12 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
   const renderCell = (column, rowIndex) => {
     const rowData = rows[rowIndex];
     const isTitle = column.id === 'title';
-    
+
+    const handleChange = (newValue) => {
+      if (onCellChange && rowData?.id && !isTitle) {
+        onCellChange(rowData, column.id, newValue);
+      }
+    };
     
     return (
       <FormField
@@ -386,7 +394,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
               ) : column.columnDef.type === 'daterange' ? (
                 <DatePickerWithRange
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(val) => { field.onChange(val); handleChange(val); }}
                   className="border-0 h-auto rounded-none bg-transparent"
                 />
               ) : (column.columnDef.type === 'select' || column.columnDef.type === 'dynamic-select') ? (() => {
@@ -399,7 +407,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
                 return (
                   <Select
                     value={field.value || ''}
-                    onValueChange={field.onChange}
+                    onValueChange={(val) => { field.onChange(val); handleChange(val); }}
                   >
                     <SelectTrigger id={field.name} className="w-full border-0 px-4 py-2 h-auto focus:ring-0 test-select">
                       <SelectValue placeholder="Select...">
@@ -420,6 +428,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
                   {...field}
                   id={field.name}
                   className="border-0 h-auto focus-visible:ring-0 rounded-false py-2 px-4 test"
+                  onBlur={(e) => { field.onBlur(e); handleChange(e.target.value); }}
                 />
               )}
             </FormControl>
@@ -593,7 +602,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
                         <div className="divide-y">
                           {group.rows.map(row => <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} />)}
                         </div>
-                        <AddTaskRow />
+                        <AddTaskRow onClick={onTaskCreate} />
                       </>
                     )}
                   </div>
@@ -609,7 +618,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
                   <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} />
                 ))}
               </div>
-              <AddTaskRow />
+              <AddTaskRow onClick={onTaskCreate} />
             </>
           )}
         </div>
