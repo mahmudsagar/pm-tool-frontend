@@ -72,10 +72,12 @@ export const useSearchWorkspaceMembers = (search) => {
 // stale/cached data — no hard-refresh required.
 const flattenMembers = (data) => {
   if (!data) return [];
-  if (Array.isArray(data)) return data;
+  // Handle full API envelope { status, message, data: { owner, members } }
+  const payload = data?.owner !== undefined || data?.members !== undefined ? data : (data?.data ?? data);
+  if (Array.isArray(payload)) return payload;
   const list = [];
-  if (data.owner) list.push(data.owner);
-  if (Array.isArray(data.members)) list.push(...data.members);
+  if (payload?.owner) list.push(payload.owner);
+  if (Array.isArray(payload?.members)) list.push(...payload.members);
   return list;
 };
 

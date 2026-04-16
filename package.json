@@ -76,6 +76,7 @@
     "environment": "^1.1.0",
     "lexical": "^0.17.0",
     "lucide-react": "^0.390.0",
+    "qs": "^6.15.1",
     "rc-select": "^14.16.8",
     "react": "^18.2.0",
     "react-day-picker": "^8.10.1",

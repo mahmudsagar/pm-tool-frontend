@@ -201,24 +201,12 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
     setTaskModalOpen(true);
   };
 
-  const handleEditTask = (task) => {
-    setEditingTask(task);
-    setTaskModalOpen(true);
-  };
-
   const handleSaveTask = (taskData, isEditing) => {
     // In a real app, this would update the backend
     console.log('Save task:', taskData, 'Is editing:', isEditing);
     // Clear selected date and close modal
     setSelectedDate(null);
     setTaskModalOpen(false);
-  };
-
-  const handleStatusToggle = (statusValue) => {
-    setVisibleStatuses(prev => ({
-      ...prev,
-      [statusValue]: !prev[statusValue]
-    }));
   };
 
   // Get status color for task display

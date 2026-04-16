@@ -29,14 +29,15 @@ import CalendarView from "@/components/elements/dataView/calendar"
 
 import { TabsContent } from "@radix-ui/react-tabs"
 import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
+import BoardSubheaderControls from "@/components/elements/dataView/BoardSubheaderControls"
 
 // Dummy data for now
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { useParams, useSearchParams } from "react-router-dom"
 import { Plus } from "lucide-react"
 import TaskFormModal from "@/components/elements/dataView/kanban/task-form-modal"
 import { useBoard } from "@/hooks/queries/useBoardsQueries"
-import { useCreateBoardTask } from "@/hooks/mutations/useBoardsMutations"
+import { useCreateBoardTask, useUpdateBoard } from "@/hooks/mutations/useBoardsMutations"
 import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete"
 import { useUsers } from "@/hooks/queries/useSpacesQueries"
 import { useTeams } from "@/hooks/queries/useTeamsQueries"
@@ -89,10 +90,20 @@ export default function Data({ id: propId, setTopMenu }) {
   const [activeTab, setActiveTab] = useState("table");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [groupBy, setGroupBy] = useState(null); // null = no grouping | { name, label, type }
-  
-  // Use TanStack Query to fetch board data
-  const { data: rawBoardData, isLoading } = useBoard(boardId);
+
+  const DEFAULT_VIEW = { sorts: [], filters: [], search: '' };
+  const [viewState, setViewState] = useState(DEFAULT_VIEW);
+  // Debounce viewState sent to API so typing doesn't fire a request per keystroke
+  const [debouncedView, setDebouncedView] = useState(DEFAULT_VIEW);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedView(viewState), 350);
+    return () => clearTimeout(t);
+  }, [viewState]);
+
+  // Use TanStack Query to fetch board data (with server-side sort/filter/search)
+  const { data: rawBoardData, isLoading } = useBoard(boardId, debouncedView);
   const createTaskMutation = useCreateBoardTask();
+  const updateBoardMutation = useUpdateBoard();
   const { data: allUsers } = useUsers();
   const { data: allTeams } = useTeams();
   
@@ -101,6 +112,19 @@ export default function Data({ id: propId, setTopMenu }) {
     if (!rawBoardData) return null;
     return Array.isArray(rawBoardData) ? rawBoardData[0] : rawBoardData;
   }, [rawBoardData]);
+
+  const boardDataId = boardData?._id;
+  const boardDataSavedView = boardData?.saved_view;
+  const loadedBoardRef = useRef(null);
+  // Load saved view from board when the board changes (once per board)
+  useEffect(() => {
+    if (boardDataId && boardDataId !== loadedBoardRef.current) {
+      loadedBoardRef.current = boardDataId;
+      if (boardDataSavedView) {
+        setViewState(boardDataSavedView);
+      }
+    }
+  }, [boardDataId, boardDataSavedView]);
 
   // Derive assignee options based on board visibility and sharing:
   // - Private board: only the owner (auto-assigned)
@@ -299,6 +323,27 @@ export default function Data({ id: propId, setTopMenu }) {
     const excluded = ['task_id', 'title', 'description'];
     return boardTasks.property_name.filter(f => !excluded.includes(f.name));
   }, [boardTasks.property_name]);
+
+  const currentUserId = useMemo(() => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        return u?._id || u?.id || null;
+      }
+    } catch (_) { /* ignore */ }
+    return null;
+  }, []);
+
+  function handleSaveView() {
+    if (!boardId) return;
+    updateBoardMutation.mutate({ boardId, data: { id: boardId, saved_view: viewState } });
+  }
+
+  function handleResetView() {
+    const saved = boardData?.saved_view || DEFAULT_VIEW;
+    setViewState(saved);
+  }
   
   return (
     <section className="w-full flex flex-col items-center justify-center gap-4 text-center p-6">
@@ -351,48 +396,63 @@ export default function Data({ id: propId, setTopMenu }) {
           </div>
         </div>
 
-        {/* Sub-toolbar: group-by selector shown below the tabs strip */}
-        <div className="flex items-center gap-3 py-2 border-b mb-4 text-sm">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`flex items-center gap-1 h-7 px-2 text-xs ${groupBy ? 'text-primary' : 'text-muted-foreground'}`}
-              >
-                <Layers className="h-3.5 w-3.5" />
-                Group by
-                {groupBy && <span className="font-semibold ml-1">{groupBy.label}</span>}
-                <ChevronDown className="h-3 w-3 ml-0.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem
-                onClick={() => setGroupBy(null)}
-                className={!groupBy ? 'bg-accent' : ''}
-              >
-                No grouping
-              </DropdownMenuItem>
-              {groupByOptions.map(opt => (
-                <DropdownMenuItem
-                  key={opt.name}
-                  onClick={() => setGroupBy(opt)}
-                  className={groupBy?.name === opt.name ? 'bg-accent' : ''}
+        {/* Sub-toolbar: group-by (left) + sort/filter/search controls (right) */}
+        <div className="flex items-center justify-between py-2 border-b mb-4 text-sm">
+          {/* Group By */}
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`flex items-center gap-1 h-7 px-2 text-xs ${groupBy ? 'text-primary' : 'text-muted-foreground'}`}
                 >
-                  {opt.label}
+                  <Layers className="h-3.5 w-3.5" />
+                  Group by
+                  {groupBy && <span className="font-semibold ml-1">{groupBy.label}</span>}
+                  <ChevronDown className="h-3 w-3 ml-0.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => setGroupBy(null)}
+                  className={!groupBy ? 'bg-accent' : ''}
+                >
+                  No grouping
                 </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {groupByOptions.map(opt => (
+                  <DropdownMenuItem
+                    key={opt.name}
+                    onClick={() => setGroupBy(opt)}
+                    className={groupBy?.name === opt.name ? 'bg-accent' : ''}
+                  >
+                    {opt.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          {groupBy && (
-            <button
-              onClick={() => setGroupBy(null)}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <X className="h-3 w-3" /> Clear
-            </button>
-          )}
+            {groupBy && (
+              <button
+                onClick={() => setGroupBy(null)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-3 w-3" /> Clear
+              </button>
+            )}
+          </div>
+
+          {/* Sort / Filter / Assignee / My Tasks / Search / Save */}
+          <BoardSubheaderControls
+            fields={boardTasks.property_name}
+            assigneeOptions={assigneeOptions}
+            currentUserId={currentUserId}
+            viewState={viewState}
+            savedView={boardData?.saved_view}
+            onChange={setViewState}
+            onSave={handleSaveView}
+            onReset={handleResetView}
+          />
         </div>
 
         {/* Tabs Content */}
