@@ -193,7 +193,7 @@ function KanbanCard({ item, isDragOverlay = false, assigneeOptions = [], onSubta
             </div>
           )}
           <div className="flex items-center justify-between pt-1">
-            <SubtaskPopover item={item} onSubtaskCreate={onSubtaskCreate} />
+            {!item.parent_id && <SubtaskPopover item={item} onSubtaskCreate={onSubtaskCreate} />}
           </div>
         </div>
       </CardContent>
