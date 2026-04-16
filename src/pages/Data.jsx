@@ -290,12 +290,7 @@ export default function Data({ id: propId, setTopMenu }) {
   // Transform boardData into task format using useMemo
   const boardTasks = useMemo(() => {
     if (!boardData) {
-      return {
-        property_name: [],
-        property_values: [],
-        tasks: [],
-        customFields: []
-      };
+      return null; // return null so TableView keeps its previous data prop
     }
 
     const customFields = boardData.custom_meta?.fields || [];
@@ -334,7 +329,26 @@ export default function Data({ id: propId, setTopMenu }) {
     });
 
     // Transform documents into property_values format
-    const propertyValues = (boardData.documents || []).map((doc, index) => {
+    const propertyValues = [];
+    (boardData.documents || []).forEach((doc, index) => {
+      const subtasks = (doc.subtasks || []).map((sub, si) => {
+        const subData = {
+          id: sub._id,
+          task_id: `TASK-${String(index + 1).padStart(3, '0')}.${si + 1}`,
+          title: sub.title || 'Untitled Subtask',
+          description: sub.description || '',
+          parent_id: sub.parent_id,
+          custom_meta: sub.custom_meta || { fields: [], values: {} },
+          subtasks: [],
+        };
+        customFields.forEach(field => {
+          subData[field.name] = sub.custom_meta?.values?.[field.name] ?? ((field.type === 'select' || field.type === 'dynamic-select') ? '' : null);
+        });
+        subData.createdAt = sub.createdAt;
+        subData.updatedAt = sub.updatedAt;
+        return subData;
+      });
+
       const taskData = {
         id: doc._id,
         task_id: `TASK-${String(index + 1).padStart(3, '0')}`,
@@ -342,23 +356,8 @@ export default function Data({ id: propId, setTopMenu }) {
         description: doc.description || '',
         // Preserve raw custom_meta so drag-and-drop can merge values correctly
         custom_meta: doc.custom_meta || { fields: [], values: {} },
-        // Subtasks nested under this task
-        subtasks: (doc.subtasks || []).map((sub, si) => {
-          const subData = {
-            id: sub._id,
-            task_id: `TASK-${String(index + 1).padStart(3, '0')}.${si + 1}`,
-            title: sub.title || 'Untitled Subtask',
-            description: sub.description || '',
-            parent_id: sub.parent_id,
-            custom_meta: sub.custom_meta || { fields: [], values: {} },
-          };
-          customFields.forEach(field => {
-            subData[field.name] = sub.custom_meta?.values?.[field.name] ?? ((field.type === 'select' || field.type === 'dynamic-select') ? '' : null);
-          });
-          subData.createdAt = sub.createdAt;
-          subData.updatedAt = sub.updatedAt;
-          return subData;
-        }),
+        // Subtasks nested under this task (for table expand)
+        subtasks,
       };
 
       // Add custom field values
@@ -371,7 +370,9 @@ export default function Data({ id: propId, setTopMenu }) {
       taskData.createdAt = doc.createdAt;
       taskData.updatedAt = doc.updatedAt;
 
-      return taskData;
+      propertyValues.push(taskData);
+      // Also push subtasks as flat items so they appear in kanban/timeline/calendar
+      subtasks.forEach(sub => propertyValues.push(sub));
     });
 
     return {
@@ -385,8 +386,8 @@ export default function Data({ id: propId, setTopMenu }) {
   // Fields that can be used as group-by options (exclude identity/text fields)
   const groupByOptions = useMemo(() => {
     const excluded = ['task_id', 'title', 'description'];
-    return boardTasks.property_name.filter(f => !excluded.includes(f.name));
-  }, [boardTasks.property_name]);
+    return (boardTasks?.property_name || []).filter(f => !excluded.includes(f.name));
+  }, [boardTasks?.property_name]);
 
   const currentUserId = useMemo(() => {
     try {
@@ -508,7 +509,7 @@ export default function Data({ id: propId, setTopMenu }) {
 
           {/* Sort / Filter / Assignee / My Tasks / Search / Save */}
           <BoardSubheaderControls
-            fields={boardTasks.property_name}
+            fields={boardTasks?.property_name || []}
             assigneeOptions={assigneeOptions}
             currentUserId={currentUserId}
             viewState={viewState}
@@ -522,7 +523,7 @@ export default function Data({ id: propId, setTopMenu }) {
         {/* Tabs Content */}
         {layouts?.map((layout) => (
           <TabsContent key={layout.type} value={layout.type}>
-            {isLoading ? (
+            {isLoading || !boardTasks ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
               </div>
@@ -530,7 +531,7 @@ export default function Data({ id: propId, setTopMenu }) {
               <layout.element 
                 data={boardTasks} 
                 boardId={boardId}
-                onTaskCreate={createTask}
+                onTaskCreate={() => setIsTaskModalOpen(true)}
                 onSubtaskCreate={createSubtask}
                 onCellChange={handleCellChange}
                 assigneeOptions={assigneeOptions}

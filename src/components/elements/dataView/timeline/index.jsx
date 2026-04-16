@@ -34,6 +34,7 @@ import { Input } from '@/components/ui/input';
 import TaskFormModal from '../kanban/task-form-modal';
 import useStatusStore from '@/stores/useStatusStore';
 import { useUpdateDocumentMeta } from '@/hooks/mutations/useFilesMutations';
+import SubtaskPanel from '@/components/elements/SubtaskPanel';
 
 const ZOOM_LEVELS = [
   { key: 'days', label: 'Days', dayWidth: 40, dateFormat: 'MMM d' },
@@ -45,7 +46,8 @@ const TASK_HEIGHT = 32;
 const HEADER_HEIGHT = 80;
 const ROW_HEIGHT = 48;
 
-export default function TimelineView({ data, boardId, assigneeOptions = [] }) {
+export default function TimelineView({ data, boardId, assigneeOptions = [], onSubtaskCreate }) {
+  const boardFields = data?.property_name?.filter(f => !['task_id','title','description'].includes(f.name)) || [];
   const { getStatusOptions } = useStatusStore();
   const statusOptions = getStatusOptions();
   const updateDocumentMeta = useUpdateDocumentMeta();
@@ -66,6 +68,7 @@ export default function TimelineView({ data, boardId, assigneeOptions = [] }) {
   const [localTaskDates, setLocalTaskDates] = useState({});
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [subtaskTarget, setSubtaskTarget] = useState(null);
   
   const timelineRef = useRef(null);
   const scrollContainerRef = useRef(null);
@@ -683,27 +686,48 @@ export default function TimelineView({ data, boardId, assigneeOptions = [] }) {
                     </div>
                   )}
                   {group.tasks.map((task, taskIndex) => (
-                    <Link key={task.id} to={`/document/${task.id}`} target="_sidebar">
-                      <div 
-                        className="h-12 px-4 py-2 border-b hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center cursor-pointer"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate">{task.title}</div>
-                          <div className="text-xs text-gray-500 flex items-center gap-2">
-                            <span>{task.task_id}</span>
-                            {task.assignee && (
-                              <span className="flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                {task.assignee.split('_')[0]}
-                              </span>
-                            )}
+                    <div key={task.id}>
+                      <div className="group h-12 px-4 py-2 border-b hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center cursor-pointer">
+                        <Link to={`/document/${task.id}`} target="_sidebar" className="flex-1 min-w-0 flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">{task.title}</div>
+                            <div className="text-xs text-gray-500 flex items-center gap-2">
+                              <span>{task.task_id}</span>
+                              {task.assignee && (
+                                <span className="flex items-center gap-1">
+                                  <User className="w-3 h-3" />
+                                  {assigneeOptions.find(o => o.value === task.assignee)?.label || task.assignee.split('_')[0]}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {statusOptions.find(s => s.value === task.status)?.label || task.status}
-                        </Badge>
+                          <Badge variant="secondary" className="text-xs shrink-0">
+                            {statusOptions.find(s => s.value === task.status)?.label || task.status}
+                          </Badge>
+                        </Link>
+                        {onSubtaskCreate && (
+                          <button
+                            type="button"
+                            title="Add subtask"
+                            className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSubtaskTarget(t => t === task.id ? null : task.id); }}
+                          >
+                            <Plus className="w-3.5 h-3.5 text-gray-500" />
+                          </button>
+                        )}
                       </div>
-                    </Link>
+                      {subtaskTarget === task.id && (
+                        <div className="bg-muted/30 border-b px-6 py-2">
+                          <SubtaskPanel
+                            parentTaskId={task.id}
+                            boardId={boardId}
+                            subtasks={task.subtasks || []}
+                            onCreated={() => setSubtaskTarget(null)}
+                            boardFields={boardFields}
+                          />
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               ))}

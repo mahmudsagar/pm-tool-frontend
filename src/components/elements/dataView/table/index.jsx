@@ -122,7 +122,7 @@ function AddTaskRow({ onClick }) {
   return (
     <div
       className="flex items-center gap-2 px-[52px] py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/40 cursor-pointer transition-colors border-t"
-      onClick={onClick}
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
     >
       <PlusIcon className="h-4 w-4" />
       Add Task
@@ -134,6 +134,7 @@ function HeaderRow({ sensors, handleDragEnd, table, addFilter, setEditPropertyMo
   return (
     <div className="flex items-center border-b text-xs text-muted-foreground select-none">
       <div className="w-[52px] shrink-0" />
+      <div className="w-5 shrink-0" />
       <div className="flex-1 min-w-[200px] px-3 py-2 font-medium">Name</div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext
@@ -194,7 +195,61 @@ function SubtaskFormModal({ open, onOpenChange, onSave }) {
   );
 }
 
-function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick, onSubtaskCreate }) {
+function SubtaskCell({ column, sub, assigneeOptions, onCellChange }) {
+  const value = sub[column.id] ?? '';
+  const [localValue, setLocalValue] = useState(value);
+
+  const handleChange = (newValue) => {
+    if (onCellChange && sub?.id) {
+      onCellChange(sub, column.id, newValue);
+    }
+  };
+
+  if (column.type === 'daterange') {
+    return (
+      <DatePickerWithRange
+        value={value}
+        onChange={(val) => handleChange(val)}
+        className="border-0 h-auto rounded-none bg-transparent"
+      />
+    );
+  }
+
+  if (column.type === 'select' || column.type === 'dynamic-select') {
+    const options =
+      column.type === 'dynamic-select'
+        ? assigneeOptions
+        : (column.props?.optionsData ?? assigneeOptions);
+    return (
+      <Select
+        value={value || ''}
+        onValueChange={(val) => handleChange(val)}
+      >
+        <SelectTrigger className="w-full border-0 px-4 py-2 h-auto focus:ring-0">
+          <SelectValue placeholder="Select...">
+            {options.find(opt => opt.value === value)?.label}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {options.map(opt => (
+            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  return (
+    <Input
+      className="border-0 h-auto focus-visible:ring-0 rounded-false py-2 px-4"
+      value={localValue ?? ''}
+      onChange={e => setLocalValue(e.target.value)}
+      onBlur={e => handleChange(e.target.value)}
+    />
+  );
+}
+
+function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick, onSubtaskCreate, onCellChange, visibleColumns, assigneeOptions }) {
   const rowData = rows[row.index];
   const isSelected = row.getIsSelected();
   const subtasks = rowData?.subtasks || [];
@@ -253,17 +308,32 @@ function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick, onSubtaskCr
     {expanded && (
       <>
         {subtasks.map(sub => (
-          <div key={sub.id} className="flex items-center group min-h-[32px] hover:bg-accent/20 transition-colors bg-muted/30 border-l-2 border-primary/30 ml-12">
+          <div key={sub.id} className="flex items-center group min-h-[32px] hover:bg-accent/20 transition-colors bg-muted/30">
+            {/* checkbox placeholder */}
+            <div className="w-5 shrink-0" />
+            {/* grip placeholder */}
+            <div className="w-7 shrink-0" />
             <div className="w-5 flex items-center justify-center shrink-0">
               <Circle className="h-3 w-3 fill-blue-400 text-blue-400" />
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <Link to={`/document/${sub.id}`} target="_sidebar">
-                <span className="block truncate px-3 py-1.5 text-xs text-muted-foreground hover:text-primary">
-                  {sub.title || 'Untitled Subtask'}
-                </span>
-              </Link>
+            {/* indent spacer instead of chevron */}
+            <div className="w-5 shrink-0" />
+            <div className="flex-1 min-w-[200px] cursor-pointer" onClick={() => {
+              const to = `/document/${sub.id}`;
+              window.open(to, '_sidebar');
+            }}>
+              <span className="block truncate pl-14 pr-3 py-1.5 text-xs text-muted-foreground hover:text-primary border-l-2 border-primary/30">
+                {sub.title || 'Untitled Subtask'}
+              </span>
             </div>
+            {(visibleColumns || [])
+              .filter(col => col.id !== 'title' && col.id !== 'task_id' && col.id !== 'description')
+              .map(col => (
+                <div key={col.id} className="w-36 shrink-0 text-xs">
+                  <SubtaskCell column={col} sub={sub} assigneeOptions={assigneeOptions} onCellChange={onCellChange} />
+                </div>
+              ))}
+            <div className="w-10 shrink-0" />
           </div>
         ))}
         {onSubtaskCreate && (
@@ -304,26 +374,28 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
       hidden: false
     }))
   );
-  const [rows, setRows] = useState(data.property_values);
+  const [rows, setRows] = useState(data.property_values.filter(r => !r.parent_id));
   const [rowSelection, setRowSelection] = useState({});
   const [editPropertyModal, setEditPropertyModal] = useState({ open: false, property: null });
 
   const form = useForm({
     defaultValues: {
-      rows: data.property_values
+      rows: data.property_values.filter(r => !r.parent_id)
     }
   });
 
   // Sync rows when data from the server changes (e.g. after task creation)
   useEffect(() => {
-    setRows(data.property_values);
+    const topLevel = data.property_values.filter(r => !r.parent_id);
+    setRows(topLevel);
     // Only reset the form if the row count or IDs have changed to avoid
     // triggering react-hook-form re-renders on every parent re-render.
-    form.reset({ rows: data.property_values }, { keepDirtyValues: false });
+    form.reset({ rows: topLevel }, { keepDirtyValues: false });
   }, [data.property_values]);
 
   // Sync columns when data changes (e.g. dynamic-select options updated)
   useEffect(() => {
+    if (!data.property_name?.length) return; // never wipe existing columns due to a transient empty state
     setTableColumns(prev => {
       const next = data.property_name.map(col => {
         const existing = prev.find(p => p.name === col.name);
@@ -340,6 +412,8 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
       ) {
         return prev;
       }
+      // Never reduce below the current column count to avoid transient data wiping columns
+      if (next.length < prev.length) return prev;
       return next;
     });
   }, [data.property_name]);
@@ -657,6 +731,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
 
         {/* Scrollable table area */}
         <div className="overflow-x-auto w-full">
+          <div className="min-w-max">
           {groupedRows ? (
             /* ── GROUPED VIEW ─────────────────────────────────────────── */
             <div>
@@ -686,7 +761,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
                         <HeaderRow sensors={sensors} handleDragEnd={handleDragEnd} table={table} addFilter={addFilter} setEditPropertyModal={setEditPropertyModal} addNewColumn={addNewColumn} />
                         {/* Rows */}
                         <div className="divide-y">
-                          {group.rows.map(row => <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} onSubtaskCreate={onSubtaskCreate} />)}
+                          {group.rows.map(row => <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} onSubtaskCreate={onSubtaskCreate} onCellChange={onCellChange} visibleColumns={table.getVisibleLeafColumns()} assigneeOptions={assigneeOptions} />)}
                         </div>
                         <AddTaskRow onClick={onTaskCreate} />
                       </>
@@ -701,12 +776,13 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
               <HeaderRow sensors={sensors} handleDragEnd={handleDragEnd} table={table} addFilter={addFilter} setEditPropertyModal={setEditPropertyModal} addNewColumn={addNewColumn} />
               <div className="divide-y">
                 {table.getRowModel().rows.map(row => (
-                  <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} onSubtaskCreate={onSubtaskCreate} />
+                  <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} onSubtaskCreate={onSubtaskCreate} onCellChange={onCellChange} visibleColumns={table.getVisibleLeafColumns()} assigneeOptions={assigneeOptions} />
                 ))}
               </div>
               <AddTaskRow onClick={onTaskCreate} />
             </>
           )}
+          </div>
         </div>
       </form>
 

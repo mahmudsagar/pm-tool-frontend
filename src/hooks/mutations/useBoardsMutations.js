@@ -111,23 +111,7 @@ export const useCreateSubtask = () => {
     },
 
     onSuccess: (data, variables) => {
-      queryClient.setQueriesData(
-        { predicate: (query) => query.queryKey[0] === 'boards' && query.queryKey[1] === variables.boardId },
-        (oldData) => {
-          if (!oldData) return oldData;
-
-          const appendSubtask = (board) => ({
-            ...board,
-            documents: (board.documents || []).map(doc =>
-              doc._id === variables.parentTaskId
-                ? { ...doc, subtasks: [...(doc.subtasks || []), data] }
-                : doc
-            ),
-          });
-
-          return Array.isArray(oldData) ? oldData.map(appendSubtask) : appendSubtask(oldData);
-        }
-      );
+      queryClient.invalidateQueries({ queryKey: ['boards', variables.boardId] });
 
       toast({ title: 'Subtask created successfully' });
     },

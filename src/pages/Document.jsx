@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import PlaygroundNodes from '@/components/elements/editor/nodes/PlaygroundNodes';
 import PlaygroundEditorTheme from '@/components/elements/editor/themes/PlaygroundEditorTheme';
 import Editor from '@/components/elements/editor/editor';
+import SubtaskPanel from '@/components/elements/SubtaskPanel';
 
 const editorConfig = {
   namespace: 'BetterNotion Demo',
@@ -20,7 +21,8 @@ const editorConfig = {
   theme: PlaygroundEditorTheme,
 };
 let firstLoad = true;
-const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, assigneeOptions = [], ...rest }) => {
+const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, assigneeOptions = [], board_id, subtasks = [], board, ...rest }) => {
+  const boardFields = board?.custom_meta?.fields || [];
   const [showComments, setShowComments] = useState(false);
   useEffect(() => {
     if (!pageContent) return;
@@ -78,6 +80,16 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, a
     showComments,
     setShowComments,
     assigneeOptions,
+    subtaskPanel: board_id ? (
+      <div className="mt-4 mb-2">
+        <SubtaskPanel
+          parentTaskId={_id}
+          boardId={board_id}
+          subtasks={subtasks}
+          boardFields={boardFields}
+        />
+      </div>
+    ) : null,
     ...rest
   }
 
@@ -85,6 +97,7 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, a
     <LexicalComposer initialConfig={editorConfig}>
       {pageContent && <Editor {...editorProps} />}
     </LexicalComposer>
+
   </div>
 }
 

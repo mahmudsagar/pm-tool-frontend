@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/select';
 import TaskFormModal from '../kanban/task-form-modal';
 import useStatusStore from '@/stores/useStatusStore';
+import SubtaskPanel from '@/components/elements/SubtaskPanel';
+import Delete from '@/layouts/elements/components/DropdownMenuItems/items/Delete';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -26,7 +28,8 @@ const MONTHS = [
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function CalendarView({ data, assigneeOptions = [] }) {
+export default function CalendarView({ data, boardId, assigneeOptions = [], onSubtaskCreate }) {
+  const boardFields = data?.property_name?.filter(f => !['task_id','title','description'].includes(f.name)) || [];
   const { getStatusOptions } = useStatusStore();
   const statusOptions = getStatusOptions();
   
@@ -35,6 +38,7 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [subtaskTarget, setSubtaskTarget] = useState(null);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -360,7 +364,8 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
                 {/* Tasks */}
                 <div className="space-y-1">
                   {day.tasks.slice(0, 4).map((task) => (
-                    <Link key={task.id} to={`/document/${task.id}`} target="_sidebar">
+                    <div key={task.id}>
+                    <Link to={`/document/${task.id}`} target="_sidebar">
                       <div
                         className={`group relative p-1 rounded text-xs cursor-pointer border-l-2 ${getPriorityColor(task.priority)} hover:shadow-sm transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700`}
                       >
@@ -386,25 +391,43 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
                             }}>
                               Open Task
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              Delete Task
-                            </DropdownMenuItem>
+                            {onSubtaskCreate && (
+                              <DropdownMenuItem onClick={(e) => {
+                                e.preventDefault();
+                                setSubtaskTarget(t => t === task.id ? null : task.id);
+                              }}>
+                                Add Subtask
+                              </DropdownMenuItem>
+                            )}
+                            <Delete fileId={task.id} fileType="page" />
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                       
-                      <div className="flex items-center gap-1 mt-0.5">
+                      <div className="flex items-center gap-1 mt-0.5 justify-center flex-wrap">
                         <Badge variant="secondary" className={`px-1 py-0 text-xs ${getStatusColor(task.status)}`}>
                           {statusOptions.find(s => s.value === task.status)?.label || task.status}
                         </Badge>
                         {task.assignee && (
                           <span className="text-xs text-gray-500 truncate max-w-16">
-                            {task.assignee.split('_')[0]}
+                            {assigneeOptions.find(o => o.value === task.assignee)?.label || task.assignee.split('_')[0]}
                           </span>
                         )}
                       </div>
                     </div>
                     </Link>
+                    {subtaskTarget === task.id && (
+                      <div className="mt-1 mb-1">
+                        <SubtaskPanel
+                          parentTaskId={task.id}
+                          boardId={boardId}
+                          subtasks={task.subtasks || []}
+                          onCreated={() => setSubtaskTarget(null)}
+                          boardFields={boardFields}
+                        />
+                      </div>
+                    )}
+                    </div>
                   ))}
                   
                   {day.tasks.length > 4 && (
@@ -497,7 +520,7 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
                           </Badge>
                           {task.assignee && (
                             <span className="text-xs text-gray-500 truncate max-w-20">
-                              {task.assignee.split('_')[0]}
+                              {assigneeOptions.find(o => o.value === task.assignee)?.label || task.assignee.split('_')[0]}
                             </span>
                           )}
                         </div>
@@ -576,7 +599,8 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
             ) : (
               <div className="space-y-3">
                 {dayData.tasks.map((task) => (
-                  <Link key={task.id} to={`/document/${task.id}`} target="_sidebar">
+                  <div key={task.id}>
+                  <Link to={`/document/${task.id}`} target="_sidebar">
                     <div
                       className={`group relative p-4 rounded-lg cursor-pointer border-l-4 ${getPriorityColor(task.priority)} hover:shadow-md transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700`}
                     >
@@ -597,7 +621,7 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
                             </Badge>
                             {task.assignee && (
                               <span className="text-sm text-gray-500">
-                                Assigned to {task.assignee.replace(/_/g, ' ')}
+                                Assigned to {assigneeOptions.find(o => o.value === task.assignee)?.label || task.assignee.replace(/_/g, ' ')}
                               </span>
                             )}
                           </div>
@@ -620,14 +644,30 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
                             }}>
                               Open Task
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              Delete Task
-                            </DropdownMenuItem>
+                            {onSubtaskCreate && (
+                              <DropdownMenuItem onClick={(e) => {
+                                e.preventDefault();
+                                setSubtaskTarget(t => t === task.id ? null : task.id);
+                              }}>
+                                Add Subtask
+                              </DropdownMenuItem>
+                            )}
+                            <Delete fileId={task.id} fileType="page" />
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                     </div>
                   </Link>
+                  {subtaskTarget === task.id && boardId && (
+                    <SubtaskPanel
+                      parentTaskId={task.id}
+                      boardId={boardId}
+                      subtasks={task.subtasks || []}
+                      onCreated={() => setSubtaskTarget(null)}
+                      boardFields={boardFields}
+                    />
+                  )}
+                  </div>
                 ))}
               </div>
             )}

@@ -60,7 +60,7 @@ const EMPTY_CONTENT =
   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
 const placeholder = 'Enter some rich text...';
-export default function Editor({ title, content, page_id, user_id, custom_meta, comments, mediaAttachments, onChange, showComments, setShowComments, assigneeOptions = [] }) {
+export default function Editor({ title, content, page_id, user_id, custom_meta, comments, mediaAttachments, onChange, showComments, setShowComments, assigneeOptions = [], subtaskPanel = null }) {
   const [editor] = useLexicalComposerContext()
   const uploadMediaMutation = useUploadMedia();
   const deleteMediaMutation = useDeleteMedia();
@@ -176,6 +176,7 @@ export default function Editor({ title, content, page_id, user_id, custom_meta, 
           setCurrentCustomFields(custom_meta);
           handleOnChange({ title: currentTitle, content: currentEditorState, custom_meta, inner_comments: currentComments });
         }} />
+        {subtaskPanel}
         <Comment {...{ page_id, user_id, comments }} />
       </div>
       <Separator />
