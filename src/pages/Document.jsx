@@ -21,7 +21,7 @@ const editorConfig = {
   theme: PlaygroundEditorTheme,
 };
 let firstLoad = true;
-const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, assigneeOptions = [], board_id, subtasks = [], board, ...rest }) => {
+const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, assigneeOptions = [], board_id, subtasks = [], board, parent_id, ...rest }) => {
   const boardFields = board?.custom_meta?.fields || [];
   const [showComments, setShowComments] = useState(false);
   useEffect(() => {
@@ -73,6 +73,15 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, a
     handleSubmit(value);
   }, 1000);
 
+  const mergedCustomMeta = rest.custom_meta
+    ? {
+        ...rest.custom_meta,
+        fields: rest.custom_meta.fields?.length > 0
+          ? rest.custom_meta.fields
+          : boardFields,
+      }
+    : undefined;
+
   const editorProps = {
     page_id: _id,
     content: pageContent?.content,
@@ -80,7 +89,7 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, a
     showComments,
     setShowComments,
     assigneeOptions,
-    subtaskPanel: board_id ? (
+    subtaskPanel: board_id && !parent_id ? (
       <div className="mt-4 mb-2">
         <SubtaskPanel
           parentTaskId={_id}
@@ -90,7 +99,8 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, a
         />
       </div>
     ) : null,
-    ...rest
+    ...rest,
+    ...(mergedCustomMeta !== undefined ? { custom_meta: mergedCustomMeta } : {}),
   }
 
   return <div className='lexical-editor'>

@@ -196,6 +196,9 @@ function SubtaskFormModal({ open, onOpenChange, onSave }) {
 }
 
 function SubtaskCell({ column, sub, assigneeOptions, onCellChange }) {
+  // React Table column objects store meta on columnDef
+  const colType = column.columnDef?.type ?? column.type;
+  const colProps = column.columnDef?.props ?? column.props;
   const value = sub[column.id] ?? '';
   const [localValue, setLocalValue] = useState(value);
 
@@ -205,7 +208,7 @@ function SubtaskCell({ column, sub, assigneeOptions, onCellChange }) {
     }
   };
 
-  if (column.type === 'daterange') {
+  if (colType === 'daterange') {
     return (
       <DatePickerWithRange
         value={value}
@@ -215,11 +218,11 @@ function SubtaskCell({ column, sub, assigneeOptions, onCellChange }) {
     );
   }
 
-  if (column.type === 'select' || column.type === 'dynamic-select') {
+  if (colType === 'select' || colType === 'dynamic-select') {
     const options =
-      column.type === 'dynamic-select'
+      colType === 'dynamic-select'
         ? assigneeOptions
-        : (column.props?.optionsData ?? assigneeOptions);
+        : (colProps?.optionsData ?? []);
     return (
       <Select
         value={value || ''}
@@ -256,6 +259,11 @@ function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick, onSubtaskCr
   const [expanded, setExpanded] = useState(false);
   const [subtaskModalOpen, setSubtaskModalOpen] = useState(false);
 
+  // Auto-expand when the first subtask appears (e.g. immediately after creation)
+  useEffect(() => {
+    if (subtasks.length > 0) setExpanded(true);
+  }, [subtasks.length]);
+
   return (
     <>
     <div
@@ -278,7 +286,6 @@ function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick, onSubtaskCr
         </DropdownMenu>
       </div>
       <div className="w-5 flex items-center justify-center shrink-0">
-        <Circle className="h-3.5 w-3.5 fill-green-500 text-green-500" />
       </div>
       {/* Expand/collapse chevron for subtasks */}
       <div
@@ -313,9 +320,7 @@ function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick, onSubtaskCr
             <div className="w-5 shrink-0" />
             {/* grip placeholder */}
             <div className="w-7 shrink-0" />
-            <div className="w-5 flex items-center justify-center shrink-0">
-              <Circle className="h-3 w-3 fill-blue-400 text-blue-400" />
-            </div>
+            <div className="w-5 shrink-0" />
             {/* indent spacer instead of chevron */}
             <div className="w-5 shrink-0" />
             <div className="flex-1 min-w-[200px] cursor-pointer" onClick={() => {

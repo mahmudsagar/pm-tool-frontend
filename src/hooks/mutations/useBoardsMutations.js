@@ -72,7 +72,7 @@ export const useUpdateBoardTask = () => {
     },
 
     onSuccess: (data, variables) => {
-      // Optimistically update the cached board documents
+      // Optimistically update the cached board documents (top-level and nested subtasks)
       queryClient.setQueriesData(
         { predicate: (query) => query.queryKey[0] === 'boards' && query.queryKey[1] === variables.boardId },
         (oldData) => {
@@ -80,11 +80,24 @@ export const useUpdateBoardTask = () => {
 
           const updateDoc = (board) => ({
             ...board,
-            documents: (board.documents || []).map(doc =>
-              doc._id === variables.taskId
-                ? { ...doc, custom_meta: variables.custom_meta }
-                : doc
-            ),
+            documents: (board.documents || []).map(doc => {
+              // Update top-level task
+              if (doc._id === variables.taskId) {
+                return { ...doc, custom_meta: variables.custom_meta };
+              }
+              // Update matching subtask nested inside this document
+              if (doc.subtasks?.some(sub => sub._id === variables.taskId)) {
+                return {
+                  ...doc,
+                  subtasks: doc.subtasks.map(sub =>
+                    sub._id === variables.taskId
+                      ? { ...sub, custom_meta: variables.custom_meta }
+                      : sub
+                  ),
+                };
+              }
+              return doc;
+            }),
           });
 
           return Array.isArray(oldData) ? oldData.map(updateDoc) : updateDoc(oldData);
