@@ -3,10 +3,68 @@ import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { GripVertical, Calendar, User, Flag } from 'lucide-react';
+import { GripVertical, Calendar, User, Flag, ListTodo, Plus } from 'lucide-react';
 import Link from '@/BetterRouter/Link';
+import { useState } from 'react';
 
-function KanbanCard({ item, isDragOverlay = false, assigneeOptions = [] }) {
+function SubtaskPopover({ item, onSubtaskCreate }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const subtasks = item.subtasks || [];
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(o => !o); }}
+      >
+        <ListTodo className="w-3 h-3" />
+        {subtasks.length > 0 && <span>{subtasks.length}</span>}
+        <Plus className="w-3 h-3" />
+      </button>
+      {open && (
+        <div
+          className="absolute bottom-full left-0 mb-1 z-50 bg-background border rounded-lg shadow-lg w-64 p-3"
+          onClick={e => e.stopPropagation()}
+        >
+          <p className="text-xs font-semibold mb-2">Subtasks</p>
+          {subtasks.map(sub => (
+            <div key={sub.id} className="text-xs text-muted-foreground py-0.5 truncate">• {sub.title}</div>
+          ))}
+          {onSubtaskCreate && (
+            <div className="mt-2 flex gap-1">
+              <input
+                autoFocus
+                className="flex-1 text-xs border rounded px-2 py-1 bg-background"
+                placeholder="New subtask title"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && title.trim()) {
+                    onSubtaskCreate(item.id, { title: title.trim() });
+                    setTitle('');
+                  }
+                  if (e.key === 'Escape') setOpen(false);
+                }}
+              />
+              <button
+                type="button"
+                disabled={!title.trim()}
+                onClick={() => { if (title.trim()) { onSubtaskCreate(item.id, { title: title.trim() }); setTitle(''); } }}
+                className="text-xs px-2 py-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              >
+                Add
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function KanbanCard({ item, isDragOverlay = false, assigneeOptions = [], onSubtaskCreate }) {
   const {
     attributes,
     listeners,
@@ -134,6 +192,9 @@ function KanbanCard({ item, isDragOverlay = false, assigneeOptions = [] }) {
               <span className="truncate">{getAssigneeName(item.assignee)}</span>
             </div>
           )}
+          <div className="flex items-center justify-between pt-1">
+            <SubtaskPopover item={item} onSubtaskCreate={onSubtaskCreate} />
+          </div>
         </div>
       </CardContent>
     </Card>

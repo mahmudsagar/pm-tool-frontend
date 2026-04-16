@@ -161,11 +161,48 @@ function HeaderRow({ sensors, handleDragEnd, table, addFilter, setEditPropertyMo
   );
 }
 
-function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick }) {
+function SubtaskFormModal({ open, onOpenChange, onSave }) {
+  const [title, setTitle] = useState('');
+  return (
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/40 ${open ? '' : 'hidden'}`} onClick={() => onOpenChange(false)}>
+      <div className="bg-background rounded-lg shadow-lg p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <h3 className="text-sm font-semibold mb-3">Add Subtask</h3>
+        <Input
+          autoFocus
+          placeholder="Subtask title"
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && title.trim()) { onSave({ title: title.trim() }); setTitle(''); }
+            if (e.key === 'Escape') onOpenChange(false);
+          }}
+          className="mb-3"
+        />
+        <div className="flex gap-2 justify-end">
+          <button type="button" onClick={() => onOpenChange(false)} className="text-xs px-3 py-1.5 rounded border hover:bg-accent">Cancel</button>
+          <button
+            type="button"
+            disabled={!title.trim()}
+            onClick={() => { if (title.trim()) { onSave({ title: title.trim() }); setTitle(''); } }}
+            className="text-xs px-3 py-1.5 rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            Create
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick, onSubtaskCreate }) {
   const rowData = rows[row.index];
   const isSelected = row.getIsSelected();
+  const subtasks = rowData?.subtasks || [];
+  const [expanded, setExpanded] = useState(false);
+  const [subtaskModalOpen, setSubtaskModalOpen] = useState(false);
 
   return (
+    <>
     <div
       className={`flex items-center group min-h-[36px] hover:bg-accent/40 transition-colors ${isSelected ? 'bg-primary/10' : ''}`}
     >
@@ -188,6 +225,16 @@ function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick }) {
       <div className="w-5 flex items-center justify-center shrink-0">
         <Circle className="h-3.5 w-3.5 fill-green-500 text-green-500" />
       </div>
+      {/* Expand/collapse chevron for subtasks */}
+      <div
+        className="w-5 flex items-center justify-center shrink-0 cursor-pointer"
+        onClick={() => subtasks.length > 0 && setExpanded(e => !e)}
+      >
+        {subtasks.length > 0
+          ? <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${expanded ? 'rotate-90' : ''}`} />
+          : <span className="w-3.5" />
+        }
+      </div>
       <div className="flex-1 min-w-[200px] cursor-pointer" onClick={() => onRowClick(row)}>
         <span className="block truncate px-3 py-2 text-sm hover:text-primary">
           {row.getValue('title') || 'Untitled'}
@@ -202,10 +249,49 @@ function RowItem({ row, rows, duplicateRows, deleteRows, onRowClick }) {
         ))}
       <div className="w-10 shrink-0" />
     </div>
+    {/* Subtask rows */}
+    {expanded && (
+      <>
+        {subtasks.map(sub => (
+          <div key={sub.id} className="flex items-center group min-h-[32px] hover:bg-accent/20 transition-colors bg-muted/30 border-l-2 border-primary/30 ml-12">
+            <div className="w-5 flex items-center justify-center shrink-0">
+              <Circle className="h-3 w-3 fill-blue-400 text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <Link to={`/document/${sub.id}`} target="_sidebar">
+                <span className="block truncate px-3 py-1.5 text-xs text-muted-foreground hover:text-primary">
+                  {sub.title || 'Untitled Subtask'}
+                </span>
+              </Link>
+            </div>
+          </div>
+        ))}
+        {onSubtaskCreate && (
+          <div
+            className="flex items-center gap-2 ml-12 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/20 cursor-pointer transition-colors"
+            onClick={() => setSubtaskModalOpen(true)}
+          >
+            <PlusIcon className="h-3 w-3" />
+            Add subtask
+          </div>
+        )}
+        {subtaskModalOpen && (
+          <SubtaskFormModal
+            open={subtaskModalOpen}
+            onOpenChange={setSubtaskModalOpen}
+            onSave={(data) => {
+              onSubtaskCreate(rowData.id, data);
+              setSubtaskModalOpen(false);
+            }}
+          />
+        )}
+      </>
+    )}
+    </>
   );
 }
 
-export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIONS, groupBy = null, onCellChange, onTaskCreate }) {
+export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIONS, groupBy = null, onCellChange, onTaskCreate, onSubtaskCreate }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sorting, setSorting] = useState([]);
   const [columnOrder, setColumnOrder] = useState([]);
@@ -600,7 +686,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
                         <HeaderRow sensors={sensors} handleDragEnd={handleDragEnd} table={table} addFilter={addFilter} setEditPropertyModal={setEditPropertyModal} addNewColumn={addNewColumn} />
                         {/* Rows */}
                         <div className="divide-y">
-                          {group.rows.map(row => <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} />)}
+                          {group.rows.map(row => <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} onSubtaskCreate={onSubtaskCreate} />)}
                         </div>
                         <AddTaskRow onClick={onTaskCreate} />
                       </>
@@ -615,7 +701,7 @@ export default function TableView({ data, assigneeOptions = EMPTY_ASSIGNEE_OPTIO
               <HeaderRow sensors={sensors} handleDragEnd={handleDragEnd} table={table} addFilter={addFilter} setEditPropertyModal={setEditPropertyModal} addNewColumn={addNewColumn} />
               <div className="divide-y">
                 {table.getRowModel().rows.map(row => (
-                  <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} />
+                  <RowItem key={row.id} row={row} rows={rows} duplicateRows={duplicateRows} deleteRows={deleteRows} onRowClick={handleRowClick} onSubtaskCreate={onSubtaskCreate} />
                 ))}
               </div>
               <AddTaskRow onClick={onTaskCreate} />

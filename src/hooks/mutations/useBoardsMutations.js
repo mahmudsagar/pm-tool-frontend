@@ -95,6 +95,54 @@ export const useUpdateBoardTask = () => {
 };
 
 /**
+ * Mutation hook to create a subtask under a parent task in a board
+ */
+export const useCreateSubtask = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ boardId, parentTaskId, taskData }) => {
+      const result = await api.post(`${baseUrl}/v1/page/document`, {
+        ...taskData,
+        parent_id: parentTaskId,
+      });
+      return result.data;
+    },
+
+    onSuccess: (data, variables) => {
+      queryClient.setQueriesData(
+        { predicate: (query) => query.queryKey[0] === 'boards' && query.queryKey[1] === variables.boardId },
+        (oldData) => {
+          if (!oldData) return oldData;
+
+          const appendSubtask = (board) => ({
+            ...board,
+            documents: (board.documents || []).map(doc =>
+              doc._id === variables.parentTaskId
+                ? { ...doc, subtasks: [...(doc.subtasks || []), data] }
+                : doc
+            ),
+          });
+
+          return Array.isArray(oldData) ? oldData.map(appendSubtask) : appendSubtask(oldData);
+        }
+      );
+
+      toast({ title: 'Subtask created successfully' });
+    },
+
+    onError: (error) => {
+      toast({
+        title: 'Failed to create subtask',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+/**
  * Mutation hook to update a board
  */
 export const useUpdateBoard = () => {

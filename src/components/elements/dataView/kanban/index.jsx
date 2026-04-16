@@ -25,7 +25,7 @@ import { useUpdateDocumentMeta } from '@/hooks/mutations/useFilesMutations';
 
 const EMPTY_ASSIGNEE_OPTIONS = [];
 
-export default function KanbanView({ data, boardId, onTaskCreate, assigneeOptions = EMPTY_ASSIGNEE_OPTIONS, groupBy = null }) {
+export default function KanbanView({ data, boardId, onTaskCreate, assigneeOptions = EMPTY_ASSIGNEE_OPTIONS, groupBy = null, onSubtaskCreate }) {
   // Get status management functions from the global store
   const statuses = useStatusStore(state => state.statuses);
   const addStatus = useStatusStore(state => state.addStatus);
@@ -453,6 +453,7 @@ export default function KanbanView({ data, boardId, onTaskCreate, assigneeOption
                   onEditStatus={handleEditStatus}
                   isDragOverlay={false}
                   assigneeOptions={assigneeOptions}
+                  onSubtaskCreate={onSubtaskCreate}
                 />
               ))}
             </div>

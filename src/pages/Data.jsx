@@ -37,7 +37,7 @@ import { useParams, useSearchParams } from "react-router-dom"
 import { Plus } from "lucide-react"
 import TaskFormModal from "@/components/elements/dataView/kanban/task-form-modal"
 import { useBoard } from "@/hooks/queries/useBoardsQueries"
-import { useCreateBoardTask, useUpdateBoard, useUpdateBoardTask } from "@/hooks/mutations/useBoardsMutations"
+import { useCreateBoardTask, useUpdateBoard, useUpdateBoardTask, useCreateSubtask } from "@/hooks/mutations/useBoardsMutations"
 import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete"
 import { useUsers } from "@/hooks/queries/useSpacesQueries"
 import { useTeams } from "@/hooks/queries/useTeamsQueries"
@@ -105,6 +105,7 @@ export default function Data({ id: propId, setTopMenu }) {
   const createTaskMutation = useCreateBoardTask();
   const updateBoardMutation = useUpdateBoard();
   const updateTaskMutation = useUpdateBoardTask();
+  const createSubtaskMutation = useCreateSubtask();
   const { data: allUsers } = useUsers();
   const { data: allTeams } = useTeams();
   
@@ -200,6 +201,37 @@ export default function Data({ id: propId, setTopMenu }) {
     };
     updateTaskMutation.mutate({ boardId, taskId: rowData.id, custom_meta: updatedMeta });
   }, [boardId, boardData, updateTaskMutation]);
+
+  // Create a subtask under a parent task
+  const createSubtask = useCallback(async (parentTaskId, taskData) => {
+    if (!boardId || !parentTaskId) return;
+    try {
+      const customMetaValues = {};
+      const coreFields = ['title', 'description', 'id', 'task_id', 'kanbanId', 'custom_meta'];
+      Object.keys(taskData).forEach(key => {
+        if (!coreFields.includes(key) && taskData[key] !== undefined) {
+          customMetaValues[key] = taskData[key];
+        }
+      });
+      const requestBody = {
+        user_id: localStorage.getItem('userId') || "68578b51b1325fc7c9b7b095",
+        title: taskData.title,
+        page_type: 'document',
+        entity_type: 'page',
+        content: { text: taskData.description || '' },
+        summary: taskData.description || '',
+        last_updated_by: localStorage.getItem('userId') || "68578b51b1325fc7c9b7b095",
+        custom_meta: { fields: boardData?.custom_meta?.fields || [], values: customMetaValues },
+        board_id: boardId,
+        shared_members: boardData?.shared_members || [],
+        shared_teams: boardData?.shared_teams || [],
+        attachments: [],
+      };
+      await createSubtaskMutation.mutateAsync({ boardId, parentTaskId, taskData: requestBody });
+    } catch (error) {
+      console.error('Error creating subtask:', error);
+    }
+  }, [boardId, boardData, createSubtaskMutation]);
 
   // Shared function to create a task (used by both modal and kanban)
   const createTask = async (taskData) => {
@@ -310,6 +342,23 @@ export default function Data({ id: propId, setTopMenu }) {
         description: doc.description || '',
         // Preserve raw custom_meta so drag-and-drop can merge values correctly
         custom_meta: doc.custom_meta || { fields: [], values: {} },
+        // Subtasks nested under this task
+        subtasks: (doc.subtasks || []).map((sub, si) => {
+          const subData = {
+            id: sub._id,
+            task_id: `TASK-${String(index + 1).padStart(3, '0')}.${si + 1}`,
+            title: sub.title || 'Untitled Subtask',
+            description: sub.description || '',
+            parent_id: sub.parent_id,
+            custom_meta: sub.custom_meta || { fields: [], values: {} },
+          };
+          customFields.forEach(field => {
+            subData[field.name] = sub.custom_meta?.values?.[field.name] ?? ((field.type === 'select' || field.type === 'dynamic-select') ? '' : null);
+          });
+          subData.createdAt = sub.createdAt;
+          subData.updatedAt = sub.updatedAt;
+          return subData;
+        }),
       };
 
       // Add custom field values
@@ -482,6 +531,7 @@ export default function Data({ id: propId, setTopMenu }) {
                 data={boardTasks} 
                 boardId={boardId}
                 onTaskCreate={createTask}
+                onSubtaskCreate={createSubtask}
                 onCellChange={handleCellChange}
                 assigneeOptions={assigneeOptions}
                 groupBy={groupBy}
