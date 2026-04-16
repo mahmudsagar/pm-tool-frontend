@@ -78,7 +78,7 @@ function KanbanColumn({ id, title, color, items, onAddTask, onEditStatus, isDrag
               </DropdownMenu>
             )}
           </div>
-          <Badge variant="secondary" className={cn("text-xs", color)}>
+          <Badge variant="secondary" className={cn("text-xs", 'text-white')}>
             {items.length}
           </Badge>
         </div>
