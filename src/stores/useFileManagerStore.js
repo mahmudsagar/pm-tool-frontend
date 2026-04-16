@@ -256,10 +256,16 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
 
       const updatedPublicSpaces = removeChild(state.publicSpaces);
       const updatedPrivateSpaces = removeChild(state.privateSpaces);
+
+      const updatedSpaceFiles = Array.isArray(state.spaceFiles)
+        ? state.spaceFiles.filter((file) => file.id !== id && file._id !== id)
+        : state.spaceFiles;
+
       return {
         documents: updatedDocuments,
         publicSpaces: updatedPublicSpaces,
         privateSpaces: updatedPrivateSpaces,
+        spaceFiles: updatedSpaceFiles,
       };
     });
   },

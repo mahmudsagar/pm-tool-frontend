@@ -93,7 +93,8 @@ export const useDeleteEntity = () => {
           query.queryKey[0] === 'files' ||
           query.queryKey[0] === 'folders' ||
           query.queryKey[0] === 'groups' ||
-          query.queryKey[0] === 'documents'
+          query.queryKey[0] === 'documents' ||
+          query.queryKey[0] === 'boards'
       });
       
       toast({
