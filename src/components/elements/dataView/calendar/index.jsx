@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Filter, Search, MoreHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import Link from '@/BetterRouter/Link';
 import {
@@ -9,8 +8,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
 import {
   Select,
@@ -38,11 +35,6 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [visibleStatuses, setVisibleStatuses] = useState(
-    statusOptions.reduce((acc, status) => ({ ...acc, [status.value]: true }), {})
-  );
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -87,20 +79,6 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
     }));
   }, [data]);
 
-  // Filter tasks based on search and status
-  const filteredTasks = useMemo(() => {
-    return tasks.filter(task => {
-      const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           task.assignee?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
-      const isStatusVisible = visibleStatuses[task.status] !== false;
-      
-      return matchesSearch && matchesStatus && isStatusVisible;
-    });
-  }, [tasks, searchTerm, statusFilter, visibleStatuses]);
-
   // Get current month calendar data
   const getCalendarData = useCallback(() => {
     const year = currentDate.getFullYear();
@@ -114,7 +92,7 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
     const current = new Date(startDate);
     
     for (let i = 0; i < 42; i++) {
-      const dayTasks = filteredTasks.filter(task => {
+      const dayTasks = tasks.filter(task => {
         const taskDate = new Date(task.date);
         return taskDate.toDateString() === current.toDateString();
       });
@@ -130,7 +108,7 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
     }
     
     return days;
-  }, [currentDate, filteredTasks]);
+  }, [currentDate, tasks]);
 
   // Get week calendar data
   const getWeekData = useCallback(() => {
@@ -142,7 +120,7 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
       const day = new Date(startOfWeek);
       day.setDate(startOfWeek.getDate() + i);
       
-      const dayTasks = filteredTasks.filter(task => {
+      const dayTasks = tasks.filter(task => {
         const taskDate = new Date(task.date);
         return taskDate.toDateString() === day.toDateString();
       });
@@ -155,11 +133,11 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
     }
     
     return days;
-  }, [currentDate, filteredTasks]);
+  }, [currentDate, tasks]);
 
   // Get day data
   const getDayData = useCallback(() => {
-    const dayTasks = filteredTasks.filter(task => {
+    const dayTasks = tasks.filter(task => {
       const taskDate = new Date(task.date);
       return taskDate.toDateString() === currentDate.toDateString();
     });
@@ -169,7 +147,7 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
       tasks: dayTasks,
       isToday: currentDate.toDateString() === new Date().toDateString(),
     };
-  }, [currentDate, filteredTasks]);
+  }, [currentDate, tasks]);
 
   const calendarDays = getCalendarData();
   const weekDays = getWeekData();
@@ -289,24 +267,24 @@ export default function CalendarView({ data, assigneeOptions = [] }) {
         <div className="grid grid-cols-4 gap-4 mb-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg border p-3">
             <div className="text-sm text-gray-500 dark:text-gray-400">Total Tasks</div>
-            <div className="text-2xl font-bold">{filteredTasks.length}</div>
+            <div className="text-2xl font-bold">{tasks.length}</div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg border p-3">
             <div className="text-sm text-gray-500 dark:text-gray-400">In Progress</div>
             <div className="text-2xl font-bold text-blue-600">
-              {filteredTasks.filter(t => t.status === 'in-progress').length}
+              {tasks.filter(t => t.status === 'in-progress').length}
             </div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg border p-3">
             <div className="text-sm text-gray-500 dark:text-gray-400">Completed</div>
             <div className="text-2xl font-bold text-green-600">
-              {filteredTasks.filter(t => t.status === 'done').length}
+              {tasks.filter(t => t.status === 'done').length}
             </div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg border p-3">
             <div className="text-sm text-gray-500 dark:text-gray-400">Overdue</div>
             <div className="text-2xl font-bold text-red-600">
-              {filteredTasks.filter(t => new Date(t.date) < new Date() && t.status !== 'done').length}
+              {tasks.filter(t => new Date(t.date) < new Date() && t.status !== 'done').length}
             </div>
           </div>
         </div>
