@@ -13,6 +13,10 @@ import UsersPage from "@/pages/users";
 import { LoginForm } from "@/components/auth/LoginForm";
 import CreateTeam from "@/pages/teams/Create";
 import TeamDetails from "@/pages/teams/TeamDetails";
+import ProfileSettings from "@/pages/settings/Profile";
+import WorkspaceSettings from "@/pages/settings/Workspace";
+import MembersSettings from "@/pages/settings/Members";
+import TeamsSettings from "@/pages/settings/Teams";
 
 export const routes = [
   {
@@ -80,30 +84,16 @@ export const routes = [
       {
         path: "/comment/:id",
         element: <CommentPage />
-      }
-    ]
-  },
-  {
-    path: '/settings',
-    element: (<ProtectedRoute>
-      <Settings />
-    </ProtectedRoute>),
-    children: [
-      {
-        path: '/settings/',
-        element: <Home />
       },
       {
-        path: '/settings/check',
-        element: <Check />
-      },
-      {
-        path: '/settings/form/*',
-        element: <Form />
-      },
-      {
-        path: '/settings/document/:id',
-        element: <Page />
+        path: '/settings',
+        element: <Settings />,
+        children: [
+          { path: '/settings/', element: <ProfileSettings /> },
+          { path: '/settings/workspace', element: <WorkspaceSettings /> },
+          { path: '/settings/members', element: <MembersSettings /> },
+          { path: '/settings/teams', element: <TeamsSettings /> },
+        ]
       },
     ]
   },

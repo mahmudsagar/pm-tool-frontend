@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { EllipsisVertical, Link2, SquarePen } from "lucide-react";
+import { EllipsisVertical, Link2, SquarePen, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -7,14 +7,17 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import Delete from './items/Delete';
 import AddFileDialog from '../AddFileDialog';
+import SpaceSettingsSheet from '../SpaceSettingsSheet';
 
-const SpaceMenu = ({ id, type = 'space', fileName, isOpen: externalIsOpen, onToggle: externalOnToggle }) => {
+const SpaceMenu = ({ id, type = 'space', fileName, initialData, isOpen: externalIsOpen, onToggle: externalOnToggle }) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { toast } = useToast();
 
   const isControlled = externalIsOpen !== undefined && externalOnToggle !== undefined;
@@ -28,6 +31,13 @@ const SpaceMenu = ({ id, type = 'space', fileName, isOpen: externalIsOpen, onTog
     e.preventDefault();
     e.stopPropagation();
     setIsEditModalOpen(true);
+    handleOpenChange(false);
+  };
+
+  const handleSettingsClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsSettingsOpen(true);
     handleOpenChange(false);
   };
 
@@ -82,6 +92,11 @@ const SpaceMenu = ({ id, type = 'space', fileName, isOpen: externalIsOpen, onTog
               <Link2 className="w-4 h-4" />
               Copy Link
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="flex items-center px-4 py-3 font-medium gap-3 cursor-pointer" onSelect={handleSettingsClick}>
+              <Settings className="w-4 h-4" />
+              Settings
+            </DropdownMenuItem>
           </DropdownMenuGroup>
           <Delete
             fileId={id}
@@ -100,6 +115,12 @@ const SpaceMenu = ({ id, type = 'space', fileName, isOpen: externalIsOpen, onTog
           setIsOpen={setIsEditModalOpen}
         />
       )}
+      <SpaceSettingsSheet
+        spaceId={id}
+        space={initialData}
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+      />
     </>
   );
 }

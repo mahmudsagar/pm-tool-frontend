@@ -1,43 +1,18 @@
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { MoreVertical } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { SidebarMenu } from "./SidebarMenu";
 import { useSidebar } from "@/stores/store";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import Link from "@/BetterRouter/Link";
 import useFileManagerStore from "@/stores/useFileManagerStore";
 import useAuthStore from "@/stores/useAuthStore";
 import { useInitAuth } from "@/hooks/queries/useAuthQueries";
-import useDialogStore from "@/stores/useDialogStore";
-import WorkspaceManagerContent from "./components/WorkspaceManagerModal";
 import WorkspaceSwitcher from "./components/WorkspaceSwitcher";
 
 export default function Sidebar({ className }) {
   const { isOpen } = useSidebar();
   const { logout, user, currentWorkspace } = useAuthStore();
   const { isSuccess: isAuthReady } = useInitAuth();
-  const openDialog = useDialogStore((s) => s.openDialog);
-
-  const openWorkspaceManager = () => {
-    setTimeout(() => {
-      openDialog({
-        type: 'dialog',
-        title: 'Workspaces',
-        content: <WorkspaceManagerContent />,
-        closeOnClickOutside: true,
-      });
-    }, 0);
-  };
-  
   // Use Zustand store directly for sidebar data - updates immediately on delete
   const {
     isSpacesLoading,
@@ -80,7 +55,7 @@ export default function Sidebar({ className }) {
             />
           </div>
           <div className="border-t pt-2">
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <div className="flex gap-1.5">
                 <div className="w-12 flex flex-row-reverse justify-end items-center relative transform translate-z-0">
                   <Avatar className="w-8 h-8 relative -mr-3.5">
@@ -101,7 +76,8 @@ export default function Sidebar({ className }) {
                   )}
                 </div>
               </div>
-              <DropdownMenu>
+              <LogOut className="h-4 w-4 mr-2 cursor-pointer" onClick={logout} />
+              {/* <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon w-8">
                     <MoreVertical className="h-4 w-4" />
@@ -109,20 +85,22 @@ export default function Sidebar({ className }) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
-                    <Link href="/">Profile</Link>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={openWorkspaceManager}>
                     Workspaces
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Button variant="ghost" size="xs" onClick={logout}>
-                      Logout
-                    </Button>
+                  <DropdownMenuItem onSelect={logout}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
+              </DropdownMenu> */}
             </div>
           </div>
         </div>

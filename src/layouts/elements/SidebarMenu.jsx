@@ -1,12 +1,11 @@
 import { cn } from "@/lib/utils";
 import { Link as RouterLink } from "react-router-dom";
-import Link from "@/BetterRouter/Link";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   LucideCalendar,
   LucideHome,
-  LucideUsers
+  Settings
 } from "lucide-react";
 import { CommandMenu } from "@/components/elements/commandMenu/command-menu";
 import SidebarMenuItems from "./SidebarMenuItems";
@@ -24,9 +23,9 @@ const sidebarTopLinks = [
     icon: LucideCalendar,
   },
   {
-    title: "Teams",
-    href: "/users",
-    icon: LucideUsers,
+    title: "Settings",
+    href: "/settings",
+    icon: Settings,
   },
 ];
 
