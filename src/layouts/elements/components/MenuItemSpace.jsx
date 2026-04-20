@@ -75,11 +75,11 @@ const MenuItemSpace = ({
           )}
 
           <div className="flex gap-2 items-center cursor-pointer" onClick={handleSpaceClick}>
-            <img
-              src={space.is_private ? privateIcon : publicIcon}
-              alt="Space Icon"
-              width={20}
-            />
+            {space.icon ? (
+              <img src={space.icon} alt="Space Icon" width={20} height={20} className="rounded object-cover shrink-0" style={{ width: 20, height: 20 }} />
+            ) : (
+              <img src={space.is_private ? privateIcon : publicIcon} alt="Space Icon" width={20} />
+            )}
             <h4 className="text-sm font-medium text-black dark:text-white hover:text-purple-600 transition-colors">
               {displayName}
             </h4>
