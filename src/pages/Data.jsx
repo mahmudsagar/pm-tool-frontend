@@ -38,6 +38,7 @@ import { Plus } from "lucide-react"
 import TaskFormModal from "@/components/elements/dataView/kanban/task-form-modal"
 import { useBoard } from "@/hooks/queries/useBoardsQueries"
 import { useCreateBoardTask, useUpdateBoard, useUpdateBoardTask, useCreateSubtask } from "@/hooks/mutations/useBoardsMutations"
+import { normalizeEntityAccess } from "@/utils/entityAccessUtils"
 import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete"
 import { useUsers } from "@/hooks/queries/useSpacesQueries"
 import { useTeams } from "@/hooks/queries/useTeamsQueries"
@@ -109,10 +110,12 @@ export default function Data({ id: propId, setTopMenu }) {
   const { data: allUsers } = useUsers();
   const { data: allTeams } = useTeams();
   
-  // Extract board data from array if needed
+  // Extract board data from array if needed and normalize access format
   const boardData = useMemo(() => {
     if (!rawBoardData) return null;
-    return Array.isArray(rawBoardData) ? rawBoardData[0] : rawBoardData;
+    const board = Array.isArray(rawBoardData) ? rawBoardData[0] : rawBoardData;
+    // Normalize old format (objects with user_id/role) to new (separate arrays)
+    return normalizeEntityAccess(board);
   }, [rawBoardData]);
 
   const boardDataId = boardData?._id;

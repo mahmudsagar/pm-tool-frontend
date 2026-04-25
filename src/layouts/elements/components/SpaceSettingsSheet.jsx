@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ImageIcon, X } from "lucide-react";
 import { api } from "@/utils/api";
 import { baseUrl, mediaEndpoint } from "@/utils/constants";
+import { normalizeEntityAccess } from "@/utils/entityAccessUtils";
 
 const VIEWS = [
   { value: "table", label: "Table" },
@@ -50,7 +51,7 @@ export default function SpaceSettingsSheet({ spaceId, space, open, onOpenChange 
         setMembers(all);
       }
       if (spaceRes.status === "fulfilled" && spaceRes.value?.status === "success" && spaceRes.value.data?.[0]) {
-        const s = spaceRes.value.data[0];
+        const s = normalizeEntityAccess(spaceRes.value.data[0]);
         setForm({
           name: s.name || "",
           icon: s.icon || "",
