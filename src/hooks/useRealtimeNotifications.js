@@ -14,6 +14,12 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
     const queryClient = useQueryClient();
     const reconnectTimeoutRef = useRef(null);
     const [isConnected, setIsConnected] = useState(false);
+    const onNotificationRef = useRef(onNotification); // ← Store callback in ref
+
+    // Update ref when callback changes (but don't trigger socket recreation)
+    useEffect(() => {
+        onNotificationRef.current = onNotification;
+    }, [onNotification]);
 
     // Connect to the same origin — proxied by Vite in dev, same host in production
     const WS_URL = import.meta.env.BN_WS_URL || '';
@@ -35,7 +41,8 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
                     },
                     reconnection: true,
                     reconnectionDelay: 1000,
-                    reconnectionAttempts: 10
+                    reconnectionAttempts: 10,
+                    transports: ['websocket'] // Only use WebSocket, disable polling
                 });
 
                 // Handle connection
@@ -56,9 +63,9 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
                     // Invalidate notifications query to refetch
                     queryClient.invalidateQueries({ queryKey: ['notifications'] });
                     
-                    // Call custom callback if provided
-                    if (onNotification) {
-                        onNotification(notification);
+                    // Call custom callback if provided (use ref to avoid stale closure)
+                    if (onNotificationRef.current) {
+                        onNotificationRef.current(notification);
                     }
                     
                     // Show toast/popup notification
@@ -109,7 +116,7 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
         } catch (error) {
             console.error('WebSocket connection error:', error);
         }
-    }, [userId, workspaceId, token, WS_URL, queryClient, onNotification]);
+    }, [userId, workspaceId, token, WS_URL, queryClient]);
 
     useEffect(() => {
         connectSocket();
