@@ -50,7 +50,7 @@ export default function Header({ showPageTitle = true, closeBtn='', topMenu }) {
                         <ThemeToggle />
                         {user && currentWorkspace && token && (
                             <NotificationCenter
-                                userId={user.id}
+                                userId={user._id}
                                 workspaceId={currentWorkspace._id}
                                 token={token}
                             />

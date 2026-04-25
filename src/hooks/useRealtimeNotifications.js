@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
@@ -13,8 +13,10 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
     const socketRef = useRef(null);
     const queryClient = useQueryClient();
     const reconnectTimeoutRef = useRef(null);
-    
-    const WS_URL = import.meta.env.BN_WS_URL || 'http://localhost:3002';
+    const [isConnected, setIsConnected] = useState(false);
+
+    // Connect to the same origin — proxied by Vite in dev, same host in production
+    const WS_URL = import.meta.env.BN_WS_URL || '';
 
     const connectSocket = useCallback(() => {
         if (!userId || !workspaceId || !token) {
@@ -37,6 +39,10 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
                 });
 
                 // Handle connection
+                socket.on('connect', () => {
+                    setIsConnected(true);
+                });
+
                 socket.on('connected', (data) => {
                     console.log('WebSocket connected:', data);
                 });
@@ -62,6 +68,7 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
                 // Handle disconnection
                 socket.on('disconnect', () => {
                     console.log('WebSocket disconnected');
+                    setIsConnected(false);
                 });
 
                 // Handle errors
@@ -118,7 +125,7 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
     }, [connectSocket]);
 
     return {
-        isConnected: socketRef.current?.connected || false,
+        isConnected,
         socket: socketRef.current
     };
 };

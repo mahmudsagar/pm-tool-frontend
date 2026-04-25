@@ -85,6 +85,7 @@
     "react-dropzone": "^14.2.3",
     "react-hook-form": "^7.53.0",
     "react-router-dom": "^6.23.1",
+    "socket.io-client": "^4.8.3",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
     "vite-bundle-visualizer": "^1.2.1",

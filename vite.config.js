@@ -33,6 +33,19 @@ export default defineConfig({
   // 🔥 Important for spa routing on Vite
   server: {
     historyApiFallback: true,
+    proxy: {
+      // Proxy REST API calls to the backend
+      '/v1': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      // Proxy Socket.io WebSocket connections to the same backend port
+      '/socket.io': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        ws: true,
+      },
+    },
   },
 
   // optional but recommended for Vercel
