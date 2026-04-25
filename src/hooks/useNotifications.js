@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useRealtimeNotifications, requestNotificationPermission } from './useRealtimeNotifications';
 import { useEffect, useState } from 'react';
+import { api } from '@/utils/api';
+import { baseUrl } from '@/utils/constants';
 
 /**
  * Hook to manage notifications (both cached and real-time)
@@ -22,20 +24,10 @@ export const useNotifications = (userId, workspaceId, token) => {
     } = useQuery({
         queryKey: ['notifications', workspaceId],
         queryFn: async () => {
-            const response = await fetch(
-                `/v1/notification?limit=50`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'X-Workspace-ID': workspaceId
-                    }
-                }
-            );
-            if (!response.ok) throw new Error('Failed to fetch notifications');
-            const result = await response.json();
+            const result = await api.get(`${baseUrl}/v1/notification?limit=50`);
             return result.data;
         },
-        enabled: !!token && !!workspaceId,
+        enabled: !!workspaceId,
         refetchInterval: 60000, // Refetch every minute as fallback
         staleTime: 30000 // Cache for 30 seconds
     });
@@ -43,17 +35,7 @@ export const useNotifications = (userId, workspaceId, token) => {
     // Mutation to mark notification as read
     const markAsReadMutation = useMutation({
         mutationFn: async (notificationId) => {
-            const response = await fetch(
-                `/v1/notification/markAsRead?notification_id=${notificationId}`,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'X-Workspace-ID': workspaceId
-                    }
-                }
-            );
-            if (!response.ok) throw new Error('Failed to mark as read');
-            return response.json();
+            return await api.put(`${baseUrl}/v1/notification?notification_id=${notificationId}`);
         },
         onSuccess: (data, notificationId) => {
             // Update cache
@@ -70,11 +52,13 @@ export const useNotifications = (userId, workspaceId, token) => {
                     }
                 };
             });
+            // Also invalidate to sync with server
+            queryClient.invalidateQueries({ queryKey: ['notifications', workspaceId] });
         }
     });
 
     // Setup real-time notifications
-    const { isConnected } = useRealtimeNotifications(
+    const { isConnected, isConnecting } = useRealtimeNotifications(
         userId,
         workspaceId,
         token,
@@ -101,7 +85,7 @@ export const useNotifications = (userId, workspaceId, token) => {
 
     // Update unread count
     useEffect(() => {
-        if (notificationsData?.count?.unread) {
+        if (notificationsData?.count?.unread !== undefined) {
             setUnreadCount(notificationsData.count.unread);
         }
     }, [notificationsData?.count?.unread]);
@@ -126,6 +110,7 @@ export const useNotifications = (userId, workspaceId, token) => {
         isLoading,
         error,
         isConnected,
+        isConnecting,
         refetch,
         markAsRead,
         markAllAsRead,

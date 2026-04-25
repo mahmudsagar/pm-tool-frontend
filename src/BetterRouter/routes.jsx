@@ -10,6 +10,7 @@ import Page from "@/pages";
 import CommentPage from "@/pages/CommentPage";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import UsersPage from "@/pages/users";
+import Notifications from "@/pages/Notifications";
 import { LoginForm } from "@/components/auth/LoginForm";
 import CreateTeam from "@/pages/teams/Create";
 import TeamDetails from "@/pages/teams/TeamDetails";
@@ -44,6 +45,10 @@ export const routes = [
       {
         path: '/users',
         element: <UsersPage />
+      },
+      {
+        path: '/notifications',
+        element: <Notifications />
       },
       {
         path: '/file-manager/:type/:id',

@@ -14,6 +14,7 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
     const queryClient = useQueryClient();
     const reconnectTimeoutRef = useRef(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [isConnecting, setIsConnecting] = useState(false);
     const onNotificationRef = useRef(onNotification); // ← Store callback in ref
 
     // Update ref when callback changes (but don't trigger socket recreation)
@@ -29,6 +30,8 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
             console.warn('Missing required params for WebSocket connection');
             return;
         }
+
+        setIsConnecting(true);
 
         try {
             // Dynamically import socket.io-client
@@ -47,7 +50,9 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
 
                 // Handle connection
                 socket.on('connect', () => {
+                    console.log('WebSocket connected');
                     setIsConnected(true);
+                    setIsConnecting(false);
                 });
 
                 socket.on('connected', (data) => {
@@ -76,11 +81,14 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
                 socket.on('disconnect', () => {
                     console.log('WebSocket disconnected');
                     setIsConnected(false);
+                    setIsConnecting(true); // Still trying to reconnect
                 });
 
                 // Handle errors
                 socket.on('connect_error', (error) => {
                     console.error('WebSocket connection error:', error);
+                    setIsConnected(false);
+                    setIsConnecting(true); // Still trying
                 });
 
                 // Keep alive with ping/pong
@@ -110,11 +118,13 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
                 };
             }).catch(err => {
                 console.error('Error importing socket.io-client:', err);
+                setIsConnecting(false);
                 // Attempt to reconnect
                 reconnectTimeoutRef.current = setTimeout(connectSocket, 5000);
             });
         } catch (error) {
             console.error('WebSocket connection error:', error);
+            setIsConnecting(false);
         }
     }, [userId, workspaceId, token, WS_URL, queryClient]);
 
@@ -133,6 +143,7 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
 
     return {
         isConnected,
+        isConnecting,
         socket: socketRef.current
     };
 };

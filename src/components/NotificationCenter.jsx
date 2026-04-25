@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Bell, Check, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export const NotificationCenter = ({ userId, workspaceId, token }) => {
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const {
         notifications,
@@ -12,6 +14,7 @@ export const NotificationCenter = ({ userId, workspaceId, token }) => {
         isLoading,
         error,
         isConnected,
+        isConnecting,
         markAsRead,
         markAllAsRead,
         requestNotificationPermission
@@ -83,7 +86,9 @@ export const NotificationCenter = ({ userId, workspaceId, token }) => {
                         <h3 className="font-semibold text-lg">Notifications</h3>
                         <div className="flex items-center gap-2">
                             {!isConnected && (
-                                <span className="text-xs text-yellow-600 dark:text-yellow-400">Reconnecting...</span>
+                                <span className={`text-xs ${isConnecting ? 'text-blue-600 dark:text-blue-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                                    {isConnecting ? 'Connecting...' : 'Disconnected'}
+                                </span>
                             )}
                             {unreadCount > 0 && (
                                 <Button
@@ -160,7 +165,10 @@ export const NotificationCenter = ({ userId, workspaceId, token }) => {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setIsOpen(false)}
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    navigate('/notifications');
+                                }}
                                 className="text-xs text-blue-600 dark:text-blue-400"
                             >
                                 View all notifications
