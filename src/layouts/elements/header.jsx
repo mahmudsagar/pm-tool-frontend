@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileSidebar } from "./mobile-sidebar";
+import NotificationCenter from "@/components/NotificationCenter";
+import useAuthStore from "@/stores/useAuthStore";
 // import DynamicBreadCrumb from "@/components/elements/breadcrumbs";
 // import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreVertical } from "lucide-react";
@@ -8,6 +10,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/compon
 import { Button } from "@/components/ui/button";
 
 export default function Header({ showPageTitle = true, closeBtn='', topMenu }) {
+    const user = useAuthStore((state) => state.user);
+    const currentWorkspace = useAuthStore((state) => state.currentWorkspace);
+    const token = useAuthStore((state) => state.token);
 
     return (
         <div className="supports-backdrop-blur:bg-background/60 sticky left-0 right-0 top-0 z-20 border-b bg-background/95 backdrop-blur">
@@ -43,6 +48,13 @@ export default function Header({ showPageTitle = true, closeBtn='', topMenu }) {
                     <div className="flex gap-0 items-center justify-between">
                        {topMenu?.inlineContent}
                         <ThemeToggle />
+                        {user && currentWorkspace && token && (
+                            <NotificationCenter
+                                userId={user.id}
+                                workspaceId={currentWorkspace._id}
+                                token={token}
+                            />
+                        )}
                        {topMenu?.dropdownContent && <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="w-6">
