@@ -84,7 +84,7 @@ const normalizeSelectLikeValue = (value, options = []) => {
   return text;
 };
 
-const DEPENDENCY_FIELDS = new Set(["blocked_by", "depends_on"]);
+const DEPENDENCY_FIELDS = new Set(["depends_on"]);
 const isDependencyField = (field) => {
   const name = String(field?.name || "").toLowerCase();
   const label = String(field?.label || "").toLowerCase();

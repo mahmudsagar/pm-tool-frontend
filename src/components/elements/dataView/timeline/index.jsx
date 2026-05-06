@@ -212,7 +212,7 @@ export default function TimelineView({
 
     const blocksCount = {};
     timelineItems.forEach((item) => {
-      const dependencyRef = item.depends_on || item.blocked_by || null;
+      const dependencyRef = item.depends_on || null;
       const target = resolveRef(dependencyRef);
       if (!target) return;
       const key = String(target.id);
@@ -221,7 +221,7 @@ export default function TimelineView({
 
     const out = {};
     timelineItems.forEach((item) => {
-      const dependencyRef = item.depends_on || item.blocked_by || null;
+      const dependencyRef = item.depends_on || null;
       const target = resolveRef(dependencyRef);
       out[String(item.id)] = {
         dependsOnTitle: target?.title || null,
@@ -243,7 +243,7 @@ export default function TimelineView({
       return idMap.get(String(ref)) || taskIdMap.get(String(ref)) || null;
     };
     return timelineItems.flatMap((item) => {
-      const dependencyRef = item.depends_on || item.blocked_by || null;
+      const dependencyRef = item.depends_on || null;
       const blocker = resolveRef(dependencyRef);
       if (!blocker || String(blocker.id) === String(item.id)) return [];
       return [{

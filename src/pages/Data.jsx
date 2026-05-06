@@ -127,7 +127,6 @@ const resolveDependencyFieldName = (fields = [], kind) => {
   return byName?.name || kind;
 };
 const DEPENDENCY_FIELD_DEFS = [
-  { name: "blocked_by", label: "Blocking task", type: "text" },
   { name: "depends_on", label: "Dependent on", type: "text" },
 ];
 
@@ -795,7 +794,6 @@ export default function Data({ id: propId, setTopMenu }) {
       ...DEPENDENCY_FIELD_DEFS.filter((def) => !customFieldsBase.some((f) => f?.name === def.name)),
     ];
     const statusFieldName = resolveFieldName(customFields, "status");
-    const blockedByFieldName = resolveDependencyFieldName(customFields, "blocked_by");
     const dependsOnFieldName = resolveDependencyFieldName(customFields, "depends_on");
     const normalizeDateValue = (raw) => {
       if (!raw) return null;
@@ -886,8 +884,11 @@ export default function Data({ id: propId, setTopMenu }) {
           }
         });
         subData.status = subData[statusFieldName] || sub.custom_meta?.values?.status || "";
-        subData.blocked_by = subData[blockedByFieldName] || sub.custom_meta?.values?.blocked_by || "";
-        subData.depends_on = subData[dependsOnFieldName] || sub.custom_meta?.values?.depends_on || "";
+        subData.depends_on =
+          subData[dependsOnFieldName] ||
+          sub.custom_meta?.values?.depends_on ||
+          sub.custom_meta?.values?.blocked_by ||
+          "";
         subData.createdAt = sub.createdAt;
         subData.updatedAt = sub.updatedAt;
         return subData;
@@ -928,8 +929,11 @@ export default function Data({ id: propId, setTopMenu }) {
         }
       });
       taskData.status = taskData[statusFieldName] || doc.custom_meta?.values?.status || "";
-      taskData.blocked_by = taskData[blockedByFieldName] || doc.custom_meta?.values?.blocked_by || "";
-      taskData.depends_on = taskData[dependsOnFieldName] || doc.custom_meta?.values?.depends_on || "";
+      taskData.depends_on =
+        taskData[dependsOnFieldName] ||
+        doc.custom_meta?.values?.depends_on ||
+        doc.custom_meta?.values?.blocked_by ||
+        "";
 
       // Add timestamps
       taskData.createdAt = doc.createdAt;

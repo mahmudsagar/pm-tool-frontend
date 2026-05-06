@@ -144,7 +144,7 @@ const fields = {
 const isDependencyField = (field) => {
   const name = String(field?.name || '').toLowerCase();
   const label = String(field?.label || '').toLowerCase();
-  if (name === 'blocked_by' || name === 'depends_on') return true;
+  if (name === 'depends_on') return true;
   return label.includes('depend') || label.includes('block');
 };
 
