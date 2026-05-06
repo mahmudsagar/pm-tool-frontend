@@ -1,17 +1,42 @@
 import { Fragment, useMemo, useState } from "react";
 import Link from "@/BetterRouter/Link";
 
-const resolveDueDate = (item) => {
-  if (item?.due_date) return item.due_date;
-  const range = item?.dates;
-  if (range?.to) {
-    const d = new Date(range.to);
+const toDateLabel = (value) => {
+  if (!value) return null;
+  if (typeof value === "string") {
+    const d = new Date(value);
     if (!Number.isNaN(d.getTime())) return d.toISOString().split("T")[0];
+    return value.slice(0, 10);
   }
-  return "-";
+  if (value instanceof Date) {
+    if (!Number.isNaN(value.getTime())) return value.toISOString().split("T")[0];
+    return null;
+  }
+  if (typeof value === "object") {
+    return toDateLabel(value.to || value.end || value.date || value.from || value.start || null);
+  }
+  return null;
 };
 
-export default function TableView({ data, assigneeOptions = [] }) {
+const resolveDueDate = (item) =>
+  toDateLabel(item?.due_date) || toDateLabel(item?.dates?.to) || toDateLabel(item?.dates) || "-";
+
+const getGroupValue = (raw) => {
+  if (raw === undefined || raw === null || raw === "") {
+    return { key: "__unset__", label: null };
+  }
+  if (typeof raw === "object") {
+    const from = toDateLabel(raw.from || raw.start || null);
+    const to = toDateLabel(raw.to || raw.end || null);
+    if (from && to) return { key: `${from}__${to}`, label: `${from} → ${to}` };
+    if (to) return { key: to, label: to };
+    if (from) return { key: from, label: from };
+    return { key: "__unset__", label: null };
+  }
+  return { key: String(raw), label: null };
+};
+
+export default function TableView({ data, assigneeOptions = [], groupBy = null }) {
   const rows = useMemo(
     () => (data?.property_values || []).filter((item) => !item.parent_id),
     [data?.property_values]
@@ -22,6 +47,31 @@ export default function TableView({ data, assigneeOptions = [] }) {
     [assigneeOptions]
   );
   const [collapsed, setCollapsed] = useState({});
+  const groups = useMemo(() => {
+    if (!groupBy) return [{ key: "__all__", label: "All tasks", rows }];
+
+    const fieldDef = (data?.property_name || []).find((f) => f.name === groupBy.name);
+    const options =
+      groupBy.type === "dynamic-select"
+        ? assigneeOptions
+        : (fieldDef?.props?.optionsData || []);
+    const labelMap = Object.fromEntries((options || []).map((o) => [String(o.value), o.label]));
+    const buckets = {};
+    const objectLabels = {};
+    rows.forEach((row) => {
+      const raw = row[groupBy.name];
+      const resolved = getGroupValue(raw);
+      const key = resolved.key;
+      if (!buckets[key]) buckets[key] = [];
+      buckets[key].push(row);
+      if (resolved.label) objectLabels[key] = resolved.label;
+    });
+    return Object.keys(buckets).map((key) => ({
+      key,
+      label: key === "__unset__" ? `No ${groupBy.label}` : (labelMap[key] || objectLabels[key] || key),
+      rows: buckets[key],
+    }));
+  }, [groupBy, rows, data?.property_name, assigneeOptions]);
 
   return (
     <div className="w-full rounded-md border bg-background">
@@ -37,8 +87,17 @@ export default function TableView({ data, assigneeOptions = [] }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <Fragment key={row.id}>
+            {groups.map((group) => (
+              <Fragment key={group.key}>
+                {groupBy && (
+                  <tr className="border-t bg-muted/20">
+                    <td className="px-3 py-2 text-xs font-semibold text-muted-foreground" colSpan={5}>
+                      {group.label} ({group.rows.length})
+                    </td>
+                  </tr>
+                )}
+                {group.rows.map((row) => (
+                  <Fragment key={row.id}>
                 <tr className="border-t hover:bg-muted/40">
                   <td className="px-3 py-2 font-medium">
                     {(row.subtasks || []).length > 0 && (
@@ -84,6 +143,8 @@ export default function TableView({ data, assigneeOptions = [] }) {
                     </td>
                     <td className="px-3 py-2 text-xs">{resolveDueDate(sub) !== "-" ? resolveDueDate(sub) : resolveDueDate(row)}</td>
                   </tr>
+                ))}
+                  </Fragment>
                 ))}
               </Fragment>
             ))}
