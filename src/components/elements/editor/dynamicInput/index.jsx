@@ -16,15 +16,23 @@ const InputNumber = ({ ...props }) => {
   return <Input type="number" {...props} />;
 };
 
+const normalizeSelectLikeValue = (value) => {
+  if (value === undefined || value === null || value === "") return "";
+  if (typeof value === "object") {
+    return String(value.value ?? value.id ?? value.key ?? value.label ?? "");
+  }
+  return String(value);
+};
+
 const SelectField = ({ options, onChange, value, ...props }) => {
-  return <Select onValueChange={onChange} value={value}>
+  return <Select onValueChange={onChange} value={normalizeSelectLikeValue(value)}>
     <SelectTrigger {...props}>
       <SelectValue />
     </SelectTrigger>
     <SelectContent>
       <SelectGroup>
         {options?.map((option, index) => (
-          <SelectItem key={index} value={option?.value}>{option?.label}</SelectItem>
+          <SelectItem key={index} value={normalizeSelectLikeValue(option?.value)}>{option?.label}</SelectItem>
         ))}
 
         {options?.length === 0 && <SelectItem disabled>No options available</SelectItem>}

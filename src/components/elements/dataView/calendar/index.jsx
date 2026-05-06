@@ -409,7 +409,7 @@ function DraggableCalendarTask({ task, selectedTaskId, onSelectTask }) {
         to={`/document/${task.id}`}
         target="_sidebar"
         onClick={() => onSelectTask?.(task.id)}
-        className={`flex flex-1 items-center rounded px-1.5 py-0.5 text-[10px] ${
+        className={`flex flex-1 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ${
           selectedTaskId === task.id
             ? "bg-sky-600 text-white"
             : task._kind === "sub"
@@ -418,6 +418,15 @@ function DraggableCalendarTask({ task, selectedTaskId, onSelectTask }) {
         }`}
       >
         <span className="truncate">{task._kind === "sub" ? `↳ ${task.title || "Subtask"}` : (task.title || "Task")}</span>
+        {task.overdue && (
+          <span
+            className={`shrink-0 rounded-full px-1 py-0 text-[9px] font-semibold ${
+              selectedTaskId === task.id ? "bg-white/20 text-white" : "bg-red-100 text-red-700"
+            }`}
+          >
+            !
+          </span>
+        )}
       </Link>
     </div>
   );

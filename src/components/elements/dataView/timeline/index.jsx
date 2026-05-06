@@ -477,8 +477,15 @@ export default function TimelineView({
                     {initials || "NA"}
                   </div>
                   <div className="min-w-0">
-                    <div className={`truncate text-[13px] font-medium ${task.isSubtask ? "text-muted-foreground" : "text-foreground"}`}>
-                      {task.isSubtask ? `↳ ${task.title || "Untitled subtask"}` : (task.title || "Untitled task")}
+                    <div className="flex items-center gap-1">
+                      <div className={`truncate text-[13px] font-medium ${task.isSubtask ? "text-muted-foreground" : "text-foreground"}`}>
+                        {task.isSubtask ? `↳ ${task.title || "Untitled subtask"}` : (task.title || "Untitled task")}
+                      </div>
+                      {task.overdue && (
+                        <span className="shrink-0 rounded-full bg-red-100 px-1.5 py-0 text-[9px] font-semibold text-red-700">
+                          Overdue
+                        </span>
+                      )}
                     </div>
                     <div className="truncate text-[11px] text-muted-foreground">{task.assigneeName}</div>
                   </div>

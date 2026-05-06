@@ -66,6 +66,22 @@ const getFieldOptions = (field, assigneeOptions) => {
   return field?.props?.optionsData || [];
 };
 
+const normalizeSelectLikeValue = (value, options = []) => {
+  if (value === undefined || value === null || value === "") return "";
+  const base =
+    typeof value === "object"
+      ? (value.value ?? value.id ?? value.key ?? value.label ?? "")
+      : value;
+  const text = String(base).trim();
+  if (!text) return "";
+  const byValue = (options || []).find((opt) => String(opt?.value ?? "").trim() === text);
+  if (byValue) return String(byValue.value);
+  const lowered = text.toLowerCase();
+  const byLabel = (options || []).find((opt) => String(opt?.label ?? "").trim().toLowerCase() === lowered);
+  if (byLabel) return String(byLabel.value);
+  return text;
+};
+
 const renderRangeValue = (value) => {
   if (!value || typeof value !== "object") return "-";
   const from = toDateLabel(value.from || value.start || null);
@@ -149,13 +165,14 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
 
   const renderEditableCell = (item, field, isSubtask = false) => {
     const value = item?.[field.name];
-    const selectValue = value === undefined || value === null || value === "" ? "__empty__" : String(value);
+    const selectValue = normalizeSelectLikeValue(value) || "__empty__";
     const commonClass = isSubtask
       ? "h-7 w-full border-0 bg-transparent px-0 text-xs shadow-none outline-none focus:ring-0"
       : "h-8 w-full border-0 bg-transparent px-0 text-xs shadow-none outline-none focus:ring-0";
 
     if (field.type === "select" || field.type === "dynamic-select") {
       const options = getFieldOptions(field, assigneeOptions);
+      const selectValue = normalizeSelectLikeValue(value, options) || "__empty__";
       return (
         <Select
           value={selectValue}
@@ -169,7 +186,7 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
           <SelectContent>
             <SelectItem value="__empty__">-</SelectItem>
             {options.map((opt) => (
-              <SelectItem key={String(opt.value)} value={String(opt.value)}>
+              <SelectItem key={String(opt.value)} value={normalizeSelectLikeValue(opt.value)}>
                 {opt.label}
               </SelectItem>
             ))}
@@ -320,6 +337,11 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
                         >
                           {row.title || "Untitled task"}
                         </Link>
+                        {row.overdue && (
+                          <span className="ml-2 inline-flex rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                            Overdue
+                          </span>
+                        )}
                       </td>
                       {activeColumns.map((field) => (
                         <td key={`${row.id}-${field.name}`} className="px-3 py-2">
@@ -328,7 +350,7 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
                             : field.type === "dynamic-select" && !onCellChange
                               ? (assigneeMap[row[field.name]] || row[field.name] || "-")
                               : field.type === "select" && !onCellChange
-                                ? (getFieldOptions(field, assigneeOptions).find((o) => String(o.value) === String(row[field.name]))?.label || row[field.name] || "-")
+                                ? (getFieldOptions(field, assigneeOptions).find((o) => normalizeSelectLikeValue(o.value) === normalizeSelectLikeValue(row[field.name]))?.label || normalizeSelectLikeValue(row[field.name]) || "-")
                                 : field.name === "due_date"
                                   ? resolveDueDate(row)
                                   : renderEditableCell(row, field)}
@@ -345,6 +367,11 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
                           >
                             ↳ {sub.title || "Untitled subtask"}
                           </Link>
+                          {sub.overdue && (
+                            <span className="ml-2 inline-flex rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+                              Overdue
+                            </span>
+                          )}
                         </td>
                         {activeColumns.map((field) => (
                           <td key={`${sub.id}-${field.name}`} className="px-3 py-2 text-xs">
@@ -353,7 +380,7 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
                               : field.type === "dynamic-select" && !onCellChange
                                 ? (assigneeMap[sub[field.name]] || sub[field.name] || assigneeMap[row[field.name]] || row[field.name] || "-")
                                 : field.type === "select" && !onCellChange
-                                  ? (getFieldOptions(field, assigneeOptions).find((o) => String(o.value) === String(sub[field.name]))?.label || sub[field.name] || "-")
+                                  ? (getFieldOptions(field, assigneeOptions).find((o) => normalizeSelectLikeValue(o.value) === normalizeSelectLikeValue(sub[field.name]))?.label || normalizeSelectLikeValue(sub[field.name]) || "-")
                                   : field.name === "due_date"
                                     ? (resolveDueDate(sub) !== "-" ? resolveDueDate(sub) : resolveDueDate(row))
                                     : renderEditableCell(sub, field, true)}

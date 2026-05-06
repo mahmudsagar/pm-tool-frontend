@@ -16,7 +16,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-const KANBAN_COLUMNS = ["Backlog", "In progress", "In review", "Done"];
+const FALLBACK_STATUS_COLUMNS = [
+  { key: "backlog", label: "Backlog" },
+  { key: "in_progress", label: "In progress" },
+  { key: "review", label: "In review" },
+  { key: "done", label: "Done" },
+];
 const toDateLabel = (value) => {
   if (!value) return null;
   if (typeof value === "string") {
@@ -93,6 +98,11 @@ function SortableTaskCard({ task, assigneeMap }) {
           {assigneeMap[task.assignee] || task.assignee || "Unassigned"} ·{" "}
           {resolveDueDate(task)}
         </p>
+        {task.overdue && (
+          <span className="mt-1 inline-flex rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+            Overdue
+          </span>
+        )}
         {task.isSubtask && (
           <p className="mt-1 text-[10px] text-muted-foreground">
             Subtask of {task.parentTitle || "Parent task"}
@@ -148,18 +158,46 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null,
     return map;
   }, [assigneeOptions]);
 
-  const normalizeStatus = (rawStatus) => {
-    const s = String(rawStatus || "").toLowerCase();
-    if (s.includes("done") || s.includes("complete")) return "Done";
-    if (s.includes("review")) return "In review";
-    if (s.includes("progress") || s.includes("doing")) return "In progress";
-    if (s.includes("todo") || s.includes("backlog") || s.includes("open")) return "Backlog";
-    return "Backlog";
-  };
   const statusFieldName = useMemo(
     () => findStatusFieldName(data?.property_name || []),
     [data?.property_name]
   );
+  const statusFieldDef = useMemo(
+    () => (data?.property_name || []).find((f) => f?.name === statusFieldName),
+    [data?.property_name, statusFieldName]
+  );
+  const statusOptions = useMemo(() => {
+    const options = statusFieldDef?.props?.optionsData || [];
+    if (!Array.isArray(options) || !options.length) return FALLBACK_STATUS_COLUMNS;
+    return options.map((opt) => ({
+      key: String(opt.value),
+      label: opt.label || String(opt.value),
+    }));
+  }, [statusFieldDef]);
+
+  const normalizeStatus = (rawStatus) => {
+    const text = String(rawStatus ?? "").trim();
+    const lowered = text.toLowerCase();
+    if (!text) return statusOptions[0]?.key || "backlog";
+
+    const byValue = statusOptions.find((opt) => String(opt.key).toLowerCase() === lowered);
+    if (byValue) return byValue.key;
+
+    const byLabel = statusOptions.find((opt) => String(opt.label || "").toLowerCase() === lowered);
+    if (byLabel) return byLabel.key;
+
+    // Fallback keyword mapping for legacy values saved from old kanban labels.
+    if (lowered.includes("done") || lowered.includes("complete")) {
+      return statusOptions.find((opt) => String(opt.label || opt.key).toLowerCase().includes("done"))?.key || "done";
+    }
+    if (lowered.includes("review")) {
+      return statusOptions.find((opt) => String(opt.label || opt.key).toLowerCase().includes("review"))?.key || "review";
+    }
+    if (lowered.includes("progress") || lowered.includes("doing")) {
+      return statusOptions.find((opt) => String(opt.label || opt.key).toLowerCase().includes("progress"))?.key || "in_progress";
+    }
+    return statusOptions.find((opt) => String(opt.label || opt.key).toLowerCase().includes("backlog"))?.key || statusOptions[0]?.key || "backlog";
+  };
   const [optimisticColumns, setOptimisticColumns] = useState({});
   const [activeTaskId, setActiveTaskId] = useState(/** @type {string | null} */ (null));
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -176,7 +214,8 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null,
       const resolved = getGroupValue(task[group.name]);
       return resolved.key;
     }
-    return normalizeStatus(task.status);
+    const statusValue = statusFieldName ? task?.[statusFieldName] : task?.status;
+    return normalizeStatus(statusValue);
   };
 
   const { columns, grouped } = useMemo(() => {
@@ -224,18 +263,19 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null,
       return { columns: cols, grouped: buckets };
     }
 
-    KANBAN_COLUMNS.forEach((name) => {
-      buckets[name] = [];
+    statusOptions.forEach((status) => {
+      buckets[status.key] = [];
     });
     tasks.forEach((task) => {
       const key = getTaskColumnKey(task);
+      if (!buckets[key]) buckets[key] = [];
       buckets[key].push(task);
     });
     return {
-      columns: KANBAN_COLUMNS.map((c) => ({ key: c, label: c })),
+      columns: statusOptions,
       grouped: buckets,
     };
-  }, [tasks, groupBy, data?.property_name, assigneeOptions, optimisticColumns]);
+  }, [tasks, groupBy, data?.property_name, assigneeOptions, optimisticColumns, statusOptions]);
 
   const taskById = useMemo(
     () => Object.fromEntries(tasks.map((t) => [t.id, t])),
