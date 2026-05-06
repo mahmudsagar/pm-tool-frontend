@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "@/BetterRouter/Link";
 import {
   DndContext,
@@ -98,10 +98,14 @@ function DropBucket({ dropId, className, startDate, endDate }) {
   return <div ref={setNodeRef} className={`${className} ${isOver ? "bg-primary/10" : ""}`} />;
 }
 
-function DraggableTimelineBar({ taskId, children, className, style }) {
+function DraggableTimelineBar({ taskId, children, className, style, barRef }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `task-${taskId}`,
   });
+  const setCombinedRef = (node) => {
+    setNodeRef(node);
+    if (barRef) barRef(node);
+  };
   const dragStyle = {
     ...style,
     transform: CSS.Translate.toString(transform),
@@ -109,7 +113,7 @@ function DraggableTimelineBar({ taskId, children, className, style }) {
     opacity: isDragging ? 0.6 : 1,
   };
   return (
-    <div ref={setNodeRef} style={dragStyle} className={className} {...attributes} {...listeners}>
+    <div ref={setCombinedRef} style={dragStyle} className={className} {...attributes} {...listeners}>
       {children}
     </div>
   );
@@ -133,6 +137,9 @@ export default function TimelineView({
   const [optimisticRanges, setOptimisticRanges] = useState({});
   const [activeTaskId, setActiveTaskId] = useState(/** @type {string | null} */ (null));
   const [hoverDropDate, setHoverDropDate] = useState("");
+  const [connectorPaths, setConnectorPaths] = useState(/** @type {{id: string, d: string}[]} */ ([]));
+  const timelineGridRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const barElementRefs = useRef(/** @type {Record<string, HTMLElement>} */ ({}));
   const dateField = useMemo(() => findDateField(data?.property_name || []), [data?.property_name]);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -223,6 +230,27 @@ export default function TimelineView({
       };
     });
     return out;
+  }, [timelineItems]);
+  const dependencyEdges = useMemo(() => {
+    const idMap = new Map();
+    const taskIdMap = new Map();
+    timelineItems.forEach((item) => {
+      idMap.set(String(item.id), item);
+      if (item.task_id) taskIdMap.set(String(item.task_id), item);
+    });
+    const resolveRef = (ref) => {
+      if (!ref) return null;
+      return idMap.get(String(ref)) || taskIdMap.get(String(ref)) || null;
+    };
+    return timelineItems.flatMap((item) => {
+      const dependencyRef = item.depends_on || item.blocked_by || null;
+      const blocker = resolveRef(dependencyRef);
+      if (!blocker || String(blocker.id) === String(item.id)) return [];
+      return [{
+        fromTaskId: String(blocker.id),
+        toTaskId: String(item.id),
+      }];
+    });
   }, [timelineItems]);
 
   const { rangeStart, rangeEnd, columns } = useMemo(() => {
@@ -379,6 +407,38 @@ export default function TimelineView({
     applyDroppedDate(taskId, new Date(date));
   };
 
+  useEffect(() => {
+    const recalcPaths = () => {
+      const gridEl = timelineGridRef.current;
+      if (!gridEl) return;
+      const gridRect = gridEl.getBoundingClientRect();
+      const paths = dependencyEdges
+        .flatMap((edge) => {
+          const fromEl = barElementRefs.current[edge.fromTaskId];
+          const toEl = barElementRefs.current[edge.toTaskId];
+          if (!fromEl || !toEl) return [];
+          const fromRect = fromEl.getBoundingClientRect();
+          const toRect = toEl.getBoundingClientRect();
+          const x1 = fromRect.right - gridRect.left;
+          const y1 = fromRect.top + fromRect.height / 2 - gridRect.top;
+          const x2 = toRect.left - gridRect.left;
+          const y2 = toRect.top + toRect.height / 2 - gridRect.top;
+          const dx = Math.max(28, Math.abs(x2 - x1) * 0.35);
+          const d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+          return [{ id: `${edge.fromTaskId}->${edge.toTaskId}`, d }];
+        });
+      setConnectorPaths(paths);
+    };
+
+    recalcPaths();
+    const rafId = requestAnimationFrame(recalcPaths);
+    window.addEventListener("resize", recalcPaths);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", recalcPaths);
+    };
+  }, [dependencyEdges, visibleItems, mode, anchorDate, optimisticRanges, collapsedParents]);
+
   return (
     <DndContext
       sensors={sensors}
@@ -455,7 +515,7 @@ export default function TimelineView({
       <div className="flex gap-4">
         {/* Main timeline grid */}
         <div className="overflow-x-auto flex-1">
-          <div className="grid min-w-[720px] grid-cols-[200px_minmax(0,1fr)] text-xs">
+          <div ref={timelineGridRef} className="relative grid min-w-[720px] grid-cols-[200px_minmax(0,1fr)] text-xs">
           <div className="border-b border-r bg-muted px-3 py-2 font-medium text-muted-foreground">
             Task / Assignee
           </div>
@@ -554,6 +614,10 @@ export default function TimelineView({
                   </div>
                   <DraggableTimelineBar
                     taskId={task.id}
+                    barRef={(node) => {
+                      if (node) barElementRefs.current[String(task.id)] = node;
+                      else delete barElementRefs.current[String(task.id)];
+                    }}
                     className={`absolute top-3 inline-flex h-5 items-center rounded px-2 text-[11px] font-medium shadow-sm ${statusStyle[task.statusKey]} ${
                       isSelected ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""
                     }`}
@@ -571,6 +635,25 @@ export default function TimelineView({
               </div>
             );
           })}
+          <svg className="pointer-events-none absolute inset-0 z-[5]" width="100%" height="100%">
+            <defs>
+              <marker id="dep-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#fb923c" />
+              </marker>
+            </defs>
+            {connectorPaths.map((path) => (
+              <path
+                key={path.id}
+                d={path.d}
+                fill="none"
+                stroke="#fb923c"
+                strokeWidth="1.5"
+                strokeDasharray="4 3"
+                markerEnd="url(#dep-arrow)"
+                opacity="0.9"
+              />
+            ))}
+          </svg>
         </div>
 
         {/* Right-side health summary panel */}
