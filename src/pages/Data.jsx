@@ -298,6 +298,25 @@ export default function Data({ id: propId, setTopMenu }) {
     }
 
     const customFields = boardData.custom_meta?.fields || [];
+    const normalizeDateValue = (raw) => {
+      if (!raw) return null;
+      if (typeof raw === 'string') {
+        const d = new Date(raw);
+        return Number.isNaN(d.getTime()) ? null : d.toISOString().split('T')[0];
+      }
+      if (raw instanceof Date) {
+        return Number.isNaN(raw.getTime()) ? null : raw.toISOString().split('T')[0];
+      }
+      if (typeof raw === 'object') {
+        const from = raw.from || raw.start || raw.date || null;
+        const to = raw.to || raw.end || null;
+        return {
+          from: normalizeDateValue(from),
+          to: normalizeDateValue(to),
+        };
+      }
+      return null;
+    };
     
     // Transform custom_meta.fields into property_name format
     const propertyNames = [
@@ -346,7 +365,17 @@ export default function Data({ id: propId, setTopMenu }) {
           subtasks: [],
         };
         customFields.forEach(field => {
-          subData[field.name] = sub.custom_meta?.values?.[field.name] ?? ((field.type === 'select' || field.type === 'dynamic-select') ? '' : null);
+          const rawValue = sub.custom_meta?.values?.[field.name];
+          subData[field.name] = rawValue ?? ((field.type === 'select' || field.type === 'dynamic-select') ? '' : null);
+
+          // Normalize daterange values so all views can rely on start_date / due_date.
+          if (field.type === 'daterange') {
+            const norm = normalizeDateValue(rawValue);
+            if (norm && typeof norm === 'object') {
+              if (norm.from) subData.start_date = norm.from;
+              if (norm.to) subData.due_date = norm.to;
+            }
+          }
         });
         subData.createdAt = sub.createdAt;
         subData.updatedAt = sub.updatedAt;
@@ -368,6 +397,15 @@ export default function Data({ id: propId, setTopMenu }) {
       customFields.forEach(field => {
         const value = doc.custom_meta?.values?.[field.name];
         taskData[field.name] = value ?? ((field.type === 'select' || field.type === 'dynamic-select') ? '' : null);
+
+        // Normalize daterange values so all views can rely on start_date / due_date.
+        if (field.type === 'daterange') {
+          const norm = normalizeDateValue(value);
+          if (norm && typeof norm === 'object') {
+            if (norm.from) taskData.start_date = norm.from;
+            if (norm.to) taskData.due_date = norm.to;
+          }
+        }
       });
 
       // Add timestamps

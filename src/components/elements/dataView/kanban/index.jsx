@@ -2,6 +2,15 @@ import React, { useMemo } from "react";
 import Link from "../../../../BetterRouter/Link";
 
 const KANBAN_COLUMNS = ["Backlog", "In progress", "In review", "Done"];
+const resolveDueDate = (item) => {
+  if (item?.due_date) return item.due_date;
+  const range = item?.dates;
+  if (range?.to) {
+    const d = new Date(range.to);
+    if (!Number.isNaN(d.getTime())) return d.toISOString().split("T")[0];
+  }
+  return "No due date";
+};
 
 export default function KanbanView({ data, assigneeOptions = [] }) {
   const tasks = useMemo(
@@ -65,7 +74,7 @@ export default function KanbanView({ data, assigneeOptions = [] }) {
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {assigneeMap[task.assignee] || task.assignee || "Unassigned"} ·{" "}
-                    {task.due_date || "No due date"}
+                    {resolveDueDate(task)}
                   </p>
                   {(task.subtasks || []).length > 0 && (
                     <div className="mt-2 border-t pt-2">

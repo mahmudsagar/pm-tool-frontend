@@ -28,6 +28,11 @@ const startOfQuarter = (date) => {
 };
 
 const dayDiff = (a, b) => Math.round((b - a) / (1000 * 60 * 60 * 24));
+const resolveRange = (item) => {
+  const from = item?.start_date || item?.dates?.from || null;
+  const to = item?.due_date || item?.dates?.to || null;
+  return { from, to };
+};
 
 const normalizeStatus = (rawStatus) => {
   const s = String(rawStatus || "").toLowerCase();
@@ -72,10 +77,11 @@ export default function TimelineView({
     return (data?.property_values || [])
       .filter((item) => !item.parent_id)
       .map((task, index) => {
+        const range = resolveRange(task);
         const fallbackStart = addDays(now, index * 3);
         const fallbackEnd = addDays(fallbackStart, 14);
-        const startDate = task.start_date ? new Date(task.start_date) : fallbackStart;
-        const dueDate = task.due_date ? new Date(task.due_date) : fallbackEnd;
+        const startDate = range.from ? new Date(range.from) : fallbackStart;
+        const dueDate = range.to ? new Date(range.to) : fallbackEnd;
         const safeEnd = dueDate > startDate ? dueDate : addDays(startDate, 7);
         return {
           ...task,
@@ -97,8 +103,9 @@ export default function TimelineView({
         parentTitle: null,
       });
       (task.subtasks || []).forEach((sub, subIndex) => {
-        const startDate = sub.start_date ? new Date(sub.start_date) : task.startDate;
-        const dueDate = sub.due_date ? new Date(sub.due_date) : task.dueDate;
+        const range = resolveRange(sub);
+        const startDate = range.from ? new Date(range.from) : task.startDate;
+        const dueDate = range.to ? new Date(range.to) : task.dueDate;
         items.push({
           ...sub,
           id: sub.id || `${task.id}-sub-${subIndex}`,

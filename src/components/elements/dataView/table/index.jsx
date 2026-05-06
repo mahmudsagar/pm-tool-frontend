@@ -1,6 +1,16 @@
 import { Fragment, useMemo, useState } from "react";
 import Link from "@/BetterRouter/Link";
 
+const resolveDueDate = (item) => {
+  if (item?.due_date) return item.due_date;
+  const range = item?.dates;
+  if (range?.to) {
+    const d = new Date(range.to);
+    if (!Number.isNaN(d.getTime())) return d.toISOString().split("T")[0];
+  }
+  return "-";
+};
+
 export default function TableView({ data, assigneeOptions = [] }) {
   const rows = useMemo(
     () => (data?.property_values || []).filter((item) => !item.parent_id),
@@ -54,7 +64,7 @@ export default function TableView({ data, assigneeOptions = [] }) {
                   <td className="px-3 py-2">{row.status || "Backlog"}</td>
                   <td className="px-3 py-2">{row.priority || "Medium"}</td>
                   <td className="px-3 py-2">{assigneeMap[row.assignee] || row.assignee || "-"}</td>
-                  <td className="px-3 py-2">{row.due_date || "-"}</td>
+                  <td className="px-3 py-2">{resolveDueDate(row)}</td>
                 </tr>
                 {!collapsed[row.id] && (row.subtasks || []).map((sub) => (
                   <tr key={sub.id} className="border-t bg-muted/30 hover:bg-muted/50">
@@ -72,7 +82,7 @@ export default function TableView({ data, assigneeOptions = [] }) {
                     <td className="px-3 py-2 text-xs">
                       {assigneeMap[sub.assignee] || sub.assignee || assigneeMap[row.assignee] || row.assignee || "-"}
                     </td>
-                    <td className="px-3 py-2 text-xs">{sub.due_date || row.due_date || "-"}</td>
+                    <td className="px-3 py-2 text-xs">{resolveDueDate(sub) !== "-" ? resolveDueDate(sub) : resolveDueDate(row)}</td>
                   </tr>
                 ))}
               </Fragment>

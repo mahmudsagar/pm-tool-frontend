@@ -36,6 +36,9 @@ const toDateKey = (value) => {
   return null;
 };
 
+const resolveScheduleDate = (task, parent) =>
+  toDateKey(task?.due_date || task?.start_date || task?.dates || parent?.due_date || parent?.start_date || parent?.dates || null);
+
 export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [mode, setMode] = useState("month"); // week | month | quarter
@@ -48,7 +51,7 @@ export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
         .flatMap((task) => {
           const parent = {
             ...task,
-            scheduleDate: toDateKey(task.due_date || task.start_date || null),
+            scheduleDate: resolveScheduleDate(task),
             isSubtask: false,
             parentId: task.id,
           };
@@ -56,9 +59,7 @@ export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
             ...sub,
             id: sub.id || `${task.id}-sub-${idx}`,
             title: sub.title || "Untitled subtask",
-            scheduleDate: toDateKey(
-              sub.due_date || sub.start_date || task.due_date || task.start_date || null
-            ),
+            scheduleDate: resolveScheduleDate(sub, task),
             isSubtask: true,
             parentId: task.id,
           }));
