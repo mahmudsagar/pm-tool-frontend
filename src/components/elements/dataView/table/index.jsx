@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import Link from "@/BetterRouter/Link";
 
 export default function TableView({ data, assigneeOptions = [] }) {
   const rows = useMemo(
@@ -26,8 +27,16 @@ export default function TableView({ data, assigneeOptions = [] }) {
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className="border-t hover:bg-muted/20">
-                <td className="px-3 py-2 font-medium">{row.title || "Untitled task"}</td>
+              <tr key={row.id} className="border-t hover:bg-muted/40">
+                <td className="px-3 py-2 font-medium">
+                  <Link
+                    to={`/document/${row.id}`}
+                    target="_sidebar"
+                    className="underline-offset-2 hover:underline"
+                  >
+                    {row.title || "Untitled task"}
+                  </Link>
+                </td>
                 <td className="px-3 py-2">{row.status || "Backlog"}</td>
                 <td className="px-3 py-2">{row.priority || "Medium"}</td>
                 <td className="px-3 py-2">{assigneeMap[row.assignee] || row.assignee || "-"}</td>

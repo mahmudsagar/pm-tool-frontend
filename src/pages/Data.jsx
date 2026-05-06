@@ -91,6 +91,7 @@ export default function Data({ id: propId, setTopMenu }) {
   const [activeTab, setActiveTab] = useState("table");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [groupBy, setGroupBy] = useState(null); // null = no grouping | { name, label, type }
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
 
   const DEFAULT_VIEW = { sorts: [], filters: [], search: '' };
   const [viewState, setViewState] = useState(DEFAULT_VIEW);
@@ -539,6 +540,8 @@ export default function Data({ id: propId, setTopMenu }) {
                 onCellChange={handleCellChange}
                 assigneeOptions={assigneeOptions}
                 groupBy={groupBy}
+                selectedTaskId={selectedTaskId}
+                onSelectTask={setSelectedTaskId}
               />
             )}
           </TabsContent>

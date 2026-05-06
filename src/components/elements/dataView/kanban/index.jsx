@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
+import Link from "../../../../BetterRouter/Link";
 
 const KANBAN_COLUMNS = ["Backlog", "In progress", "In review", "Done"];
 
@@ -8,10 +9,14 @@ export default function KanbanView({ data, assigneeOptions = [] }) {
     [data?.property_values]
   );
 
-  const assigneeMap = useMemo(
-    () => Object.fromEntries((assigneeOptions || []).map((opt) => [opt.value, opt.label])),
-    [assigneeOptions]
-  );
+  const assigneeMap = useMemo(() => {
+    const map = {};
+    (assigneeOptions || []).forEach((opt) => {
+      if (!opt) return;
+      map[opt.value] = opt.label;
+    });
+    return map;
+  }, [assigneeOptions]);
 
   const normalizeStatus = (rawStatus) => {
     const s = String(rawStatus || "").toLowerCase();
@@ -23,7 +28,11 @@ export default function KanbanView({ data, assigneeOptions = [] }) {
   };
 
   const grouped = useMemo(() => {
-    const buckets = Object.fromEntries(KANBAN_COLUMNS.map((name) => [name, []]));
+    /** @type {Record<string, any[]>} */
+    const buckets = {};
+    KANBAN_COLUMNS.forEach((name) => {
+      buckets[name] = [];
+    });
     tasks.forEach((task) => {
       const key = normalizeStatus(task.status);
       buckets[key].push(task);
@@ -33,13 +42,6 @@ export default function KanbanView({ data, assigneeOptions = [] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">Website Relaunch · Kanban</p>
-        <div className="flex gap-2 text-xs">
-          <button type="button" className="rounded-md border px-3 py-1.5">Group by assignee</button>
-          <button type="button" className="rounded-md border px-3 py-1.5">+ Add card</button>
-        </div>
-      </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {KANBAN_COLUMNS.map((column) => (
           <div key={column} className="rounded-lg border bg-muted/30 p-3">
@@ -51,14 +53,26 @@ export default function KanbanView({ data, assigneeOptions = [] }) {
             </div>
             <div className="space-y-2">
               {grouped[column].map((task) => (
-                <div key={task.id} className="rounded-md border bg-background p-2">
-                  <p className="text-sm font-medium">{task.title || "Untitled task"}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {assigneeMap[task.assignee] || task.assignee || "Unassigned"} · {task.due_date || "No due date"}
+                <Link
+                  key={task.id}
+                  to={`/document/${task.id}`}
+                  target="_sidebar"
+                  onClick={() => {}}
+                  className="block w-full rounded-md border bg-background p-2 text-left hover:bg-muted/60"
+                >
+                  <p className="text-sm font-medium underline-offset-2 hover:underline">
+                    {task.title || "Untitled task"}
                   </p>
-                </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {assigneeMap[task.assignee] || task.assignee || "Unassigned"} ·{" "}
+                    {task.due_date || "No due date"}
+                  </p>
+                </Link>
               ))}
-              <button type="button" className="w-full rounded-md border border-dashed px-3 py-1.5 text-xs text-muted-foreground">
+              <button
+                type="button"
+                className="w-full rounded-md border border-dashed px-3 py-1.5 text-xs text-muted-foreground"
+              >
                 + Add card
               </button>
             </div>
