@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useOutletContext, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { sanitize } from '@/utils/helper';
 import useDialog from '@/hooks/useDialog';
@@ -40,6 +40,7 @@ const Page = ({ ...props }) => {
   const deleteDocumentMutation = useDeleteDocument();
 
   const { page_type, ...restData } = data || {}
+  const saveDebounceRef = useRef(null);
 
   // Compute live assignee options for board documents so DynamicInput
   // can render the 'dynamic-select' assignee field with the correct users.
@@ -104,12 +105,28 @@ const Page = ({ ...props }) => {
   }
 
   const handleSubmit = (value) => {
-    updateDocumentMutation.mutate({
-      documentId: data?._id,
-      content: sanitize(value),
-      boardId: data?.board_id,
-    });
+    const documentId = data?._id;
+    if (!documentId) return;
+    const sanitized = sanitize(value);
+
+    if (saveDebounceRef.current) {
+      clearTimeout(saveDebounceRef.current);
+    }
+
+    saveDebounceRef.current = setTimeout(() => {
+      updateDocumentMutation.mutate({
+        documentId,
+        content: sanitized,
+        boardId: data?.board_id,
+      });
+    }, 500);
   }
+
+  useEffect(() => {
+    return () => {
+      if (saveDebounceRef.current) clearTimeout(saveDebounceRef.current);
+    };
+  }, []);
 
   if (error) {
     return <NotFound />

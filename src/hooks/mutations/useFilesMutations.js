@@ -243,7 +243,15 @@ export const useUpdateDocument = () => {
 
   return useMutation({
     mutationFn: async ({ documentId, content, boardId }) => {
-      const result = await api.put(documentBaseUrl, { id: documentId, content });
+      const payload = { id: documentId };
+      if (content && typeof content === 'object' && !Array.isArray(content)) {
+        // Editor sends a compound payload: { title, content, custom_meta, inner_comments }
+        // Preserve all keys so title/subtask name and date fields persist.
+        Object.assign(payload, content);
+      } else {
+        payload.content = content;
+      }
+      const result = await api.put(documentBaseUrl, payload);
       return result;
     },
 
@@ -259,9 +267,21 @@ export const useUpdateDocument = () => {
       // value (e.g. rest.content after unwrap). Mirror that here so the
       // cache shape matches what GET returns.
       const actualContent = content?.content ?? content;
+      const nextTitle = content?.title;
+      const nextCustomMeta = content?.custom_meta;
+      const nextComments = content?.inner_comments;
       queryClient.setQueryData(['documents', documentId], (old) =>
         old
-          ? { ...old, pageContent: { ...old.pageContent, content: actualContent } }
+          ? {
+              ...old,
+              ...(nextTitle !== undefined ? { title: nextTitle } : {}),
+              ...(nextCustomMeta !== undefined ? { custom_meta: nextCustomMeta } : {}),
+              ...(nextComments !== undefined ? { comments: nextComments } : {}),
+              pageContent: {
+                ...old.pageContent,
+                content: actualContent,
+              },
+            }
           : old
       );
 
@@ -279,9 +299,21 @@ export const useUpdateDocument = () => {
     // GET → re-init → auto-save → PUT loop in spreadsheets.
     onSuccess: (_, { documentId, content, boardId }) => {
       const actualContent = content?.content ?? content;
+      const nextTitle = content?.title;
+      const nextCustomMeta = content?.custom_meta;
+      const nextComments = content?.inner_comments;
       queryClient.setQueryData(['documents', documentId], (old) =>
         old
-          ? { ...old, pageContent: { ...old.pageContent, content: actualContent } }
+          ? {
+              ...old,
+              ...(nextTitle !== undefined ? { title: nextTitle } : {}),
+              ...(nextCustomMeta !== undefined ? { custom_meta: nextCustomMeta } : {}),
+              ...(nextComments !== undefined ? { comments: nextComments } : {}),
+              pageContent: {
+                ...old.pageContent,
+                content: actualContent,
+              },
+            }
           : old
       );
       // If this document belongs to a board, invalidate the board query so
