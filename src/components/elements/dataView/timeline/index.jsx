@@ -65,6 +65,7 @@ export default function TimelineView({
 
   const [mode, setMode] = useState("month"); // week | month | quarter
   const [anchorDate, setAnchorDate] = useState(() => new Date());
+  const [collapsedParents, setCollapsedParents] = useState({});
 
   const tasks = useMemo(() => {
     const now = new Date();
@@ -85,6 +86,36 @@ export default function TimelineView({
         };
       });
   }, [data?.property_values, assigneeMap]);
+
+  const timelineItems = useMemo(() => {
+    const items = [];
+    tasks.forEach((task) => {
+      items.push({
+        ...task,
+        isSubtask: false,
+        parentId: task.id,
+        parentTitle: null,
+      });
+      (task.subtasks || []).forEach((sub, subIndex) => {
+        const startDate = sub.start_date ? new Date(sub.start_date) : task.startDate;
+        const dueDate = sub.due_date ? new Date(sub.due_date) : task.dueDate;
+        items.push({
+          ...sub,
+          id: sub.id || `${task.id}-sub-${subIndex}`,
+          title: sub.title || "Untitled subtask",
+          assigneeName: assigneeMap[sub.assignee] || sub.assignee || task.assigneeName,
+          startDate,
+          dueDate: dueDate > startDate ? dueDate : addDays(startDate, 3),
+          statusKey: normalizeStatus(sub.status || task.status),
+          status: sub.status || task.status,
+          isSubtask: true,
+          parentId: task.id,
+          parentTitle: task.title || "Untitled task",
+        });
+      });
+    });
+    return items;
+  }, [tasks, assigneeMap]);
 
   const { rangeStart, rangeEnd, columns } = useMemo(() => {
     if (mode === "week") {
@@ -145,6 +176,14 @@ export default function TimelineView({
 
   const gridColsClass =
     mode === "week" ? "grid-cols-12" : "grid-cols-3";
+  const visibleItems = useMemo(
+    () =>
+      timelineItems.filter((item) => {
+        if (!item.isSubtask) return true;
+        return !collapsedParents[item.parentId];
+      }),
+    [timelineItems, collapsedParents]
+  );
 
   return (
     <div className="space-y-4">
@@ -225,7 +264,7 @@ export default function TimelineView({
               ))}
             </div>
           </div>
-          {tasks.map((task, idx) => {
+              {visibleItems.map((task, idx) => {
             const leftPercent = (dayDiff(rangeStart, task.startDate) / totalDays) * 100;
             const widthPercent = (Math.max(1, dayDiff(task.startDate, task.dueDate)) / totalDays) * 100;
             const initials = task.assigneeName
@@ -244,14 +283,31 @@ export default function TimelineView({
                   to={`/document/${task.id}`}
                   target="_sidebar"
                   onClick={() => onSelectTask?.(task.id)}
-                  className={`flex items-center gap-2 border-b border-r px-3 py-2 ${isSelected ? "bg-primary/5" : "hover:bg-muted/60"}`}
+                  className={`flex items-center gap-2 border-b border-r px-3 py-2 ${
+                    task.isSubtask ? "bg-muted/30 pl-7" : ""
+                  } ${isSelected ? "bg-primary/5" : "hover:bg-muted/60"}`}
                 >
                   <span className="text-[10px] text-muted-foreground">—</span>
+                  {!task.isSubtask && (tasks.find((t) => t.id === task.id)?.subtasks || []).length > 0 && (
+                    <button
+                      type="button"
+                      className="text-[10px] text-muted-foreground"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setCollapsedParents((prev) => ({ ...prev, [task.id]: !prev[task.id] }));
+                      }}
+                    >
+                      {collapsedParents[task.id] ? "▶" : "▼"}
+                    </button>
+                  )}
                   <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-medium ${colorClass}`}>
                     {initials || "NA"}
                   </div>
                   <div className="min-w-0">
-                    <div className="truncate text-[13px] font-medium text-foreground">{task.title || "Untitled task"}</div>
+                    <div className={`truncate text-[13px] font-medium ${task.isSubtask ? "text-muted-foreground" : "text-foreground"}`}>
+                      {task.isSubtask ? `↳ ${task.title || "Untitled subtask"}` : (task.title || "Untitled task")}
+                    </div>
                     <div className="truncate text-[11px] text-muted-foreground">{task.assigneeName}</div>
                   </div>
                 </Link>
@@ -313,7 +369,7 @@ export default function TimelineView({
 
           {selectedTaskId && (
             (() => {
-              const t = tasks.find((x) => x.id === selectedTaskId);
+              const t = timelineItems.find((x) => x.id === selectedTaskId);
               if (!t) return null;
               return (
                 <div className="mt-2 space-y-2 rounded-md border bg-muted/40 p-2">

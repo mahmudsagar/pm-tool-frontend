@@ -67,6 +67,28 @@ export default function KanbanView({ data, assigneeOptions = [] }) {
                     {assigneeMap[task.assignee] || task.assignee || "Unassigned"} ·{" "}
                     {task.due_date || "No due date"}
                   </p>
+                  {(task.subtasks || []).length > 0 && (
+                    <div className="mt-2 border-t pt-2">
+                      <p className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                        Subtasks ({task.subtasks.length})
+                      </p>
+                      <div className="space-y-1">
+                        {task.subtasks.slice(0, 3).map((sub) => (
+                          <div key={sub.id} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <span className="inline-flex h-3 w-3 items-center justify-center rounded border text-[9px]">
+                              {(sub.status || "").toLowerCase().includes("done") ? "✓" : ""}
+                            </span>
+                            <span className="truncate">↳ {sub.title || "Untitled subtask"}</span>
+                          </div>
+                        ))}
+                        {task.subtasks.length > 3 && (
+                          <div className="text-[10px] text-muted-foreground">
+                            +{task.subtasks.length - 3} more
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </Link>
               ))}
               <button

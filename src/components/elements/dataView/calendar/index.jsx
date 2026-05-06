@@ -17,18 +17,53 @@ const fmtDateKey = (date) => {
   return `${y}-${m}-${d}`;
 };
 
+const toDateKey = (value) => {
+  if (!value) return null;
+  if (typeof value === "string") {
+    const direct = new Date(value);
+    if (!Number.isNaN(direct.getTime())) return fmtDateKey(direct);
+    return value.slice(0, 10);
+  }
+  if (value instanceof Date) {
+    if (!Number.isNaN(value.getTime())) return fmtDateKey(value);
+    return null;
+  }
+  if (typeof value === "object") {
+    const candidate =
+      value.to || value.end || value.date || value.start || value.from || null;
+    return toDateKey(candidate);
+  }
+  return null;
+};
+
 export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [mode, setMode] = useState("month"); // week | month | quarter
+  const [collapsedParents, setCollapsedParents] = useState({});
 
   const tasks = useMemo(
     () =>
       (data?.property_values || [])
         .filter((item) => !item.parent_id)
-        .map((task) => ({
-          ...task,
-          scheduleDate: task.due_date || task.start_date || null,
-        })),
+        .flatMap((task) => {
+          const parent = {
+            ...task,
+            scheduleDate: toDateKey(task.due_date || task.start_date || null),
+            isSubtask: false,
+            parentId: task.id,
+          };
+          const children = (task.subtasks || []).map((sub, idx) => ({
+            ...sub,
+            id: sub.id || `${task.id}-sub-${idx}`,
+            title: sub.title || "Untitled subtask",
+            scheduleDate: toDateKey(
+              sub.due_date || sub.start_date || task.due_date || task.start_date || null
+            ),
+            isSubtask: true,
+            parentId: task.id,
+          }));
+          return [parent, ...children];
+        }),
     [data?.property_values]
   );
 
@@ -180,6 +215,10 @@ export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
                       mode="quarter"
                       selectedTaskId={selectedTaskId}
                       onSelectTask={onSelectTask}
+                      collapsedParents={collapsedParents}
+                      onToggleParent={(id) =>
+                        setCollapsedParents((prev) => ({ ...prev, [id]: !prev[id] }))
+                      }
                     />
                   ))}
                 </div>
@@ -197,6 +236,10 @@ export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
               mode={mode}
               selectedTaskId={selectedTaskId}
               onSelectTask={onSelectTask}
+              collapsedParents={collapsedParents}
+              onToggleParent={(id) =>
+                setCollapsedParents((prev) => ({ ...prev, [id]: !prev[id] }))
+              }
             />
           ))}
         </div>
@@ -221,7 +264,9 @@ export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
                     selectedTaskId === t.id ? "border-primary bg-primary/5" : "border-border"
                   }`}
                 >
-                  <span className="truncate text-xs font-medium">{t.title || "Untitled task"}</span>
+                  <span className="truncate text-xs font-medium">
+                    {t.isSubtask ? `↳ ${t.title || "Untitled subtask"}` : (t.title || "Untitled task")}
+                  </span>
                   <span className="text-[11px] text-muted-foreground">
                     {t.scheduleDate || "No date"}
                   </span>
@@ -237,10 +282,32 @@ export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
   );
 }
 
-function CalendarCell({ cell, tasks, mode, selectedTaskId, onSelectTask }) {
+function CalendarCell({
+  cell,
+  tasks,
+  mode,
+  selectedTaskId,
+  onSelectTask,
+  collapsedParents,
+  onToggleParent,
+}) {
   const isToday =
     fmtDateKey(cell.date) === fmtDateKey(new Date());
-  const limit = mode === "week" ? 6 : mode === "quarter" ? 1 : 2;
+  const limit = mode === "week" ? 6 : mode === "quarter" ? 2 : 3;
+  const parentTasks = tasks.filter((t) => !t.isSubtask);
+  const renderItems = [];
+  parentTasks.forEach((parent) => {
+    renderItems.push({ ...parent, _kind: "parent" });
+    if (!collapsedParents[parent.id]) {
+      tasks
+        .filter((t) => t.isSubtask && t.parentId === parent.id)
+        .forEach((sub) => renderItems.push({ ...sub, _kind: "sub" }));
+    }
+  });
+  tasks
+    .filter((t) => t.isSubtask && !parentTasks.some((p) => p.id === t.parentId))
+    .forEach((sub) => renderItems.push({ ...sub, _kind: "sub" }));
+
   return (
     <div
       className={`min-h-24 rounded-md border p-2 ${
@@ -259,24 +326,37 @@ function CalendarCell({ cell, tasks, mode, selectedTaskId, onSelectTask }) {
         </div>
       </div>
       <div className="mt-1 space-y-1">
-        {tasks.slice(0, limit).map((task) => (
-          <Link
-            key={task.id}
-            to={`/document/${task.id}`}
-            target="_sidebar"
-            onClick={() => onSelectTask?.(task.id)}
-            className={`flex w-full items-center rounded px-1.5 py-0.5 text-[10px] ${
-              selectedTaskId === task.id
-                ? "bg-sky-600 text-white"
-                : "bg-blue-100 text-blue-900"
-            }`}
-          >
-            <span className="truncate">{task.title || "Task"}</span>
-          </Link>
+        {renderItems.slice(0, limit).map((task) => (
+          <div key={task.id} className="flex items-center gap-1">
+            {task._kind === "parent" &&
+              tasks.some((t) => t.isSubtask && t.parentId === task.id) && (
+                <button
+                  type="button"
+                  className="text-[10px] text-muted-foreground"
+                  onClick={() => onToggleParent?.(task.id)}
+                >
+                  {collapsedParents[task.id] ? "▶" : "▼"}
+                </button>
+              )}
+            <Link
+              to={`/document/${task.id}`}
+              target="_sidebar"
+              onClick={() => onSelectTask?.(task.id)}
+              className={`flex flex-1 items-center rounded px-1.5 py-0.5 text-[10px] ${
+                selectedTaskId === task.id
+                  ? "bg-sky-600 text-white"
+                  : task._kind === "sub"
+                    ? "bg-indigo-100 text-indigo-900"
+                    : "bg-blue-100 text-blue-900"
+              }`}
+            >
+              <span className="truncate">{task._kind === "sub" ? `↳ ${task.title || "Subtask"}` : (task.title || "Task")}</span>
+            </Link>
+          </div>
         ))}
-        {tasks.length > limit && (
+        {renderItems.length > limit && (
           <div className="text-[10px] text-muted-foreground">
-            +{tasks.length - limit} more
+            +{renderItems.length - limit} more
           </div>
         )}
       </div>

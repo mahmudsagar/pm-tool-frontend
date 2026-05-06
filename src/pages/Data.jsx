@@ -367,7 +367,7 @@ export default function Data({ id: propId, setTopMenu }) {
       // Add custom field values
       customFields.forEach(field => {
         const value = doc.custom_meta?.values?.[field.name];
-        taskData[field.name] = value || ((field.type === 'select' || field.type === 'dynamic-select') ? '' : null);
+        taskData[field.name] = value ?? ((field.type === 'select' || field.type === 'dynamic-select') ? '' : null);
       });
 
       // Add timestamps
