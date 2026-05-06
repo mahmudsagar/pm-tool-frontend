@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
+import { Check } from "lucide-react";
 import Link from "@/BetterRouter/Link";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
 const toDateLabel = (value) => {
   if (!value) return null;
@@ -82,6 +84,8 @@ const normalizeSelectLikeValue = (value, options = []) => {
   return text;
 };
 
+const DEPENDENCY_FIELDS = new Set(["blocked_by", "depends_on"]);
+
 const renderRangeValue = (value) => {
   if (!value || typeof value !== "object") return "-";
   const from = toDateLabel(value.from || value.start || null);
@@ -98,7 +102,7 @@ const toDateObject = (value) => {
   return d;
 };
 
-export default function TableView({ data, assigneeOptions = [], groupBy = null, onCellChange }) {
+export default function TableView({ data, assigneeOptions = [], groupBy = null, onCellChange, dependencyOptions: dependencyOptionsProp = [] }) {
   const rows = useMemo(
     () => (data?.property_values || []).filter((item) => !item.parent_id),
     [data?.property_values]
@@ -131,6 +135,18 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
     () => customColumns.filter((field) => visibleColumns.includes(field.name)),
     [customColumns, visibleColumns]
   );
+  const dependencyOptions = useMemo(() => {
+    if (Array.isArray(dependencyOptionsProp) && dependencyOptionsProp.length) {
+      return dependencyOptionsProp;
+    }
+    const byId = new Map();
+    (data?.property_values || []).forEach((item) => {
+      if (!item?.id) return;
+      const label = item.title || item.task_id || item.id;
+      byId.set(String(item.id), { value: String(item.id), label, taskId: item.task_id });
+    });
+    return Array.from(byId.values());
+  }, [data?.property_values, dependencyOptionsProp]);
 
   const groups = useMemo(() => {
     if (!groupBy) return [{ key: "__all__", label: "All tasks", rows }];
@@ -169,6 +185,45 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
     const commonClass = isSubtask
       ? "h-7 w-full border-0 bg-transparent px-0 text-xs shadow-none outline-none focus:ring-0"
       : "h-8 w-full border-0 bg-transparent px-0 text-xs shadow-none outline-none focus:ring-0";
+
+    if (DEPENDENCY_FIELDS.has(field.name)) {
+      const current =
+        dependencyOptions.find((opt) =>
+          String(opt.value) === String(value) || String(opt.taskId || "") === String(value || "")
+        ) || null;
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className={`w-full justify-start px-0 font-normal hover:bg-transparent ${isSubtask ? "h-7 text-xs" : "h-8 text-xs"}`}
+            >
+              {current ? current.label : (value || "Select task")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-72 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search task..." />
+              <CommandList>
+                <CommandEmpty>No tasks found.</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem onSelect={() => commitFieldChange(item, field, "")}>
+                    <span className="mr-2 h-4 w-4" />
+                    Clear
+                  </CommandItem>
+                  {dependencyOptions.map((opt) => (
+                    <CommandItem key={opt.value} value={`${opt.label} ${opt.taskId || ""}`} onSelect={() => commitFieldChange(item, field, opt.value)}>
+                      <Check className={`mr-2 h-4 w-4 ${String(current?.value || "") === String(opt.value) ? "opacity-100" : "opacity-0"}`} />
+                      <span className="truncate">{opt.label}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      );
+    }
 
     if (field.type === "select" || field.type === "dynamic-select") {
       const options = getFieldOptions(field, assigneeOptions);

@@ -190,6 +190,41 @@ export default function TimelineView({
     return items;
   }, [tasks, assigneeMap]);
 
+  const dependencyInfoById = useMemo(() => {
+    const idMap = new Map();
+    const taskIdMap = new Map();
+    timelineItems.forEach((item) => {
+      idMap.set(String(item.id), item);
+      if (item.task_id) taskIdMap.set(String(item.task_id), item);
+    });
+
+    const resolveRef = (ref) => {
+      if (!ref) return null;
+      return idMap.get(String(ref)) || taskIdMap.get(String(ref)) || null;
+    };
+
+    const blocksCount = {};
+    timelineItems.forEach((item) => {
+      const dependencyRef = item.depends_on || item.blocked_by || null;
+      const target = resolveRef(dependencyRef);
+      if (!target) return;
+      const key = String(target.id);
+      blocksCount[key] = (blocksCount[key] || 0) + 1;
+    });
+
+    const out = {};
+    timelineItems.forEach((item) => {
+      const dependencyRef = item.depends_on || item.blocked_by || null;
+      const target = resolveRef(dependencyRef);
+      out[String(item.id)] = {
+        dependsOnTitle: target?.title || null,
+        dependsOnId: target?.id || null,
+        blocksCount: blocksCount[String(item.id)] || 0,
+      };
+    });
+    return out;
+  }, [timelineItems]);
+
   const { rangeStart, rangeEnd, columns } = useMemo(() => {
     if (mode === "week") {
       const start = startOfWeek(anchorDate);
@@ -448,6 +483,7 @@ export default function TimelineView({
               .toUpperCase();
             const colorClass = assigneeColors[idx % assigneeColors.length];
             const isSelected = selectedTaskId === task.id;
+            const depInfo = dependencyInfoById[String(task.id)] || { dependsOnTitle: null, blocksCount: 0 };
 
             return (
               <div key={task.id} className="contents">
@@ -488,6 +524,20 @@ export default function TimelineView({
                       )}
                     </div>
                     <div className="truncate text-[11px] text-muted-foreground">{task.assigneeName}</div>
+                    {(depInfo.dependsOnTitle || depInfo.blocksCount > 0) && (
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[10px]">
+                        {depInfo.dependsOnTitle && (
+                          <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-amber-800">
+                            ↘ depends on {depInfo.dependsOnTitle}
+                          </span>
+                        )}
+                        {depInfo.blocksCount > 0 && (
+                          <span className="inline-flex items-center rounded-full bg-sky-100 px-1.5 py-0.5 text-sky-800">
+                            ↗ blocks {depInfo.blocksCount}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </Link>
                 <div className={`relative border-b block ${isSelected ? "bg-primary/5" : ""}`}>

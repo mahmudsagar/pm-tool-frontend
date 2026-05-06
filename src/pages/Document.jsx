@@ -23,6 +23,22 @@ const editorConfig = {
 let firstLoad = true;
 const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, assigneeOptions = [], board_id, subtasks = [], board, parent_id, ...rest }) => {
   const boardFields = board?.custom_meta?.fields || [];
+  const dependencyOptions = (board?.documents || []).flatMap((doc, index) => {
+    const parentTaskId = `TASK-${String(index + 1).padStart(3, '0')}`;
+    const parent = doc?._id
+      ? [{
+          value: String(doc._id),
+          label: doc?.title || doc?.name || parentTaskId,
+          taskId: parentTaskId,
+        }]
+      : [];
+    const subs = (doc?.subtasks || []).map((sub, si) => ({
+      value: String(sub?._id),
+      label: sub?.title || `Untitled Subtask ${si + 1}`,
+      taskId: `${parentTaskId}.${si + 1}`,
+    })).filter((x) => x.value && x.value !== "undefined");
+    return [...parent, ...subs];
+  });
   const [showComments, setShowComments] = useState(false);
   useEffect(() => {
     if (!pageContent) return;
@@ -89,6 +105,7 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, a
     showComments,
     setShowComments,
     assigneeOptions,
+    dependencyOptions,
     subtaskPanel: board_id && !parent_id ? (
       <div className="mt-4 mb-2">
         <SubtaskPanel

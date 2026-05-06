@@ -1,6 +1,7 @@
 // import useSyncStore from "@/stores/useSyncStore"
 
 const EMPTY_ASSIGNEE_OPTIONS = [];
+const DEFAULT_VIEW = { sorts: [], filters: [], search: '' };
 import {
   LayoutGrid,
   Table,
@@ -116,6 +117,10 @@ const resolveFieldName = (fields = [], keyword) => {
   const byName = fields.find((f) => normalizedText(f?.name).includes(needle));
   return byName?.name || keyword;
 };
+const DEPENDENCY_FIELD_DEFS = [
+  { name: "blocked_by", label: "Blocking task", type: "text" },
+  { name: "depends_on", label: "Dependent on", type: "text" },
+];
 
 const normalizeSelectLikeValue = (rawValue, options = []) => {
   if (rawValue === undefined || rawValue === null) return rawValue;
@@ -167,7 +172,6 @@ export default function Data({ id: propId, setTopMenu }) {
     workflowRules: [],
   });
 
-  const DEFAULT_VIEW = { sorts: [], filters: [], search: '' };
   const [viewState, setViewState] = useState(DEFAULT_VIEW);
   // Debounce viewState sent to API so typing doesn't fire a request per keystroke
   const [debouncedView, setDebouncedView] = useState(DEFAULT_VIEW);
@@ -178,6 +182,8 @@ export default function Data({ id: propId, setTopMenu }) {
 
   // Use TanStack Query to fetch board data (with server-side sort/filter/search)
   const { data: rawBoardData, isLoading } = useBoard(boardId, debouncedView);
+  // Unfiltered board snapshot for dependency selectors (independent from current view filters/search)
+  const { data: rawBoardDataUnfiltered } = useBoard(boardId, DEFAULT_VIEW);
   const createTaskMutation = useCreateBoardTask();
   const updateBoardMutation = useUpdateBoard();
   const updateTaskMutation = useUpdateBoardTask();
@@ -193,6 +199,11 @@ export default function Data({ id: propId, setTopMenu }) {
     // Normalize old format (objects with user_id/role) to new (separate arrays)
     return normalizeEntityAccess(board);
   }, [rawBoardData]);
+  const boardDataUnfiltered = useMemo(() => {
+    if (!rawBoardDataUnfiltered) return null;
+    const board = Array.isArray(rawBoardDataUnfiltered) ? rawBoardDataUnfiltered[0] : rawBoardDataUnfiltered;
+    return normalizeEntityAccess(board);
+  }, [rawBoardDataUnfiltered]);
 
   const boardDataId = boardData?._id;
   const boardDataSavedView = boardData?.saved_view;
@@ -203,6 +214,7 @@ export default function Data({ id: propId, setTopMenu }) {
   const resolvedPriorityField = useMemo(() => resolveFieldName(boardFieldDefs, "priority"), [boardFieldDefs]);
   const resolvedTypeField = useMemo(() => resolveFieldName(boardFieldDefs, "type"), [boardFieldDefs]);
   const loadedBoardRef = useRef(null);
+  const dependencyFieldsInitRef = useRef({});
   // Load saved view from board when the board changes (once per board)
   useEffect(() => {
     if (boardDataId && boardDataId !== loadedBoardRef.current) {
@@ -221,6 +233,31 @@ export default function Data({ id: propId, setTopMenu }) {
       workflowRules: boardDataAutomations?.workflowRules || [],
     }));
   }, [boardDataId, boardDataAutomations]);
+
+  useEffect(() => {
+    if (!boardId || !boardData?.custom_meta?.fields) return;
+    if (dependencyFieldsInitRef.current[boardId]) return;
+    if (updateBoardMutation.isPending) return;
+    const fields = boardData.custom_meta.fields || [];
+    const missing = DEPENDENCY_FIELD_DEFS.filter((def) => !fields.some((f) => f?.name === def.name));
+    if (!missing.length) {
+      dependencyFieldsInitRef.current[boardId] = true;
+      return;
+    }
+
+    dependencyFieldsInitRef.current[boardId] = true;
+    const nextFields = [...fields, ...missing];
+    updateBoardMutation.mutate({
+      boardId,
+      data: {
+        id: boardId,
+        custom_meta: {
+          ...(boardData.custom_meta || {}),
+          fields: nextFields,
+        },
+      },
+    });
+  }, [boardData?.custom_meta?.fields, boardId, updateBoardMutation]);
 
   // Derive assignee options based on board visibility and sharing:
   // - Private board: only the owner (auto-assigned)
@@ -731,7 +768,11 @@ export default function Data({ id: propId, setTopMenu }) {
       return null; // return null so TableView keeps its previous data prop
     }
 
-    const customFields = boardData.custom_meta?.fields || [];
+    const customFieldsBase = boardData.custom_meta?.fields || [];
+    const customFields = [
+      ...customFieldsBase,
+      ...DEPENDENCY_FIELD_DEFS.filter((def) => !customFieldsBase.some((f) => f?.name === def.name)),
+    ];
     const statusFieldName = resolveFieldName(customFields, "status");
     const normalizeDateValue = (raw) => {
       if (!raw) return null;
@@ -897,6 +938,28 @@ export default function Data({ id: propId, setTopMenu }) {
     return null;
   }, []);
 
+  const dependencyTaskOptions = useMemo(() => {
+    const byId = new Map();
+    (boardDataUnfiltered?.documents || []).forEach((doc, index) => {
+      if (!doc?._id) return;
+      const parentTaskId = `TASK-${String(index + 1).padStart(3, '0')}`;
+      byId.set(String(doc._id), {
+        value: String(doc._id),
+        label: doc.title || doc.name || parentTaskId,
+        taskId: parentTaskId,
+      });
+      (doc.subtasks || []).forEach((sub, si) => {
+        if (!sub?._id) return;
+        byId.set(String(sub._id), {
+          value: String(sub._id),
+          label: sub.title || `Untitled Subtask ${si + 1}`,
+          taskId: `${parentTaskId}.${si + 1}`,
+        });
+      });
+    });
+    return Array.from(byId.values());
+  }, [boardDataUnfiltered?.documents]);
+
   function handleSaveView() {
     if (!boardId) return;
     updateBoardMutation.mutate({ boardId, data: { id: boardId, saved_view: viewState } });
@@ -1048,6 +1111,7 @@ export default function Data({ id: propId, setTopMenu }) {
                 onCellChange={handleCellChange}
                 assigneeOptions={assigneeOptions}
                 groupBy={groupBy}
+                dependencyOptions={dependencyTaskOptions}
                 selectedTaskId={selectedTaskId}
                 onSelectTask={setSelectedTaskId}
               />

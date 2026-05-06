@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Check } from 'lucide-react';
 import { CopyPlus, List, Plus, Trash } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import Modal from '../../modal';
 import { DatePicker } from './datepicker';
 import { DatePickerWithRange } from './daterangepicker';
 import { MultiSelect } from '@/components/ui/multi-select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { debounce, sanitize } from '@/utils/helper';
@@ -46,6 +49,39 @@ const DynamicSelectField = ({ dynamicOptions = [], onChange, value, ...props }) 
   <SelectField options={dynamicOptions} onChange={onChange} value={value} {...props} />
 );
 
+const DependencySelectField = ({ dependencyOptions = [], onChange, value, ...props }) => {
+  const current = dependencyOptions.find((opt) => String(opt.value) === String(value || "")) || null;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="outline-none w-full h-8 justify-start text-left font-normal">
+          {current ? current.label : (value || "Select task")}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Search task..." />
+          <CommandList>
+            <CommandEmpty>No tasks found.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem onSelect={() => onChange("")}>
+                <span className="mr-2 h-4 w-4" />
+                Clear
+              </CommandItem>
+              {dependencyOptions.map((opt) => (
+                <CommandItem key={opt.value} value={`${opt.label} ${opt.taskId || ""}`} onSelect={() => onChange(String(opt.value))}>
+                  <Check className={`mr-2 h-4 w-4 ${String(current?.value || "") === String(opt.value) ? "opacity-100" : "opacity-0"}`} />
+                  <span className="truncate">{opt.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 
 const fieldTypes = [
   { type: 'input', label: 'Input', hasOptions: false },
@@ -66,7 +102,7 @@ const fields = {
   daterange: DatePickerWithRange
 }
 
-const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [] }) => {
+const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [], dependencyOptions = [] }) => {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState(field.label);
   const [actionType, setActionType] = useState('edit');
@@ -75,14 +111,17 @@ const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [
   const [showFieldList, setShowFieldList] = useState(false);
   const [changedField, setChangedField] = useState({});
 
-  const Component = fields[field.type] || Input;
+  const isDependencyField = field.name === 'blocked_by' || field.name === 'depends_on';
+  const Component = isDependencyField ? DependencySelectField : (fields[field.type] || Input);
   const { hasOptions, initialized, source, ...passableProps } = field;
 
   // For dynamic-select fields, inject the live options via a dedicated prop
   // so the component doesn't need to know about the board context itself.
   const extraProps = (field.type === 'dynamic-select')
     ? { dynamicOptions: assigneeOptions }
-    : {};
+    : isDependencyField
+      ? { dependencyOptions }
+      : {};
 
   useEffect(() => {
     if (!field.initialized) {
@@ -233,7 +272,7 @@ const FieldList = ({ handleCreateField }) => {
 }
 
 
-const DynamicInput = ({ initialData, onChange, assigneeOptions = [] }) => {
+const DynamicInput = ({ initialData, onChange, assigneeOptions = [], dependencyOptions = [] }) => {
   const { fields = [], values = {} } = sanitize(initialData);
   const [customFields, setCustomFields] = useState(fields); // List of added fields
   const form = useForm({
@@ -295,7 +334,7 @@ const DynamicInput = ({ initialData, onChange, assigneeOptions = [] }) => {
       <form onChange={handleFormChange} onSubmit={e => e.preventDefault()}>
         <table className='w-full mt-3'>
           <tbody>
-            {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} handleFormChange={handleFormChange} assigneeOptions={assigneeOptions} />
+            {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} handleFormChange={handleFormChange} assigneeOptions={assigneeOptions} dependencyOptions={dependencyOptions} />
             )}
           </tbody>
         </table>
