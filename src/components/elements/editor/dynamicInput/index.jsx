@@ -124,7 +124,9 @@ const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [
       : {};
 
   useEffect(() => {
-    if (!field.initialized) {
+    // Auto-open only for freshly created fields in the current session.
+    // Persisted board fields often have `initialized` undefined and should not pop open on load.
+    if (field.initialized === false) {
       setOpen(true);
     }
   }, [])

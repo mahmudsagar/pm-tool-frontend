@@ -86,15 +86,33 @@ export const useDeleteEntity = () => {
       // Update Zustand sidebar store immediately
       deleteHandler(variables.entityId, variables.entityType);
 
+      const deletedId = String(variables.entityId || '');
+      const shouldSkipDeletedDetailQuery = (query) => {
+        const [root, id] = query.queryKey || [];
+        if (!deletedId) return false;
+        if (variables.entityType === 'board' && root === 'boards' && String(id || '') === deletedId) return true;
+        if (variables.entityType === 'page' && root === 'documents' && String(id || '') === deletedId) return true;
+        if (variables.entityType === 'space' && root === 'spaces' && String(id || '') === deletedId) return true;
+        if (variables.entityType === 'folder' && root === 'folders' && String(id || '') === deletedId) return true;
+        if (variables.entityType === 'group' && root === 'groups' && String(id || '') === deletedId) return true;
+        return false;
+      };
+
+      // Prevent refetching the just-deleted detail query (causes one extra 403/404 request).
+      queryClient.cancelQueries({ predicate: shouldSkipDeletedDetailQuery });
+      queryClient.removeQueries({ predicate: shouldSkipDeletedDetailQuery });
+
       // Invalidate all queries starting with these keys (includes parameterized queries)
       queryClient.invalidateQueries({ 
         predicate: (query) => 
-          query.queryKey[0] === 'spaces' ||
-          query.queryKey[0] === 'files' ||
-          query.queryKey[0] === 'folders' ||
-          query.queryKey[0] === 'groups' ||
-          query.queryKey[0] === 'documents' ||
-          query.queryKey[0] === 'boards'
+          !shouldSkipDeletedDetailQuery(query) && (
+            query.queryKey[0] === 'spaces' ||
+            query.queryKey[0] === 'files' ||
+            query.queryKey[0] === 'folders' ||
+            query.queryKey[0] === 'groups' ||
+            query.queryKey[0] === 'documents' ||
+            query.queryKey[0] === 'boards'
+          )
       });
       
       toast({

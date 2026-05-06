@@ -13,6 +13,24 @@ const Delete = ({ fileId, fileType, onSuccess, wrapperClassName = "" }) => {
   const { deleteHandler } = useFileManagerStore(state => state);
   const { confirm } = useDialog();
 
+  const getSanitizedSearchAfterDelete = () => {
+    const searchParams = new URLSearchParams(location.search || '');
+    const routeKey = `/${fileType}/${fileId}`;
+    let changed = false;
+    for (const [key, value] of Array.from(searchParams.entries())) {
+      if (
+        key.includes(routeKey) ||
+        value === routeKey ||
+        key.includes(fileId) ||
+        value === fileId
+      ) {
+        searchParams.delete(key);
+        changed = true;
+      }
+    }
+    return changed ? `?${searchParams.toString()}` : null;
+  };
+
   const handleDelete = () => {
     // Defer so the dropdown finishes closing before AlertDialog opens,
     // preventing the aria-hidden conflict on the still-focused dropdown content.
@@ -43,9 +61,19 @@ const Delete = ({ fileId, fileType, onSuccess, wrapperClassName = "" }) => {
           try {
             deleteHandler(fileId, fileType);
 
-            const isViewingDeletedItem = id === fileId || location.pathname.includes(fileId);
+            const isViewingDeletedItem =
+              id === fileId ||
+              location.pathname.includes(fileId) ||
+              location.pathname.includes(`/${fileType}/${fileId}`) ||
+              location.search.includes(`/${fileType}/${fileId}`) ||
+              location.search.includes(fileId);
             if (isViewingDeletedItem) {
-              navigate('/');
+              const cleanedSearch = getSanitizedSearchAfterDelete();
+              if (cleanedSearch !== null) {
+                navigate({ pathname: '/', search: cleanedSearch }, { replace: true });
+              } else {
+                navigate('/', { replace: true });
+              }
             }
 
             if (typeof onSuccess === 'function') {
