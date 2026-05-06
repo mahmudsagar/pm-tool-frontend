@@ -1,0 +1,500 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:13px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.tabs{display:flex;gap:2px;padding-bottom:12px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:16px}
+.tab{padding:5px 14px;font-size:12px;font-weight:500;border-radius:var(--border-radius-md);border:0.5px solid transparent;cursor:pointer;color:var(--color-text-secondary);background:transparent}
+.tab.on{background:var(--color-background-secondary);border-color:var(--color-border-secondary);color:var(--color-text-primary)}
+.view{display:none}.view.on{display:block}
+.av{width:22px;height:22px;border-radius:50%;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.av-b{background:#E6F1FB;color:#185FA5}.av-t{background:#E1F5EE;color:#0F6E56}
+.av-a{background:#FAEEDA;color:#854F0B}.av-p{background:#EEEDFE;color:#534AB7}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.bd-blue{background:#E6F1FB;color:#0C447C}.bd-teal{background:#E1F5EE;color:#085041}
+.bd-amber{background:#FAEEDA;color:#633806}.bd-red{background:#FCEBEB;color:#791F1F}
+.bd-green{background:#EAF3DE;color:#27500A}.bd-gray{background:#F1EFE8;color:#444441}
+.bd-purple{background:#EEEDFE;color:#3C3489}
+.pri-high{width:8px;height:8px;border-radius:50%;background:#E24B4A;flex-shrink:0}
+.pri-med{width:8px;height:8px;border-radius:50%;background:#EF9F27;flex-shrink:0}
+.pri-low{width:8px;height:8px;border-radius:50%;background:#639922;flex-shrink:0}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{padding:7px 10px;text-align:left;font-size:11px;font-weight:500;color:var(--color-text-tertiary);border-bottom:0.5px solid var(--color-border-tertiary);letter-spacing:.04em;background:var(--color-background-secondary)}
+td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle}
+tr:hover td{background:var(--color-background-secondary)}
+.sub-row td{background:var(--color-background-tertiary)}
+.sub-row td:first-child{padding-left:28px}
+.sub-row:hover td{background:var(--color-background-secondary)}
+.expand-btn{background:none;border:none;cursor:pointer;font-size:11px;color:var(--color-text-tertiary);margin-right:4px;width:14px;display:inline-block;text-align:center}
+.task-name{font-weight:500;font-size:12px}
+.sub-name{font-size:12px;color:var(--color-text-secondary)}
+.prog-track{height:4px;background:var(--color-border-tertiary);border-radius:2px;width:60px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px}
+.pf-b{background:#378ADD}.pf-g{background:#639922}.pf-a{background:#EF9F27}
+
+/* ── TIMELINE ── */
+.tl-grid{display:grid;grid-template-columns:170px 1fr}
+.tl-head-l{padding:6px 10px;font-size:11px;font-weight:500;color:var(--color-text-tertiary);border-bottom:0.5px solid var(--color-border-tertiary);border-right:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);letter-spacing:.04em}
+.tl-months{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)}
+.tl-mo{padding:6px 8px;font-size:11px;font-weight:500;color:var(--color-text-secondary);border-right:0.5px solid var(--color-border-tertiary)}
+.tl-lbl{padding:0 10px;border-bottom:0.5px solid var(--color-border-tertiary);border-right:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:6px;min-height:40px}
+.tl-lbl.sub{background:var(--color-background-tertiary);padding-left:24px}
+.tl-bars{position:relative;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary)}
+.tl-bars.sub{background:var(--color-background-tertiary)}
+.tl-cols{display:grid;grid-template-columns:repeat(5,1fr);height:100%}
+.tl-c{border-right:0.5px solid var(--color-border-tertiary);height:100%}
+.tl-c.now{background:rgba(56,138,221,0.05)}
+.bar{position:absolute;height:18px;top:11px;border-radius:4px;display:flex;align-items:center;padding:0 7px;font-size:11px;font-weight:500;overflow:hidden;white-space:nowrap}
+.bar-b{background:#B5D4F4;color:#0C447C}.bar-t{background:#9FE1CB;color:#085041}
+.bar-a{background:#FAC775;color:#633806}.bar-p{background:#CECBF6;color:#3C3489}
+.bar-g{background:#C0DD97;color:#27500A}.bar-r{background:#F7C1C1;color:#791F1F}
+.today-l{position:absolute;top:0;bottom:0;width:1.5px;background:#378ADD;z-index:2;left:38%}
+.today-d{position:absolute;top:0;left:-4px;width:9px;height:9px;border-radius:50%;background:#378ADD}
+.ms-dia{position:absolute;top:9px;width:14px;height:14px;transform:rotate(45deg);border-radius:2px;background:#378ADD}
+.tl-sub-toggle{cursor:pointer;font-size:10px;color:var(--color-text-tertiary);background:none;border:none;margin-left:2px}
+
+/* ── CALENDAR ── */
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.cal-dow{text-align:center;font-size:11px;font-weight:500;color:var(--color-text-tertiary);padding:3px 0;letter-spacing:.04em}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-cell{min-height:80px;border-radius:6px;border:0.5px solid var(--color-border-tertiary);padding:5px;background:var(--color-background-primary)}
+.cal-cell.om{background:var(--color-background-tertiary);border-color:transparent}
+.cal-cell.td{border-color:#378ADD;border-width:1.5px}
+.cdate{font-size:11px;font-weight:500;color:var(--color-text-secondary);margin-bottom:3px}
+.cdate.tn{width:18px;height:18px;background:#378ADD;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;margin-bottom:3px}
+.cev{font-size:10px;font-weight:500;border-radius:3px;padding:1px 5px;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cev-b{background:#E6F1FB;color:#0C447C}.cev-t{background:#E1F5EE;color:#085041}
+.cev-a{background:#FAEEDA;color:#633806}.cev-p{background:#EEEDFE;color:#3C3489}
+.cev-g{background:#EAF3DE;color:#27500A}.cev-r{background:#FCEBEB;color:#791F1F}
+.more-ev{font-size:10px;color:var(--color-text-tertiary);padding:1px 4px}
+
+/* ── KANBAN ── */
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:start}
+.k-col{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:10px}
+.k-col-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.k-col-title{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.k-count{font-size:11px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:20px;padding:1px 7px;color:var(--color-text-secondary)}
+.k-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px;margin-bottom:8px}
+.k-card-title{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px;line-height:1.4}
+.k-meta{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.k-subtasks{margin-top:6px;border-top:0.5px solid var(--color-border-tertiary);padding-top:6px}
+.k-sub{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);margin-bottom:3px}
+.k-check{width:12px;height:12px;border-radius:3px;border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.k-check.done{background:#639922;border-color:#639922;color:#EAF3DE;font-size:9px}
+.k-prog{height:3px;background:var(--color-border-tertiary);border-radius:2px;margin-top:6px;overflow:hidden}
+.k-prog-fill{height:100%;border-radius:2px}
+.k-add{width:100%;padding:6px;font-size:11px;color:var(--color-text-tertiary);background:transparent;border:0.5px dashed var(--color-border-tertiary);border-radius:var(--border-radius-md);cursor:pointer;text-align:center}
+/* toolbar */
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.tl-left{display:flex;align-items:center;gap:8px}
+.navbtn{width:24px;height:24px;border-radius:6px;border:0.5px solid var(--color-border-tertiary);background:transparent;cursor:pointer;font-size:13px;color:var(--color-text-secondary);display:flex;align-items:center;justify-content:center}
+.period{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.zbtn-wrap{display:flex;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden}
+.zbtn{padding:4px 10px;font-size:11px;border:none;background:transparent;cursor:pointer;color:var(--color-text-secondary)}
+.zbtn.on{background:var(--color-background-secondary);color:var(--color-text-primary)}
+.add-btn{padding:5px 12px;font-size:12px;font-weight:500;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;color:var(--color-text-primary)}
+</style>
+
+<h2 class="sr-only">PM tool — four views: table, timeline, calendar, kanban with tasks and subtasks</h2>
+<div style="padding:1rem 0">
+
+<div class="tabs">
+  <button class="tab on" onclick="sw('table',this)">Table</button>
+  <button class="tab" onclick="sw('timeline',this)">Timeline</button>
+  <button class="tab" onclick="sw('calendar',this)">Calendar</button>
+  <button class="tab" onclick="sw('kanban',this)">Kanban</button>
+</div>
+
+<!-- ══════════ TABLE ══════════ -->
+<div class="view on" id="table">
+<div class="toolbar">
+  <div class="tl-left">
+    <span class="period">Website Relaunch · Q2 2026</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="add-btn">Filter</button>
+    <button class="add-btn">Group by</button>
+    <button class="add-btn">+ Add task</button>
+  </div>
+</div>
+<div class="tbl-wrap">
+<table>
+<thead>
+<tr>
+  <th style="width:32%">Task</th>
+  <th style="width:11%">Status</th>
+  <th style="width:9%">Priority</th>
+  <th style="width:11%">Assignee</th>
+  <th style="width:10%">Due date</th>
+  <th style="width:10%">Progress</th>
+  <th style="width:9%">Est. hrs</th>
+  <th style="width:8%">Tags</th>
+</tr>
+</thead>
+<tbody>
+<!-- Task 1 -->
+<tr>
+  <td><button class="expand-btn" onclick="tog('t1')">▼</button><span class="task-name">Discovery & research</span></td>
+  <td><span class="badge bd-green">Done</span></td>
+  <td><div style="display:flex;align-items:center;gap:5px"><div class="pri-high"></div>High</div></td>
+  <td><div style="display:flex;align-items:center;gap:5px"><div class="av av-b">SR</div>Sara</div></td>
+  <td style="color:var(--color-text-secondary)">Apr 30</td>
+  <td><div class="prog-track"><div class="prog-fill pf-g" style="width:100%"></div></div></td>
+  <td style="color:var(--color-text-secondary)">24h</td>
+  <td><span class="badge bd-blue">UX</span></td>
+</tr>
+<tr class="sub-row" data-parent="t1"><td><span class="sub-name">Stakeholder interviews</span></td><td><span class="badge bd-green">Done</span></td><td><div class="pri-high"></div></td><td><div class="av av-b">SR</div></td><td style="color:var(--color-text-secondary)">Apr 20</td><td><div class="prog-track"><div class="prog-fill pf-g" style="width:100%"></div></div></td><td style="color:var(--color-text-secondary)">8h</td><td></td></tr>
+<tr class="sub-row" data-parent="t1"><td><span class="sub-name">Competitor analysis</span></td><td><span class="badge bd-green">Done</span></td><td><div class="pri-med"></div></td><td><div class="av av-b">SR</div></td><td style="color:var(--color-text-secondary)">Apr 28</td><td><div class="prog-track"><div class="prog-fill pf-g" style="width:100%"></div></div></td><td style="color:var(--color-text-secondary)">10h</td><td></td></tr>
+<tr class="sub-row" data-parent="t1"><td><span class="sub-name">User persona docs</span></td><td><span class="badge bd-green">Done</span></td><td><div class="pri-med"></div></td><td><div class="av av-b">SR</div></td><td style="color:var(--color-text-secondary)">Apr 30</td><td><div class="prog-track"><div class="prog-fill pf-g" style="width:100%"></div></div></td><td style="color:var(--color-text-secondary)">6h</td><td></td></tr>
+<!-- Task 2 -->
+<tr>
+  <td><button class="expand-btn" onclick="tog('t2')">▼</button><span class="task-name">UI Design</span></td>
+  <td><span class="badge bd-blue">In progress</span></td>
+  <td><div style="display:flex;align-items:center;gap:5px"><div class="pri-high"></div>High</div></td>
+  <td><div style="display:flex;align-items:center;gap:5px"><div class="av av-t">MK</div>Mia</div></td>
+  <td style="color:var(--color-text-secondary)">Jun 14</td>
+  <td><div class="prog-track"><div class="prog-fill pf-b" style="width:60%"></div></div></td>
+  <td style="color:var(--color-text-secondary)">48h</td>
+  <td><span class="badge bd-purple">Design</span></td>
+</tr>
+<tr class="sub-row" data-parent="t2"><td><span class="sub-name">Wireframes</span></td><td><span class="badge bd-green">Done</span></td><td><div class="pri-high"></div></td><td><div class="av av-t">MK</div></td><td style="color:var(--color-text-secondary)">May 20</td><td><div class="prog-track"><div class="prog-fill pf-g" style="width:100%"></div></div></td><td style="color:var(--color-text-secondary)">16h</td><td></td></tr>
+<tr class="sub-row" data-parent="t2"><td><span class="sub-name">High-fidelity mockups</span></td><td><span class="badge bd-blue">In progress</span></td><td><div class="pri-high"></div></td><td><div class="av av-t">MK</div></td><td style="color:var(--color-text-secondary)">Jun 5</td><td><div class="prog-track"><div class="prog-fill pf-b" style="width:50%"></div></div></td><td style="color:var(--color-text-secondary)">22h</td><td></td></tr>
+<tr class="sub-row" data-parent="t2"><td><span class="sub-name">Design system tokens</span></td><td><span class="badge bd-gray">Backlog</span></td><td><div class="pri-low"></div></td><td><div class="av av-t">MK</div></td><td style="color:var(--color-text-secondary)">Jun 14</td><td><div class="prog-track"><div class="prog-fill pf-b" style="width:0%"></div></div></td><td style="color:var(--color-text-secondary)">10h</td><td></td></tr>
+<!-- Task 3 -->
+<tr>
+  <td><button class="expand-btn" onclick="tog('t3')">▼</button><span class="task-name">Frontend build</span></td>
+  <td><span class="badge bd-gray">Backlog</span></td>
+  <td><div style="display:flex;align-items:center;gap:5px"><div class="pri-high"></div>High</div></td>
+  <td><div style="display:flex;align-items:center;gap:5px"><div class="av av-a">JL</div>James</div></td>
+  <td style="color:var(--color-text-secondary)">Aug 15</td>
+  <td><div class="prog-track"><div class="prog-fill pf-b" style="width:0%"></div></div></td>
+  <td style="color:var(--color-text-secondary)">80h</td>
+  <td><span class="badge bd-teal">Eng</span></td>
+</tr>
+<tr class="sub-row" data-parent="t3" style="display:none"><td><span class="sub-name">Component library</span></td><td><span class="badge bd-gray">Backlog</span></td><td><div class="pri-high"></div></td><td><div class="av av-a">JL</div></td><td style="color:var(--color-text-secondary)">Jul 10</td><td><div class="prog-track"><div class="prog-fill pf-b" style="width:0%"></div></div></td><td style="color:var(--color-text-secondary)">30h</td><td></td></tr>
+<tr class="sub-row" data-parent="t3" style="display:none"><td><span class="sub-name">Page templates</span></td><td><span class="badge bd-gray">Backlog</span></td><td><div class="pri-med"></div></td><td><div class="av av-a">JL</div></td><td style="color:var(--color-text-secondary)">Aug 1</td><td><div class="prog-track"><div class="prog-fill pf-b" style="width:0%"></div></div></td><td style="color:var(--color-text-secondary)">30h</td><td></td></tr>
+<!-- Task 4 -->
+<tr>
+  <td><button class="expand-btn" onclick="tog('t4')">▶</button><span class="task-name">QA & testing</span></td>
+  <td><span class="badge bd-red">Blocked</span></td>
+  <td><div style="display:flex;align-items:center;gap:5px"><div class="pri-high"></div>High</div></td>
+  <td><div style="display:flex;align-items:center;gap:5px"><div class="av av-p">NT</div>Nina</div></td>
+  <td style="color:#E24B4A;font-weight:500">Sep 1</td>
+  <td><div class="prog-track"><div class="prog-fill pf-b" style="width:0%"></div></div></td>
+  <td style="color:var(--color-text-secondary)">40h</td>
+  <td><span class="badge bd-red">QA</span></td>
+</tr>
+<tr class="sub-row" data-parent="t4" style="display:none"><td><span class="sub-name">Test case writing</span></td><td><span class="badge bd-red">Blocked</span></td><td><div class="pri-high"></div></td><td><div class="av av-p">NT</div></td><td style="color:var(--color-text-secondary)">Aug 20</td><td></td><td style="color:var(--color-text-secondary)">15h</td><td></td></tr>
+<tr class="sub-row" data-parent="t4" style="display:none"><td><span class="sub-name">Regression testing</span></td><td><span class="badge bd-gray">Backlog</span></td><td><div class="pri-high"></div></td><td><div class="av av-p">NT</div></td><td style="color:var(--color-text-secondary)">Sep 1</td><td></td><td style="color:var(--color-text-secondary)">25h</td><td></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- ══════════ TIMELINE ══════════ -->
+<div class="view" id="timeline">
+<div class="toolbar">
+  <div class="tl-left">
+    <div style="display:flex;gap:3px"><button class="navbtn">&#8592;</button><button class="navbtn">&#8594;</button></div>
+    <span class="period">Apr – Aug 2026</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <div class="zbtn-wrap"><button class="zbtn">Week</button><button class="zbtn on">Month</button><button class="zbtn">Quarter</button></div>
+    <button class="add-btn">+ Add task</button>
+  </div>
+</div>
+<div style="overflow-x:auto">
+<div class="tl-grid" style="min-width:560px">
+  <div class="tl-head-l">Task / Assignee</div>
+  <div class="tl-months">
+    <div class="tl-mo">Apr</div><div class="tl-mo now" style="font-weight:500;color:var(--color-text-primary)">May ▸</div>
+    <div class="tl-mo">Jun</div><div class="tl-mo">Jul</div><div class="tl-mo" style="border-right:none">Aug</div>
+  </div>
+
+  <!-- Discovery parent -->
+  <div class="tl-lbl">
+    <button class="tl-sub-toggle" onclick="togTL('tl-disc')">▼</button>
+    <div class="av av-b">SR</div><div><div style="font-size:12px;font-weight:500">Discovery</div><div style="font-size:10px;color:var(--color-text-tertiary)">Sara R.</div></div>
+  </div>
+  <div class="tl-bars" style="min-height:40px">
+    <div class="tl-cols"><div class="tl-c"></div><div class="tl-c now"></div><div class="tl-c"></div><div class="tl-c"></div><div class="tl-c" style="border-right:none"></div></div>
+    <div class="bar bar-g" style="left:2%;width:26%">Discovery & research</div>
+    <div class="today-l"><div class="today-d"></div></div>
+  </div>
+  <!-- Discovery subs -->
+  <div class="tl-lbl sub" data-tl="tl-disc" style="min-height:36px"><div style="font-size:11px;color:var(--color-text-secondary)">Stakeholder interviews</div></div>
+  <div class="tl-bars sub" data-tl="tl-disc" style="min-height:36px">
+    <div class="tl-cols"><div class="tl-c"></div><div class="tl-c now"></div><div class="tl-c"></div><div class="tl-c"></div><div class="tl-c" style="border-right:none"></div></div>
+    <div class="bar bar-g" style="left:2%;width:12%;font-size:10px">Interviews</div>
+    <div class="today-l"><div class="today-d"></div></div>
+  </div>
+  <div class="tl-lbl sub" data-tl="tl-disc" style="min-height:36px"><div style="font-size:11px;color:var(--color-text-secondary)">Competitor analysis</div></div>
+  <div class="tl-bars sub" data-tl="tl-disc" style="min-height:36px">
+    <div class="tl-cols"><div class="tl-c"></div><div class="tl-c now"></div><div class="tl-c"></div><div class="tl-c"></div><div class="tl-c" style="border-right:none"></div></div>
+    <div class="bar bar-g" style="left:12%;width:16%;font-size:10px">Analysis</div>
+    <div class="today-l"><div class="today-d"></div></div>
+  </div>
+
+  <!-- Design parent -->
+  <div class="tl-lbl">
+    <button class="tl-sub-toggle" onclick="togTL('tl-des')">▼</button>
+    <div class="av av-t">MK</div><div><div style="font-size:12px;font-weight:500">UI Design</div><div style="font-size:10px;color:var(--color-text-tertiary)">Mia K.</div></div>
+  </div>
+  <div class="tl-bars" style="min-height:40px">
+    <div class="tl-cols"><div class="tl-c"></div><div class="tl-c now"></div><div class="tl-c"></div><div class="tl-c"></div><div class="tl-c" style="border-right:none"></div></div>
+    <div class="bar bar-b" style="left:26%;width:32%">UI Design</div>
+    <div class="ms-dia" style="left:calc(57% - 7px)"></div>
+    <div class="today-l"><div class="today-d"></div></div>
+  </div>
+  <div class="tl-lbl sub" data-tl="tl-des" style="min-height:36px"><div style="font-size:11px;color:var(--color-text-secondary)">Wireframes</div></div>
+  <div class="tl-bars sub" data-tl="tl-des" style="min-height:36px">
+    <div class="tl-cols"><div class="tl-c"></div><div class="tl-c now"></div><div class="tl-c"></div><div class="tl-c"></div><div class="tl-c" style="border-right:none"></div></div>
+    <div class="bar bar-b" style="left:26%;width:14%;font-size:10px">Wireframes</div>
+    <div class="today-l"><div class="today-d"></div></div>
+  </div>
+  <div class="tl-lbl sub" data-tl="tl-des" style="min-height:36px"><div style="font-size:11px;color:var(--color-text-secondary)">Hi-fi mockups</div></div>
+  <div class="tl-bars sub" data-tl="tl-des" style="min-height:36px">
+    <div class="tl-cols"><div class="tl-c"></div><div class="tl-c now"></div><div class="tl-c"></div><div class="tl-c"></div><div class="tl-c" style="border-right:none"></div></div>
+    <div class="bar bar-b" style="left:38%;width:19%;font-size:10px">Hi-fi</div>
+    <div class="today-l"><div class="today-d"></div></div>
+  </div>
+
+  <!-- Eng parent -->
+  <div class="tl-lbl">
+    <button class="tl-sub-toggle" onclick="togTL('tl-eng')">▶</button>
+    <div class="av av-a">JL</div><div><div style="font-size:12px;font-weight:500">Frontend build</div><div style="font-size:10px;color:var(--color-text-tertiary)">James L.</div></div>
+  </div>
+  <div class="tl-bars" style="min-height:40px">
+    <div class="tl-cols"><div class="tl-c"></div><div class="tl-c now"></div><div class="tl-c"></div><div class="tl-c"></div><div class="tl-c" style="border-right:none"></div></div>
+    <div class="bar bar-a" style="left:56%;width:36%">Frontend build</div>
+    <div class="today-l"><div class="today-d"></div></div>
+  </div>
+  <div class="tl-lbl sub" data-tl="tl-eng" style="display:none;min-height:36px"><div style="font-size:11px;color:var(--color-text-secondary)">Component library</div></div>
+  <div class="tl-bars sub" data-tl="tl-eng" style="display:none;min-height:36px">
+    <div class="tl-cols"><div class="tl-c"></div><div class="tl-c now"></div><div class="tl-c"></div><div class="tl-c"></div><div class="tl-c" style="border-right:none"></div></div>
+    <div class="bar bar-a" style="left:56%;width:20%;font-size:10px">Components</div>
+    <div class="today-l"><div class="today-d"></div></div>
+  </div>
+
+  <!-- QA parent -->
+  <div class="tl-lbl">
+    <button class="tl-sub-toggle">—</button>
+    <div class="av av-p">NT</div><div><div style="font-size:12px;font-weight:500">QA & testing</div><div style="font-size:10px;color:var(--color-text-tertiary)">Nina T.</div></div>
+  </div>
+  <div class="tl-bars" style="min-height:40px">
+    <div class="tl-cols"><div class="tl-c"></div><div class="tl-c now"></div><div class="tl-c"></div><div class="tl-c"></div><div class="tl-c" style="border-right:none"></div></div>
+    <div class="bar bar-p" style="left:78%;width:20%">QA</div>
+    <div class="ms-dia" style="left:calc(97% - 7px);background:#EF9F27"></div>
+    <div class="today-l"><div class="today-d"></div></div>
+  </div>
+</div>
+</div>
+<div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#C0DD97"></div>Done</div>
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#B5D4F4"></div>In progress</div>
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#FAC775"></div>Backlog</div>
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#CECBF6"></div>Blocked</div>
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;transform:rotate(45deg);border-radius:2px;background:#378ADD"></div>Milestone</div>
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:14px;height:1.5px;background:#378ADD"></div>Today</div>
+</div>
+</div>
+
+<!-- ══════════ CALENDAR ══════════ -->
+<div class="view" id="calendar">
+<div class="toolbar">
+  <div class="tl-left">
+    <div style="display:flex;gap:3px"><button class="navbtn">&#8592;</button><button class="navbtn">&#8594;</button></div>
+    <span class="period">May 2026</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <div class="zbtn-wrap"><button class="zbtn">Day</button><button class="zbtn">Week</button><button class="zbtn on">Month</button></div>
+    <button class="add-btn">+ Event</button>
+  </div>
+</div>
+<div class="cal-dow-row">
+  <div class="cal-dow">SUN</div><div class="cal-dow">MON</div><div class="cal-dow">TUE</div>
+  <div class="cal-dow">WED</div><div class="cal-dow">THU</div><div class="cal-dow">FRI</div><div class="cal-dow">SAT</div>
+</div>
+<div class="cal-grid">
+  <div class="cal-cell om"><div class="cdate">26</div></div>
+  <div class="cal-cell om"><div class="cdate">27</div></div>
+  <div class="cal-cell om"><div class="cdate">28</div></div>
+  <div class="cal-cell om"><div class="cdate">29</div></div>
+  <div class="cal-cell om"><div class="cdate">30</div></div>
+  <div class="cal-cell"><div class="cdate">1</div></div>
+  <div class="cal-cell"><div class="cdate">2</div></div>
+  <div class="cal-cell"><div class="cdate">3</div></div>
+  <div class="cal-cell"><div class="cdate">4</div><div class="cev cev-b">Sprint 7 kick-off</div></div>
+  <div class="cal-cell"><div class="cdate">5</div><div class="cev cev-g">Wireframe handoff</div></div>
+  <div class="cal-cell"><div class="cdate">6</div></div>
+  <div class="cal-cell"><div class="cdate">7</div><div class="cev cev-t">Design review</div></div>
+  <div class="cal-cell"><div class="cdate">8</div></div>
+  <div class="cal-cell"><div class="cdate">9</div></div>
+  <div class="cal-cell"><div class="cdate">10</div></div>
+  <div class="cal-cell"><div class="cdate">11</div><div class="cev cev-a">Stakeholder sync</div><div class="cev cev-p">Retro</div></div>
+  <div class="cal-cell"><div class="cdate">12</div></div>
+  <div class="cal-cell"><div class="cdate">13</div></div>
+  <div class="cal-cell"><div class="cdate">14</div><div class="cev cev-b">Eng planning</div></div>
+  <div class="cal-cell"><div class="cdate">15</div></div>
+  <div class="cal-cell"><div class="cdate">16</div></div>
+  <div class="cal-cell td"><div class="cdate tn">17</div><div class="cev cev-r">QA kick-off</div><div class="cev cev-b">Hi-fi mockup ▸</div></div>
+  <div class="cal-cell"><div class="cdate">18</div></div>
+  <div class="cal-cell"><div class="cdate">19</div><div class="cev cev-b">Sprint demo</div></div>
+  <div class="cal-cell"><div class="cdate">20</div></div>
+  <div class="cal-cell"><div class="cdate">21</div></div>
+  <div class="cal-cell"><div class="cdate">22</div></div>
+  <div class="cal-cell"><div class="cdate">23</div></div>
+  <div class="cal-cell"><div class="cdate">24</div></div>
+  <div class="cal-cell"><div class="cdate">25</div></div>
+  <div class="cal-cell"><div class="cdate">26</div></div>
+  <div class="cal-cell"><div class="cdate">27</div><div class="cev cev-g">Beta launch</div><div class="cev cev-a">All-hands</div></div>
+  <div class="cal-cell"><div class="cdate">28</div></div>
+  <div class="cal-cell"><div class="cdate">29</div></div>
+  <div class="cal-cell"><div class="cdate">30</div></div>
+  <div class="cal-cell"><div class="cdate">31</div></div>
+  <div class="cal-cell om"><div class="cdate">1</div></div>
+  <div class="cal-cell om"><div class="cdate">2</div></div>
+  <div class="cal-cell om"><div class="cdate">3</div></div>
+  <div class="cal-cell om"><div class="cdate">4</div></div>
+  <div class="cal-cell om"><div class="cdate">5</div></div>
+  <div class="cal-cell om"><div class="cdate">6</div></div>
+</div>
+<div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#E6F1FB;border:0.5px solid #B5D4F4"></div>Sprint event</div>
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#EAF3DE;border:0.5px solid #C0DD97"></div>Milestone</div>
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#FAEEDA;border:0.5px solid #FAC775"></div>Meeting</div>
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:10px;height:10px;border-radius:2px;background:#FCEBEB;border:0.5px solid #F7C1C1"></div>Blocked / urgent</div>
+  <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)"><div style="width:18px;height:18px;border-radius:50%;background:#378ADD;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px">17</div>Today</div>
+</div>
+</div>
+
+<!-- ══════════ KANBAN ══════════ -->
+<div class="view" id="kanban">
+<div class="toolbar">
+  <div class="tl-left"><span class="period">Website Relaunch · Kanban</span></div>
+  <div style="display:flex;gap:8px">
+    <button class="add-btn">Group by assignee</button>
+    <button class="add-btn">+ Add card</button>
+  </div>
+</div>
+<div class="kanban">
+  <!-- Backlog -->
+  <div class="k-col">
+    <div class="k-col-head"><span class="k-col-title">Backlog</span><span class="k-count">3</span></div>
+    <div class="k-card">
+      <div class="k-card-title">Component library setup</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Build base components in Storybook</div>
+      <div class="k-subtasks">
+        <div class="k-sub"><div class="k-check"></div>Buttons & inputs</div>
+        <div class="k-sub"><div class="k-check"></div>Modal & drawer</div>
+        <div class="k-sub"><div class="k-check"></div>Data table</div>
+      </div>
+      <div class="k-prog"><div class="k-prog-fill" style="width:0%;background:#639922"></div></div>
+      <div class="k-meta"><div class="av av-a">JL</div><div class="pri-med"></div><span class="badge bd-teal">Eng</span><span style="font-size:11px;color:var(--color-text-tertiary);margin-left:auto">Aug 1</span></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-title">Design system tokens</div>
+      <div class="k-meta"><div class="av av-t">MK</div><div class="pri-low"></div><span class="badge bd-purple">Design</span><span style="font-size:11px;color:var(--color-text-tertiary);margin-left:auto">Jun 14</span></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-title">Regression test plan</div>
+      <div class="k-meta"><div class="av av-p">NT</div><div class="pri-high"></div><span class="badge bd-red">QA</span><span style="font-size:11px;color:var(--color-text-tertiary);margin-left:auto">Sep 1</span></div>
+    </div>
+    <button class="k-add">+ Add card</button>
+  </div>
+  <!-- In progress -->
+  <div class="k-col">
+    <div class="k-col-head"><span class="k-col-title">In progress</span><span class="k-count">2</span></div>
+    <div class="k-card">
+      <div class="k-card-title">High-fidelity mockups</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Homepage, product pages, checkout flow</div>
+      <div class="k-subtasks">
+        <div class="k-sub"><div class="k-check done">✓</div>Homepage hero</div>
+        <div class="k-sub"><div class="k-check done">✓</div>Navigation states</div>
+        <div class="k-sub"><div class="k-check"></div>Product listing page</div>
+        <div class="k-sub"><div class="k-check"></div>Checkout flow</div>
+      </div>
+      <div class="k-prog"><div class="k-prog-fill" style="width:50%;background:#378ADD"></div></div>
+      <div class="k-meta"><div class="av av-t">MK</div><div class="pri-high"></div><span class="badge bd-purple">Design</span><span style="font-size:11px;color:var(--color-text-tertiary);margin-left:auto">Jun 5</span></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-title">Content audit & migration</div>
+      <div class="k-subtasks">
+        <div class="k-sub"><div class="k-check done">✓</div>Page inventory spreadsheet</div>
+        <div class="k-sub"><div class="k-check"></div>SEO metadata mapping</div>
+      </div>
+      <div class="k-prog"><div class="k-prog-fill" style="width:50%;background:#378ADD"></div></div>
+      <div class="k-meta"><div class="av av-b">SR</div><div class="pri-med"></div><span class="badge bd-blue">UX</span><span style="font-size:11px;color:var(--color-text-tertiary);margin-left:auto">May 30</span></div>
+    </div>
+    <button class="k-add">+ Add card</button>
+  </div>
+  <!-- Review -->
+  <div class="k-col">
+    <div class="k-col-head"><span class="k-col-title">In review</span><span class="k-count">2</span></div>
+    <div class="k-card">
+      <div class="k-card-title">Wireframes — all pages</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">Awaiting sign-off from product lead</div>
+      <div class="k-subtasks">
+        <div class="k-sub"><div class="k-check done">✓</div>Desktop flows</div>
+        <div class="k-sub"><div class="k-check done">✓</div>Mobile flows</div>
+      </div>
+      <div class="k-prog"><div class="k-prog-fill" style="width:100%;background:#639922"></div></div>
+      <div class="k-meta"><div class="av av-t">MK</div><div class="pri-high"></div><span class="badge bd-purple">Design</span><span style="font-size:11px;color:var(--color-text-tertiary);margin-left:auto">May 20</span></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-title">User persona documents</div>
+      <div class="k-meta"><div class="av av-b">SR</div><div class="pri-med"></div><span class="badge bd-blue">UX</span><span style="font-size:11px;color:var(--color-text-tertiary);margin-left:auto">Apr 30</span></div>
+    </div>
+    <button class="k-add">+ Add card</button>
+  </div>
+  <!-- Done -->
+  <div class="k-col">
+    <div class="k-col-head"><span class="k-col-title">Done</span><span class="k-count">3</span></div>
+    <div class="k-card">
+      <div class="k-card-title">Stakeholder interviews</div>
+      <div class="k-subtasks">
+        <div class="k-sub"><div class="k-check done">✓</div>Interview 8 stakeholders</div>
+        <div class="k-sub"><div class="k-check done">✓</div>Synthesize findings</div>
+      </div>
+      <div class="k-prog"><div class="k-prog-fill" style="width:100%;background:#639922"></div></div>
+      <div class="k-meta"><div class="av av-b">SR</div><div class="pri-high"></div><span class="badge bd-blue">UX</span><span style="font-size:11px;color:var(--color-text-secondary);margin-left:auto">Apr 20</span></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-title">Competitor analysis</div>
+      <div class="k-meta"><div class="av av-b">SR</div><div class="pri-med"></div><span class="badge bd-blue">UX</span></div>
+    </div>
+    <div class="k-card">
+      <div class="k-card-title">Project brief & scope</div>
+      <div class="k-meta"><div class="av av-b">SR</div><div class="pri-high"></div><span class="badge bd-gray">PM</span></div>
+    </div>
+    <button class="k-add">+ Add card</button>
+  </div>
+</div>
+</div>
+
+</div>
+<script>
+function sw(id,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+}
+function tog(pid){
+  const rows=document.querySelectorAll('[data-parent="'+pid+'"]');
+  if(!rows.length)return;
+  const hidden=rows[0].style.display==='none';
+  rows.forEach(r=>r.style.display=hidden?'':'none');
+  const btn=document.querySelector('[onclick="tog(\''+pid+'\')"]');
+  if(btn)btn.textContent=hidden?'▼':'▶';
+}
+function togTL(grp){
+  const els=document.querySelectorAll('[data-tl="'+grp+'"]');
+  if(!els.length)return;
+  const hidden=els[0].style.display==='none';
+  els.forEach(e=>e.style.display=hidden?'':'none');
+}
+</script>
