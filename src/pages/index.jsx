@@ -8,6 +8,7 @@ import Document from './Document';
 import Sheet from './Sheets';
 import Whiteboard from './Whiteboard';
 import { useDocument } from '@/hooks/queries/useFilesQueries';
+import { useBoard } from '@/hooks/queries/useBoardsQueries';
 import { useUpdateDocument, useDeleteDocument } from '@/hooks/mutations/useFilesMutations';
 import HistoryPanel from '@/components/elements/HistoryPanel';
 import { useQueryClient } from '@tanstack/react-query';
@@ -20,6 +21,7 @@ const pageType = {
   sheet: Sheet,
   whiteboard: Whiteboard,
 }
+const DEFAULT_VIEW = { sorts: [], filters: [], search: '' };
 const Page = ({ ...props }) => {
   const context = useOutletContext();
   const [, setTopMenu] = context || ['', (props.setTopMenu ? props.setTopMenu : () => { })];
@@ -36,6 +38,7 @@ const Page = ({ ...props }) => {
 
   // Use TanStack Query to fetch document data
   const { data, isLoading, error } = useDocument(paramId);
+  const { data: boardQueryData } = useBoard(data?.board_id, DEFAULT_VIEW);
   const updateDocumentMutation = useUpdateDocument();
   const deleteDocumentMutation = useDeleteDocument();
 
@@ -73,6 +76,30 @@ const Page = ({ ...props }) => {
       .filter(u => allowedIds.has(u._id))
       .map(u => ({ label: u.name || u.email, value: u._id }));
   }, [data, allUsers, allTeams]);
+
+  const dependencyOptions = useMemo(() => {
+    const boardData = Array.isArray(boardQueryData) ? boardQueryData[0] : boardQueryData;
+    const documents = boardData?.documents || [];
+    const byId = new Map();
+    documents.forEach((doc, index) => {
+      if (!doc?._id) return;
+      const parentTaskId = `TASK-${String(index + 1).padStart(3, '0')}`;
+      byId.set(String(doc._id), {
+        value: String(doc._id),
+        label: doc.title || doc.name || parentTaskId,
+        taskId: parentTaskId,
+      });
+      (doc.subtasks || []).forEach((sub, si) => {
+        if (!sub?._id) return;
+        byId.set(String(sub._id), {
+          value: String(sub._id),
+          label: sub.title || `Untitled Subtask ${si + 1}`,
+          taskId: `${parentTaskId}.${si + 1}`,
+        });
+      });
+    });
+    return Array.from(byId.values());
+  }, [boardQueryData]);
 
   const handleDelete = async () => {
     try {
@@ -150,6 +177,7 @@ const Page = ({ ...props }) => {
     handleSubmit,
     onOpenHistory: () => setHistoryOpen(true),
     assigneeOptions,
+    dependencyOptions,
   }
 
 

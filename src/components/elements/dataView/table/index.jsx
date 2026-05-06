@@ -85,6 +85,12 @@ const normalizeSelectLikeValue = (value, options = []) => {
 };
 
 const DEPENDENCY_FIELDS = new Set(["blocked_by", "depends_on"]);
+const isDependencyField = (field) => {
+  const name = String(field?.name || "").toLowerCase();
+  const label = String(field?.label || "").toLowerCase();
+  if (DEPENDENCY_FIELDS.has(name)) return true;
+  return label.includes("depend") || label.includes("block");
+};
 
 const renderRangeValue = (value) => {
   if (!value || typeof value !== "object") return "-";
@@ -118,6 +124,7 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
   );
   const [collapsed, setCollapsed] = useState({});
   const [visibleColumns, setVisibleColumns] = useState([]);
+  const [dependencyQueryByCell, setDependencyQueryByCell] = useState({});
   useEffect(() => {
     if (!customColumns.length) {
       setVisibleColumns([]);
@@ -186,7 +193,18 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
       ? "h-7 w-full border-0 bg-transparent px-0 text-xs shadow-none outline-none focus:ring-0"
       : "h-8 w-full border-0 bg-transparent px-0 text-xs shadow-none outline-none focus:ring-0";
 
-    if (DEPENDENCY_FIELDS.has(field.name)) {
+    if (isDependencyField(field)) {
+      const cellKey = `${item?.id || "row"}:${field.name}`;
+      const query = dependencyQueryByCell[cellKey] || "";
+      const filteredDependencyOptions = dependencyOptions.filter((opt) => {
+        const q = String(query || "").trim().toLowerCase();
+        if (!q) return true;
+        return (
+          String(opt.label || "").toLowerCase().includes(q) ||
+          String(opt.taskId || "").toLowerCase().includes(q) ||
+          String(opt.value || "").toLowerCase().includes(q)
+        );
+      });
       const current =
         dependencyOptions.find((opt) =>
           String(opt.value) === String(value) || String(opt.taskId || "") === String(value || "")
@@ -203,7 +221,28 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
           </PopoverTrigger>
           <PopoverContent className="w-72 p-0" align="start">
             <Command>
-              <CommandInput placeholder="Search task..." />
+              <CommandInput
+                placeholder="Search task..."
+                value={query}
+                onValueChange={(next) => {
+                  setDependencyQueryByCell((prev) => ({ ...prev, [cellKey]: next }));
+                  if (next) {
+                    const q = String(next).trim().toLowerCase();
+                    const previewMatches = dependencyOptions.filter((opt) => (
+                      String(opt.label || "").toLowerCase().includes(q) ||
+                      String(opt.taskId || "").toLowerCase().includes(q) ||
+                      String(opt.value || "").toLowerCase().includes(q)
+                    ));
+                    console.log("[DependencyPicker][Table] search", {
+                      field: field.name,
+                      query: next,
+                      totalOptions: dependencyOptions.length,
+                      filteredCount: previewMatches.length,
+                      topMatches: previewMatches.slice(0, 5).map((o) => ({ label: o.label, taskId: o.taskId, value: o.value })),
+                    });
+                  }
+                }}
+              />
               <CommandList>
                 <CommandEmpty>No tasks found.</CommandEmpty>
                 <CommandGroup>
@@ -211,8 +250,18 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
                     <span className="mr-2 h-4 w-4" />
                     Clear
                   </CommandItem>
-                  {dependencyOptions.map((opt) => (
-                    <CommandItem key={opt.value} value={`${opt.label} ${opt.taskId || ""}`} onSelect={() => commitFieldChange(item, field, opt.value)}>
+                  {filteredDependencyOptions.map((opt) => (
+                    <CommandItem
+                      key={opt.value}
+                      value={`${opt.label} ${opt.taskId || ""}`}
+                      onSelect={() => {
+                        console.log("[DependencyPicker][Table] select", {
+                          field: field.name,
+                          selected: { label: opt.label, taskId: opt.taskId, value: opt.value },
+                        });
+                        commitFieldChange(item, field, opt.value);
+                      }}
+                    >
                       <Check className={`mr-2 h-4 w-4 ${String(current?.value || "") === String(opt.value) ? "opacity-100" : "opacity-0"}`} />
                       <span className="truncate">{opt.label}</span>
                     </CommandItem>

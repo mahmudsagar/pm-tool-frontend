@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -49,18 +49,47 @@ const DynamicSelectField = ({ dynamicOptions = [], onChange, value, ...props }) 
   <SelectField options={dynamicOptions} onChange={onChange} value={value} {...props} />
 );
 
-const DependencySelectField = ({ dependencyOptions = [], onChange, value, ...props }) => {
+const DependencySelectField = React.forwardRef(/** @param {any} allProps */ (allProps, ref) => {
+  const { dependencyOptions = [], onChange, value, className, ...props } = allProps;
+  const [query, setQuery] = useState("");
   const current = dependencyOptions.find((opt) => String(opt.value) === String(value || "")) || null;
+  const filteredDependencyOptions = useMemo(() => dependencyOptions.filter((opt) => {
+    const q = String(query || "").trim().toLowerCase();
+    if (!q) return true;
+    return (
+      String(opt.label || "").toLowerCase().includes(q) ||
+      String(opt.taskId || "").toLowerCase().includes(q) ||
+      String(opt.value || "").toLowerCase().includes(q)
+    );
+  }), [dependencyOptions, query]);
+  useEffect(() => {
+    if (!query) return;
+    console.log("[DependencyPicker][Document] search", {
+      query,
+      totalOptions: dependencyOptions.length,
+      filteredCount: filteredDependencyOptions.length,
+      topMatches: filteredDependencyOptions.slice(0, 5).map((o) => ({ label: o.label, taskId: o.taskId, value: o.value })),
+    });
+  }, [query, dependencyOptions.length, filteredDependencyOptions.length]);
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="outline-none w-full h-8 justify-start text-left font-normal">
+        <Button
+          ref={ref}
+          variant="outline"
+          className={`outline-none w-full h-8 justify-start text-left font-normal ${className || ""}`}
+          {...props}
+        >
           {current ? current.label : (value || "Select task")}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search task..." />
+          <CommandInput
+            placeholder="Search task..."
+            value={query}
+            onValueChange={(next) => setQuery(next)}
+          />
           <CommandList>
             <CommandEmpty>No tasks found.</CommandEmpty>
             <CommandGroup>
@@ -68,8 +97,17 @@ const DependencySelectField = ({ dependencyOptions = [], onChange, value, ...pro
                 <span className="mr-2 h-4 w-4" />
                 Clear
               </CommandItem>
-              {dependencyOptions.map((opt) => (
-                <CommandItem key={opt.value} value={`${opt.label} ${opt.taskId || ""}`} onSelect={() => onChange(String(opt.value))}>
+              {filteredDependencyOptions.map((opt) => (
+                <CommandItem
+                  key={opt.value}
+                  value={`${opt.label} ${opt.taskId || ""}`}
+                  onSelect={() => {
+                    console.log("[DependencyPicker][Document] select", {
+                      selected: { label: opt.label, taskId: opt.taskId, value: opt.value },
+                    });
+                    onChange(String(opt.value));
+                  }}
+                >
                   <Check className={`mr-2 h-4 w-4 ${String(current?.value || "") === String(opt.value) ? "opacity-100" : "opacity-0"}`} />
                   <span className="truncate">{opt.label}</span>
                 </CommandItem>
@@ -80,7 +118,8 @@ const DependencySelectField = ({ dependencyOptions = [], onChange, value, ...pro
       </PopoverContent>
     </Popover>
   );
-};
+});
+DependencySelectField.displayName = "DependencySelectField";
 
 
 const fieldTypes = [
@@ -102,6 +141,13 @@ const fields = {
   daterange: DatePickerWithRange
 }
 
+const isDependencyField = (field) => {
+  const name = String(field?.name || '').toLowerCase();
+  const label = String(field?.label || '').toLowerCase();
+  if (name === 'blocked_by' || name === 'depends_on') return true;
+  return label.includes('depend') || label.includes('block');
+};
+
 const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [], dependencyOptions = [] }) => {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState(field.label);
@@ -111,15 +157,15 @@ const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [
   const [showFieldList, setShowFieldList] = useState(false);
   const [changedField, setChangedField] = useState({});
 
-  const isDependencyField = field.name === 'blocked_by' || field.name === 'depends_on';
-  const Component = isDependencyField ? DependencySelectField : (fields[field.type] || Input);
+  const dependencyField = isDependencyField(field);
+  const Component = dependencyField ? DependencySelectField : (fields[field.type] || Input);
   const { hasOptions, initialized, source, ...passableProps } = field;
 
   // For dynamic-select fields, inject the live options via a dedicated prop
   // so the component doesn't need to know about the board context itself.
   const extraProps = (field.type === 'dynamic-select')
     ? { dynamicOptions: assigneeOptions }
-    : isDependencyField
+    : dependencyField
       ? { dependencyOptions }
       : {};
 
