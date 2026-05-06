@@ -1,5 +1,16 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "@/BetterRouter/Link";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  pointerWithin,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 
 const addDays = (date, days) => {
   const d = new Date(date);
@@ -76,6 +87,34 @@ const fmtDateKey = (date) => {
   return `${y}-${m}-${day}`;
 };
 
+function DropBucket({ dropId, className, startDate, endDate }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: dropId,
+    data: {
+      startDate: startDate ? fmtDateKey(startDate) : null,
+      endDate: endDate ? fmtDateKey(endDate) : null,
+    },
+  });
+  return <div ref={setNodeRef} className={`${className} ${isOver ? "bg-primary/10" : ""}`} />;
+}
+
+function DraggableTimelineBar({ taskId, children, className, style }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `task-${taskId}`,
+  });
+  const dragStyle = {
+    ...style,
+    transform: CSS.Translate.toString(transform),
+    transition: "transform 180ms ease",
+    opacity: isDragging ? 0.6 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={dragStyle} className={className} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+}
+
 export default function TimelineView({
   data,
   assigneeOptions = [],
@@ -91,7 +130,11 @@ export default function TimelineView({
   const [mode, setMode] = useState("month"); // week | month | quarter
   const [anchorDate, setAnchorDate] = useState(() => new Date());
   const [collapsedParents, setCollapsedParents] = useState({});
+  const [optimisticRanges, setOptimisticRanges] = useState({});
+  const [activeTaskId, setActiveTaskId] = useState(/** @type {string | null} */ (null));
+  const [hoverDropDate, setHoverDropDate] = useState("");
   const dateField = useMemo(() => findDateField(data?.property_name || []), [data?.property_name]);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const tasks = useMemo(() => {
     const now = new Date();
@@ -99,10 +142,11 @@ export default function TimelineView({
       .filter((item) => !item.parent_id)
       .map((task, index) => {
         const range = resolveRange(task);
+        const override = optimisticRanges[task.id];
         const fallbackStart = addDays(now, index * 3);
         const fallbackEnd = addDays(fallbackStart, 14);
-        const startDate = range.from ? new Date(range.from) : fallbackStart;
-        const dueDate = range.to ? new Date(range.to) : fallbackEnd;
+        const startDate = override?.from ? new Date(override.from) : (range.from ? new Date(range.from) : fallbackStart);
+        const dueDate = override?.to ? new Date(override.to) : (range.to ? new Date(range.to) : fallbackEnd);
         const safeEnd = dueDate > startDate ? dueDate : addDays(startDate, 7);
         return {
           ...task,
@@ -112,7 +156,7 @@ export default function TimelineView({
           assigneeName: assigneeMap[task.assignee] || task.assignee || "Unassigned",
         };
       });
-  }, [data?.property_values, assigneeMap]);
+  }, [data?.property_values, assigneeMap, optimisticRanges]);
 
   const timelineItems = useMemo(() => {
     const items = [];
@@ -125,8 +169,9 @@ export default function TimelineView({
       });
       (task.subtasks || []).forEach((sub, subIndex) => {
         const range = resolveRange(sub);
-        const startDate = range.from ? new Date(range.from) : task.startDate;
-        const dueDate = range.to ? new Date(range.to) : task.dueDate;
+        const override = optimisticRanges[sub.id];
+        const startDate = override?.from ? new Date(override.from) : (range.from ? new Date(range.from) : task.startDate);
+        const dueDate = override?.to ? new Date(override.to) : (range.to ? new Date(range.to) : task.dueDate);
         items.push({
           ...sub,
           id: sub.id || `${task.id}-sub-${subIndex}`,
@@ -224,11 +269,90 @@ export default function TimelineView({
       onCellChange(item, dateField.name, { from, to });
       return;
     }
-    const useDueLikeField = String(dateField.name || "").includes("due");
-    onCellChange(item, dateField.name, useDueLikeField ? to : from);
+    // For single-date fields, commit the exact hovered date shown in badge.
+    onCellChange(item, dateField.name, from);
+  };
+
+  const taskById = useMemo(
+    () => Object.fromEntries(timelineItems.map((t) => [t.id, t])),
+    [timelineItems]
+  );
+  const activeTask = activeTaskId ? taskById[activeTaskId] : null;
+
+  const parseDropDateFromOverId = (overId) => {
+    const text = String(overId || "");
+    if (!text.startsWith("drop-")) return null;
+    const parts = text.split("-");
+    return parts.slice(-3).join("-");
+  };
+
+  const resolveDropDateFromEvent = (event) => {
+    const over = event?.over;
+    const fallback = parseDropDateFromOverId(over?.id) || "";
+    if (!over) return fallback;
+
+    const startKey = over?.data?.current?.startDate || fallback;
+    const endKey = over?.data?.current?.endDate || startKey;
+    if (!startKey) return "";
+
+    const start = new Date(startKey);
+    const end = new Date(endKey);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return startKey;
+
+    const spanDays = Math.max(1, dayDiff(start, end));
+    const translated = event?.active?.rect?.current?.translated;
+    const overRect = over?.rect;
+    if (!translated || !overRect?.width) return startKey;
+
+    const pointerCenterX = translated.left + translated.width / 2;
+    const rel = Math.min(0.999, Math.max(0, (pointerCenterX - overRect.left) / overRect.width));
+    const dayOffset = Math.floor(rel * spanDays);
+    return fmtDateKey(addDays(start, dayOffset));
+  };
+
+  const handleDragStart = (event) => {
+    const id = String(event?.active?.id || "");
+    if (!id.startsWith("task-")) return;
+    setActiveTaskId(id.replace("task-", ""));
+    setHoverDropDate("");
+  };
+
+  const handleDragOver = (event) => {
+    const date = resolveDropDateFromEvent(event);
+    if (date) setHoverDropDate(date);
+  };
+
+  const handleDragMove = (event) => {
+    const date = resolveDropDateFromEvent(event);
+    if (date) setHoverDropDate(date);
+  };
+
+  const handleDragEnd = (event) => {
+    const id = String(event?.active?.id || "");
+    const overId = event?.over?.id;
+    setActiveTaskId(null);
+    setHoverDropDate("");
+    if (!id.startsWith("task-") || !overId) return;
+    const taskId = id.replace("task-", "");
+    const date = hoverDropDate || resolveDropDateFromEvent(event);
+    if (!date) return;
+    const task = taskById[taskId];
+    if (!task) return;
+    const duration = Math.max(0, dayDiff(task.startDate, task.dueDate));
+    const next = { from: date, to: fmtDateKey(addDays(new Date(date), duration)) };
+    setOptimisticRanges((prev) => ({ ...prev, [taskId]: next }));
+    applyDroppedDate(taskId, new Date(date));
   };
 
   return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={pointerWithin}
+      onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
     <div className="space-y-4">
       {/* Sticky Toolbar */}
       <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 py-2 text-sm backdrop-blur">
@@ -255,6 +379,11 @@ export default function TimelineView({
           </span>
         </div>
         <div className="flex items-center gap-2 text-xs">
+          {activeTaskId && (
+            <span className="rounded-md border bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
+              Dropping on: {hoverDropDate || "move over a date"}
+            </span>
+          )}
           <div className="inline-flex overflow-hidden rounded-md border">
             <button
               type="button"
@@ -354,33 +483,20 @@ export default function TimelineView({
                     <div className="truncate text-[11px] text-muted-foreground">{task.assigneeName}</div>
                   </div>
                 </Link>
-                <Link
-                  to={`/document/${task.id}`}
-                  target="_sidebar"
-                  onClick={() => onSelectTask?.(task.id)}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData("text/task-id", task.id);
-                    e.dataTransfer.effectAllowed = "move";
-                  }}
-                  className={`relative border-b block ${isSelected ? "bg-primary/5" : ""}`}
-                >
+                <div className={`relative border-b block ${isSelected ? "bg-primary/5" : ""}`}>
                   <div className={`grid h-12 ${gridColsClass}`}>
                     {columns.map((c, idx) => (
-                      <div
+                      <DropBucket
                         key={c.key}
+                        dropId={`drop-${task.id}-${fmtDateKey(c.start)}`}
+                        startDate={c.start}
+                        endDate={c.end}
                         className={`border-r ${mode !== "week" && idx === 1 ? "bg-blue-50/40" : ""} ${idx === columns.length - 1 ? "border-r-0" : ""}`}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          const draggedTaskId = e.dataTransfer.getData("text/task-id");
-                          if (!draggedTaskId) return;
-                          applyDroppedDate(draggedTaskId, c.start);
-                        }}
                       />
                     ))}
                   </div>
-                  <div
+                  <DraggableTimelineBar
+                    taskId={task.id}
                     className={`absolute top-3 inline-flex h-5 items-center rounded px-2 text-[11px] font-medium shadow-sm ${statusStyle[task.statusKey]} ${
                       isSelected ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""
                     }`}
@@ -390,11 +506,11 @@ export default function TimelineView({
                     }}
                   >
                     {task.status || "Backlog"}
-                  </div>
+                  </DraggableTimelineBar>
                   <div className="absolute top-0 bottom-0 w-[2px] bg-sky-500" style={{ left: todayLeft }}>
                     <div className="absolute left-[-3px] top-0 h-2 w-2 rounded-full bg-sky-500" />
                   </div>
-                </Link>
+                </div>
               </div>
             );
           })}
@@ -472,5 +588,16 @@ export default function TimelineView({
       </div>
 
     </div>
+    <DragOverlay>
+      {activeTask ? (
+        <div className="rounded border bg-background px-2 py-1 text-xs shadow-lg">
+          <div className="font-medium">{activeTask.title || "Task"}</div>
+          <div className="text-muted-foreground">
+            {hoverDropDate ? `Drop on ${hoverDropDate}` : "Move to a date bucket"}
+          </div>
+        </div>
+      ) : null}
+    </DragOverlay>
+    </DndContext>
   );
 }

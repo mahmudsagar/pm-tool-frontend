@@ -82,36 +82,21 @@ function SortableTaskCard({ task, assigneeMap }) {
         to={`/document/${task.id}`}
         target="_sidebar"
         onClick={() => {}}
-        className="block w-full rounded-md border bg-background p-2 text-left transition-colors duration-150 hover:bg-muted/60"
+        className={`block w-full rounded-md border bg-background p-2 text-left transition-colors duration-150 hover:bg-muted/60 ${
+          task.isSubtask ? "border-dashed bg-muted/20" : ""
+        }`}
       >
         <p className="text-sm font-medium underline-offset-2 hover:underline">
-          {task.title || "Untitled task"}
+          {task.isSubtask ? `↳ ${task.title || "Untitled subtask"}` : (task.title || "Untitled task")}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
           {assigneeMap[task.assignee] || task.assignee || "Unassigned"} ·{" "}
           {resolveDueDate(task)}
         </p>
-        {(task.subtasks || []).length > 0 && (
-          <div className="mt-2 border-t pt-2">
-            <p className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-              Subtasks ({task.subtasks.length})
-            </p>
-            <div className="space-y-1">
-              {task.subtasks.slice(0, 3).map((sub) => (
-                <div key={sub.id} className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <span className="inline-flex h-3 w-3 items-center justify-center rounded border text-[9px]">
-                    {(sub.status || "").toLowerCase().includes("done") ? "✓" : ""}
-                  </span>
-                  <span className="truncate">↳ {sub.title || "Untitled subtask"}</span>
-                </div>
-              ))}
-              {task.subtasks.length > 3 && (
-                <div className="text-[10px] text-muted-foreground">
-                  +{task.subtasks.length - 3} more
-                </div>
-              )}
-            </div>
-          </div>
+        {task.isSubtask && (
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            Subtask of {task.parentTitle || "Parent task"}
+          </p>
         )}
       </Link>
     </div>
@@ -136,7 +121,21 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null,
   /** @type {any} */
   const group = groupBy;
   const tasks = useMemo(
-    () => (data?.property_values || []).filter((item) => !item.parent_id),
+    () =>
+      (data?.property_values || [])
+        .filter((item) => !item.parent_id)
+        .flatMap((parent) => {
+          const parentCard = { ...parent, isSubtask: false };
+          const subCards = (parent.subtasks || []).map((sub, idx) => ({
+            ...sub,
+            id: sub.id || `${parent.id}-sub-${idx}`,
+            title: sub.title || "Untitled subtask",
+            parentId: parent.id,
+            parentTitle: parent.title || "Untitled task",
+            isSubtask: true,
+          }));
+          return [parentCard, ...subCards];
+        }),
     [data?.property_values]
   );
 

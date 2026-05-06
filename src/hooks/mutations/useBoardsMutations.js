@@ -103,6 +103,12 @@ export const useUpdateBoardTask = () => {
           return Array.isArray(oldData) ? oldData.map(updateDoc) : updateDoc(oldData);
         }
       );
+
+      // Force refresh all cached board views for this board (different filters/sorts/tabs)
+      // so drag/drop changes propagate across timeline/calendar/kanban/table consistently.
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'boards' && query.queryKey[1] === variables.boardId,
+      });
     },
   });
 };
