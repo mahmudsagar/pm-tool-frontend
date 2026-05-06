@@ -244,6 +244,18 @@ export default function Data({ id: propId, setTopMenu }) {
   }, [boardDataId, boardDataAutomations]);
 
   useEffect(() => {
+    if (!selectedTaskId) return;
+    const selectedDocRoute = `/document/${selectedTaskId}`;
+    const isSelectedDocOpen = Array.from(searchParams.entries()).some(
+      ([key, value]) =>
+        key === selectedDocRoute && (value === "_sidebar" || value === "_popup")
+    );
+    if (!isSelectedDocOpen) {
+      setSelectedTaskId(null);
+    }
+  }, [searchParams, selectedTaskId]);
+
+  useEffect(() => {
     if (!boardId || !boardData?.custom_meta?.fields) return;
     if (dependencyFieldsInitRef.current[boardId]) return;
     if (updateBoardMutation.isPending) return;
