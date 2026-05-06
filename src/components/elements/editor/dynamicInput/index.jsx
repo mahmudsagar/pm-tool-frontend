@@ -64,12 +64,6 @@ const DependencySelectField = React.forwardRef(/** @param {any} allProps */ (all
   }), [dependencyOptions, query]);
   useEffect(() => {
     if (!query) return;
-    console.log("[DependencyPicker][Document] search", {
-      query,
-      totalOptions: dependencyOptions.length,
-      filteredCount: filteredDependencyOptions.length,
-      topMatches: filteredDependencyOptions.slice(0, 5).map((o) => ({ label: o.label, taskId: o.taskId, value: o.value })),
-    });
   }, [query, dependencyOptions.length, filteredDependencyOptions.length]);
   return (
     <Popover>
