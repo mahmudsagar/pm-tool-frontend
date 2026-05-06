@@ -1,9 +1,14 @@
 import { useMemo } from "react";
 
-export default function TableView({ data }) {
+export default function TableView({ data, assigneeOptions = [] }) {
   const rows = useMemo(
-    () => (data?.property_values || []).filter((item) => !item.parent_id).slice(0, 8),
+    () => (data?.property_values || []).filter((item) => !item.parent_id),
     [data?.property_values]
+  );
+
+  const assigneeMap = useMemo(
+    () => Object.fromEntries((assigneeOptions || []).map((opt) => [opt.value, opt.label])),
+    [assigneeOptions]
   );
 
   return (
@@ -25,7 +30,7 @@ export default function TableView({ data }) {
                 <td className="px-3 py-2 font-medium">{row.title || "Untitled task"}</td>
                 <td className="px-3 py-2">{row.status || "Backlog"}</td>
                 <td className="px-3 py-2">{row.priority || "Medium"}</td>
-                <td className="px-3 py-2">{row.assignee || "-"}</td>
+                <td className="px-3 py-2">{assigneeMap[row.assignee] || row.assignee || "-"}</td>
                 <td className="px-3 py-2">{row.due_date || "-"}</td>
               </tr>
             ))}

@@ -2,21 +2,31 @@ import { useMemo } from "react";
 
 const KANBAN_COLUMNS = ["Backlog", "In progress", "In review", "Done"];
 
-export default function KanbanView({ data }) {
+export default function KanbanView({ data, assigneeOptions = [] }) {
   const tasks = useMemo(
-    () => (data?.property_values || []).filter((item) => !item.parent_id).slice(0, 16),
+    () => (data?.property_values || []).filter((item) => !item.parent_id),
     [data?.property_values]
   );
 
+  const assigneeMap = useMemo(
+    () => Object.fromEntries((assigneeOptions || []).map((opt) => [opt.value, opt.label])),
+    [assigneeOptions]
+  );
+
+  const normalizeStatus = (rawStatus) => {
+    const s = String(rawStatus || "").toLowerCase();
+    if (s.includes("done") || s.includes("complete")) return "Done";
+    if (s.includes("review")) return "In review";
+    if (s.includes("progress") || s.includes("doing")) return "In progress";
+    if (s.includes("todo") || s.includes("backlog") || s.includes("open")) return "Backlog";
+    return "Backlog";
+  };
+
   const grouped = useMemo(() => {
     const buckets = Object.fromEntries(KANBAN_COLUMNS.map((name) => [name, []]));
-    tasks.forEach((task, index) => {
-      const status = String(task.status || "").toLowerCase();
-      if (status.includes("done")) buckets.Done.push(task);
-      else if (status.includes("review")) buckets["In review"].push(task);
-      else if (status.includes("progress")) buckets["In progress"].push(task);
-      else if (index % 4 === 0) buckets["In progress"].push(task);
-      else buckets.Backlog.push(task);
+    tasks.forEach((task) => {
+      const key = normalizeStatus(task.status);
+      buckets[key].push(task);
     });
     return buckets;
   }, [tasks]);
@@ -40,10 +50,12 @@ export default function KanbanView({ data }) {
               </span>
             </div>
             <div className="space-y-2">
-              {grouped[column].slice(0, 4).map((task) => (
+              {grouped[column].map((task) => (
                 <div key={task.id} className="rounded-md border bg-background p-2">
                   <p className="text-sm font-medium">{task.title || "Untitled task"}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{task.due_date || "No due date"}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {assigneeMap[task.assignee] || task.assignee || "Unassigned"} · {task.due_date || "No due date"}
+                  </p>
                 </div>
               ))}
               <button type="button" className="w-full rounded-md border border-dashed px-3 py-1.5 text-xs text-muted-foreground">

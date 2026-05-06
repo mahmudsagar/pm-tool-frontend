@@ -1,7 +1,76 @@
-// Static timeline skeleton modeled after pm_tool_full_four_views
-// Uses demo data and layout that closely matches the sample image.
+import { useMemo } from "react";
 
-export default function TimelineView() {
+const MONTH_LABELS = ["Apr", "May", "Jun", "Jul", "Aug"];
+
+const addDays = (date, days) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+};
+
+const dayDiff = (a, b) => Math.round((b - a) / (1000 * 60 * 60 * 24));
+
+const normalizeStatus = (rawStatus) => {
+  const s = String(rawStatus || "").toLowerCase();
+  if (s.includes("done") || s.includes("complete")) return "done";
+  if (s.includes("review")) return "review";
+  if (s.includes("progress") || s.includes("doing")) return "in-progress";
+  return "backlog";
+};
+
+const statusStyle = {
+  done: "bg-lime-200 text-lime-900",
+  "in-progress": "bg-sky-200 text-sky-900",
+  review: "bg-indigo-200 text-indigo-900",
+  backlog: "bg-amber-200 text-amber-900",
+};
+
+export default function TimelineView({ data, assigneeOptions = [] }) {
+  const assigneeMap = useMemo(
+    () => Object.fromEntries((assigneeOptions || []).map((opt) => [opt.value, opt.label])),
+    [assigneeOptions]
+  );
+
+  const tasks = useMemo(() => {
+    const now = new Date();
+    return (data?.property_values || [])
+      .filter((item) => !item.parent_id)
+      .map((task, index) => {
+        const fallbackStart = addDays(now, index * 3);
+        const fallbackEnd = addDays(fallbackStart, 14);
+        const startDate = task.start_date ? new Date(task.start_date) : fallbackStart;
+        const dueDate = task.due_date ? new Date(task.due_date) : fallbackEnd;
+        const safeEnd = dueDate > startDate ? dueDate : addDays(startDate, 7);
+        return {
+          ...task,
+          startDate,
+          dueDate: safeEnd,
+          statusKey: normalizeStatus(task.status),
+          assigneeName: assigneeMap[task.assignee] || task.assignee || "Unassigned",
+        };
+      });
+  }, [data?.property_values, assigneeMap]);
+
+  const { rangeStart, rangeEnd } = useMemo(() => {
+    if (!tasks.length) {
+      const now = new Date();
+      return { rangeStart: addDays(now, -30), rangeEnd: addDays(now, 120) };
+    }
+    let minStart = tasks[0].startDate;
+    let maxEnd = tasks[0].dueDate;
+    tasks.forEach((t) => {
+      if (t.startDate < minStart) minStart = t.startDate;
+      if (t.dueDate > maxEnd) maxEnd = t.dueDate;
+    });
+    return {
+      rangeStart: addDays(minStart, -14),
+      rangeEnd: addDays(maxEnd, 14),
+    };
+  }, [tasks]);
+
+  const totalDays = Math.max(1, dayDiff(rangeStart, rangeEnd));
+  const todayLeft = `${Math.min(100, Math.max(0, (dayDiff(rangeStart, new Date()) / totalDays) * 100))}%`;
+
   return (
     <div className="space-y-4">
       {/* Toolbar */}
@@ -21,7 +90,10 @@ export default function TimelineView() {
               →
             </button>
           </div>
-          <span className="font-medium text-foreground">Apr – Aug 2026</span>
+          <span className="font-medium text-foreground">
+            {rangeStart.toLocaleDateString(undefined, { month: "short", year: "numeric" })} –{" "}
+            {rangeEnd.toLocaleDateString(undefined, { month: "short", year: "numeric" })}
+          </span>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <div className="inline-flex overflow-hidden rounded-md border">
@@ -38,178 +110,71 @@ export default function TimelineView() {
         </div>
       </div>
 
-      {/* Timeline grid */}
       <div className="overflow-x-auto">
         <div className="grid min-w-[720px] grid-cols-[180px_minmax(0,1fr)] text-xs">
-          {/* Left header */}
           <div className="border-b border-r bg-muted px-3 py-2 font-medium text-muted-foreground">
             Task / Assignee
           </div>
-
-          {/* Month header */}
           <div className="border-b bg-muted">
             <div className="grid grid-cols-5 border-l">
-              <div className="border-r px-3 py-2 text-muted-foreground">Apr</div>
-              <div className="border-r px-3 py-2 font-medium text-foreground">
-                May <span className="text-xs text-muted-foreground">▸</span>
+              {MONTH_LABELS.map((month, i) => (
+                <div
+                  key={month}
+                  className={`border-r px-3 py-2 ${i === 1 ? "font-medium text-foreground" : "text-muted-foreground"} ${i === 4 ? "border-r-0" : ""}`}
+                >
+                  {month}
+                  {i === 1 && <span className="text-xs text-muted-foreground"> ▸</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+          {tasks.map((task) => {
+            const leftPercent = (dayDiff(rangeStart, task.startDate) / totalDays) * 100;
+            const widthPercent = (Math.max(1, dayDiff(task.startDate, task.dueDate)) / totalDays) * 100;
+            const initials = task.assigneeName
+              .split(" ")
+              .filter(Boolean)
+              .map((s) => s[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase();
+
+            return (
+              <div key={task.id} className="contents">
+                <div className="flex items-center gap-2 border-b border-r px-3 py-2">
+                  <button className="text-[10px] text-muted-foreground">—</button>
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[10px] font-medium text-blue-800">
+                    {initials || "NA"}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate text-[13px] font-medium text-foreground">{task.title || "Untitled task"}</div>
+                    <div className="truncate text-[11px] text-muted-foreground">{task.assigneeName}</div>
+                  </div>
+                </div>
+                <div className="relative border-b">
+                  <div className="grid h-12 grid-cols-5">
+                    <div className="border-r" />
+                    <div className="border-r bg-blue-50/40" />
+                    <div className="border-r" />
+                    <div className="border-r" />
+                    <div />
+                  </div>
+                  <div
+                    className={`absolute top-3 inline-flex h-5 items-center rounded px-2 text-[11px] font-medium ${statusStyle[task.statusKey]}`}
+                    style={{
+                      left: `${Math.min(96, Math.max(0, leftPercent))}%`,
+                      width: `${Math.max(8, Math.min(96, widthPercent))}%`,
+                    }}
+                  >
+                    {task.status || "Backlog"}
+                  </div>
+                  <div className="absolute top-0 bottom-0 w-[2px] bg-sky-500" style={{ left: todayLeft }}>
+                    <div className="absolute left-[-3px] top-0 h-2 w-2 rounded-full bg-sky-500" />
+                  </div>
+                </div>
               </div>
-              <div className="border-r px-3 py-2 text-muted-foreground">Jun</div>
-              <div className="border-r px-3 py-2 text-muted-foreground">Jul</div>
-              <div className="px-3 py-2 text-muted-foreground">Aug</div>
-            </div>
-          </div>
-
-          {/* Discovery parent row */}
-          <div className="flex items-center gap-2 border-b border-r px-3 py-2">
-            <button className="text-[10px] text-muted-foreground">▼</button>
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[10px] font-medium text-blue-800">
-              SR
-            </div>
-            <div>
-              <div className="text-[13px] font-medium text-foreground">Discovery</div>
-              <div className="text-[11px] text-muted-foreground">Sara R.</div>
-            </div>
-          </div>
-          <div className="relative border-b">
-            <div className="grid h-12 grid-cols-5">
-              <div className="border-r" />
-              <div className="border-r bg-blue-50/40" />
-              <div className="border-r" />
-              <div className="border-r" />
-              <div />
-            </div>
-            {/* Discovery & research bar */}
-            <div className="absolute left-[2%] top-3 inline-flex h-5 items-center rounded bg-lime-200 px-2 text-[11px] font-medium text-lime-900">
-              Discovery &amp; research
-            </div>
-            {/* Today line */}
-            <div className="absolute left-[38%] top-0 bottom-0 w-[2px] bg-sky-500">
-              <div className="absolute left-[-3px] top-0 h-2 w-2 rounded-full bg-sky-500" />
-            </div>
-          </div>
-
-          {/* Discovery child row: Stakeholder interviews */}
-          <div className="flex items-center gap-2 border-b border-r bg-muted/40 px-6 py-2">
-            <span className="text-[11px] text-muted-foreground">Stakeholder interviews</span>
-          </div>
-          <div className="relative border-b bg-muted/40">
-            <div className="grid h-9 grid-cols-5">
-              <div className="border-r" />
-              <div className="border-r bg-blue-50/40" />
-              <div className="border-r" />
-              <div className="border-r" />
-              <div />
-            </div>
-            <div className="absolute left-[2%] top-2 inline-flex h-4 items-center rounded bg-lime-200 px-2 text-[10px] font-medium text-lime-900">
-              Interviews
-            </div>
-            <div className="absolute left-[38%] top-0 bottom-0 w-[2px] bg-sky-500">
-              <div className="absolute left-[-3px] top-0 h-2 w-2 rounded-full bg-sky-500" />
-            </div>
-          </div>
-
-          {/* Discovery child row: Competitor analysis */}
-          <div className="flex items-center gap-2 border-b border-r bg-muted/40 px-6 py-2">
-            <span className="text-[11px] text-muted-foreground">Competitor analysis</span>
-          </div>
-          <div className="relative border-b bg-muted/40">
-            <div className="grid h-9 grid-cols-5">
-              <div className="border-r" />
-              <div className="border-r bg-blue-50/40" />
-              <div className="border-r" />
-              <div className="border-r" />
-              <div />
-            </div>
-            <div className="absolute left-[12%] top-2 inline-flex h-4 items-center rounded bg-lime-200 px-2 text-[10px] font-medium text-lime-900">
-              Analysis
-            </div>
-            <div className="absolute left-[38%] top-0 bottom-0 w-[2px] bg-sky-500">
-              <div className="absolute left-[-3px] top-0 h-2 w-2 rounded-full bg-sky-500" />
-            </div>
-          </div>
-
-          {/* UI Design parent row */}
-          <div className="flex items-center gap-2 border-b border-r px-3 py-2">
-            <button className="text-[10px] text-muted-foreground">▼</button>
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-medium text-emerald-800">
-              MK
-            </div>
-            <div>
-              <div className="text-[13px] font-medium text-foreground">UI Design</div>
-              <div className="text-[11px] text-muted-foreground">Mia K.</div>
-            </div>
-          </div>
-          <div className="relative border-b">
-            <div className="grid h-12 grid-cols-5">
-              <div className="border-r" />
-              <div className="border-r bg-blue-50/40" />
-              <div className="border-r" />
-              <div className="border-r" />
-              <div />
-            </div>
-            <div className="absolute left-[26%] top-3 inline-flex h-5 items-center rounded bg-sky-200 px-2 text-[11px] font-medium text-sky-900">
-              UI Design
-            </div>
-            <div className="absolute left-[57%] top-2 h-3.5 w-3.5 rotate-45 rounded-sm bg-sky-500" />
-            <div className="absolute left-[38%] top-0 bottom-0 w-[2px] bg-sky-500">
-              <div className="absolute left-[-3px] top-0 h-2 w-2 rounded-full bg-sky-500" />
-            </div>
-          </div>
-
-          {/* Frontend build parent row */}
-          <div className="flex items-center gap-2 border-b border-r px-3 py-2">
-            <button className="text-[10px] text-muted-foreground">▶</button>
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-[10px] font-medium text-amber-800">
-              JL
-            </div>
-            <div>
-              <div className="text-[13px] font-medium text-foreground">Frontend build</div>
-              <div className="text-[11px] text-muted-foreground">James L.</div>
-            </div>
-          </div>
-          <div className="relative border-b">
-            <div className="grid h-12 grid-cols-5">
-              <div className="border-r" />
-              <div className="border-r bg-blue-50/40" />
-              <div className="border-r" />
-              <div className="border-r" />
-              <div />
-            </div>
-            <div className="absolute left-[56%] top-3 inline-flex h-5 items-center rounded bg-amber-200 px-2 text-[11px] font-medium text-amber-900">
-              Frontend build
-            </div>
-            <div className="absolute left-[38%] top-0 bottom-0 w-[2px] bg-sky-500">
-              <div className="absolute left-[-3px] top-0 h-2 w-2 rounded-full bg-sky-500" />
-            </div>
-          </div>
-
-          {/* QA parent row */}
-          <div className="flex items-center gap-2 border-b border-r px-3 py-2">
-            <button className="text-[10px] text-muted-foreground">—</button>
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-medium text-indigo-800">
-              NT
-            </div>
-            <div>
-              <div className="text-[13px] font-medium text-foreground">QA &amp; testing</div>
-              <div className="text-[11px] text-muted-foreground">Nina T.</div>
-            </div>
-          </div>
-          <div className="relative border-b">
-            <div className="grid h-12 grid-cols-5">
-              <div className="border-r" />
-              <div className="border-r bg-blue-50/40" />
-              <div className="border-r" />
-              <div className="border-r" />
-              <div />
-            </div>
-            <div className="absolute left-[78%] top-3 inline-flex h-5 items-center rounded bg-indigo-200 px-2 text-[11px] font-medium text-indigo-900">
-              QA
-            </div>
-            <div className="absolute left-[97%] top-2 h-3.5 w-3.5 rotate-45 rounded-sm bg-amber-400" />
-            <div className="absolute left-[38%] top-0 bottom-0 w-[2px] bg-sky-500">
-              <div className="absolute left-[-3px] top-0 h-2 w-2 rounded-full bg-sky-500" />
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
 
