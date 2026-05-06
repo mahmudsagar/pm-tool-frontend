@@ -39,10 +39,26 @@ const toDateKey = (value) => {
 const resolveScheduleDate = (task, parent) =>
   toDateKey(task?.due_date || task?.start_date || task?.dates || parent?.due_date || parent?.start_date || parent?.dates || null);
 
-export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
+const findDateField = (fields = []) => {
+  const rangeField = fields.find((f) => f?.type === "daterange");
+  if (rangeField) return rangeField;
+  const dueField = fields.find((f) => f?.name === "due_date");
+  if (dueField) return dueField;
+  const dateField = fields.find((f) => f?.type === "date");
+  return dateField || null;
+};
+
+const addDays = (dateKey, days) => {
+  const d = new Date(dateKey);
+  d.setDate(d.getDate() + days);
+  return fmtDateKey(d);
+};
+
+export default function CalendarView({ data, selectedTaskId, onSelectTask, onCellChange }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [mode, setMode] = useState("month"); // week | month | quarter
   const [collapsedParents, setCollapsedParents] = useState({});
+  const dateField = useMemo(() => findDateField(data?.property_name || []), [data?.property_name]);
 
   const tasks = useMemo(
     () =>
@@ -118,6 +134,28 @@ export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
       }
       return new Date(d.getFullYear(), d.getMonth() + dir * 1, 1);
     });
+  };
+
+  const handleTaskDropToDate = (taskId, targetDateKey) => {
+    if (!onCellChange || !dateField) return;
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    if (dateField.type === "daterange") {
+      const from = toDateKey(task?.dates?.from || task?.start_date || task?.dates?.start || null);
+      const to = toDateKey(task?.dates?.to || task?.due_date || task?.dates?.end || null);
+      let nextFrom = targetDateKey;
+      let nextTo = targetDateKey;
+      if (from && to) {
+        const start = new Date(from);
+        const end = new Date(to);
+        const duration = Math.max(0, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+        nextFrom = targetDateKey;
+        nextTo = addDays(targetDateKey, duration);
+      }
+      onCellChange(task, dateField.name, { from: nextFrom, to: nextTo });
+      return;
+    }
+    onCellChange(task, dateField.name, targetDateKey);
   };
 
   return (
@@ -220,6 +258,7 @@ export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
                       onToggleParent={(id) =>
                         setCollapsedParents((prev) => ({ ...prev, [id]: !prev[id] }))
                       }
+                      onTaskDrop={handleTaskDropToDate}
                     />
                   ))}
                 </div>
@@ -241,6 +280,7 @@ export default function CalendarView({ data, selectedTaskId, onSelectTask }) {
               onToggleParent={(id) =>
                 setCollapsedParents((prev) => ({ ...prev, [id]: !prev[id] }))
               }
+              onTaskDrop={handleTaskDropToDate}
             />
           ))}
         </div>
@@ -291,6 +331,7 @@ function CalendarCell({
   onSelectTask,
   collapsedParents,
   onToggleParent,
+  onTaskDrop,
 }) {
   const isToday =
     fmtDateKey(cell.date) === fmtDateKey(new Date());
@@ -314,6 +355,13 @@ function CalendarCell({
       className={`min-h-24 rounded-md border p-2 ${
         mode === "month" && !cell.inMonth ? "bg-muted/40" : ""
       }`}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        const taskId = e.dataTransfer.getData("text/task-id");
+        if (!taskId) return;
+        onTaskDrop?.(taskId, cell.key);
+      }}
     >
       <div className="flex items-center justify-between">
         <div
@@ -343,6 +391,11 @@ function CalendarCell({
               to={`/document/${task.id}`}
               target="_sidebar"
               onClick={() => onSelectTask?.(task.id)}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData("text/task-id", task.id);
+                e.dataTransfer.effectAllowed = "move";
+              }}
               className={`flex flex-1 items-center rounded px-1.5 py-0.5 text-[10px] ${
                 selectedTaskId === task.id
                   ? "bg-sky-600 text-white"

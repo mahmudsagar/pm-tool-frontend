@@ -1,5 +1,20 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "../../../../BetterRouter/Link";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCorners,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const KANBAN_COLUMNS = ["Backlog", "In progress", "In review", "Done"];
 const toDateLabel = (value) => {
@@ -36,7 +51,90 @@ const getGroupValue = (raw) => {
   return { key: String(raw), label: null };
 };
 
-export default function KanbanView({ data, assigneeOptions = [], groupBy = null }) {
+const findStatusFieldName = (fields = []) => {
+  const exact = fields.find((f) => f?.name === "status");
+  if (exact) return exact.name;
+  const byLabel = fields.find((f) => String(f?.label || "").toLowerCase().includes("status"));
+  if (byLabel) return byLabel.name;
+  const byName = fields.find((f) => String(f?.name || "").toLowerCase().includes("status"));
+  return byName?.name || null;
+};
+
+function SortableTaskCard({ task, assigneeMap }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: `task-${task.id}`,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition || "transform 180ms ease",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`rounded-md ${isDragging ? "opacity-50" : ""}`}
+      {...attributes}
+      {...listeners}
+    >
+      <Link
+        to={`/document/${task.id}`}
+        target="_sidebar"
+        onClick={() => {}}
+        className="block w-full rounded-md border bg-background p-2 text-left transition-colors duration-150 hover:bg-muted/60"
+      >
+        <p className="text-sm font-medium underline-offset-2 hover:underline">
+          {task.title || "Untitled task"}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {assigneeMap[task.assignee] || task.assignee || "Unassigned"} ·{" "}
+          {resolveDueDate(task)}
+        </p>
+        {(task.subtasks || []).length > 0 && (
+          <div className="mt-2 border-t pt-2">
+            <p className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+              Subtasks ({task.subtasks.length})
+            </p>
+            <div className="space-y-1">
+              {task.subtasks.slice(0, 3).map((sub) => (
+                <div key={sub.id} className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <span className="inline-flex h-3 w-3 items-center justify-center rounded border text-[9px]">
+                    {(sub.status || "").toLowerCase().includes("done") ? "✓" : ""}
+                  </span>
+                  <span className="truncate">↳ {sub.title || "Untitled subtask"}</span>
+                </div>
+              ))}
+              {task.subtasks.length > 3 && (
+                <div className="text-[10px] text-muted-foreground">
+                  +{task.subtasks.length - 3} more
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Link>
+    </div>
+  );
+}
+
+function DropColumn({ columnKey, children, className }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `column-${columnKey}` });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`${className} transition-colors duration-150 ${
+        isOver ? "ring-2 ring-primary/40 bg-primary/5" : ""
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
+export default function KanbanView({ data, assigneeOptions = [], groupBy = null, onCellChange }) {
+  /** @type {any} */
+  const group = groupBy;
   const tasks = useMemo(
     () => (data?.property_values || []).filter((item) => !item.parent_id),
     [data?.property_values]
@@ -58,6 +156,28 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null 
     if (s.includes("progress") || s.includes("doing")) return "In progress";
     if (s.includes("todo") || s.includes("backlog") || s.includes("open")) return "Backlog";
     return "Backlog";
+  };
+  const statusFieldName = useMemo(
+    () => findStatusFieldName(data?.property_name || []),
+    [data?.property_name]
+  );
+  const [optimisticColumns, setOptimisticColumns] = useState({});
+  const [activeTaskId, setActiveTaskId] = useState(/** @type {string | null} */ (null));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  useEffect(() => {
+    setOptimisticColumns({});
+  }, [data?.property_values, group?.name]);
+
+  const fieldName = group?.name || statusFieldName;
+  const getTaskColumnKey = (task) => {
+    const overridden = optimisticColumns[task.id];
+    if (overridden !== undefined) return overridden;
+    if (group) {
+      const resolved = getGroupValue(task[group.name]);
+      return resolved.key;
+    }
+    return normalizeStatus(task.status);
   };
 
   const { columns, grouped } = useMemo(() => {
@@ -83,11 +203,10 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null 
       });
 
       tasks.forEach((task) => {
-        const raw = task[group.name];
-        const resolved = getGroupValue(raw);
-        const key = resolved.key;
+        const key = getTaskColumnKey(task);
         if (!buckets[key]) buckets[key] = [];
         buckets[key].push(task);
+        const resolved = getGroupValue(task[group.name]);
         if (resolved.label) objectLabels[key] = resolved.label;
       });
 
@@ -110,76 +229,104 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null 
       buckets[name] = [];
     });
     tasks.forEach((task) => {
-      const key = normalizeStatus(task.status);
+      const key = getTaskColumnKey(task);
       buckets[key].push(task);
     });
     return {
       columns: KANBAN_COLUMNS.map((c) => ({ key: c, label: c })),
       grouped: buckets,
     };
-  }, [tasks, groupBy, data?.property_name, assigneeOptions]);
+  }, [tasks, groupBy, data?.property_name, assigneeOptions, optimisticColumns]);
+
+  const taskById = useMemo(
+    () => Object.fromEntries(tasks.map((t) => [t.id, t])),
+    [tasks]
+  );
+  const activeTask = activeTaskId ? taskById[activeTaskId] : null;
+
+  const getColumnFromDropTarget = (overId) => {
+    const text = String(overId || "");
+    if (text.startsWith("column-")) return text.replace("column-", "");
+    if (text.startsWith("task-")) {
+      const overTaskId = text.replace("task-", "");
+      const overTask = taskById[overTaskId];
+      return overTask ? getTaskColumnKey(overTask) : null;
+    }
+    return null;
+  };
+
+  const handleDragStart = (event) => {
+    const id = String(event?.active?.id || "");
+    if (!id.startsWith("task-")) return;
+    setActiveTaskId(id.replace("task-", ""));
+  };
+
+  const handleDragEnd = (event) => {
+    const activeId = String(event?.active?.id || "");
+    const overId = event?.over?.id;
+    setActiveTaskId(null);
+    if (!activeId.startsWith("task-") || !overId) return;
+
+    const taskId = activeId.replace("task-", "");
+    const targetColumn = getColumnFromDropTarget(overId);
+    const task = taskById[taskId];
+    if (!task || !targetColumn || !fieldName) return;
+
+    const currentColumn = getTaskColumnKey(task);
+    if (currentColumn === targetColumn) return;
+
+    setOptimisticColumns((prev) => ({ ...prev, [taskId]: targetColumn }));
+    onCellChange?.(task, fieldName, targetColumn === "__unset__" ? "" : targetColumn);
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {columns.map((column) => (
-          <div key={column.key} className="rounded-lg border bg-muted/30 p-3">
-            <div className="mb-3 flex items-center justify-between">
-              <h4 className="text-sm font-semibold">{column.label}</h4>
-              <span className="rounded-full border bg-background px-2 py-0.5 text-xs text-muted-foreground">
-                {(grouped[column.key] || []).length}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {(grouped[column.key] || []).map((task) => (
-                <Link
-                  key={task.id}
-                  to={`/document/${task.id}`}
-                  target="_sidebar"
-                  onClick={() => {}}
-                  className="block w-full rounded-md border bg-background p-2 text-left hover:bg-muted/60"
-                >
-                  <p className="text-sm font-medium underline-offset-2 hover:underline">
-                    {task.title || "Untitled task"}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {assigneeMap[task.assignee] || task.assignee || "Unassigned"} ·{" "}
-                    {resolveDueDate(task)}
-                  </p>
-                  {(task.subtasks || []).length > 0 && (
-                    <div className="mt-2 border-t pt-2">
-                      <p className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-                        Subtasks ({task.subtasks.length})
-                      </p>
-                      <div className="space-y-1">
-                        {task.subtasks.slice(0, 3).map((sub) => (
-                          <div key={sub.id} className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                            <span className="inline-flex h-3 w-3 items-center justify-center rounded border text-[9px]">
-                              {(sub.status || "").toLowerCase().includes("done") ? "✓" : ""}
-                            </span>
-                            <span className="truncate">↳ {sub.title || "Untitled subtask"}</span>
-                          </div>
-                        ))}
-                        {task.subtasks.length > 3 && (
-                          <div className="text-[10px] text-muted-foreground">
-                            +{task.subtasks.length - 3} more
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </Link>
-              ))}
-              <button
-                type="button"
-                className="w-full rounded-md border border-dashed px-3 py-1.5 text-xs text-muted-foreground"
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {columns.map((column) => (
+            <DropColumn key={column.key} columnKey={column.key} className="rounded-lg border bg-muted/30 p-3">
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="text-sm font-semibold">{column.label}</h4>
+                <span className="rounded-full border bg-background px-2 py-0.5 text-xs text-muted-foreground">
+                  {(grouped[column.key] || []).length}
+                </span>
+              </div>
+              <SortableContext
+                items={(grouped[column.key] || []).map((task) => `task-${task.id}`)}
+                strategy={verticalListSortingStrategy}
               >
-                + Add card
-              </button>
-            </div>
-          </div>
-        ))}
+                <div className="space-y-2">
+                  {(grouped[column.key] || []).map((task) => (
+                    <SortableTaskCard key={task.id} task={task} assigneeMap={assigneeMap} />
+                  ))}
+                  <button
+                    type="button"
+                    className="w-full rounded-md border border-dashed px-3 py-1.5 text-xs text-muted-foreground"
+                  >
+                    + Add card
+                  </button>
+                </div>
+              </SortableContext>
+            </DropColumn>
+          ))}
+        </div>
       </div>
-    </div>
+      <DragOverlay>
+        {activeTask ? (
+          <div className="w-full max-w-[280px] rounded-md border bg-background p-2 shadow-lg">
+            <p className="text-sm font-medium">{activeTask.title || "Untitled task"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {assigneeMap[activeTask.assignee] || activeTask.assignee || "Unassigned"} ·{" "}
+              {resolveDueDate(activeTask)}
+            </p>
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

@@ -57,11 +57,31 @@ const assigneeColors = [
   "bg-rose-100 text-rose-800",
 ];
 
+const findDateField = (fields = []) => {
+  const rangeField = fields.find((f) => f?.type === "daterange");
+  if (rangeField) return rangeField;
+  const startField = fields.find((f) => f?.name === "start_date");
+  if (startField) return startField;
+  const dueField = fields.find((f) => f?.name === "due_date");
+  if (dueField) return dueField;
+  const dateField = fields.find((f) => f?.type === "date");
+  return dateField || null;
+};
+
+const fmtDateKey = (date) => {
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 export default function TimelineView({
   data,
   assigneeOptions = [],
   selectedTaskId,
   onSelectTask,
+  onCellChange,
 }) {
   const assigneeMap = useMemo(
     () => Object.fromEntries((assigneeOptions || []).map((opt) => [opt.value, opt.label])),
@@ -71,6 +91,7 @@ export default function TimelineView({
   const [mode, setMode] = useState("month"); // week | month | quarter
   const [anchorDate, setAnchorDate] = useState(() => new Date());
   const [collapsedParents, setCollapsedParents] = useState({});
+  const dateField = useMemo(() => findDateField(data?.property_name || []), [data?.property_name]);
 
   const tasks = useMemo(() => {
     const now = new Date();
@@ -191,6 +212,21 @@ export default function TimelineView({
       }),
     [timelineItems, collapsedParents]
   );
+
+  const applyDroppedDate = (taskId, bucketStartDate) => {
+    if (!onCellChange || !dateField) return;
+    const item = timelineItems.find((t) => t.id === taskId);
+    if (!item) return;
+    const duration = Math.max(0, dayDiff(item.startDate, item.dueDate));
+    const from = fmtDateKey(bucketStartDate);
+    const to = fmtDateKey(addDays(bucketStartDate, duration));
+    if (dateField.type === "daterange") {
+      onCellChange(item, dateField.name, { from, to });
+      return;
+    }
+    const useDueLikeField = String(dateField.name || "").includes("due");
+    onCellChange(item, dateField.name, useDueLikeField ? to : from);
+  };
 
   return (
     <div className="space-y-4">
@@ -322,6 +358,11 @@ export default function TimelineView({
                   to={`/document/${task.id}`}
                   target="_sidebar"
                   onClick={() => onSelectTask?.(task.id)}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/task-id", task.id);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
                   className={`relative border-b block ${isSelected ? "bg-primary/5" : ""}`}
                 >
                   <div className={`grid h-12 ${gridColsClass}`}>
@@ -329,6 +370,13 @@ export default function TimelineView({
                       <div
                         key={c.key}
                         className={`border-r ${mode !== "week" && idx === 1 ? "bg-blue-50/40" : ""} ${idx === columns.length - 1 ? "border-r-0" : ""}`}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const draggedTaskId = e.dataTransfer.getData("text/task-id");
+                          if (!draggedTaskId) return;
+                          applyDroppedDate(draggedTaskId, c.start);
+                        }}
                       />
                     ))}
                   </div>
