@@ -137,6 +137,8 @@ const AddMyFilesDialog = ({
   const onSubmit = async (data) => {
     setLoading(true);
     const spaceId_ = type === 'space' ? id : (selectedSpace?.entity_type === 'space' ? selectedSpace._id : (spaceId || ''));
+    const storeParentId = id || spaceId_ || '';
+    const storeParentType = type || (spaceId_ ? 'space' : '');
     try {
       let res;
 
@@ -183,7 +185,7 @@ const AddMyFilesDialog = ({
           folder_id: type === 'folder' ? id : '',
           group_id: type === 'group' ? id : '',
         });
-        storeHandler(id, type, res?.data);
+        storeHandler(storeParentId, storeParentType, res?.data);
       } else if (data.filetype === 'page') {
         res = await createDocumentMutation.mutateAsync({
           user_id: userID,
@@ -199,21 +201,21 @@ const AddMyFilesDialog = ({
           space_id: spaceId_,
           attachments: [],
         });
-        storeHandler(id, type, res?.data);
+        storeHandler(storeParentId, storeParentType, res?.data);
       } else if (data.filetype === 'folder') {
         res = await createFolderMutation.mutateAsync({
           user_id: userID, entity_type: 'folder', name: data.title,
           shared_members: data.shared_members, shared_teams: data.shared_teams,
           folder_id: type === 'folder' ? id : '', group_id: type === 'group' ? id : '', space_id: spaceId_,
         });
-        storeHandler(id, type, res?.data);
+        storeHandler(storeParentId, storeParentType, res?.data);
       } else if (data.filetype === 'group') {
         res = await createGroupMutation.mutateAsync({
           user_id: userID, entity_type: 'group', name: data.title,
           shared_members: data.shared_members, shared_teams: data.shared_teams,
           folder_id: type === 'folder' ? id : '', group_id: type === 'group' ? id : '', space_id: spaceId_,
         });
-        storeHandler(id, type, res?.data);
+        storeHandler(storeParentId, storeParentType, res?.data);
       }
 
       setIsOpen(false);

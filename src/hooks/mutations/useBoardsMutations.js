@@ -161,7 +161,9 @@ export const useUpdateBoard = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['boards'] });
       queryClient.invalidateQueries({ queryKey: ['boards', variables.boardId] });
-      toast({ title: 'Board updated successfully' });
+      if (!variables.skipToast) {
+        toast({ title: 'Board updated successfully' });
+      }
     },
     
     onError: (error) => {

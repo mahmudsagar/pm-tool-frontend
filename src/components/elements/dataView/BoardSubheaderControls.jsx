@@ -139,7 +139,17 @@ export default function BoardSubheaderControls({
     f => f.field === assigneeFieldName && f.operator === 'is'
   ).length;
 
-  const viewIsDirty = JSON.stringify(viewState) !== JSON.stringify(savedView ?? { sorts: [], filters: [], search: '' });
+  // Treat only sort/filter/search as the "view" — layout tab order is separate and saves on its own.
+  const viewCore = (v) =>
+    !v
+      ? { sorts: [], filters: [], search: '' }
+      : {
+          sorts: v.sorts ?? [],
+          filters: v.filters ?? [],
+          search: v.search ?? '',
+        };
+  const viewIsDirty =
+    JSON.stringify(viewCore(viewState)) !== JSON.stringify(viewCore(savedView ?? { sorts: [], filters: [], search: '' }));
 
   // ── helpers ──────────────────────────────────────────────────────
   function addSort() {

@@ -1,7 +1,30 @@
 // import useSyncStore from "@/stores/useSyncStore"
 
 const EMPTY_ASSIGNEE_OPTIONS = [];
-const DEFAULT_VIEW = { sorts: [], filters: [], search: '' };
+const LAYOUT_TYPES = ['table', 'kanban', 'timeline', 'calendar'];
+const DEFAULT_LAYOUT_ORDER = ['table', 'kanban', 'timeline', 'calendar'];
+const DEFAULT_VIEW = {
+  sorts: [],
+  filters: [],
+  search: '',
+  layout_tabs_order: [...DEFAULT_LAYOUT_ORDER],
+};
+
+function normalizeLayoutOrder(order) {
+  const raw = Array.isArray(order) ? order : DEFAULT_LAYOUT_ORDER;
+  const seen = new Set();
+  const result = [];
+  for (const t of raw) {
+    if (LAYOUT_TYPES.includes(t) && !seen.has(t)) {
+      seen.add(t);
+      result.push(t);
+    }
+  }
+  for (const t of LAYOUT_TYPES) {
+    if (!seen.has(t)) result.push(t);
+  }
+  return result;
+}
 import {
   LayoutGrid,
   Table,
@@ -32,6 +55,7 @@ import { TabsContent } from "@radix-ui/react-tabs"
 import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
 import BoardSubheaderControls from "@/components/elements/dataView/BoardSubheaderControls"
 import AutomationsPanel from "@/components/elements/dataView/AutomationsPanel"
+import BoardViewTabList from "@/components/elements/dataView/BoardViewTabList"
 
 // Dummy data for now
 import { useState, useMemo, useEffect, useRef, useCallback } from "react"
@@ -46,32 +70,12 @@ import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete
 import { useUsers } from "@/hooks/queries/useSpacesQueries"
 import { useTeams } from "@/hooks/queries/useTeamsQueries"
 
-const layouts = [
-  {
-    type: "table",
-    label: "Table",
-    icon: Table,
-    element: TableView,
-  },
-  {
-    type: "timeline",
-    label: "Timeline",
-    icon: BarChart3,
-    element: TimelineView,
-  },
-  {
-    type: "kanban",
-    label: "Kanban",
-    icon: LayoutGrid,
-    element: KanbanView,
-  },
-  {
-    type: "calendar",
-    label: "Calendar",
-    icon: Calendar,
-    element: CalendarView,
-  },
-]
+const LAYOUT_DEFINITIONS = {
+  table: { type: "table", label: "Table", icon: Table, element: TableView },
+  kanban: { type: "kanban", label: "Kanban", icon: LayoutGrid, element: KanbanView },
+  timeline: { type: "timeline", label: "Timeline", icon: BarChart3, element: TimelineView },
+  calendar: { type: "calendar", label: "Calendar", icon: Calendar, element: CalendarView },
+}
 
 const DONE_STATUSES = ["done", "complete", "completed", "closed"];
 const BLOCKED_STATUSES = ["blocked", "stuck"];
@@ -221,6 +225,35 @@ export default function Data({ id: propId, setTopMenu }) {
   const resolvedAssigneeField = useMemo(() => resolveFieldName(boardFieldDefs, "assignee"), [boardFieldDefs]);
   const resolvedPriorityField = useMemo(() => resolveFieldName(boardFieldDefs, "priority"), [boardFieldDefs]);
   const resolvedTypeField = useMemo(() => resolveFieldName(boardFieldDefs, "type"), [boardFieldDefs]);
+
+  const layoutOrder = useMemo(
+    () => normalizeLayoutOrder(viewState?.layout_tabs_order),
+    [viewState?.layout_tabs_order]
+  );
+
+  const orderedLayouts = useMemo(
+    () => layoutOrder.map((t) => LAYOUT_DEFINITIONS[t]).filter(Boolean),
+    [layoutOrder]
+  );
+
+  const handleLayoutOrderChange = useCallback(
+    (newOrder) => {
+      const normalized = normalizeLayoutOrder(newOrder);
+      setViewState((prev) => {
+        const next = { ...prev, layout_tabs_order: normalized };
+        if (boardId) {
+          updateBoardMutation.mutate({
+            boardId,
+            data: { id: boardId, saved_view: next },
+            skipToast: true,
+          });
+        }
+        return next;
+      });
+    },
+    [boardId, updateBoardMutation]
+  );
+
   const loadedBoardRef = useRef(null);
   const dependencyFieldsInitRef = useRef({});
   // Load saved view from board when the board changes (once per board)
@@ -228,7 +261,13 @@ export default function Data({ id: propId, setTopMenu }) {
     if (boardDataId && boardDataId !== loadedBoardRef.current) {
       loadedBoardRef.current = boardDataId;
       if (boardDataSavedView) {
-        setViewState(boardDataSavedView);
+        setViewState({
+          ...DEFAULT_VIEW,
+          ...boardDataSavedView,
+          layout_tabs_order: normalizeLayoutOrder(boardDataSavedView.layout_tabs_order),
+        });
+      } else {
+        setViewState(DEFAULT_VIEW);
       }
     }
   }, [boardDataId, boardDataSavedView]);
@@ -998,7 +1037,11 @@ export default function Data({ id: propId, setTopMenu }) {
 
   function handleResetView() {
     const saved = boardData?.saved_view || DEFAULT_VIEW;
-    setViewState(saved);
+    setViewState({
+      ...DEFAULT_VIEW,
+      ...saved,
+      layout_tabs_order: normalizeLayoutOrder(saved.layout_tabs_order),
+    });
   }
 
   function handleSaveAutomations(nextAutomations) {
@@ -1035,15 +1078,10 @@ export default function Data({ id: propId, setTopMenu }) {
         {/* Header */}
         <div className="flex items-center justify-between border-gray-300 mb-5">
           <div className="flex items-center gap-4">
-            <TabsList>
-              {/* Tabs */}
-              {layouts?.map((layout) => (
-                <TabsTrigger key={layout.type} value={layout.type} className="flex items-center gap-2">
-                  <layout.icon className="h-4 w-4" />
-                  {layout.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <BoardViewTabList
+              orderedLayouts={orderedLayouts}
+              onOrderChange={handleLayoutOrderChange}
+            />
 
 
           </div>
@@ -1127,7 +1165,7 @@ export default function Data({ id: propId, setTopMenu }) {
         </div>
 
         {/* Tabs Content */}
-        {layouts?.map((layout) => (
+        {orderedLayouts?.map((layout) => (
           <TabsContent key={layout.type} value={layout.type}>
             {isLoading || !boardTasks ? (
               <div className="flex items-center justify-center py-12">

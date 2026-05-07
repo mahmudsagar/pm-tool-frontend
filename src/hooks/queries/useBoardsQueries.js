@@ -3,19 +3,29 @@ import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
 import qs from 'qs';
 
+const narrowBoardView = (v) => {
+  if (!v) return { sorts: [], filters: [], search: '' };
+  return {
+    sorts: v.sorts ?? [],
+    filters: v.filters ?? [],
+    search: v.search ?? '',
+  };
+};
+
 /**
  * Query hook to get a specific board by ID, with optional server-side view (sort/filter/search).
  * @param {string} boardId
  * @param {{ sorts?: Array, filters?: Array, search?: string }} [viewState]
  */
 export const useBoard = (boardId, viewState) => {
+  const narrow = narrowBoardView(viewState);
   return useQuery({
-    queryKey: ['boards', boardId, viewState],
+    queryKey: ['boards', boardId, narrow],
     queryFn: async () => {
       const params = { id: boardId };
-      if (viewState?.sorts?.length)   params.sorts   = viewState.sorts;
-      if (viewState?.filters?.length) params.filters = viewState.filters;
-      if (viewState?.search)          params.search  = viewState.search;
+      if (narrow.sorts?.length)   params.sorts   = narrow.sorts;
+      if (narrow.filters?.length) params.filters = narrow.filters;
+      if (narrow.search)          params.search  = narrow.search;
       const queryString = qs.stringify(params, { arrayFormat: 'brackets', encode: false });
       const result = await api.get(`${baseUrl}/v1/board?${queryString}`);
       return result.data;

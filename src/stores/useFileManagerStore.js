@@ -237,12 +237,18 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   },
 
   // Delete functionality for File, Folder
-  deleteHandler: (id, type) => {
+  deleteHandler: (id) => {
     set((state) => {
+      const targetId = String(id);
+      const matchesTarget = (item) => {
+        if (!item?._id) return false;
+        return String(item._id) === targetId;
+      };
+
       const updatedDocuments = { ...state.documents };
       Object.keys(updatedDocuments).forEach((key) => {
         updatedDocuments[key] = updatedDocuments[key].filter(
-          (child) => !(child._id === id && child.entity_type === type)
+          (child) => !matchesTarget(child)
         );
       });
 
@@ -250,7 +256,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         spaces?.map((space) => ({
           ...space,
           childs: (space.childs || []).filter(
-            (child) => !(child._id === id && child.entity_type === type)
+            (child) => !matchesTarget(child)
           ),
         })) || [];
 
@@ -258,7 +264,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       const updatedPrivateSpaces = removeChild(state.privateSpaces);
 
       const updatedSpaceFiles = Array.isArray(state.spaceFiles)
-        ? state.spaceFiles.filter((file) => file.id !== id && file._id !== id)
+        ? state.spaceFiles.filter((file) => String(file.id || file._id || '') !== targetId)
         : state.spaceFiles;
 
       return {
