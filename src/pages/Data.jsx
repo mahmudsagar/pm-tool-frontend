@@ -1156,15 +1156,6 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
                 orderedLayouts={orderedLayouts}
                 onOrderChange={handleLayoutOrderChange}
               />
-            ) : scrumSection === "board" ? (
-              <TabsList className="inline-flex h-auto min-h-10 flex-wrap items-center gap-0.5">
-                {orderedLayouts.map((layout) => (
-                  <TabsTrigger key={layout.type} value={layout.type} className="flex items-center gap-2">
-                    <layout.icon className="h-4 w-4" />
-                    {layout.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
             ) : null}
             {isScrumPage && (
               <div className="ml-2 inline-flex rounded-md border bg-muted/40 p-0.5">
@@ -1235,8 +1226,21 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
           />
         )}
 
+        {isScrumPage && scrumSection === "board" && (
+          <div className="mb-2 w-full border-b pb-2">
+            <TabsList className="inline-flex h-auto min-h-10 flex-wrap items-center gap-0.5">
+              {orderedLayouts.map((layout) => (
+                <TabsTrigger key={layout.type} value={layout.type} className="flex items-center gap-2">
+                  <layout.icon className="h-4 w-4" />
+                  {layout.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+        )}
+
         {/* Sub-toolbar: group-by (left) + sort/filter/search controls (right) */}
-        {(!isScrumPage || scrumSection === "board" || scrumSection === "sprints") && (
+        {(!isScrumPage || scrumSection === "board") && (
         <div className="flex items-center justify-between py-2 border-b mb-4 text-sm">
           {/* Group By */}
           <div className="flex items-center gap-2">
@@ -1313,42 +1317,30 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
             viewState={viewState}
             patchSavedView={patchSavedView}
           />
-        ) : (
+        ) : isScrumPage && scrumSection !== "board" ? null : (
           orderedLayouts?.map((layout) => (
-          <TabsContent key={layout.type} value={layout.type}>
-            {isLoading || !(isScrumPage ? scrumScopedBoardTasks : boardTasks) ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
-              </div>
-            ) : layout.type === 'scrum' ? (
-              <ScrumBoardView
-                data={scrumScopedBoardTasks}
-                assigneeOptions={assigneeOptions}
-                onCellChange={handleCellChange}
-                viewState={viewState}
-                patchSavedView={patchSavedView}
-                swimlaneFieldNames={{
-                  assigneeField: resolvedAssigneeField,
-                  priorityField: resolvedPriorityField,
-                  epicField: resolvedEpicField,
-                }}
-              />
-            ) : (
-              <layout.element
-                data={isScrumPage ? scrumScopedBoardTasks : boardTasks}
-                boardId={boardId}
-                onTaskCreate={() => setIsTaskModalOpen(true)}
-                onSubtaskCreate={createSubtask}
-                onCellChange={handleCellChange}
-                assigneeOptions={assigneeOptions}
-                groupBy={groupBy}
-                dependencyOptions={dependencyTaskOptions}
-                selectedTaskId={selectedTaskId}
-                onSelectTask={setSelectedTaskId}
-              />
-            )}
-          </TabsContent>
-        )))}
+            <TabsContent key={layout.type} value={layout.type}>
+              {isLoading || !(isScrumPage ? scrumScopedBoardTasks : boardTasks) ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+                </div>
+              ) : (
+                <layout.element
+                  data={isScrumPage ? scrumScopedBoardTasks : boardTasks}
+                  boardId={boardId}
+                  onTaskCreate={() => setIsTaskModalOpen(true)}
+                  onSubtaskCreate={createSubtask}
+                  onCellChange={handleCellChange}
+                  assigneeOptions={assigneeOptions}
+                  groupBy={groupBy}
+                  dependencyOptions={dependencyTaskOptions}
+                  selectedTaskId={selectedTaskId}
+                  onSelectTask={setSelectedTaskId}
+                />
+              )}
+            </TabsContent>
+          ))
+        )}
       </Tabs>
 
       {/* Task Form Modal */}
