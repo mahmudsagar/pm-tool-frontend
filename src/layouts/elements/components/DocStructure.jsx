@@ -22,6 +22,9 @@ function DocStructure({
     switch (docType) {
       case 'page':
         // Check if it's a board page type
+        if (fileType === 'scrum') {
+          return `/scrum/${docId}`;
+        }
         if (fileType === 'board') {
           return `/board/${docId}`;
         }

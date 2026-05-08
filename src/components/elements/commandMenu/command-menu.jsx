@@ -62,7 +62,9 @@ export function CommandMenu({ ...props }) {
     } else if (entity_type === 'space') {
       navigate(`/space/${_id}`);
     } else if (entity_type === 'page' || entity_type === 'board') {
-      if (page_type === 'board' || entity_type === 'board') {
+      if (page_type === 'scrum') {
+        navigate(`/scrum/${_id}`);
+      } else if (page_type === 'board' || entity_type === 'board') {
         navigate(`/board/${_id}`);
       } else {
         navigate(`/document/${_id}`);

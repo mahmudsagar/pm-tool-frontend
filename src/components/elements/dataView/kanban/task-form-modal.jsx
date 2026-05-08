@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Dialog,
@@ -26,10 +26,57 @@ import {
 } from '@/components/ui/select';
 import useStatusStore from '@/stores/useStatusStore';
 
-function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo", defaultDate = null, onSave, assigneeOptions = [] }) {
-  // Get status options from the global store
+function TaskFormModal({
+  open,
+  onOpenChange,
+  task = null,
+  defaultStatus = "todo",
+  defaultDate = null,
+  onSave,
+  assigneeOptions = [],
+  boardFieldDefs = [],
+}) {
   const { getStatusOptions } = useStatusStore();
-  const statusOptions = getStatusOptions();
+
+  const statusFieldDef = useMemo(
+    () => boardFieldDefs.find((f) => f.name === 'status'),
+    [boardFieldDefs]
+  );
+  const statusOptionsForForm = useMemo(() => {
+    const opts = statusFieldDef?.options;
+    if (Array.isArray(opts) && opts.length) {
+      return opts.map((o) => ({ label: o.label, value: String(o.value) }));
+    }
+    return getStatusOptions();
+  }, [statusFieldDef, getStatusOptions]);
+
+  const sprintFieldDef = useMemo(
+    () => boardFieldDefs.find((f) => f.name === 'sprint'),
+    [boardFieldDefs]
+  );
+  const sprintIsText = sprintFieldDef?.type === 'input';
+
+  const showScrumExtras = useMemo(
+    () =>
+      boardFieldDefs.some((f) =>
+        [
+          'story_points',
+          'epic',
+          'labels',
+          'moscow',
+          'effort_score',
+          'value_score',
+          'dod_checklist',
+        ].includes(f.name)
+      ),
+    [boardFieldDefs]
+  );
+
+  const moscowField = useMemo(
+    () => boardFieldDefs.find((f) => f.name === 'moscow'),
+    [boardFieldDefs]
+  );
+  const moscowOptions = moscowField?.options || [];
   
   // Other static options (these don't need to be global)
   const priorityOptions = [
@@ -63,9 +110,19 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
       due_date: '',
       start_date: '',
       sprint: 'sprint-1',
-      type: 'feature'
+      type: 'feature',
+      story_points: '',
+      epic: '',
+      labels: '',
+      moscow: '',
+      effort_score: '',
+      value_score: '',
+      dod_checklist: '',
     }
   });
+
+  const effectiveDefaultStatus = statusOptionsForForm[0]?.value || defaultStatus;
+  const defaultSprintForCreate = sprintIsText ? '' : 'sprint-1';
 
   // Reset form when task changes or modal opens
   useEffect(() => {
@@ -74,13 +131,20 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
       form.reset({
         title: task.title || '',
         description: task.description || '',
-        status: task.status || defaultStatus,
+        status: task.status || effectiveDefaultStatus,
         priority: task.priority || 'medium',
         assignee: task.assignee || '',
         due_date: task.due_date || '',
         start_date: task.start_date || '',
-        sprint: task.sprint || 'sprint-1',
-        type: task.type || 'feature'
+        sprint: task.sprint || (sprintIsText ? '' : 'sprint-1'),
+        type: task.type || 'feature',
+        story_points: task.story_points ?? '',
+        epic: task.epic ?? '',
+        labels: task.labels ?? '',
+        moscow: task.moscow ?? '',
+        effort_score: task.effort_score ?? '',
+        value_score: task.value_score ?? '',
+        dod_checklist: task.dod_checklist ?? '',
       });
     } else if (open) {
       // Creating new task
@@ -90,16 +154,23 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
       form.reset({
         title: '',
         description: '',
-        status: defaultStatus,
+        status: effectiveDefaultStatus,
         priority: 'medium',
         assignee: defaultAssignee,
         due_date: defaultDueDate,
         start_date: '',
-        sprint: 'sprint-1',
-        type: 'feature'
+        sprint: defaultSprintForCreate,
+        type: 'feature',
+        story_points: '',
+        epic: '',
+        labels: '',
+        moscow: '',
+        effort_score: '',
+        value_score: '',
+        dod_checklist: '',
       });
     }
-  }, [task, defaultStatus, defaultDate, open, form]);
+  }, [task, effectiveDefaultStatus, defaultDate, open, form, assigneeOptions, sprintIsText, defaultSprintForCreate]);
 
   const onSubmit = (data) => {
     // Generate task ID for new tasks
@@ -121,6 +192,13 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
             start_date: data.start_date,
             type: data.type,
             sprint: data.sprint,
+            story_points: data.story_points,
+            epic: data.epic,
+            labels: data.labels,
+            moscow: data.moscow,
+            effort_score: data.effort_score,
+            value_score: data.value_score,
+            dod_checklist: data.dod_checklist,
           },
         }
       : undefined;
@@ -161,6 +239,125 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
                 )}
               />
 
+              {isEditing && showScrumExtras && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="story_points"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Story points</FormLabel>
+                        <FormControl>
+                          <Input type="text" inputMode="decimal" placeholder="e.g. 3" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="epic"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Epic</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Epic name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="labels"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Labels</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Comma-separated" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {moscowOptions.length > 0 && (
+                    <FormField
+                      control={form.control}
+                      name="moscow"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>MoSCoW</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {moscowOptions.map((option) => (
+                                <SelectItem key={option.value} value={String(option.value)}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  {boardFieldDefs.some((f) => f.name === 'effort_score') && (
+                    <FormField
+                      control={form.control}
+                      name="effort_score"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Effort (1–10)</FormLabel>
+                          <FormControl>
+                            <Input type="text" inputMode="numeric" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  {boardFieldDefs.some((f) => f.name === 'value_score') && (
+                    <FormField
+                      control={form.control}
+                      name="value_score"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Value (1–10)</FormLabel>
+                          <FormControl>
+                            <Input type="text" inputMode="numeric" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  {boardFieldDefs.some((f) => f.name === 'dod_checklist') && (
+                    <FormField
+                      control={form.control}
+                      name="dod_checklist"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>DoD checklist (JSON)</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder='[{"id":"1","label":"Tests pass","done":false}]'
+                              rows={2}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </>
+              )}
+
               {isEditing && (
               <FormField
                 control={form.control}
@@ -195,7 +392,7 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {statusOptions.map((option) => (
+                        {statusOptionsForForm.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -298,20 +495,26 @@ function TaskFormModal({ open, onOpenChange, task = null, defaultStatus = "todo"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sprint</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    {sprintIsText ? (
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select sprint" />
-                        </SelectTrigger>
+                        <Input placeholder="Sprint name or id" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        {sprintOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    ) : (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select sprint" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {sprintOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}

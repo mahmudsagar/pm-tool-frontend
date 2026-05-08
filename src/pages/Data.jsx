@@ -1,8 +1,10 @@
 // import useSyncStore from "@/stores/useSyncStore"
 
 const EMPTY_ASSIGNEE_OPTIONS = [];
-const LAYOUT_TYPES = ['table', 'kanban', 'timeline', 'calendar'];
-const DEFAULT_LAYOUT_ORDER = ['table', 'kanban', 'timeline', 'calendar'];
+const DATA_LAYOUT_TYPES = ['table', 'kanban', 'timeline', 'calendar'];
+const SCRUM_LAYOUT_TYPES = ['scrum', ...DATA_LAYOUT_TYPES];
+const SCRUM_BOARD_LAYOUT_TYPES = ['kanban', 'timeline', 'calendar'];
+const DEFAULT_LAYOUT_ORDER = [...DATA_LAYOUT_TYPES];
 const DEFAULT_VIEW = {
   sorts: [],
   filters: [],
@@ -10,17 +12,18 @@ const DEFAULT_VIEW = {
   layout_tabs_order: [...DEFAULT_LAYOUT_ORDER],
 };
 
-function normalizeLayoutOrder(order) {
+function normalizeLayoutOrder(order, allowScrum = false) {
+  const allowed = allowScrum ? SCRUM_LAYOUT_TYPES : DATA_LAYOUT_TYPES;
   const raw = Array.isArray(order) ? order : DEFAULT_LAYOUT_ORDER;
   const seen = new Set();
   const result = [];
   for (const t of raw) {
-    if (LAYOUT_TYPES.includes(t) && !seen.has(t)) {
+    if (allowed.includes(t) && !seen.has(t)) {
       seen.add(t);
       result.push(t);
     }
   }
-  for (const t of LAYOUT_TYPES) {
+  for (const t of allowed) {
     if (!seen.has(t)) result.push(t);
   }
   return result;
@@ -35,6 +38,7 @@ import {
   Share,
   Layers,
   X,
+  SquareKanban,
 } from "lucide-react"
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -50,6 +54,11 @@ import TableView from "@/components/elements/dataView/table"
 import KanbanView from "@/components/elements/dataView/kanban"
 import TimelineView from "@/components/elements/dataView/timeline"
 import CalendarView from "@/components/elements/dataView/calendar"
+import ScrumBoardView from "@/components/elements/dataView/scrum/ScrumBoardView"
+import ScrumReportsSection from "@/components/elements/dataView/scrum/ScrumReportsSection"
+import ScrumSprintHub from "@/components/elements/dataView/scrum/ScrumSprintHub"
+import ScrumBacklogPlanning from "@/components/elements/dataView/scrum/ScrumBacklogPlanning"
+import ScrumAgileModulesSection from "@/components/elements/dataView/scrum/ScrumAgileModulesSection"
 
 import { TabsContent } from "@radix-ui/react-tabs"
 import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
@@ -70,12 +79,12 @@ import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete
 import { useUsers } from "@/hooks/queries/useSpacesQueries"
 import { useTeams } from "@/hooks/queries/useTeamsQueries"
 
-const LAYOUT_DEFINITIONS = {
+const BASE_LAYOUT_DEFINITIONS = {
   table: { type: "table", label: "Table", icon: Table, element: TableView },
   kanban: { type: "kanban", label: "Kanban", icon: LayoutGrid, element: KanbanView },
   timeline: { type: "timeline", label: "Timeline", icon: BarChart3, element: TimelineView },
   calendar: { type: "calendar", label: "Calendar", icon: Calendar, element: CalendarView },
-}
+};
 
 const DONE_STATUSES = ["done", "complete", "completed", "closed"];
 const BLOCKED_STATUSES = ["blocked", "stuck"];
@@ -150,7 +159,7 @@ const normalizeSelectLikeValue = (rawValue, options = []) => {
   return text;
 };
 
-export default function Data({ id: propId, setTopMenu }) {
+export default function Data({ id: propId, setTopMenu, mode = "board" }) {
   // Get board ID from URL params or props (for parallel routes)
   const { id: paramBoardId } = useParams();
   const [searchParams] = useSearchParams();
@@ -165,10 +174,16 @@ export default function Data({ id: propId, setTopMenu }) {
         boardId = key.replace('/board/', '');
         break;
       }
+      if (value === '_sidebar' && key.startsWith('/scrum/')) {
+        boardId = key.replace('/scrum/', '');
+        break;
+      }
     }
   }
 
-  const [activeTab, setActiveTab] = useState("table");
+  const isScrumPage = mode === "scrum";
+  const [activeTab, setActiveTab] = useState(isScrumPage ? "kanban" : "table");
+  const [scrumSection, setScrumSection] = useState("sprints");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [groupBy, setGroupBy] = useState(null); // null = no grouping | { name, label, type }
   const [selectedTaskId, setSelectedTaskId] = useState(null);
@@ -225,20 +240,27 @@ export default function Data({ id: propId, setTopMenu }) {
   const resolvedAssigneeField = useMemo(() => resolveFieldName(boardFieldDefs, "assignee"), [boardFieldDefs]);
   const resolvedPriorityField = useMemo(() => resolveFieldName(boardFieldDefs, "priority"), [boardFieldDefs]);
   const resolvedTypeField = useMemo(() => resolveFieldName(boardFieldDefs, "type"), [boardFieldDefs]);
+  const resolvedEpicField = useMemo(() => resolveFieldName(boardFieldDefs, "epic"), [boardFieldDefs]);
 
   const layoutOrder = useMemo(
-    () => normalizeLayoutOrder(viewState?.layout_tabs_order),
-    [viewState?.layout_tabs_order]
+    () => normalizeLayoutOrder(viewState?.layout_tabs_order, isScrumPage),
+    [viewState?.layout_tabs_order, isScrumPage]
   );
 
-  const orderedLayouts = useMemo(
-    () => layoutOrder.map((t) => LAYOUT_DEFINITIONS[t]).filter(Boolean),
-    [layoutOrder]
-  );
+  const orderedLayouts = useMemo(() => {
+    const defs = { ...BASE_LAYOUT_DEFINITIONS };
+    if (isScrumPage) {
+      defs.scrum = { type: "scrum", label: "Scrum", icon: SquareKanban, element: ScrumBoardView };
+    }
+    const source = isScrumPage
+      ? layoutOrder.filter((t) => SCRUM_BOARD_LAYOUT_TYPES.includes(t))
+      : layoutOrder;
+    return source.map((t) => defs[t]).filter(Boolean);
+  }, [layoutOrder, isScrumPage]);
 
   const handleLayoutOrderChange = useCallback(
     (newOrder) => {
-      const normalized = normalizeLayoutOrder(newOrder);
+      const normalized = normalizeLayoutOrder(newOrder, isScrumPage);
       setViewState((prev) => {
         const next = { ...prev, layout_tabs_order: normalized };
         if (boardId) {
@@ -248,6 +270,22 @@ export default function Data({ id: propId, setTopMenu }) {
             skipToast: true,
           });
         }
+        return next;
+      });
+    },
+    [boardId, isScrumPage, updateBoardMutation]
+  );
+
+  const patchSavedView = useCallback(
+    (updater) => {
+      if (!boardId) return;
+      setViewState((prev) => {
+        const next = typeof updater === "function" ? updater(prev) : updater;
+        updateBoardMutation.mutate({
+          boardId,
+          data: { id: boardId, saved_view: next },
+          skipToast: true,
+        });
         return next;
       });
     },
@@ -264,13 +302,29 @@ export default function Data({ id: propId, setTopMenu }) {
         setViewState({
           ...DEFAULT_VIEW,
           ...boardDataSavedView,
-          layout_tabs_order: normalizeLayoutOrder(boardDataSavedView.layout_tabs_order),
+          layout_tabs_order: normalizeLayoutOrder(boardDataSavedView.layout_tabs_order, isScrumPage),
         });
       } else {
         setViewState(DEFAULT_VIEW);
       }
     }
-  }, [boardDataId, boardDataSavedView]);
+  }, [boardDataId, boardDataSavedView, isScrumPage]);
+
+  useEffect(() => {
+    if (isScrumPage) {
+      if (!SCRUM_BOARD_LAYOUT_TYPES.includes(activeTab)) {
+        setActiveTab("kanban");
+      }
+    } else if (activeTab === "scrum") {
+      setActiveTab("table");
+    }
+  }, [activeTab, isScrumPage]);
+
+  useEffect(() => {
+    if (!isScrumPage && scrumSection !== "board") {
+      setScrumSection("board");
+    }
+  }, [isScrumPage, scrumSection]);
 
   useEffect(() => {
     if (!boardDataId) return;
@@ -367,7 +421,7 @@ export default function Data({ id: propId, setTopMenu }) {
           <Share size={12} /> Share
         </div>
       </DropdownMenuItem>
-      <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/board/${boardId}`)}>
+      <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/${isScrumPage ? "scrum" : "board"}/${boardId}`)}>
         <div className='flex items-center gap-1'>
           <Copy size={12} /> Copy link
         </div>
@@ -928,6 +982,8 @@ export default function Data({ id: propId, setTopMenu }) {
           sub.custom_meta?.values?.depends_on ||
           sub.custom_meta?.values?.blocked_by ||
           "";
+        subData.risk_flag = Boolean(sub.custom_meta?.values?.risk_flag);
+        subData.risk_reason = sub.custom_meta?.values?.risk_reason || "";
         subData.createdAt = sub.createdAt;
         subData.updatedAt = sub.updatedAt;
         return subData;
@@ -973,6 +1029,8 @@ export default function Data({ id: propId, setTopMenu }) {
         doc.custom_meta?.values?.depends_on ||
         doc.custom_meta?.values?.blocked_by ||
         "";
+      taskData.risk_flag = Boolean(doc.custom_meta?.values?.risk_flag);
+      taskData.risk_reason = doc.custom_meta?.values?.risk_reason || "";
 
       // Add timestamps
       taskData.createdAt = doc.createdAt;
@@ -1008,6 +1066,21 @@ export default function Data({ id: propId, setTopMenu }) {
     return null;
   }, []);
 
+  const activeSprint = viewState?.scrum?.sprint_management?.active_sprint || "";
+  const scrumScopedBoardTasks = useMemo(() => {
+    if (!isScrumPage || !boardTasks) return boardTasks;
+    if (!activeSprint) return boardTasks;
+    const values = (boardTasks.property_values || []).filter((item) => {
+      if (item.parent_id) return true;
+      return String(item.sprint || "") === String(activeSprint);
+    });
+    return {
+      ...boardTasks,
+      property_values: values,
+      tasks: values,
+    };
+  }, [activeSprint, boardTasks, isScrumPage]);
+
   const dependencyTaskOptions = useMemo(() => {
     const byId = new Map();
     (boardDataUnfiltered?.documents || []).forEach((doc, index) => {
@@ -1040,7 +1113,7 @@ export default function Data({ id: propId, setTopMenu }) {
     setViewState({
       ...DEFAULT_VIEW,
       ...saved,
-      layout_tabs_order: normalizeLayoutOrder(saved.layout_tabs_order),
+      layout_tabs_order: normalizeLayoutOrder(saved.layout_tabs_order, isScrumPage),
     });
   }
 
@@ -1078,11 +1151,57 @@ export default function Data({ id: propId, setTopMenu }) {
         {/* Header */}
         <div className="flex items-center justify-between border-gray-300 mb-5">
           <div className="flex items-center gap-4">
-            <BoardViewTabList
-              orderedLayouts={orderedLayouts}
-              onOrderChange={handleLayoutOrderChange}
-            />
-
+            {!isScrumPage ? (
+              <BoardViewTabList
+                orderedLayouts={orderedLayouts}
+                onOrderChange={handleLayoutOrderChange}
+              />
+            ) : scrumSection === "board" ? (
+              <TabsList className="inline-flex h-auto min-h-10 flex-wrap items-center gap-0.5">
+                {orderedLayouts.map((layout) => (
+                  <TabsTrigger key={layout.type} value={layout.type} className="flex items-center gap-2">
+                    <layout.icon className="h-4 w-4" />
+                    {layout.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            ) : null}
+            {isScrumPage && (
+              <div className="ml-2 inline-flex rounded-md border bg-muted/40 p-0.5">
+                <Button
+                  variant={scrumSection === "sprints" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-7 px-3 text-xs"
+                  onClick={() => setScrumSection("sprints")}
+                >
+                  Sprints
+                </Button>
+                <Button
+                  variant={scrumSection === "board" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-7 px-3 text-xs"
+                  onClick={() => setScrumSection("board")}
+                >
+                  Sprint Board
+                </Button>
+                <Button
+                  variant={scrumSection === "reports" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-7 px-3 text-xs"
+                  onClick={() => setScrumSection("reports")}
+                >
+                  Reports
+                </Button>
+                <Button
+                  variant={scrumSection === "agile" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-7 px-3 text-xs"
+                  onClick={() => setScrumSection("agile")}
+                >
+                  Agile
+                </Button>
+              </div>
+            )}
 
           </div>
           <div className="flex items-center gap-2">
@@ -1097,7 +1216,27 @@ export default function Data({ id: propId, setTopMenu }) {
           </div>
         </div>
 
+        {isScrumPage && scrumSection === "sprints" && !isLoading && !!boardTasks && (
+          <ScrumSprintHub
+            data={boardTasks}
+            viewState={viewState}
+            patchSavedView={patchSavedView}
+            onSprintSelected={() => setScrumSection("board")}
+          />
+        )}
+        {isScrumPage && scrumSection === "board" && !isLoading && !!boardTasks && (
+          <ScrumBacklogPlanning
+            data={boardTasks}
+            viewState={viewState}
+            onCellChange={handleCellChange}
+            patchSavedView={patchSavedView}
+            sprintFieldName={resolveFieldName(boardFieldDefs, "sprint")}
+            moscowFieldName={resolveFieldName(boardFieldDefs, "moscow")}
+          />
+        )}
+
         {/* Sub-toolbar: group-by (left) + sort/filter/search controls (right) */}
+        {(!isScrumPage || scrumSection === "board" || scrumSection === "sprints") && (
         <div className="flex items-center justify-between py-2 border-b mb-4 text-sm">
           {/* Group By */}
           <div className="flex items-center gap-2">
@@ -1163,17 +1302,40 @@ export default function Data({ id: propId, setTopMenu }) {
             />
           </div>
         </div>
+        )}
 
         {/* Tabs Content */}
-        {orderedLayouts?.map((layout) => (
+        {isScrumPage && scrumSection === "reports" ? (
+          <ScrumReportsSection data={boardTasks} activeSprint={activeSprint} />
+        ) : isScrumPage && scrumSection === "agile" ? (
+          <ScrumAgileModulesSection
+            data={boardTasks}
+            viewState={viewState}
+            patchSavedView={patchSavedView}
+          />
+        ) : (
+          orderedLayouts?.map((layout) => (
           <TabsContent key={layout.type} value={layout.type}>
-            {isLoading || !boardTasks ? (
+            {isLoading || !(isScrumPage ? scrumScopedBoardTasks : boardTasks) ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
               </div>
+            ) : layout.type === 'scrum' ? (
+              <ScrumBoardView
+                data={scrumScopedBoardTasks}
+                assigneeOptions={assigneeOptions}
+                onCellChange={handleCellChange}
+                viewState={viewState}
+                patchSavedView={patchSavedView}
+                swimlaneFieldNames={{
+                  assigneeField: resolvedAssigneeField,
+                  priorityField: resolvedPriorityField,
+                  epicField: resolvedEpicField,
+                }}
+              />
             ) : (
               <layout.element
-                data={boardTasks}
+                data={isScrumPage ? scrumScopedBoardTasks : boardTasks}
                 boardId={boardId}
                 onTaskCreate={() => setIsTaskModalOpen(true)}
                 onSubtaskCreate={createSubtask}
@@ -1186,7 +1348,7 @@ export default function Data({ id: propId, setTopMenu }) {
               />
             )}
           </TabsContent>
-        ))}
+        )))}
       </Tabs>
 
       {/* Task Form Modal */}
@@ -1195,6 +1357,7 @@ export default function Data({ id: propId, setTopMenu }) {
         onOpenChange={setIsTaskModalOpen}
         onSave={createTask}
         assigneeOptions={assigneeOptions}
+        boardFieldDefs={boardFieldDefs}
       />
     </section>
   )

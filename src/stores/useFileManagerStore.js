@@ -8,6 +8,7 @@ import {
   StickyNote,
   FileSpreadsheet,
   LayoutGrid,
+  SquareKanban,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.BN_BASE_URL + "/v1";
@@ -683,6 +684,10 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   // Obtain the data and convert it into a table format.
   convertTableFormat: (data) => {
     return (data || []).map((child) => {
+      let pageType = child.page_type;
+      if (!pageType && child.entity_type === 'board') {
+        pageType = child.custom_meta?.board_kind === 'scrum' ? 'scrum' : 'board';
+      }
       const fileIcon =
         child.entity_type === "folder"
           ? Folder
@@ -693,14 +698,15 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
               whiteboard: StickyNote,
               sheet: FileSpreadsheet,
               board: LayoutGrid,
-            }[child.page_type] || FileText;
+              scrum: SquareKanban,
+            }[pageType] || FileText;
 
       // Choose display name robustly: folders/groups use `name`, pages usually use `title`,
       // but board pages may use `name` on the backend. Fall back safely.
       let fileName = '';
       if (child.entity_type === 'folder' || child.entity_type === 'group') {
         fileName = child.name;
-      } else if (child.page_type === 'board') {
+      } else if (pageType === 'board' || pageType === 'scrum' || child.entity_type === 'board') {
         fileName = child.name || child.title || '';
       } else {
         fileName = child.title || child.name || '';
@@ -721,7 +727,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         space_id: child.space_id,
         folder_id: child.folder_id || child.parent_id || null,
         group_id: child.group_id || null,
-        page_type: child.page_type || null,
+        page_type: pageType || null,
       };
     });
   },
@@ -768,6 +774,11 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
           const modifiedUser = result?.full_name || "Unknown User";
           console.log(child);
 
+          let pageType = child.page_type;
+          if (!pageType && child.entity_type === 'board') {
+            pageType = child.custom_meta?.board_kind === 'scrum' ? 'scrum' : 'board';
+          }
+
           return {
             id: child._id,
             type: child.entity_type,
@@ -775,9 +786,9 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
             name:
               child.entity_type === "folder"
                 ? child.name
-                : child.page_type === 'board'
+                : (pageType === 'board' || pageType === 'scrum' || child.entity_type === 'board')
                 ? (child.name || child.title || '')
-                : (child.title ? `${child.title}.${child.page_type}` : (child.name || '')),
+                : (child.title ? `${child.title}.${pageType || child.page_type}` : (child.name || '')),
             modified: formatTime(child.updatedAt),
             modifiedBy: modifiedUser,
             sharing: data[0].is_private ? "Public" : "Private",
@@ -785,7 +796,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
             space_id: child.space_id,
             folder_id: child.folder_id || child.parent_id || null,
             group_id: child.group_id || null,
-            page_type: child.page_type || null,
+            page_type: pageType || null,
           };
         })
       );

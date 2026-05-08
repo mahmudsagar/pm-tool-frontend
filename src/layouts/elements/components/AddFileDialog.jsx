@@ -36,6 +36,8 @@ import { useEffect, useState } from 'react';
 import { Controller, useForm } from "react-hook-form";
 import ButtonLoading from './ButtonLoading';
 import { useCreateDocument, useCreateBoard, useCreateFolder, useCreateGroup, useUpdateEntityTitle } from '@/hooks/mutations/useFilesMutations';
+import { buildScrumBoardCustomMeta, defaultScrumSavedView } from '@/components/elements/dataView/scrum/scrumBoardConstants';
+import { useToast } from '@/components/ui/use-toast';
 
 const AddFileDialog = ({
   id,
@@ -66,6 +68,7 @@ const AddFileDialog = ({
   const createFolderMutation = useCreateFolder();
   const createGroupMutation = useCreateGroup();
   const updateEntityTitleMutation = useUpdateEntityTitle();
+  const { toast } = useToast();
 
   const form = useForm({
     defaultValues: {
@@ -76,8 +79,6 @@ const AddFileDialog = ({
       shared_teams: []
     }
   });
-
-  // Update filename state when initialName changes
   useEffect(() => {
     if (isEdit && initialName) {
       setFileName(initialName);
@@ -118,12 +119,27 @@ const AddFileDialog = ({
 
   const onSubmit = async (data) => {
     setLoading(true);
+    const parentIds = {
+      space_id: type === 'space' ? id : '',
+      folder_id: type === 'folder' ? id : '',
+      group_id: type === 'group' ? id : '',
+    };
+    const parentCount = [parentIds.space_id, parentIds.folder_id, parentIds.group_id].filter(Boolean).length;
+    if (!isEdit && data.filetype === 'page' && (data.page_type === 'board' || data.page_type === 'scrum') && parentCount !== 1) {
+      toast({
+        variant: "destructive",
+        title: "Invalid parent for board",
+        description: "Please create this board inside exactly one container (space, folder, or group).",
+      });
+      setLoading(false);
+      return;
+    }
     try {
       let res;
 
       if (isEdit) {
         // All edits just rename — use a single mutation
-        const entity = data.page_type === 'board' ? 'board'
+        const entity = (data.page_type === 'board' || data.page_type === 'scrum') ? 'board'
           : data.filetype === 'folder' ? 'folder'
           : data.filetype === 'group' ? 'group'
           : 'page';
@@ -134,7 +150,7 @@ const AddFileDialog = ({
         };
         updateHandler(id, data.filetype, updateData);
         if (onEditSuccess) onEditSuccess(res?.data);
-      } else if (data.filetype === 'page' && data.page_type === 'board') {
+      } else if (data.filetype === 'page' && (data.page_type === 'board' || data.page_type === 'scrum')) {
         // Build assignee options from selected shared_members for dynamic reference
         const isPrivateBoard = space_visibility ?? false;
         // For private boards, always include owner in shared_members
@@ -143,7 +159,8 @@ const AddFileDialog = ({
           ? [...new Set([...baseSharedMembers, userID])]
           : baseSharedMembers;
 
-        const boardData = {
+        const isScrumBoard = data.page_type === 'scrum';
+        const dataBoardPayload = {
           name: data.title,
           description: `Board: ${data.title}`,
           user_id: userID,
@@ -159,12 +176,21 @@ const AddFileDialog = ({
               { type: 'daterange', initialized: true, label: 'Dates', name: 'dates', hasOptions: false },
             ],
           },
-          space_id: type === 'space' ? id : '',
-          folder_id: type === 'folder' ? id : '',
-          group_id: type === 'group' ? id : '',
+          ...parentIds,
         };
-        res = await createBoardMutation.mutateAsync(boardData);
-        storeHandler(id, type, res?.data);
+        const scrumBoardPayload = {
+          ...dataBoardPayload,
+          description: `Scrum board: ${data.title}`,
+          custom_meta: buildScrumBoardCustomMeta(),
+          saved_view: defaultScrumSavedView(),
+        };
+        res = await createBoardMutation.mutateAsync(isScrumBoard ? scrumBoardPayload : dataBoardPayload);
+        const createdBoard = res?.data && typeof res.data === 'object' ? res.data : res;
+        storeHandler(id, type, {
+          ...createdBoard,
+          entity_type: 'board',
+          page_type: isScrumBoard ? 'scrum' : 'board',
+        });
       } else if (data.filetype === 'page') {
         const docData = {
           user_id: userID,
@@ -338,7 +364,8 @@ const AddFileDialog = ({
                                 <SelectItem value="document" className="cursor-pointer">Document</SelectItem>
                                 <SelectItem value="sheet" className="cursor-pointer">Sheet</SelectItem>
                                 <SelectItem value="whiteboard" className="cursor-pointer">Whiteboard</SelectItem>
-                                <SelectItem value="board" className="cursor-pointer">Board</SelectItem>
+                                <SelectItem value="board" className="cursor-pointer">Data board</SelectItem>
+                                <SelectItem value="scrum" className="cursor-pointer">Scrum board</SelectItem>
                               </SelectContent>
                             </Select>
                           )}

@@ -37,6 +37,8 @@ import { useEffect, useState, useMemo } from 'react';
 import { Controller, useForm } from "react-hook-form";
 import ButtonLoading from './ButtonLoading';
 import { useCreateDocument, useCreateBoard, useCreateFolder, useCreateGroup, useUpdateEntityTitle } from '@/hooks/mutations/useFilesMutations';
+import { buildScrumBoardCustomMeta, defaultScrumSavedView } from '@/components/elements/dataView/scrum/scrumBoardConstants';
+import { useToast } from '@/components/ui/use-toast';
 
 const AddMyFilesDialog = ({
   id,
@@ -76,6 +78,7 @@ const AddMyFilesDialog = ({
   const createFolderMutation = useCreateFolder();
   const createGroupMutation = useCreateGroup();
   const updateEntityTitleMutation = useUpdateEntityTitle();
+  const { toast } = useToast();
   const form = useForm({
     defaultValues: {
       title: isEdit ? initialName : fileName,
@@ -85,8 +88,6 @@ const AddMyFilesDialog = ({
       shared_teams: []
     }
   });
-
-  // Update filename state when initialName changes
   useEffect(() => {
     if (isEdit && initialName) {
       setFileName(initialName);
@@ -101,6 +102,16 @@ const AddMyFilesDialog = ({
       }
     }
   }, [spaceId, allSpaces])
+
+  // When creating from root context (no explicit parent), default to first available space.
+  useEffect(() => {
+    if (type || spaceId || !Array.isArray(allSpaces) || allSpaces.length === 0) return;
+    const firstSpace = allSpaces[0];
+    if (firstSpace?._id) {
+      setSpaceId(firstSpace._id);
+      setSelectedSpace(firstSpace);
+    }
+  }, [allSpaces, spaceId, type]);
 
   // Force set form values when component mounts
   useEffect(() => {
@@ -139,11 +150,22 @@ const AddMyFilesDialog = ({
     const spaceId_ = type === 'space' ? id : (selectedSpace?.entity_type === 'space' ? selectedSpace._id : (spaceId || ''));
     const storeParentId = id || spaceId_ || '';
     const storeParentType = type || (spaceId_ ? 'space' : '');
+
+    if (!isEdit && !storeParentId) {
+      toast({
+        variant: "destructive",
+        title: "Select a space first",
+        description: "Please select a parent space before creating a Scrum/Data board.",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       let res;
 
       if (isEdit) {
-        const entity = data.page_type === 'board' ? 'board'
+        const entity = (data.page_type === 'board' || data.page_type === 'scrum') ? 'board'
           : data.filetype === 'folder' ? 'folder'
           : data.filetype === 'group' ? 'group'
           : 'page';
@@ -151,7 +173,7 @@ const AddMyFilesDialog = ({
         const updateData = { ...res?.data, ...(entity === 'page' ? { title: data.title } : { name: data.title }) };
         updateHandler(id, data.filetype, updateData);
         if (onEditSuccess) onEditSuccess(res?.data);
-      } else if (data.filetype === 'page' && data.page_type === 'board') {
+      } else if (data.filetype === 'page' && (data.page_type === 'board' || data.page_type === 'scrum')) {
         const isPrivateBoard = selectedSpace?.is_private ?? false;
         // For private boards, always include owner in shared_members
         const baseSharedMembers = data.shared_members || [];
@@ -164,28 +186,36 @@ const AddMyFilesDialog = ({
             return u ? { label: u.name || u.email, value: u._id } : null;
           })
           .filter(Boolean);
+        const isScrumBoard = data.page_type === 'scrum';
+        const dataBoardCustomMeta = {
+          fields: [
+            { type: 'select', initialized: true, label: 'Status', name: 'status', hasOptions: true, options: [{ label: 'To Do', value: 'todo' }, { label: 'In Progress', value: 'in-progress' }, { label: 'Review', value: 'review' }, { label: 'Done', value: 'done' }] },
+            { type: 'select', initialized: true, label: 'Assignee', name: 'assignee', hasOptions: true, options: selectedMemberOptions },
+            { type: 'select', initialized: true, label: 'Priority', name: 'priority', hasOptions: true, options: [{ label: 'Low', value: 'low' }, { label: 'Medium', value: 'medium' }, { label: 'High', value: 'high' }, { label: 'Critical', value: 'critical' }] },
+            { type: 'input', initialized: true, label: 'Type', name: 'type', hasOptions: false },
+            { type: 'date', initialized: true, label: 'Start Date', name: 'start_date', hasOptions: false },
+            { type: 'date', initialized: true, label: 'Due Date', name: 'due_date', hasOptions: false },
+          ],
+        };
         res = await createBoardMutation.mutateAsync({
           name: data.title,
-          description: `Board: ${data.title}`,
+          description: isScrumBoard ? `Scrum board: ${data.title}` : `Board: ${data.title}`,
           user_id: userID,
           is_private: isPrivateBoard,
           shared_teams: data.shared_teams || [],
           shared_members: effectiveSharedMembers,
-          custom_meta: {
-            fields: [
-              { type: 'select', initialized: true, label: 'Status', name: 'status', hasOptions: true, options: [{ label: 'To Do', value: 'todo' }, { label: 'In Progress', value: 'in-progress' }, { label: 'Review', value: 'review' }, { label: 'Done', value: 'done' }] },
-              { type: 'select', initialized: true, label: 'Assignee', name: 'assignee', hasOptions: true, options: selectedMemberOptions },
-              { type: 'select', initialized: true, label: 'Priority', name: 'priority', hasOptions: true, options: [{ label: 'Low', value: 'low' }, { label: 'Medium', value: 'medium' }, { label: 'High', value: 'high' }, { label: 'Critical', value: 'critical' }] },
-              { type: 'input', initialized: true, label: 'Type', name: 'type', hasOptions: false },
-              { type: 'date', initialized: true, label: 'Start Date', name: 'start_date', hasOptions: false },
-              { type: 'date', initialized: true, label: 'Due Date', name: 'due_date', hasOptions: false },
-            ],
-          },
+          custom_meta: isScrumBoard ? buildScrumBoardCustomMeta() : dataBoardCustomMeta,
+          ...(isScrumBoard ? { saved_view: defaultScrumSavedView() } : {}),
           space_id: spaceId_,
           folder_id: type === 'folder' ? id : '',
           group_id: type === 'group' ? id : '',
         });
-        storeHandler(storeParentId, storeParentType, res?.data);
+        const createdBoard = res?.data && typeof res.data === 'object' ? res.data : res;
+        storeHandler(storeParentId, storeParentType, {
+          ...createdBoard,
+          entity_type: 'board',
+          page_type: isScrumBoard ? 'scrum' : 'board',
+        });
       } else if (data.filetype === 'page') {
         res = await createDocumentMutation.mutateAsync({
           user_id: userID,
@@ -252,8 +282,6 @@ const AddMyFilesDialog = ({
           });
           setFileName('');
         }
-
-        // Reset local state
       } else {
         // When opening, initialize form properly
         if (isEdit && initialName) {
@@ -386,7 +414,8 @@ const AddMyFilesDialog = ({
                                 <SelectItem value="document">Document</SelectItem>
                                 <SelectItem value="sheet">Sheet</SelectItem>
                                 <SelectItem value="whiteboard">Whiteboard</SelectItem>
-                                <SelectItem value="board">Board</SelectItem>
+                                <SelectItem value="board">Data board</SelectItem>
+                                <SelectItem value="scrum">Scrum board</SelectItem>
                               </SelectContent>
                             </Select>
                           )}

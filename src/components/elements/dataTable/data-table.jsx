@@ -69,17 +69,22 @@ function DataTable({ propId, propType } = {}) {
         const date = new Date(dateString);
         return date.toLocaleString();
       };
+      const pageType =
+        child.page_type ||
+        (child.entity_type === "board"
+          ? (child.custom_meta?.board_kind === "scrum" ? "scrum" : "board")
+          : null);
 
       return {
         id: child._id,
         type: child.entity_type,
-        page_type: child.page_type,
+        page_type: pageType,
         icon: child.entity_type === 'folder' ? Folder : File,
         name: (child.entity_type === 'folder' || child.entity_type === 'group' || child.entity_type === 'space')
           ? child.name
-          : child.entity_type === 'board'
-          ? (child.name ? `${child.name}.board` : (child.title ? `${child.title}.board` : ''))
-          : (child.title ? `${child.title}.${child.page_type}` : (child.name || '')),
+          : (child.entity_type === 'board' || pageType === 'board' || pageType === 'scrum')
+          ? (child.name || child.title || '')
+          : (child.title ? `${child.title}.${pageType || child.page_type}` : (child.name || '')),
         modified: formatTime(child.updatedAt),
         modifiedBy: child.user_id || 'Unknown User',
         sharing: rawData[0].is_private ? 'Private' : 'Public',

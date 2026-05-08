@@ -39,6 +39,10 @@ export const routes = [
         element: <Data />
       },
       {
+        path: '/scrum/:id',
+        element: <Data mode="scrum" />
+      },
+      {
         path: '/check',
         element: <Check />
       },

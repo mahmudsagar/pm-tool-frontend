@@ -118,6 +118,8 @@ const DataTableColumnBody = ({ table, loading, onDataChange }) => {
                     let path = `/document/${original.id}`;
                     if (original.type === 'folder' || original.type === 'group') {
                       path = `/file-manager/${original.type}/${original.id}`;
+                    } else if (original.page_type === 'scrum') {
+                      path = `/scrum/${original.id}`;
                     } else if (original.type === 'board' || original.page_type === 'board') {
                       path = `/board/${original.id}`;
                     }
