@@ -391,7 +391,7 @@ export default function BoardSubheaderControls({
       {/* ── CLEAR ALL ────────────────────── */}
       {(filters.length > 0 || sorts.length > 0 || search) && (
         <button
-          onClick={() => onChange({ sorts: [], filters: [], search: '' })}
+          onClick={() => onChange({ ...viewState, sorts: [], filters: [], search: '' })}
           className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-destructive transition-colors ml-0.5"
         >
           <X className="h-3 w-3" /> Clear all

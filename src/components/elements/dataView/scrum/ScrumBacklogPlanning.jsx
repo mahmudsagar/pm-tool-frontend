@@ -116,7 +116,7 @@ export default function ScrumBacklogPlanning({
           onClick={assignSelectedToActiveSprint}
           disabled={!activeSprint || selectedIds.length === 0}
         >
-          Add selected to active sprint
+          Add selected to the sprint
           <ArrowRight className="ml-1 h-3.5 w-3.5" />
         </Button>
         <Button size="sm" variant="outline" className="h-8 text-xs" onClick={toggleVelocityWarning}>

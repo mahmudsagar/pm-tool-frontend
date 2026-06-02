@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CalendarDays, Flag, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
 import { DEFAULT_SCRUM_VIEW_BLOCK } from "@/components/elements/dataView/scrum/scrumBoardConstants";
 
 const DONE_KEYS = ["done", "completed", "complete", "closed"];
@@ -13,8 +14,16 @@ const asPoints = (v) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-export default function ScrumSprintHub({ data, viewState, patchSavedView, onSprintSelected }) {
+export default function ScrumSprintHub({
+  data,
+  viewState,
+  patchSavedView,
+  onSprintSelected,
+  onSprintClosed,
+}) {
+  const { toast } = useToast();
   const [newSprintName, setNewSprintName] = useState("");
+  const [optimisticSprints, setOptimisticSprints] = useState([]);
   const stories = useMemo(() => (data?.property_values || []).filter((t) => !t.parent_id), [data?.property_values]);
 
   const sprintCfg = viewState?.scrum?.sprint_management || DEFAULT_SCRUM_VIEW_BLOCK.sprint_management;
@@ -34,13 +43,21 @@ export default function ScrumSprintHub({ data, viewState, patchSavedView, onSpri
     return map;
   }, [stories]);
 
+  const persistedSprintsKey = (sprintCfg.sprints || []).join("\0");
+  useEffect(() => {
+    setOptimisticSprints([]);
+  }, [persistedSprintsKey]);
+
   const sprintList = useMemo(() => {
-    const names = new Set((sprintCfg.sprints || []).filter(Boolean));
+    const names = new Set([
+      ...(sprintCfg.sprints || []),
+      ...optimisticSprints,
+    ].filter(Boolean));
     stories.forEach((s) => {
       if (s.sprint) names.add(String(s.sprint));
     });
     return [...names].sort((a, b) => a.localeCompare(b));
-  }, [sprintCfg.sprints, stories]);
+  }, [sprintCfg.sprints, optimisticSprints, stories]);
 
   const historicalVelocityAvg = useMemo(() => {
     const previous = sprintList.filter((s) => s !== activeSprint);
@@ -53,28 +70,47 @@ export default function ScrumSprintHub({ data, viewState, patchSavedView, onSpri
   const velocityExceeded = historicalVelocityAvg > 0 && activeStats.committed > historicalVelocityAvg;
 
   const persistSprintCfg = (updater) => {
-    patchSavedView?.((prev) => {
+    if (!patchSavedView) {
+      toast({
+        title: "Cannot save sprint",
+        description: "Board settings are not available yet.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    patchSavedView((prev) => {
       const current = prev?.scrum?.sprint_management || DEFAULT_SCRUM_VIEW_BLOCK.sprint_management;
-      const next = typeof updater === "function" ? updater(current) : updater;
+      const nextMgmt = typeof updater === "function" ? updater(current) : updater;
       return {
         ...prev,
         scrum: {
           ...DEFAULT_SCRUM_VIEW_BLOCK,
-          ...(prev.scrum || {}),
-          sprint_management: next,
+          ...(prev?.scrum || {}),
+          sprint_management: nextMgmt,
         },
       };
     });
+    return true;
   };
 
   const addSprint = () => {
     const name = newSprintName.trim();
-    if (!name) return;
-    persistSprintCfg((current) => ({
+    if (!name) {
+      toast({
+        title: "Sprint name required",
+        description: "Enter a name before adding a sprint.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setOptimisticSprints((prev) => (prev.includes(name) ? prev : [...prev, name]));
+    if (!persistSprintCfg((current) => ({
       ...current,
       sprints: Array.from(new Set([...(current.sprints || []), name])),
       active_sprint: current.active_sprint || name,
-    }));
+    }))) {
+      return;
+    }
     setNewSprintName("");
   };
 
@@ -97,8 +133,7 @@ export default function ScrumSprintHub({ data, viewState, patchSavedView, onSpri
 
   const closeActiveSprint = () => {
     if (!activeSprint) return;
-    const next = sprintList.find((s) => s !== activeSprint) || "";
-    persistSprintCfg((current) => ({ ...current, active_sprint: next }));
+    onSprintClosed?.();
   };
 
   return (
@@ -111,9 +146,15 @@ export default function ScrumSprintHub({ data, viewState, patchSavedView, onSpri
               className="h-8 text-xs"
               value={newSprintName}
               onChange={(e) => setNewSprintName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addSprint();
+                }
+              }}
               placeholder="Sprint 21"
             />
-            <Button className="h-8" size="sm" onClick={addSprint}>
+            <Button type="button" className="h-8" size="sm" onClick={addSprint}>
               <Plus className="mr-1 h-3.5 w-3.5" />
               Add Sprint
             </Button>
@@ -132,7 +173,7 @@ export default function ScrumSprintHub({ data, viewState, patchSavedView, onSpri
         </div>
       )}
 
-      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+      <div className="flex flex-col gap-2">
         {sprintList.length === 0 && (
           <div className="rounded border border-dashed p-3 text-xs text-muted-foreground">
             No sprints yet. Create one to start planning.
@@ -144,40 +185,69 @@ export default function ScrumSprintHub({ data, viewState, patchSavedView, onSpri
           return (
             <div
               key={sprint}
-              className={`rounded border p-3 text-left transition ${active ? "border-primary bg-primary/5" : "hover:bg-muted/40"}`}
+              role="button"
+              tabIndex={0}
+              aria-pressed={active}
+              onClick={() => setActiveSprint(sprint)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setActiveSprint(sprint);
+                }
+              }}
+              className={`flex w-full cursor-pointer items-center justify-between gap-4 rounded border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                active ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "hover:bg-muted/40"
+              }`}
             >
-              <div className="mb-2 flex items-center justify-between">
-                <button type="button" onClick={() => setActiveSprint(sprint)} className="truncate text-left text-sm font-semibold hover:underline">
-                  {sprint}
-                </button>
-                <div className="flex items-center gap-1">
-                  {active ? <Badge variant="default">Active</Badge> : <Badge variant="outline">Open</Badge>}
-                  <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => removeSprint(sprint)}>
-                    Remove
-                  </Button>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">{sprint}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <Flag className="h-3 w-3 shrink-0" />
+                    {st.stories} stories
+                  </span>
+                  <span>Committed: {st.committed} pts</span>
+                  <span>Completed: {st.completed} pts</span>
                 </div>
               </div>
-              <div className="space-y-1 text-xs text-muted-foreground">
-                <p className="flex items-center gap-1"><Flag className="h-3 w-3" /> {st.stories} stories</p>
-                <p>Committed: {st.committed} pts</p>
-                <p>Completed: {st.completed} pts</p>
+              <div
+                className="flex shrink-0 items-center gap-2"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                {active ? <Badge variant="default">Active</Badge> : <Badge variant="outline">Open</Badge>}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 px-2 text-[10px]"
+                  onClick={() => removeSprint(sprint)}
+                >
+                  Remove
+                </Button>
               </div>
             </div>
           );
         })}
       </div>
 
-      {activeSprint && (
+      {/* {activeSprint && (
         <div className="flex items-center justify-between rounded border bg-muted/20 px-3 py-2 text-xs">
           <p className="flex items-center gap-1">
             <CalendarDays className="h-3.5 w-3.5" />
             Viewing sprint <span className="font-semibold">{activeSprint}</span> task list
           </p>
-          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={closeActiveSprint}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs"
+            onClick={closeActiveSprint}
+          >
             Close sprint view
           </Button>
         </div>
-      )}
+      )} */}
     </section>
   );
 }

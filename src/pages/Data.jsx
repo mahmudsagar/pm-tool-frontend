@@ -12,6 +12,38 @@ const DEFAULT_VIEW = {
   layout_tabs_order: [...DEFAULT_LAYOUT_ORDER],
 };
 
+function mergeViewStateFromBoard(savedView, isScrumPage) {
+  if (!isScrumPage) {
+    return {
+      ...DEFAULT_VIEW,
+      ...(savedView || {}),
+      layout_tabs_order: normalizeLayoutOrder(savedView?.layout_tabs_order, false),
+    };
+  }
+  const scrumDefaults = defaultScrumSavedView();
+  return {
+    ...DEFAULT_VIEW,
+    ...scrumDefaults,
+    ...(savedView || {}),
+    layout_tabs_order: normalizeLayoutOrder(
+      savedView?.layout_tabs_order ?? scrumDefaults.layout_tabs_order,
+      true
+    ),
+    scrum: {
+      ...DEFAULT_SCRUM_VIEW_BLOCK,
+      ...(savedView?.scrum || {}),
+      sprint_management: {
+        ...DEFAULT_SCRUM_VIEW_BLOCK.sprint_management,
+        ...(savedView?.scrum?.sprint_management || {}),
+      },
+      backlog: {
+        ...DEFAULT_SCRUM_VIEW_BLOCK.backlog,
+        ...(savedView?.scrum?.backlog || {}),
+      },
+    },
+  };
+}
+
 function normalizeLayoutOrder(order, allowScrum = false) {
   const allowed = allowScrum ? SCRUM_LAYOUT_TYPES : DATA_LAYOUT_TYPES;
   const raw = Array.isArray(order) ? order : DEFAULT_LAYOUT_ORDER;
@@ -59,6 +91,10 @@ import ScrumReportsSection from "@/components/elements/dataView/scrum/ScrumRepor
 import ScrumSprintHub from "@/components/elements/dataView/scrum/ScrumSprintHub"
 import ScrumBacklogPlanning from "@/components/elements/dataView/scrum/ScrumBacklogPlanning"
 import ScrumAgileModulesSection from "@/components/elements/dataView/scrum/ScrumAgileModulesSection"
+import {
+  DEFAULT_SCRUM_VIEW_BLOCK,
+  defaultScrumSavedView,
+} from "@/components/elements/dataView/scrum/scrumBoardConstants"
 
 import { TabsContent } from "@radix-ui/react-tabs"
 import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
@@ -278,7 +314,14 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
 
   const patchSavedView = useCallback(
     (updater) => {
-      if (!boardId) return;
+      if (!boardId) {
+        toast({
+          title: "Cannot save sprint settings",
+          description: "Board is still loading. Try again in a moment.",
+          variant: "destructive",
+        });
+        return;
+      }
       setViewState((prev) => {
         const next = typeof updater === "function" ? updater(prev) : updater;
         updateBoardMutation.mutate({
@@ -289,26 +332,18 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
         return next;
       });
     },
-    [boardId, updateBoardMutation]
+    [boardId, updateBoardMutation, toast]
   );
 
-  const loadedBoardRef = useRef(null);
+  const savedViewHydratedRef = useRef(null);
   const dependencyFieldsInitRef = useRef({});
-  // Load saved view from board when the board changes (once per board)
+  // Hydrate saved_view after board fetch completes (avoids racing with empty saved_view)
   useEffect(() => {
-    if (boardDataId && boardDataId !== loadedBoardRef.current) {
-      loadedBoardRef.current = boardDataId;
-      if (boardDataSavedView) {
-        setViewState({
-          ...DEFAULT_VIEW,
-          ...boardDataSavedView,
-          layout_tabs_order: normalizeLayoutOrder(boardDataSavedView.layout_tabs_order, isScrumPage),
-        });
-      } else {
-        setViewState(DEFAULT_VIEW);
-      }
-    }
-  }, [boardDataId, boardDataSavedView, isScrumPage]);
+    if (!boardDataId || isLoading) return;
+    if (savedViewHydratedRef.current === boardDataId) return;
+    savedViewHydratedRef.current = boardDataId;
+    setViewState(mergeViewStateFromBoard(boardDataSavedView, isScrumPage));
+  }, [boardDataId, boardDataSavedView, isScrumPage, isLoading]);
 
   useEffect(() => {
     if (isScrumPage) {
@@ -1067,6 +1102,23 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
   }, []);
 
   const activeSprint = viewState?.scrum?.sprint_management?.active_sprint || "";
+
+  const closeSprintView = useCallback(() => {
+    patchSavedView((prev) => ({
+      ...prev,
+      scrum: {
+        ...DEFAULT_SCRUM_VIEW_BLOCK,
+        ...(prev?.scrum || {}),
+        sprint_management: {
+          ...DEFAULT_SCRUM_VIEW_BLOCK.sprint_management,
+          ...(prev?.scrum?.sprint_management || {}),
+          active_sprint: "",
+        },
+      },
+    }));
+    setScrumSection("sprints");
+  }, [patchSavedView]);
+
   const scrumScopedBoardTasks = useMemo(() => {
     if (!isScrumPage || !boardTasks) return boardTasks;
     if (!activeSprint) return boardTasks;
@@ -1109,12 +1161,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
   }
 
   function handleResetView() {
-    const saved = boardData?.saved_view || DEFAULT_VIEW;
-    setViewState({
-      ...DEFAULT_VIEW,
-      ...saved,
-      layout_tabs_order: normalizeLayoutOrder(saved.layout_tabs_order, isScrumPage),
-    });
+    setViewState(mergeViewStateFromBoard(boardData?.saved_view, isScrumPage));
   }
 
   function handleSaveAutomations(nextAutomations) {
@@ -1197,10 +1244,12 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
           </div>
           <div className="flex items-center gap-2">
             <Button
+              type="button"
+              size="sm"
+              className="h-8"
               onClick={() => setIsTaskModalOpen(true)}
-              className="flex items-center gap-2"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="mr-1 h-3.5 w-3.5" />
               New Task
             </Button>
             <TableMainMenu />
@@ -1213,6 +1262,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
             viewState={viewState}
             patchSavedView={patchSavedView}
             onSprintSelected={() => setScrumSection("board")}
+            onSprintClosed={closeSprintView}
           />
         )}
         {isScrumPage && scrumSection === "board" && !isLoading && !!boardTasks && (
@@ -1224,6 +1274,23 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
             sprintFieldName={resolveFieldName(boardFieldDefs, "sprint")}
             moscowFieldName={resolveFieldName(boardFieldDefs, "moscow")}
           />
+        )}
+
+        {isScrumPage && scrumSection === "board" && activeSprint && (
+          <div className="mb-2 flex items-center justify-between rounded border bg-muted/20 px-3 py-2 text-xs text-left">
+            <p>
+              Viewing sprint <span className="font-semibold">{activeSprint}</span> task list
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={closeSprintView}
+            >
+              Close sprint view
+            </Button>
+          </div>
         )}
 
         {isScrumPage && scrumSection === "board" && (
