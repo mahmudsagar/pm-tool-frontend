@@ -1,6 +1,10 @@
-
 export const userID = import.meta.env.BN_USER_ID;
 export const baseUrl = import.meta.env.BN_BASE_URL;
+
+// In dev, empty string uses the Vite /socket.io proxy. In production, fall back to the API host.
+export const wsUrl = import.meta.env.BN_WS_URL
+    || (import.meta.env.PROD ? import.meta.env.BN_BASE_URL : '')
+    || '';
 
 export const documentEndpoint = '/v1/page/document';
 export const documentBaseUrl = baseUrl + documentEndpoint;

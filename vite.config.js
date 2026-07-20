@@ -1,10 +1,14 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import alias from "@rollup/plugin-alias";
 import { fileURLToPath, URL } from "url";
 import { univerPlugin } from "@univerjs/vite-plugin";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "BN_");
+  const apiTarget = env.BN_BASE_URL || "http://localhost:3001";
+
+  return {
   define: {
     "process.env.IS_PREACT": JSON.stringify("true"),
   },
@@ -36,12 +40,12 @@ export default defineConfig({
     proxy: {
       // Proxy REST API calls to the backend
       '/v1': {
-        target: 'http://localhost:3001',
+        target: apiTarget,
         changeOrigin: true,
       },
       // Proxy Socket.io WebSocket connections to the same backend port
       '/socket.io': {
-        target: 'http://localhost:3001',
+        target: apiTarget,
         changeOrigin: true,
         ws: true,
       },
@@ -52,4 +56,5 @@ export default defineConfig({
   build: {
     outDir: "dist",
   },
+};
 });

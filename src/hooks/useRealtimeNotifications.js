@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { wsUrl } from '@/utils/constants';
 
 /**
  * Hook to handle WebSocket connection and real-time notifications
@@ -22,9 +23,6 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
         onNotificationRef.current = onNotification;
     }, [onNotification]);
 
-    // Connect to the same origin — proxied by Vite in dev, same host in production
-    const WS_URL = import.meta.env.BN_WS_URL || '';
-
     const connectSocket = useCallback(() => {
         if (!userId || !workspaceId || !token) {
             console.warn('Missing required params for WebSocket connection');
@@ -36,7 +34,7 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
         try {
             // Dynamically import socket.io-client
             import('socket.io-client').then(({ io }) => {
-                const socket = io(WS_URL, {
+                const socket = io(wsUrl, {
                     auth: {
                         token,
                         userId,
@@ -45,7 +43,7 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
                     reconnection: true,
                     reconnectionDelay: 1000,
                     reconnectionAttempts: 10,
-                    transports: ['websocket'] // Only use WebSocket, disable polling
+                    transports: ['websocket', 'polling']
                 });
 
                 // Handle connection
@@ -126,7 +124,7 @@ export const useRealtimeNotifications = (userId, workspaceId, token, onNotificat
             console.error('WebSocket connection error:', error);
             setIsConnecting(false);
         }
-    }, [userId, workspaceId, token, WS_URL, queryClient]);
+    }, [userId, workspaceId, token, queryClient]);
 
     useEffect(() => {
         connectSocket();
