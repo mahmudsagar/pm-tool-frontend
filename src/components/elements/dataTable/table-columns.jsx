@@ -120,6 +120,17 @@ export const createColumns = (onDeleteSuccess, onEditSuccess) => [
     },
   },
   {
+    accessorKey: "typeLabel",
+    header: () => (
+      <span className="font-medium dark:text-white">Type</span>
+    ),
+    cell: ({ row }) => (
+      <div className="text-slate-500 dark:text-white capitalize">
+        {row.getValue("typeLabel")}
+      </div>
+    ),
+  },
+  {
     accessorKey: "modified",
     header: ({ column }) => {
       return (

@@ -7,7 +7,8 @@ import ShowIcon from '@/components/common/ShowIcon';
 
 function DocStructure({ 
   docId, 
-  docName, 
+  docName,
+  rawName,
   docType,
   fileType,
   openItem,
@@ -67,7 +68,7 @@ function DocStructure({
             onToggle={(id) => handleDropdownToggle(id)}
             id={docId}
             type={docType}
-            fileName={docName}
+            fileName={rawName || docName}
           />
         </div>
       </div>

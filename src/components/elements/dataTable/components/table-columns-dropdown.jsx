@@ -47,6 +47,7 @@ const TableColumnsDropdown = ({info, onDeleteSuccess, onEditSuccess}) => {
   const fileId = info?.original?.id || '';
   const fileType = info?.original?.type || 'folder'; // Default to folder if not specified
   const fileName = info?.original?.name || '';
+  const editName = info?.original?.rawName || fileName;
   
   // Get pin status when dropdown opens
   useEffect(() => {
@@ -261,7 +262,7 @@ const TableColumnsDropdown = ({info, onDeleteSuccess, onEditSuccess}) => {
           id={fileId} 
           type={fileType} 
           isEdit={true} 
-          initialName={fileName}
+          initialName={editName}
           isOpen={isEditModalOpen}
           setIsOpen={setIsEditModalOpen}
           onEditSuccess={handleEditSuccess}

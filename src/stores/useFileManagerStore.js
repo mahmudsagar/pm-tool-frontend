@@ -1,6 +1,12 @@
 import { createWithEqualityFn } from "zustand/traditional";
 import { formatTime } from "@/utils/helper";
 import {
+  formatEntityDisplayName,
+  formatEntityTypeLabel,
+  getEntityRawName,
+  resolveEntityPageType,
+} from "@/utils/fileDisplayUtils";
+import {
   File,
   Users,
   Folder,
@@ -684,10 +690,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   // Obtain the data and convert it into a table format.
   convertTableFormat: (data) => {
     return (data || []).map((child) => {
-      let pageType = child.page_type;
-      if (!pageType && child.entity_type === 'board') {
-        pageType = child.custom_meta?.board_kind === 'scrum' ? 'scrum' : 'board';
-      }
+      const pageType = resolveEntityPageType(child);
       const fileIcon =
         child.entity_type === "folder"
           ? Folder
@@ -701,16 +704,6 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
               scrum: SquareKanban,
             }[pageType] || FileText;
 
-      // Choose display name robustly: folders/groups use `name`, pages usually use `title`,
-      // but board pages may use `name` on the backend. Fall back safely.
-      let fileName = '';
-      if (child.entity_type === 'folder' || child.entity_type === 'group') {
-        fileName = child.name;
-      } else if (pageType === 'board' || pageType === 'scrum' || child.entity_type === 'board') {
-        fileName = child.name || child.title || '';
-      } else {
-        fileName = child.title || child.name || '';
-      }
       const usersArr = Array.isArray(get().users) ? get().users : [];
       const user = usersArr.find((user) => user._id === child.user_id);
       const modifiedUserName = user ? user.full_name : "Unknown User";
@@ -719,7 +712,9 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         id: child._id,
         type: child.entity_type,
         icon: fileIcon,
-        name: fileName,
+        name: formatEntityDisplayName(child),
+        rawName: getEntityRawName(child),
+        typeLabel: formatEntityTypeLabel(child),
         modified: formatTime(child.updatedAt),
         modifiedBy: modifiedUserName,
         sharing: child.is_private ? "Private" : "Public",
@@ -774,21 +769,15 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
           const modifiedUser = result?.full_name || "Unknown User";
           console.log(child);
 
-          let pageType = child.page_type;
-          if (!pageType && child.entity_type === 'board') {
-            pageType = child.custom_meta?.board_kind === 'scrum' ? 'scrum' : 'board';
-          }
+          const pageType = resolveEntityPageType(child);
 
           return {
             id: child._id,
             type: child.entity_type,
             icon: child.entity_type === "folder" ? Folder : File,
-            name:
-              child.entity_type === "folder"
-                ? child.name
-                : (pageType === 'board' || pageType === 'scrum' || child.entity_type === 'board')
-                ? (child.name || child.title || '')
-                : (child.title ? `${child.title}.${pageType || child.page_type}` : (child.name || '')),
+            name: formatEntityDisplayName(child),
+            rawName: getEntityRawName(child),
+            typeLabel: formatEntityTypeLabel(child),
             modified: formatTime(child.updatedAt),
             modifiedBy: modifiedUser,
             sharing: data[0].is_private ? "Public" : "Private",

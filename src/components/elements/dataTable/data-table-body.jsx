@@ -156,7 +156,7 @@ const DataTableColumnBody = ({ table, loading, onDataChange }) => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={table.getAllColumns().length} className="h-24 text-center">
                   No files are found!
                 </TableCell>
               </TableRow>

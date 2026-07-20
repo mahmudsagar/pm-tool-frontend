@@ -30,6 +30,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import EllipsisTooltip from "@/components/common/EllipsisTooltip";
 import ShowIcon from "@/components/common/ShowIcon";
 import { resolveBoardListPageType } from "@/components/elements/dataView/scrum/scrumBoardConstants";
+import { formatEntityDisplayName, getEntityRawName } from "@/utils/fileDisplayUtils";
 
 const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
   if (!folder) return null;    
@@ -184,7 +185,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                     onToggle={(id) => handleDropdownToggle(id)}
                     id={folder?._id}
                     type={folder?.entity_type}
-                    fileName={folder}
+                    fileName={getEntityRawName(folder)}
                   />
                 </div>
               </div>
@@ -202,7 +203,8 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                         <DocStructure
                           key={item?._id}
                           docId = {item?._id}
-                          docName = {item?.title || item?.name} 
+                          docName = {formatEntityDisplayName(item)}
+                          rawName = {getEntityRawName(item)}
                           docType = {item?.entity_type}
                           fileType = { resolveBoardListPageType(item) || item?.page_type }
                           hasChild = {true}
@@ -227,7 +229,8 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
       (
         <DocStructure
           docId = {folder?._id}
-          docName = {folder?.title || folder?.name}
+          docName = {formatEntityDisplayName(folder)}
+          rawName = {getEntityRawName(folder)}
           docType = {folder?.entity_type}
           fileType = { resolveBoardListPageType(folder) || folder?.page_type }
           openItem={openItem}

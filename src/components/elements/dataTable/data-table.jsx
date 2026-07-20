@@ -15,6 +15,12 @@ import { createColumns } from './table-columns';
 import DataTableColumnBody from './data-table-body';
 import DataTableColumnHeader from './data-table-header';
 import { Folder, File } from 'lucide-react';
+import {
+  formatEntityDisplayName,
+  formatEntityTypeLabel,
+  getEntityRawName,
+  resolveEntityPageType,
+} from '@/utils/fileDisplayUtils';
 
 function DataTable({ propId, propType } = {}) {
   let { id: paramId, type: paramType } = useParams();
@@ -69,22 +75,16 @@ function DataTable({ propId, propType } = {}) {
         const date = new Date(dateString);
         return date.toLocaleString();
       };
-      const pageType =
-        child.page_type ||
-        (child.entity_type === "board"
-          ? (child.custom_meta?.board_kind === "scrum" ? "scrum" : "board")
-          : null);
+      const pageType = resolveEntityPageType(child);
 
       return {
         id: child._id,
         type: child.entity_type,
         page_type: pageType,
         icon: child.entity_type === 'folder' ? Folder : File,
-        name: (child.entity_type === 'folder' || child.entity_type === 'group' || child.entity_type === 'space')
-          ? child.name
-          : (child.entity_type === 'board' || pageType === 'board' || pageType === 'scrum')
-          ? (child.name || child.title || '')
-          : (child.title ? `${child.title}.${pageType || child.page_type}` : (child.name || '')),
+        name: formatEntityDisplayName(child),
+        rawName: getEntityRawName(child),
+        typeLabel: formatEntityTypeLabel(child),
         modified: formatTime(child.updatedAt),
         modifiedBy: child.user_id || 'Unknown User',
         sharing: rawData[0].is_private ? 'Private' : 'Public',

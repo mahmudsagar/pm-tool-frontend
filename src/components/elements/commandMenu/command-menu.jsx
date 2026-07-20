@@ -8,6 +8,7 @@ import { useGlobalSearch } from "@/hooks/queries/useFilesQueries";
 import publicIcon from '@/assets/images/public.svg';
 import ShowIcon from "@/components/common/ShowIcon";
 import { resolveBoardListPageType } from "@/components/elements/dataView/scrum/scrumBoardConstants";
+import { formatEntityDisplayName } from "@/utils/fileDisplayUtils";
 
 export function CommandMenu({ ...props }) {
   const navigate = useNavigate()
@@ -120,8 +121,7 @@ export function CommandMenu({ ...props }) {
                   </div>
                 }>
                   {list.map((item, index) => {
-                    const { title, name } = item || {};
-                    const displayName = title || name;
+                    const displayName = formatEntityDisplayName(item);
                     const listPageType = resolveBoardListPageType(item) || item?.page_type;
                     const iconFile = item?.entity_type === 'board' ? 'board' : (groupKey[group] || item?.entity_type);
                     return (
