@@ -75,11 +75,13 @@ export const useDeleteEntity = () => {
         queryClient.setQueryData(['groups'], context.previousData.groups);
       }
       
-      toast({
-        title: `Failed to delete ${variables.entityType}`,
-        description: error.message,
-        variant: 'destructive',
-      });
+      if (!variables.silent) {
+        toast({
+          title: `Failed to delete ${variables.entityType}`,
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     },
     
     onSuccess: (data, variables) => {
@@ -115,9 +117,11 @@ export const useDeleteEntity = () => {
           )
       });
       
-      toast({
-        title: `${variables.entityType.charAt(0).toUpperCase() + variables.entityType.slice(1)} deleted successfully`,
-      });
+      if (!variables.silent) {
+        toast({
+          title: `${variables.entityType.charAt(0).toUpperCase() + variables.entityType.slice(1)} deleted successfully`,
+        });
+      }
     },
   });
 };

@@ -51,3 +51,20 @@ export function formatEntityTypeLabel(item) {
   if (!entityType) return '';
   return entityType.charAt(0).toUpperCase() + entityType.slice(1);
 }
+
+/** @param {Array<{ _id?: string, name?: string, title?: string }>} spaces */
+export function buildSpaceNameMap(spaces = []) {
+  const map = new Map();
+  for (const space of spaces) {
+    if (space?._id) {
+      map.set(String(space._id), space.name || space.title || 'Unknown Space');
+    }
+  }
+  return map;
+}
+
+/** @param {string | undefined | null} spaceId @param {Map<string, string>} spaceNameMap @param {string} [fallback=''] */
+export function resolveSpaceName(spaceId, spaceNameMap, fallback = '') {
+  if (!spaceId) return fallback;
+  return spaceNameMap.get(String(spaceId)) || fallback;
+}

@@ -5,6 +5,8 @@ import {
   formatEntityTypeLabel,
   getEntityRawName,
   resolveEntityPageType,
+  buildSpaceNameMap,
+  resolveSpaceName,
 } from "@/utils/fileDisplayUtils";
 import {
   File,
@@ -204,7 +206,10 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
       .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
     set({
-      spaceFiles: get().convertTableFormat(allChildFiles),
+      spaceFiles: get().convertTableFormat(allChildFiles, [
+        ...categorizedSpaces.privateSpaces,
+        ...categorizedSpaces.publicSpaces,
+      ]),
       privateSpaces: categorizedSpaces.privateSpaces,
       publicSpaces: categorizedSpaces.publicSpaces,
       hasInitializedSpaces: true,
@@ -688,7 +693,13 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
   },
 
   // Obtain the data and convert it into a table format.
-  convertTableFormat: (data) => {
+  convertTableFormat: (data, spaces = null) => {
+    const allSpaces = spaces || [
+      ...(get().publicSpaces || []),
+      ...(get().privateSpaces || []),
+    ];
+    const spaceNameMap = buildSpaceNameMap(allSpaces);
+
     return (data || []).map((child) => {
       const pageType = resolveEntityPageType(child);
       const fileIcon =
@@ -715,6 +726,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         name: formatEntityDisplayName(child),
         rawName: getEntityRawName(child),
         typeLabel: formatEntityTypeLabel(child),
+        spaceName: resolveSpaceName(child.space_id, spaceNameMap),
         modified: formatTime(child.updatedAt),
         modifiedBy: modifiedUserName,
         sharing: child.is_private ? "Private" : "Public",
@@ -763,6 +775,11 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
         return { error };
       }
 
+      const spaceNameMap = buildSpaceNameMap([
+        ...(get().publicSpaces || []),
+        ...(get().privateSpaces || []),
+      ]);
+
       const transformedData = await Promise.all(
         data[0].childs.map(async (child) => {
           const result = await get().getUserById(child.user_id);
@@ -778,6 +795,7 @@ const useFileManagerStore = createWithEqualityFn((set, get) => ({
             name: formatEntityDisplayName(child),
             rawName: getEntityRawName(child),
             typeLabel: formatEntityTypeLabel(child),
+            spaceName: resolveSpaceName(child.space_id, spaceNameMap, data[0]?.name || ''),
             modified: formatTime(child.updatedAt),
             modifiedBy: modifiedUser,
             sharing: data[0].is_private ? "Public" : "Private",

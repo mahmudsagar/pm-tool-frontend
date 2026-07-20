@@ -3,7 +3,6 @@ import { useState, useCallback, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { useFolderContents, useGroupContents, useSpaceContents } from '@/hooks/queries/useFilesQueries';
 import { useQueryClient } from '@tanstack/react-query';
-import { useDeleteEntity } from '@/hooks/mutations/useDeleteMutations';
 import {
   useReactTable,
   getCoreRowModel,
@@ -20,7 +19,10 @@ import {
   formatEntityTypeLabel,
   getEntityRawName,
   resolveEntityPageType,
+  buildSpaceNameMap,
+  resolveSpaceName,
 } from '@/utils/fileDisplayUtils';
+import useFileManagerStore from '@/stores/useFileManagerStore';
 
 function DataTable({ propId, propType } = {}) {
   let { id: paramId, type: paramType } = useParams();
@@ -30,7 +32,6 @@ function DataTable({ propId, propType } = {}) {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const queryClient = useQueryClient();
-  const { mutate: deleteEntity } = useDeleteEntity();
 
   // Props passed from parallel route take priority over URL params
   const id = propId || paramId;
@@ -66,9 +67,21 @@ function DataTable({ propId, propType } = {}) {
     return rawData[0].name || rawData[0].title || 'My Files';
   }, [rawData]);
 
+  const { publicSpaces, privateSpaces } = useFileManagerStore(state => ({
+    publicSpaces: state.publicSpaces,
+    privateSpaces: state.privateSpaces,
+  }));
+
+  const spaceNameMap = useMemo(
+    () => buildSpaceNameMap([...(publicSpaces || []), ...(privateSpaces || [])]),
+    [publicSpaces, privateSpaces]
+  );
+
   // Transform data for table display
   const tableData = useMemo(() => {
     if (!rawData || !rawData[0]?.childs) return [];
+
+    const containerSpaceName = rawData[0].name || rawData[0].title || '';
 
     return rawData[0].childs.map((child) => {
       const formatTime = (dateString) => {
@@ -85,6 +98,11 @@ function DataTable({ propId, propType } = {}) {
         name: formatEntityDisplayName(child),
         rawName: getEntityRawName(child),
         typeLabel: formatEntityTypeLabel(child),
+        spaceName: resolveSpaceName(
+          child.space_id || (detectedType === 'space' ? rawData[0]._id : null),
+          spaceNameMap,
+          detectedType === 'space' ? containerSpaceName : ''
+        ),
         modified: formatTime(child.updatedAt),
         modifiedBy: child.user_id || 'Unknown User',
         sharing: rawData[0].is_private ? 'Private' : 'Public',
@@ -92,13 +110,17 @@ function DataTable({ propId, propType } = {}) {
         space_id: child.space_id,
       };
     });
-  }, [rawData]);
+  }, [rawData, spaceNameMap, detectedType]);
 
-  // Handler for successful deletion - uses TanStack Query mutation
-  const handleDeleteSuccess = useCallback((fileId, fileType) => {
-    // Use TanStack Query mutation which handles API call, cache invalidation, and error handling
-    deleteEntity({ entityId: fileId, entityType: fileType });
-  }, [deleteEntity]);
+  // Handler for successful deletion - refresh queries after Delete component completes API call
+  const handleDeleteSuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['folders', id] });
+    queryClient.invalidateQueries({ queryKey: ['groups', id] });
+    queryClient.invalidateQueries({ queryKey: ['spaces', id] });
+    queryClient.invalidateQueries({ queryKey: ['spaces'] });
+  }, [queryClient, id]);
+
+  const handleBulkDeleteSuccess = handleDeleteSuccess;
 
   // Handler for successful edit - invalidate queries to refetch
   const handleEditSuccess = useCallback((fileId, fileType, updatedData) => {
@@ -120,7 +142,10 @@ function DataTable({ propId, propType } = {}) {
   }, [queryClient, id]);
 
   // Create columns with handlers attached
-  const columns = createColumns(handleDeleteSuccess, handleEditSuccess);
+  const columns = useMemo(
+    () => createColumns(handleDeleteSuccess, handleEditSuccess),
+    [handleDeleteSuccess, handleEditSuccess]
+  );
 
   const table = useReactTable({
     data: tableData,
@@ -148,6 +173,7 @@ function DataTable({ propId, propType } = {}) {
         table={table} 
         containerId={id}
         containerType={detectedType}
+        onBulkDeleteSuccess={handleBulkDeleteSuccess}
       />
       <DataTableColumnBody 
         table={table} 

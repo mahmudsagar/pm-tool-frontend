@@ -1,5 +1,5 @@
 "use client"
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import {
   useReactTable,
@@ -8,8 +8,9 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
 } from "@tanstack/react-table";
+import { useQueryClient } from '@tanstack/react-query';
 import useFileManagerStore from '@/stores/useFileManagerStore';
-import columns from '@/components/elements/dataTable/table-columns';
+import { createColumns } from '@/components/elements/dataTable/table-columns';
 import DataTableColumnBody from '@/components/elements/dataTable/data-table-body';
 import DataTableColumnHeader from '@/components/elements/dataTable/data-table-header';
 
@@ -19,7 +20,7 @@ const Home = () => {
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [searchParams] = useSearchParams();
-  
+  const queryClient = useQueryClient();
   const {
     spaceFiles,
     publicSpaces,
@@ -195,6 +196,19 @@ const Home = () => {
     return filtered;
   }, [spaceFiles, filterType, effectiveSpaceId, effectiveFolderId, effectiveGroupId, publicSpaces, privateSpaces]);
 
+  const handleDeleteSuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['spaces'] });
+  }, [queryClient]);
+
+  const handleEditSuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['spaces'] });
+  }, [queryClient]);
+
+  const columns = useMemo(
+    () => createColumns(handleDeleteSuccess, handleEditSuccess),
+    [handleDeleteSuccess, handleEditSuccess]
+  );
+
   const table = useReactTable({
     data: filteredData || [],
     columns,
@@ -225,6 +239,7 @@ const Home = () => {
         table={table}
         containerId={containerId}
         containerType={containerType}
+        onBulkDeleteSuccess={handleDeleteSuccess}
       />
       <DataTableColumnBody table={table} />
     </section>
