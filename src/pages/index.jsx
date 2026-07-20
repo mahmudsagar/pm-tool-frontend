@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useOutletContext, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { sanitize } from '@/utils/helper';
 import useDialog from '@/hooks/useDialog';
@@ -10,6 +10,12 @@ import Whiteboard from './Whiteboard';
 import { useDocument } from '@/hooks/queries/useFilesQueries';
 import { useBoard } from '@/hooks/queries/useBoardsQueries';
 import { useUpdateDocument, useDeleteDocument } from '@/hooks/mutations/useFilesMutations';
+import { useUpdateBoard } from '@/hooks/mutations/useBoardsMutations';
+import { DEFAULT_SCRUM_VIEW_BLOCK } from '@/components/elements/dataView/scrum/scrumBoardConstants';
+import {
+  buildDependencyOptionsFromDocuments,
+  resolveDependencySprintScope,
+} from '@/components/elements/dataView/scrum/dependencyOptionsUtils';
 import HistoryPanel from '@/components/elements/HistoryPanel';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUsers } from '@/hooks/queries/useSpacesQueries';
@@ -41,6 +47,7 @@ const Page = ({ ...props }) => {
   const { data: boardQueryData } = useBoard(data?.board_id, DEFAULT_VIEW);
   const updateDocumentMutation = useUpdateDocument();
   const deleteDocumentMutation = useDeleteDocument();
+  const updateBoardMutation = useUpdateBoard();
 
   const { page_type, ...restData } = data || {}
   const saveDebounceRef = useRef(null);
@@ -80,26 +87,72 @@ const Page = ({ ...props }) => {
   const dependencyOptions = useMemo(() => {
     const boardData = Array.isArray(boardQueryData) ? boardQueryData[0] : boardQueryData;
     const documents = boardData?.documents || [];
-    const byId = new Map();
-    documents.forEach((doc, index) => {
-      if (!doc?._id) return;
-      const parentTaskId = `TASK-${String(index + 1).padStart(3, '0')}`;
-      byId.set(String(doc._id), {
-        value: String(doc._id),
-        label: doc.title || doc.name || parentTaskId,
-        taskId: parentTaskId,
-      });
-      (doc.subtasks || []).forEach((sub, si) => {
-        if (!sub?._id) return;
-        byId.set(String(sub._id), {
-          value: String(sub._id),
-          label: sub.title || `Untitled Subtask ${si + 1}`,
-          taskId: `${parentTaskId}.${si + 1}`,
-        });
-      });
+    const sprintScope = resolveDependencySprintScope(boardData, data);
+    return buildDependencyOptionsFromDocuments(documents, {
+      excludeTaskId: data?._id,
+      sprintScope,
     });
-    return Array.from(byId.values());
-  }, [boardQueryData]);
+  }, [boardQueryData, data]);
+
+  const boardData = useMemo(
+    () => (Array.isArray(boardQueryData) ? boardQueryData[0] : boardQueryData),
+    [boardQueryData]
+  );
+
+  const labelRegistry = boardData?.saved_view?.scrum?.label_registry || {};
+  const epicRegistry = boardData?.saved_view?.scrum?.epic_registry || {};
+
+  const handleLabelRegistryChange = useCallback(
+    (nextOrUpdater) => {
+      if (!data?.board_id) return;
+      const savedView = boardData?.saved_view || {};
+      const current = savedView?.scrum?.label_registry || {};
+      const nextRegistry =
+        typeof nextOrUpdater === 'function' ? nextOrUpdater(current) : nextOrUpdater;
+      updateBoardMutation.mutate({
+        boardId: data.board_id,
+        data: {
+          id: data.board_id,
+          saved_view: {
+            ...savedView,
+            scrum: {
+              ...DEFAULT_SCRUM_VIEW_BLOCK,
+              ...(savedView.scrum || {}),
+              label_registry: nextRegistry,
+            },
+          },
+        },
+        skipToast: true,
+      });
+    },
+    [boardData?.saved_view, data?.board_id, updateBoardMutation]
+  );
+
+  const handleEpicRegistryChange = useCallback(
+    (nextOrUpdater) => {
+      if (!data?.board_id) return;
+      const savedView = boardData?.saved_view || {};
+      const current = savedView?.scrum?.epic_registry || {};
+      const nextRegistry =
+        typeof nextOrUpdater === 'function' ? nextOrUpdater(current) : nextOrUpdater;
+      updateBoardMutation.mutate({
+        boardId: data.board_id,
+        data: {
+          id: data.board_id,
+          saved_view: {
+            ...savedView,
+            scrum: {
+              ...DEFAULT_SCRUM_VIEW_BLOCK,
+              ...(savedView.scrum || {}),
+              epic_registry: nextRegistry,
+            },
+          },
+        },
+        skipToast: true,
+      });
+    },
+    [boardData?.saved_view, data?.board_id, updateBoardMutation]
+  );
 
   const handleDelete = async () => {
     try {
@@ -178,6 +231,11 @@ const Page = ({ ...props }) => {
     onOpenHistory: () => setHistoryOpen(true),
     assigneeOptions,
     dependencyOptions,
+    labelRegistry,
+    onLabelRegistryChange: handleLabelRegistryChange,
+    epicRegistry,
+    onEpicRegistryChange: handleEpicRegistryChange,
+    board: boardData,
   }
 
 

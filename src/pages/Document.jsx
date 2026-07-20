@@ -1,5 +1,5 @@
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { debounce } from '@/utils/helper';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Copy, ExternalLink, History, Maximize2, MessageSquareMore } from 'lucide-react';
@@ -9,6 +9,10 @@ import PlaygroundNodes from '@/components/elements/editor/nodes/PlaygroundNodes'
 import PlaygroundEditorTheme from '@/components/elements/editor/themes/PlaygroundEditorTheme';
 import Editor from '@/components/elements/editor/editor';
 import SubtaskPanel from '@/components/elements/SubtaskPanel';
+import {
+  buildDependencyOptionsFromDocuments,
+  resolveDependencySprintScope,
+} from '@/components/elements/dataView/scrum/dependencyOptionsUtils';
 
 const editorConfig = {
   namespace: 'BetterNotion Demo',
@@ -21,24 +25,18 @@ const editorConfig = {
   theme: PlaygroundEditorTheme,
 };
 let firstLoad = true;
-const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, assigneeOptions = [], board_id, subtasks = [], board, parent_id, ...rest }) => {
+const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, assigneeOptions = [], board_id, subtasks = [], board, parent_id, labelRegistry = {}, onLabelRegistryChange, epicRegistry = {}, onEpicRegistryChange, dependencyOptions: dependencyOptionsProp, ...rest }) => {
   const boardFields = board?.custom_meta?.fields || [];
-  const dependencyOptions = (board?.documents || []).flatMap((doc, index) => {
-    const parentTaskId = `TASK-${String(index + 1).padStart(3, '0')}`;
-    const parent = doc?._id
-      ? [{
-          value: String(doc._id),
-          label: doc?.title || doc?.name || parentTaskId,
-          taskId: parentTaskId,
-        }]
-      : [];
-    const subs = (doc?.subtasks || []).map((sub, si) => ({
-      value: String(sub?._id),
-      label: sub?.title || `Untitled Subtask ${si + 1}`,
-      taskId: `${parentTaskId}.${si + 1}`,
-    })).filter((x) => x.value && x.value !== "undefined");
-    return [...parent, ...subs];
-  });
+  const dependencyOptions = useMemo(() => {
+    if (Array.isArray(dependencyOptionsProp) && dependencyOptionsProp.length) {
+      return dependencyOptionsProp;
+    }
+    const sprintScope = resolveDependencySprintScope(board, { _id, ...rest });
+    return buildDependencyOptionsFromDocuments(board?.documents || [], {
+      excludeTaskId: _id,
+      sprintScope,
+    });
+  }, [board, _id, dependencyOptionsProp, rest.custom_meta, rest.parent_id]);
   const [showComments, setShowComments] = useState(false);
   useEffect(() => {
     if (!pageContent) return;
@@ -106,6 +104,10 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, a
     setShowComments,
     assigneeOptions,
     dependencyOptions,
+    labelRegistry,
+    onLabelRegistryChange,
+    epicRegistry,
+    onEpicRegistryChange,
     subtaskPanel: board_id && !parent_id ? (
       <div className="mt-4 mb-2">
         <SubtaskPanel

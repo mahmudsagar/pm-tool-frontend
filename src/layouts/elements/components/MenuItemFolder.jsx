@@ -29,6 +29,7 @@ import { api } from '@/utils/api';
 import { useQueryClient } from '@tanstack/react-query';
 import EllipsisTooltip from "@/components/common/EllipsisTooltip";
 import ShowIcon from "@/components/common/ShowIcon";
+import { resolveBoardListPageType } from "@/components/elements/dataView/scrum/scrumBoardConstants";
 
 const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
   if (!folder) return null;    
@@ -140,7 +141,11 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
               <div className="flex justify-between items-center gap-2 overflow-hidden">
                 <span className="inline group-hover:hidden group-data-[state=open]:hidden">
                   {/* { showIcon(folder?.entity_type, folder?.page_type) } */}
-                  <ShowIcon file={folder?.entity_type} page={folder?.page_type} />
+                  <ShowIcon
+                    file={folder?.entity_type}
+                    page={resolveBoardListPageType(folder) || folder?.page_type}
+                    item={folder}
+                  />
                 </span>
                 <ChevronRight
                   strokeWidth={2.5}
@@ -199,7 +204,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
                           docId = {item?._id}
                           docName = {item?.title || item?.name} 
                           docType = {item?.entity_type}
-                          fileType = { item?.page_type }
+                          fileType = { resolveBoardListPageType(item) || item?.page_type }
                           hasChild = {true}
                           openItem={openItem}
                           isOpen = {isOpen}
@@ -224,7 +229,7 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
           docId = {folder?._id}
           docName = {folder?.title || folder?.name}
           docType = {folder?.entity_type}
-          fileType = {folder?.page_type}
+          fileType = { resolveBoardListPageType(folder) || folder?.page_type }
           openItem={openItem}
           isOpen = {isOpen}
           // showIcon={showIcon}

@@ -1,6 +1,22 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import Link from "@/BetterRouter/Link";
+import {
+  clampScoreValue,
+  isScoreFieldName,
+  SCORE_MAX,
+  SCORE_MIN,
+} from "@/components/elements/dataView/scrum/scrumBoardConstants";
+import LabelBadge from "@/components/elements/dataView/scrum/LabelBadge";
+import LabelsField from "@/components/elements/dataView/scrum/LabelsField";
+import EpicBadge from "@/components/elements/dataView/scrum/EpicBadge";
+import EpicField from "@/components/elements/dataView/scrum/EpicField";
+import { parseLabelsString } from "@/components/elements/dataView/scrum/labelUtils";
+import { parseEpicValue } from "@/components/elements/dataView/scrum/epicUtils";
+import DodChecklistField from "@/components/elements/dataView/scrum/DodChecklistField";
+import { dodChecklistSummary } from "@/components/elements/dataView/scrum/dodUtils";
+import { filterDependencyOptionsForTask } from "@/components/elements/dataView/scrum/dependencyOptionsUtils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
@@ -108,7 +123,7 @@ const toDateObject = (value) => {
   return d;
 };
 
-export default function TableView({ data, assigneeOptions = [], groupBy = null, onCellChange, dependencyOptions: dependencyOptionsProp = [] }) {
+export default function TableView({ data, assigneeOptions = [], groupBy = null, onCellChange, dependencyOptions: dependencyOptionsProp = [], filterDependenciesBySprint = false, labelRegistry = {}, onLabelRegistryChange, epicRegistry = {}, onEpicRegistryChange }) {
   const rows = useMemo(
     () => (data?.property_values || []).filter((item) => !item.parent_id),
     [data?.property_values]
@@ -196,7 +211,10 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
     if (isDependencyField(field)) {
       const cellKey = `${item?.id || "row"}:${field.name}`;
       const query = dependencyQueryByCell[cellKey] || "";
-      const filteredDependencyOptions = dependencyOptions.filter((opt) => {
+      const rowDependencyOptions = filterDependenciesBySprint
+        ? filterDependencyOptionsForTask(dependencyOptions, data?.property_values, item)
+        : dependencyOptions.filter((opt) => String(opt.value) !== String(item?.id));
+      const filteredDependencyOptions = rowDependencyOptions.filter((opt) => {
         const q = String(query || "").trim().toLowerCase();
         if (!q) return true;
         return (
@@ -353,6 +371,113 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
                 })
               }
               initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      );
+    }
+
+    if (isScoreFieldName(field.name)) {
+      return (
+        <input
+          type="number"
+          min={SCORE_MIN}
+          max={SCORE_MAX}
+          step={1}
+          className={`w-full ${commonClass}`}
+          defaultValue={value ?? ""}
+          onBlur={(e) => {
+            const clamped = clampScoreValue(e.target.value);
+            e.target.value = clamped;
+            commitFieldChange(item, field, clamped);
+          }}
+        />
+      );
+    }
+
+    if (field.name === "epic" || field.type === "epic") {
+      const epic = parseEpicValue(value);
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={`flex w-full items-center text-left ${isSubtask ? "min-h-7" : "min-h-8"}`}
+            >
+              {epic ? (
+                <EpicBadge name={epic} epicRegistry={epicRegistry} size="sm" />
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-3" align="start">
+            <EpicField
+              compact
+              value={value ?? ""}
+              epicRegistry={epicRegistry}
+              onRegistryChange={onEpicRegistryChange}
+              onChange={(next) => commitFieldChange(item, field, next)}
+            />
+          </PopoverContent>
+        </Popover>
+      );
+    }
+
+    if (field.name === "labels" || field.type === "labels") {
+      const labels = parseLabelsString(value);
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={`flex w-full flex-wrap gap-1 text-left ${isSubtask ? "min-h-7" : "min-h-8"}`}
+            >
+              {labels.length > 0 ? (
+                labels.map((name) => (
+                  <LabelBadge key={name} name={name} labelRegistry={labelRegistry} size="sm" />
+                ))
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-3" align="start">
+            <LabelsField
+              compact
+              value={value ?? ""}
+              labelRegistry={labelRegistry}
+              onRegistryChange={onLabelRegistryChange}
+              onChange={(next) => commitFieldChange(item, field, next)}
+            />
+          </PopoverContent>
+        </Popover>
+      );
+    }
+
+    if (field.name === "dod_checklist" || field.type === "dod_checklist") {
+      const summary = dodChecklistSummary(value);
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={`flex w-full items-center text-left ${isSubtask ? "min-h-7" : "min-h-8"}`}
+            >
+              {summary ? (
+                <span className="text-xs">
+                  DoD {summary.done}/{summary.total}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-3" align="start">
+            <DodChecklistField
+              compact
+              value={value ?? ""}
+              onChange={(next) => commitFieldChange(item, field, next)}
             />
           </PopoverContent>
         </Popover>

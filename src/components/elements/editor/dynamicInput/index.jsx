@@ -14,6 +14,17 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { debounce, sanitize } from '@/utils/helper';
+import {
+  clampScoreValue,
+  isScoreFieldName,
+  SCORE_MAX,
+  SCORE_MIN,
+} from '@/components/elements/dataView/scrum/scrumBoardConstants';
+import LabelsField from '@/components/elements/dataView/scrum/LabelsField';
+import EpicField from '@/components/elements/dataView/scrum/EpicField';
+import DodChecklistField from '@/components/elements/dataView/scrum/DodChecklistField';
+
+const INITIAL_VISIBLE_PROPERTY_COUNT = 5;
 
 const InputNumber = ({ ...props }) => {
   return <Input type="number" {...props} />;
@@ -132,7 +143,10 @@ const fields = {
   'dynamic-select': DynamicSelectField,
   multiSelect: MultiSelect,
   date: DatePicker,
-  daterange: DatePickerWithRange
+  daterange: DatePickerWithRange,
+  labels: LabelsField,
+  epic: EpicField,
+  dod_checklist: DodChecklistField,
 }
 
 const isDependencyField = (field) => {
@@ -142,7 +156,7 @@ const isDependencyField = (field) => {
   return label.includes('depend') || label.includes('block');
 };
 
-const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [], dependencyOptions = [] }) => {
+const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [], dependencyOptions = [], labelRegistry = {}, onLabelRegistryChange, epicRegistry = {}, onEpicRegistryChange }) => {
   const [open, setOpen] = useState(false);
   const [label, setLabel] = useState(field.label);
   const [actionType, setActionType] = useState('edit');
@@ -152,6 +166,9 @@ const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [
   const [changedField, setChangedField] = useState({});
 
   const dependencyField = isDependencyField(field);
+  const isLabelsField = field.type === 'labels' || field.name === 'labels';
+  const isEpicField = field.type === 'epic' || field.name === 'epic';
+  const isDodField = field.type === 'dod_checklist' || field.name === 'dod_checklist';
   const Component = dependencyField ? DependencySelectField : (fields[field.type] || Input);
   const { hasOptions, initialized, source, ...passableProps } = field;
 
@@ -161,7 +178,11 @@ const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [
     ? { dynamicOptions: assigneeOptions }
     : dependencyField
       ? { dependencyOptions }
-      : {};
+      : isLabelsField
+        ? { labelRegistry, onRegistryChange: onLabelRegistryChange, compact: true }
+        : isEpicField
+          ? { epicRegistry, onRegistryChange: onEpicRegistryChange, compact: true }
+          : {};
 
   useEffect(() => {
     // Auto-open only for freshly created fields in the current session.
@@ -186,7 +207,9 @@ const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [
         }
       }}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="text-blue-500 justify-start">{field.label}</Button>
+          <Button variant="ghost" className="text-blue-500 justify-start">
+            {isLabelsField ? 'Labels' : isDodField ? 'Definition of Done' : field.label}
+          </Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent >
@@ -284,9 +307,87 @@ const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [
           if (['date', 'daterange', 'multiSelect'].includes(field.type)) {
             formField.handleFormChange = handleFormChange;
           }
+          const scoreField = isScoreFieldName(field.name);
+          const boundedNumber = scoreField || field.type === 'number';
+          const min = field.min ?? (scoreField ? SCORE_MIN : undefined);
+          const max = field.max ?? (scoreField ? SCORE_MAX : undefined);
+          const { onBlur, onChange, ...restFormField } = formField;
+
+          if (isEpicField) {
+            return (
+              <FormItem className="space-y-0">
+                <FormControl>
+                  <EpicField
+                    compact
+                    value={formField.value}
+                    epicRegistry={epicRegistry}
+                    onRegistryChange={onEpicRegistryChange}
+                    onChange={(val) => {
+                      onChange(val);
+                      handleFormChange?.();
+                    }}
+                  />
+                </FormControl>
+              </FormItem>
+            );
+          }
+
+          if (isDodField) {
+            return (
+              <FormItem className="space-y-0">
+                <FormControl>
+                  <DodChecklistField
+                    compact
+                    value={formField.value}
+                    onChange={(val) => {
+                      onChange(val);
+                      handleFormChange?.();
+                    }}
+                  />
+                </FormControl>
+              </FormItem>
+            );
+          }
+
+          if (isLabelsField) {
+            return (
+              <FormItem className="space-y-0">
+                <FormControl>
+                  <LabelsField
+                    compact
+                    value={formField.value}
+                    labelRegistry={labelRegistry}
+                    onRegistryChange={onLabelRegistryChange}
+                    onChange={(val) => {
+                      onChange(val);
+                      handleFormChange?.();
+                    }}
+                  />
+                </FormControl>
+              </FormItem>
+            );
+          }
+
           return <FormItem>
             <FormControl>
-              <Component className="outline-none w-full h-8" {...passableProps} {...formField} {...extraProps} />
+              <Component
+                className="outline-none w-full h-8"
+                {...passableProps}
+                {...restFormField}
+                {...extraProps}
+                type={boundedNumber ? 'number' : undefined}
+                min={min}
+                max={max}
+                step={boundedNumber ? 1 : undefined}
+                onChange={onChange}
+                onBlur={(e) => {
+                  if (scoreField) {
+                    onChange(clampScoreValue(e.target.value));
+                  }
+                  onBlur(e);
+                  handleFormChange?.();
+                }}
+              />
             </FormControl>
           </FormItem>
         }}
@@ -314,12 +415,19 @@ const FieldList = ({ handleCreateField }) => {
 }
 
 
-const DynamicInput = ({ initialData, onChange, assigneeOptions = [], dependencyOptions = [] }) => {
+const DynamicInput = ({ initialData, onChange, assigneeOptions = [], dependencyOptions = [], labelRegistry = {}, onLabelRegistryChange, epicRegistry = {}, onEpicRegistryChange }) => {
   const { fields = [], values = {} } = sanitize(initialData);
   const [customFields, setCustomFields] = useState(fields); // List of added fields
+  const [expanded, setExpanded] = useState(false);
   const form = useForm({
     defaultValues: values
   })
+
+  const hasOverflow = customFields.length > INITIAL_VISIBLE_PROPERTY_COUNT;
+  const hiddenCount = hasOverflow ? customFields.length - INITIAL_VISIBLE_PROPERTY_COUNT : 0;
+  const displayedFields = !hasOverflow || expanded
+    ? customFields
+    : customFields.slice(0, INITIAL_VISIBLE_PROPERTY_COUNT);
 
   const handleCreateField = ({ type, label, ...rest }) => {
     /** store the new field in the list by a random id */
@@ -370,13 +478,56 @@ const DynamicInput = ({ initialData, onChange, assigneeOptions = [], dependencyO
     onChange({ values, fields });
   }, 1000);
 
+  const renderPropertyField = (customField) => (
+    <Field
+      key={customField.name}
+      field={customField}
+      control={form.control}
+      onChange={handleEditField}
+      handleFormChange={handleFormChange}
+      assigneeOptions={assigneeOptions}
+      dependencyOptions={dependencyOptions}
+      labelRegistry={labelRegistry}
+      onLabelRegistryChange={onLabelRegistryChange}
+      epicRegistry={epicRegistry}
+      onEpicRegistryChange={onEpicRegistryChange}
+    />
+  );
+
   return (
 
     <Form {...form}>
       <form onChange={handleFormChange} onSubmit={e => e.preventDefault()}>
         <table className='w-full mt-3'>
           <tbody>
-            {customFields.map((customField, index) => <Field key={index} field={customField} control={form.control} onChange={handleEditField} handleFormChange={handleFormChange} assigneeOptions={assigneeOptions} dependencyOptions={dependencyOptions} />
+            {displayedFields.map((customField) => renderPropertyField(customField))}
+            {hasOverflow && !expanded && (
+              <tr>
+                <td colSpan={2} className="pt-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-8 px-0 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setExpanded(true)}
+                  >
+                    See more ({hiddenCount})
+                  </Button>
+                </td>
+              </tr>
+            )}
+            {hasOverflow && expanded && (
+              <tr>
+                <td colSpan={2} className="pt-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-8 px-0 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setExpanded(false)}
+                  >
+                    See less
+                  </Button>
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

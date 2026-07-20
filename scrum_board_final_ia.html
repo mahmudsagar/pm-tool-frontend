@@ -1,0 +1,164 @@
+<div id="app" style="position:relative; border:0.5px solid var(--border); border-radius:14px; overflow:hidden; background:var(--surface-1); height:600px;"></div>
+<script>
+const SPRINTS = {
+  'new sprint': {status:'Active', committed:10, completed:6, stories:['jdfh','new 1'], retroId:'168e33eb'},
+  'sprint 1': {status:'Upcoming', committed:0, completed:0, stories:['new test'], retroId:null},
+};
+const EPICS = { 'Checkout v2': {goal:'Reduce checkout drop-off by 20%', committed:0, completed:0} };
+const MILESTONES = [ {name:'new 1', sprint:'new sprint'} ];
+const state = { tab:'board', sprint:'new sprint', drawerOpen:false, drawerSub:'sprints', boardPanel:null };
+
+function pbar(done,total,color){ const p=total?Math.round((done/total)*100):0; return `<div style="height:6px; border-radius:3px; background:var(--surface-3); overflow:hidden;"><div style="height:100%; width:${p}%; background:${color||'var(--text-muted)'};"></div></div>`; }
+function card(t,sub){ return `<div style="background:var(--surface-2); border:0.5px solid var(--border); border-radius:10px; padding:10px 12px; margin-bottom:8px;"><p style="font-size:13px; margin:0;">${t}</p><p style="font-size:11px; color:var(--text-muted); margin:4px 0 0;">${sub}</p></div>`; }
+
+function contextBar(){
+  const s = SPRINTS[state.sprint];
+  const opts = Object.keys(SPRINTS).map(k=>`<option value="${k}" ${k===state.sprint?'selected':''}>${k}</option>`).join('');
+  return `<div style="display:flex; align-items:center; gap:14px; padding:12px 20px; border-bottom:0.5px solid var(--border); background:var(--surface-2); flex-wrap:wrap;">
+    <span style="font-size:12px; color:var(--text-muted);">Working in</span>
+    <select onchange="setSprint(this.value)" style="font-size:13px; font-weight:500;">${opts}</select>
+    <span style="font-size:11px; padding:2px 8px; border-radius:var(--radius); background:${s.status==='Active'?'var(--c-green-50,#EAF3DE)':'var(--surface-3)'}; color:${s.status==='Active'?'#27500A':'var(--text-secondary)'};">${s.status}</span>
+    <span style="font-size:12px; color:var(--text-secondary);">${s.stories.length} stories · ${s.completed}/${s.committed} pts</span>
+  </div>`;
+}
+
+function tabBar(){
+  const tabs = [['board','Board'],['reports','Reports']];
+  return `<div style="display:flex; align-items:center; justify-content:space-between; padding:8px 20px; border-bottom:0.5px solid var(--border); flex-wrap:wrap; gap:10px;">
+    <div style="display:flex; gap:4px;">
+      ${tabs.map(([id,label])=>`<button onclick="setTab('${id}')" style="font-size:12px; padding:6px 12px; background:${state.tab===id?'var(--surface-3)':'transparent'}; border:${state.tab===id?'none':'0.5px solid var(--border)'};">${label}</button>`).join('')}
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button onclick="openDrawer()" style="font-size:12px; padding:6px 10px;"><i class="ti ti-list-details" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>Backlog</button>
+      <button style="font-size:12px; padding:6px 10px;"><i class="ti ti-plus" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>New task</button>
+    </div>
+  </div>`;
+}
+
+function renderBoard(){
+  const s = SPRINTS[state.sprint];
+  const cols = [
+    {name:'Backlog', cards:s.stories.map(st=>card(st,'No due date'))},
+    {name:'In Progress', cards:[]}, {name:'Review', cards:[]}, {name:'Done', cards:[]},
+  ];
+  const panel = state.boardPanel==='dependencies' ? `
+    <div style="border:0.5px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:10px;">
+      <p style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">Blocked-by / blocks</p>
+      <div style="display:flex; align-items:center; gap:6px; font-size:12px;">
+        <span style="padding:2px 7px; border-radius:var(--radius); background:var(--c-coral-50,#FAECE7); color:#712B13;">TASK-002</span>
+        <i class="ti ti-arrow-right" style="font-size:12px; color:var(--text-muted);"></i>
+        <span style="padding:2px 7px; border-radius:var(--radius); background:var(--c-coral-50,#FAECE7); color:#712B13;">TASK-003</span>
+        <span style="font-size:11px; padding:2px 8px; border-radius:var(--radius); background:#B3402A; color:white;">Critical path</span>
+      </div>
+    </div>` : state.boardPanel==='standup' ? `
+    <div style="border:0.5px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:10px;">
+      <p style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">Daily standup — ${state.sprint}</p>
+      <textarea placeholder="Yesterday / Today update" style="width:100%; font-size:12px; margin-bottom:6px;"></textarea>
+      <input placeholder="Blocker (optional)" style="width:100%; font-size:12px; margin-bottom:6px;" />
+      <button style="font-size:12px;">Log standup</button>
+    </div>` : '';
+
+  return `<div style="padding:18px 20px; display:flex; flex-direction:column; gap:10px;">
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <p style="font-size:13px; color:var(--text-secondary); margin:0;">Board for <b style="color:var(--text-primary);">${state.sprint}</b></p>
+      <div style="flex:1;"></div>
+      <button onclick="togglePanel('dependencies')" style="font-size:12px; padding:5px 10px; background:${state.boardPanel==='dependencies'?'var(--surface-3)':'transparent'};"><i class="ti ti-git-branch" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>Dependencies</button>
+      <button onclick="togglePanel('standup')" style="font-size:12px; padding:5px 10px; background:${state.boardPanel==='standup'?'var(--surface-3)':'transparent'};"><i class="ti ti-message-circle" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>Standup</button>
+      <button style="font-size:12px; padding:5px 10px;"><i class="ti ti-filter" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>Filter</button>
+    </div>
+    ${panel}
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
+      ${cols.map(c=>`<div style="background:var(--surface-2); border:0.5px solid var(--border); border-radius:10px; padding:10px;">
+        <p style="font-size:12px; color:var(--text-secondary); margin:0 0 8px; display:flex; justify-content:space-between;">${c.name}<span>${c.cards.length}</span></p>
+        ${c.cards.join('') || '<p style="font-size:11px; color:var(--text-muted); margin:0 0 8px;">Empty</p>'}
+        <button style="font-size:11px; width:100%;">+ Add card</button>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderReports(){
+  const s = SPRINTS[state.sprint];
+  return `<div style="padding:18px 20px; display:flex; flex-direction:column; gap:14px;">
+    <p style="font-size:13px; color:var(--text-secondary); margin:0;">Report for <b style="color:var(--text-primary);">${state.sprint}</b></p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px;">
+      <div style="border:0.5px solid var(--border); border-radius:10px; padding:10px 12px;"><p style="font-size:11px; color:var(--text-muted); margin:0;">Committed</p><p style="font-size:17px; margin:4px 0 0;">${s.committed} pts</p></div>
+      <div style="border:0.5px solid var(--border); border-radius:10px; padding:10px 12px;"><p style="font-size:11px; color:var(--text-muted); margin:0;">Completed</p><p style="font-size:17px; margin:4px 0 0;">${s.completed} pts</p></div>
+      <div style="border:0.5px solid var(--border); border-radius:10px; padding:10px 12px;"><p style="font-size:11px; color:var(--text-muted); margin:0;">Remaining</p><p style="font-size:17px; margin:4px 0 0;">${s.committed-s.completed} pts</p></div>
+    </div>
+    <div style="background:var(--surface-2); border:0.5px solid var(--border); border-radius:10px; padding:12px 14px;">
+      <p style="font-size:12px; margin:0 0 6px;">Burndown</p>${pbar(s.completed,s.committed,'var(--c-green-600,#4B7521)')}
+    </div>
+    <div style="border:0.5px solid var(--border); border-radius:10px; padding:12px 14px;">
+      <p style="font-size:12px; color:var(--text-muted); margin:0 0 8px;">Team health</p>
+      <p style="font-size:13px; margin:0;">Burnout signal: <b>Low</b></p>
+      <p style="font-size:12px; color:var(--text-muted); margin:4px 0 0;">Sentiment samples: 0</p>
+    </div>
+    <div style="border:0.5px solid var(--border); border-radius:10px; padding:12px 14px;">
+      <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">Test coverage</p>
+      <p style="font-size:12px; color:var(--text-secondary); margin:0;">No coverage series yet. Add snapshot data via integration.</p>
+    </div>
+  </div>`;
+}
+
+function renderDrawer(){
+  if(!state.drawerOpen) return '';
+  const subs = [['sprints','Sprints'],['epics','Epics'],['milestones','Milestones']];
+  let body = '';
+  if(state.drawerSub==='sprints'){
+    body = Object.entries(SPRINTS).map(([name,s])=>`
+      <div style="border:0.5px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--surface-2);">
+          <div>
+            <p style="font-weight:500; font-size:13px; margin:0;">${name} <span style="font-size:11px; padding:2px 8px; border-radius:var(--radius); background:${s.status==='Active'?'var(--c-green-50,#EAF3DE)':'var(--surface-3)'}; color:${s.status==='Active'?'#27500A':'var(--text-secondary)'};">${s.status}</span></p>
+            <p style="font-size:11px; color:var(--text-muted); margin:4px 0 0;">${s.stories.length} stories · ${s.completed}/${s.committed} pts</p>
+          </div>
+          <div style="display:flex; gap:6px;">
+            ${s.retroId ? `<button style="font-size:11px;">Open retro</button>` : `<button style="font-size:11px;" disabled>No retro yet</button>`}
+          </div>
+        </div>
+      </div>`).join('') + `<button style="font-size:12px;"><i class="ti ti-plus" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>New sprint</button>`;
+  } else if(state.drawerSub==='epics'){
+    body = Object.entries(EPICS).map(([name,e])=>`
+      <div style="border:0.5px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px;">
+        <p style="font-weight:500; font-size:13px; margin:0;">${name}</p>
+        <p style="font-size:11px; color:var(--text-muted); margin:2px 0 8px;">${e.goal}</p>
+        ${pbar(e.completed, e.committed||1)}
+      </div>`).join('') + `<button style="font-size:12px;"><i class="ti ti-plus" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>New epic</button>`;
+  } else {
+    body = MILESTONES.map(m=>`
+      <div style="border:0.5px solid var(--border); border-radius:12px; padding:12px 14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+        <div><p style="font-weight:500; font-size:13px; margin:0;">${m.name}</p><p style="font-size:11px; color:var(--text-muted); margin:2px 0 0;">tied to ${m.sprint}</p></div>
+        <i class="ti ti-trash" style="font-size:14px; color:var(--text-muted);"></i>
+      </div>`).join('') + `
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <input placeholder="Beta launch" style="flex:1; font-size:12px;" />
+        <button style="font-size:12px;"><i class="ti ti-plus" style="font-size:13px; vertical-align:-2px; margin-right:4px;"></i>Add</button>
+      </div>`;
+  }
+  return `
+  <div onclick="closeDrawer()" style="position:absolute; inset:0; background:rgba(0,0,0,0.4); z-index:5;"></div>
+  <div style="position:absolute; top:0; right:0; bottom:0; width:340px; max-width:85%; background:var(--surface-1); border-left:0.5px solid var(--border); z-index:6; display:flex; flex-direction:column; box-shadow:-8px 0 24px rgba(0,0,0,0.25);">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:0.5px solid var(--border);">
+      <p style="font-weight:500; font-size:14px; margin:0;">Backlog</p>
+      <button onclick="closeDrawer()" style="font-size:13px; padding:2px 8px;"><i class="ti ti-x" style="font-size:14px;"></i></button>
+    </div>
+    <div style="display:flex; gap:6px; padding:10px 16px 0;">
+      ${subs.map(([id,label])=>`<button onclick="setDrawerSub('${id}')" style="font-size:12px; padding:5px 12px; border-radius:999px; background:${state.drawerSub===id?'var(--text-primary)':'transparent'}; color:${state.drawerSub===id?'var(--surface-1)':'var(--text-secondary)'}; border:${state.drawerSub===id?'none':'0.5px solid var(--border)'};">${label}</button>`).join('')}
+    </div>
+    <div style="padding:16px; overflow:auto; flex:1;">${body}</div>
+  </div>`;
+}
+
+function render(){
+  const views = {board:renderBoard, reports:renderReports};
+  document.getElementById('app').innerHTML = contextBar() + tabBar() + `<div style="overflow:auto; height:calc(100% - 105px);">${views[state.tab]()}</div>` + renderDrawer();
+}
+function setTab(t){ state.tab=t; state.boardPanel=null; render(); }
+function setSprint(s){ state.sprint=s; render(); }
+function openDrawer(){ state.drawerOpen=true; render(); }
+function closeDrawer(){ state.drawerOpen=false; render(); }
+function setDrawerSub(s){ state.drawerSub=s; render(); }
+function togglePanel(p){ state.boardPanel = state.boardPanel===p ? null : p; render(); }
+render();
+</script>

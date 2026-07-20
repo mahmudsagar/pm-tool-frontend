@@ -30,7 +30,7 @@ function DocStructure({
         }
         return `/document/${docId}`;
       case 'board':
-        return `/board/${docId}`;
+        return fileType === 'scrum' ? `/scrum/${docId}` : `/board/${docId}`;
       case 'folder':
         return `/folder/${docId}`;
       default:

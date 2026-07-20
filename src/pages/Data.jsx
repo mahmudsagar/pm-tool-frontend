@@ -40,6 +40,32 @@ function mergeViewStateFromBoard(savedView, isScrumPage) {
         ...DEFAULT_SCRUM_VIEW_BLOCK.backlog,
         ...(savedView?.scrum?.backlog || {}),
       },
+      release_plan: {
+        ...DEFAULT_SCRUM_VIEW_BLOCK.release_plan,
+        ...(savedView?.scrum?.release_plan || {}),
+      },
+      label_registry: {
+        ...(savedView?.scrum?.label_registry || {}),
+      },
+      epic_registry: {
+        ...(savedView?.scrum?.epic_registry || {}),
+      },
+      test_coverage: {
+        ...DEFAULT_SCRUM_VIEW_BLOCK.test_coverage,
+        ...(savedView?.scrum?.test_coverage || {}),
+        integration: {
+          ...DEFAULT_SCRUM_VIEW_BLOCK.test_coverage.integration,
+          ...(savedView?.scrum?.test_coverage?.integration || {}),
+        },
+      },
+      team_health: {
+        ...DEFAULT_SCRUM_VIEW_BLOCK.team_health,
+        ...(savedView?.scrum?.team_health || {}),
+        digest: {
+          ...DEFAULT_SCRUM_VIEW_BLOCK.team_health.digest,
+          ...(savedView?.scrum?.team_health?.digest || {}),
+        },
+      },
     },
   };
 }
@@ -87,14 +113,26 @@ import KanbanView from "@/components/elements/dataView/kanban"
 import TimelineView from "@/components/elements/dataView/timeline"
 import CalendarView from "@/components/elements/dataView/calendar"
 import ScrumBoardView from "@/components/elements/dataView/scrum/ScrumBoardView"
-import ScrumReportsSection from "@/components/elements/dataView/scrum/ScrumReportsSection"
-import ScrumSprintHub from "@/components/elements/dataView/scrum/ScrumSprintHub"
-import ScrumBacklogPlanning from "@/components/elements/dataView/scrum/ScrumBacklogPlanning"
-import ScrumAgileModulesSection from "@/components/elements/dataView/scrum/ScrumAgileModulesSection"
+import ScrumBoardShell from "@/components/elements/dataView/scrum/ScrumBoardShell"
 import {
   DEFAULT_SCRUM_VIEW_BLOCK,
   defaultScrumSavedView,
 } from "@/components/elements/dataView/scrum/scrumBoardConstants"
+import {
+  collectLabelsFromTasks,
+  parseLabelsString,
+  syncRegistryWithLabels,
+} from "@/components/elements/dataView/scrum/labelUtils"
+import {
+  collectEpicsFromTasks,
+  parseEpicValue,
+  syncRegistryWithEpics,
+} from "@/components/elements/dataView/scrum/epicUtils"
+import {
+  buildDependencyOptionsFromDocuments,
+  filterDependencyOptionsForTask,
+} from "@/components/elements/dataView/scrum/dependencyOptionsUtils"
+import { isScrumBoardKind } from "@/components/elements/dataView/scrum/scrumBoardConstants"
 
 import { TabsContent } from "@radix-ui/react-tabs"
 import TableMainMenu from "@/components/elements/dataView/TableMainMenu"
@@ -114,6 +152,7 @@ import { useToast } from "@/components/ui/use-toast"
 import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete"
 import { useUsers } from "@/hooks/queries/useSpacesQueries"
 import { useTeams } from "@/hooks/queries/useTeamsQueries"
+import useAuthStore from "@/stores/useAuthStore"
 
 const BASE_LAYOUT_DEFINITIONS = {
   table: { type: "table", label: "Table", icon: Table, element: TableView },
@@ -177,6 +216,7 @@ const resolveDependencyFieldName = (fields = [], kind) => {
 };
 const DEPENDENCY_FIELD_DEFS = [
   { name: "depends_on", label: "Dependent on", type: "text" },
+  { name: "test_coverage_ref", label: "Test coverage ref", type: "text" },
 ];
 
 const normalizeSelectLikeValue = (rawValue, options = []) => {
@@ -219,7 +259,6 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
 
   const isScrumPage = mode === "scrum";
   const [activeTab, setActiveTab] = useState(isScrumPage ? "kanban" : "table");
-  const [scrumSection, setScrumSection] = useState("sprints");
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [groupBy, setGroupBy] = useState(null); // null = no grouping | { name, label, type }
   const [selectedTaskId, setSelectedTaskId] = useState(null);
@@ -254,6 +293,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
   const { toast } = useToast();
   const { data: allUsers } = useUsers();
   const { data: allTeams } = useTeams();
+  const currentWorkspace = useAuthStore((state) => state.currentWorkspace);
 
   // Extract board data from array if needed and normalize access format
   const boardData = useMemo(() => {
@@ -335,6 +375,47 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
     [boardId, updateBoardMutation, toast]
   );
 
+  const labelRegistry = viewState?.scrum?.label_registry || {};
+  const epicRegistry = viewState?.scrum?.epic_registry || {};
+
+  const patchLabelRegistry = useCallback(
+    (nextOrUpdater) => {
+      patchSavedView((prev) => {
+        const current = prev?.scrum?.label_registry || {};
+        const nextRegistry =
+          typeof nextOrUpdater === "function" ? nextOrUpdater(current) : nextOrUpdater;
+        return {
+          ...prev,
+          scrum: {
+            ...DEFAULT_SCRUM_VIEW_BLOCK,
+            ...(prev?.scrum || {}),
+            label_registry: nextRegistry,
+          },
+        };
+      });
+    },
+    [patchSavedView]
+  );
+
+  const patchEpicRegistry = useCallback(
+    (nextOrUpdater) => {
+      patchSavedView((prev) => {
+        const current = prev?.scrum?.epic_registry || {};
+        const nextRegistry =
+          typeof nextOrUpdater === "function" ? nextOrUpdater(current) : nextOrUpdater;
+        return {
+          ...prev,
+          scrum: {
+            ...DEFAULT_SCRUM_VIEW_BLOCK,
+            ...(prev?.scrum || {}),
+            epic_registry: nextRegistry,
+          },
+        };
+      });
+    },
+    [patchSavedView]
+  );
+
   const savedViewHydratedRef = useRef(null);
   const dependencyFieldsInitRef = useRef({});
   // Hydrate saved_view after board fetch completes (avoids racing with empty saved_view)
@@ -354,12 +435,6 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
       setActiveTab("table");
     }
   }, [activeTab, isScrumPage]);
-
-  useEffect(() => {
-    if (!isScrumPage && scrumSection !== "board") {
-      setScrumSection("board");
-    }
-  }, [isScrumPage, scrumSection]);
 
   useEffect(() => {
     if (!boardDataId) return;
@@ -481,6 +556,16 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
     updateTaskMutation.mutate({ boardId, taskId: rowData.id, custom_meta: updatedMeta });
 
     const normalizedField = normalizedText(fieldName);
+    if (normalizedField === "labels") {
+      patchLabelRegistry((prev) => syncRegistryWithLabels(prev, parseLabelsString(newValue)));
+    }
+    if (normalizedField === "epic") {
+      const epic = parseEpicValue(newValue);
+      if (epic) {
+        patchEpicRegistry((prev) => syncRegistryWithEpics(prev, [epic]));
+      }
+    }
+
     const documents = boardData?.documents || [];
     const parentDoc = rowData.parent_id
       ? documents.find((doc) => doc._id === rowData.parent_id)
@@ -765,7 +850,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
         }
       }
     }
-  }, [assigneeOptions, automationState, boardId, boardData, resolvedAssigneeField, resolvedPriorityField, resolvedStatusField, resolvedTypeField, toast, updateTaskMutation]);
+  }, [assigneeOptions, automationState, boardId, boardData, patchEpicRegistry, patchLabelRegistry, resolvedAssigneeField, resolvedPriorityField, resolvedStatusField, resolvedTypeField, toast, updateTaskMutation]);
 
   // Create a subtask under a parent task
   const createSubtask = useCallback(async (parentTaskId, taskData) => {
@@ -866,6 +951,16 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
 
       // Use TanStack Query mutation to create task
       await createTaskMutation.mutateAsync({ boardId, taskData: requestBody });
+      if (customMetaValues.labels) {
+        patchLabelRegistry((prev) =>
+          syncRegistryWithLabels(prev, parseLabelsString(customMetaValues.labels))
+        );
+      }
+      if (customMetaValues.epic) {
+        patchEpicRegistry((prev) =>
+          syncRegistryWithEpics(prev, [parseEpicValue(customMetaValues.epic)])
+        );
+      }
       console.log('Task created successfully via TanStack Query');
     } catch (error) {
       console.error('Error creating task:', error);
@@ -1084,6 +1179,34 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
     };
   }, [boardData, assigneeOptions]);
 
+  const labelsSeededRef = useRef(null);
+  useEffect(() => {
+    if (!isScrumPage || !boardDataId || !boardTasks?.property_values) return;
+    if (labelsSeededRef.current === boardDataId) return;
+    labelsSeededRef.current = boardDataId;
+    const discovered = collectLabelsFromTasks(boardTasks.property_values);
+    if (!discovered.length) return;
+    const current = boardDataSavedView?.scrum?.label_registry || {};
+    const synced = syncRegistryWithLabels(current, discovered);
+    if (JSON.stringify(synced) !== JSON.stringify(current)) {
+      patchLabelRegistry(synced);
+    }
+  }, [boardDataId, boardDataSavedView, boardTasks, isScrumPage, patchLabelRegistry]);
+
+  const epicsSeededRef = useRef(null);
+  useEffect(() => {
+    if (!isScrumPage || !boardDataId || !boardTasks?.property_values) return;
+    if (epicsSeededRef.current === boardDataId) return;
+    epicsSeededRef.current = boardDataId;
+    const discovered = collectEpicsFromTasks(boardTasks.property_values);
+    if (!discovered.length) return;
+    const current = boardDataSavedView?.scrum?.epic_registry || {};
+    const synced = syncRegistryWithEpics(current, discovered);
+    if (JSON.stringify(synced) !== JSON.stringify(current)) {
+      patchEpicRegistry(synced);
+    }
+  }, [boardDataId, boardDataSavedView, boardTasks, isScrumPage, patchEpicRegistry]);
+
   // Fields that can be used as group-by options (exclude identity/text fields)
   const groupByOptions = useMemo(() => {
     const excluded = ['task_id', 'title', 'description'];
@@ -1116,7 +1239,6 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
         },
       },
     }));
-    setScrumSection("sprints");
   }, [patchSavedView]);
 
   const scrumScopedBoardTasks = useMemo(() => {
@@ -1134,26 +1256,15 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
   }, [activeSprint, boardTasks, isScrumPage]);
 
   const dependencyTaskOptions = useMemo(() => {
-    const byId = new Map();
-    (boardDataUnfiltered?.documents || []).forEach((doc, index) => {
-      if (!doc?._id) return;
-      const parentTaskId = `TASK-${String(index + 1).padStart(3, '0')}`;
-      byId.set(String(doc._id), {
-        value: String(doc._id),
-        label: doc.title || doc.name || parentTaskId,
-        taskId: parentTaskId,
-      });
-      (doc.subtasks || []).forEach((sub, si) => {
-        if (!sub?._id) return;
-        byId.set(String(sub._id), {
-          value: String(sub._id),
-          label: sub.title || `Untitled Subtask ${si + 1}`,
-          taskId: `${parentTaskId}.${si + 1}`,
-        });
-      });
+    return buildDependencyOptionsFromDocuments(boardDataUnfiltered?.documents || [], {
+      sprintScope: null,
     });
-    return Array.from(byId.values());
   }, [boardDataUnfiltered?.documents]);
+
+  const isScrumBoard = useMemo(
+    () => isScrumBoardKind(boardData?.custom_meta),
+    [boardData?.custom_meta]
+  );
 
   function handleSaveView() {
     if (!boardId) return;
@@ -1196,7 +1307,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
       )}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {/* Header */}
-        <div className="flex items-center justify-between border-gray-300 mb-5">
+        <div className="mb-5 flex items-center justify-between border-gray-300">
           <div className="flex items-center gap-4">
             {!isScrumPage ? (
               <BoardViewTabList
@@ -1204,209 +1315,225 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
                 onOrderChange={handleLayoutOrderChange}
               />
             ) : null}
-            {isScrumPage && (
-              <div className="ml-2 inline-flex rounded-md border bg-muted/40 p-0.5">
-                <Button
-                  variant={scrumSection === "sprints" ? "default" : "ghost"}
-                  size="sm"
-                  className="h-7 px-3 text-xs"
-                  onClick={() => setScrumSection("sprints")}
-                >
-                  Sprints
-                </Button>
-                <Button
-                  variant={scrumSection === "board" ? "default" : "ghost"}
-                  size="sm"
-                  className="h-7 px-3 text-xs"
-                  onClick={() => setScrumSection("board")}
-                >
-                  Sprint Board
-                </Button>
-                <Button
-                  variant={scrumSection === "reports" ? "default" : "ghost"}
-                  size="sm"
-                  className="h-7 px-3 text-xs"
-                  onClick={() => setScrumSection("reports")}
-                >
-                  Reports
-                </Button>
-                <Button
-                  variant={scrumSection === "agile" ? "default" : "ghost"}
-                  size="sm"
-                  className="h-7 px-3 text-xs"
-                  onClick={() => setScrumSection("agile")}
-                >
-                  Agile
-                </Button>
-              </div>
-            )}
-
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              className="h-8"
-              onClick={() => setIsTaskModalOpen(true)}
-            >
-              <Plus className="mr-1 h-3.5 w-3.5" />
-              New Task
-            </Button>
-            <TableMainMenu />
-          </div>
-        </div>
-
-        {isScrumPage && scrumSection === "sprints" && !isLoading && !!boardTasks && (
-          <ScrumSprintHub
-            data={boardTasks}
-            viewState={viewState}
-            patchSavedView={patchSavedView}
-            onSprintSelected={() => setScrumSection("board")}
-            onSprintClosed={closeSprintView}
-          />
-        )}
-        {isScrumPage && scrumSection === "board" && !isLoading && !!boardTasks && (
-          <ScrumBacklogPlanning
-            data={boardTasks}
-            viewState={viewState}
-            onCellChange={handleCellChange}
-            patchSavedView={patchSavedView}
-            sprintFieldName={resolveFieldName(boardFieldDefs, "sprint")}
-            moscowFieldName={resolveFieldName(boardFieldDefs, "moscow")}
-          />
-        )}
-
-        {isScrumPage && scrumSection === "board" && activeSprint && (
-          <div className="mb-2 flex items-center justify-between rounded border bg-muted/20 px-3 py-2 text-xs text-left">
-            <p>
-              Viewing sprint <span className="font-semibold">{activeSprint}</span> task list
-            </p>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs"
-              onClick={closeSprintView}
-            >
-              Close sprint view
-            </Button>
-          </div>
-        )}
-
-        {isScrumPage && scrumSection === "board" && (
-          <div className="mb-2 w-full border-b pb-2">
-            <TabsList className="inline-flex h-auto min-h-10 flex-wrap items-center gap-0.5">
-              {orderedLayouts.map((layout) => (
-                <TabsTrigger key={layout.type} value={layout.type} className="flex items-center gap-2">
-                  <layout.icon className="h-4 w-4" />
-                  {layout.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
-        )}
-
-        {/* Sub-toolbar: group-by (left) + sort/filter/search controls (right) */}
-        {(!isScrumPage || scrumSection === "board") && (
-        <div className="flex items-center justify-between py-2 border-b mb-4 text-sm">
-          {/* Group By */}
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`flex items-center gap-1 h-7 px-2 text-xs ${groupBy ? 'text-primary' : 'text-muted-foreground'}`}
-                >
-                  <Layers className="h-3.5 w-3.5" />
-                  Group by
-                  {groupBy && <span className="font-semibold ml-1">{groupBy.label}</span>}
-                  <ChevronDown className="h-3 w-3 ml-0.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem
-                  onClick={() => setGroupBy(null)}
-                  className={!groupBy ? 'bg-accent' : ''}
-                >
-                  No grouping
-                </DropdownMenuItem>
-                {groupByOptions.map(opt => (
-                  <DropdownMenuItem
-                    key={opt.name}
-                    onClick={() => setGroupBy(opt)}
-                    className={groupBy?.name === opt.name ? 'bg-accent' : ''}
-                  >
-                    {opt.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {groupBy && (
-              <button
-                onClick={() => setGroupBy(null)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            {!isScrumPage && (
+              <Button
+                type="button"
+                size="sm"
+                className="h-8"
+                onClick={() => setIsTaskModalOpen(true)}
               >
-                <X className="h-3 w-3" /> Clear
-              </button>
+                <Plus className="mr-1 h-3.5 w-3.5" />
+                New Task
+              </Button>
             )}
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Sort / Filter / Assignee / My Tasks / Search / Save */}
-            <BoardSubheaderControls
-              fields={boardTasks?.property_name || []}
-              assigneeOptions={assigneeOptions}
-              currentUserId={currentUserId}
-              viewState={viewState}
-              savedView={boardData?.saved_view}
-              onChange={setViewState}
-              onSave={handleSaveView}
-              onReset={handleResetView}
-            />
-            <AutomationsPanel
-              fields={boardTasks?.property_name || []}
-              assigneeOptions={assigneeOptions}
-              automations={automationState}
-              onChange={setAutomationState}
-              onSave={handleSaveAutomations}
-            />
+            {!isScrumPage && <TableMainMenu />}
           </div>
         </div>
-        )}
 
-        {/* Tabs Content */}
-        {isScrumPage && scrumSection === "reports" ? (
-          <ScrumReportsSection data={boardTasks} activeSprint={activeSprint} />
-        ) : isScrumPage && scrumSection === "agile" ? (
-          <ScrumAgileModulesSection
-            data={boardTasks}
-            viewState={viewState}
-            patchSavedView={patchSavedView}
-          />
-        ) : isScrumPage && scrumSection !== "board" ? null : (
-          orderedLayouts?.map((layout) => (
-            <TabsContent key={layout.type} value={layout.type}>
-              {isLoading || !(isScrumPage ? scrumScopedBoardTasks : boardTasks) ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+        {isScrumPage ? (
+          isLoading || !boardTasks ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900 dark:border-white" />
+            </div>
+          ) : (
+            <ScrumBoardShell
+              data={boardTasks}
+              viewState={viewState}
+              patchSavedView={patchSavedView}
+              boardId={boardId}
+              activeSprint={activeSprint}
+              epicFieldName={resolveFieldName(boardFieldDefs, "epic")}
+              assigneeOptions={assigneeOptions}
+              teams={allTeams || []}
+              workspace={currentWorkspace}
+              currentUserId={currentUserId}
+              onNewTask={() => setIsTaskModalOpen(true)}
+              onSprintClosed={closeSprintView}
+              filterControls={
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`flex h-7 items-center gap-1 px-2 text-xs ${groupBy ? "text-primary" : "text-muted-foreground"}`}
+                        >
+                          <Layers className="h-3.5 w-3.5" />
+                          Group by
+                          {groupBy && <span className="ml-1 font-semibold">{groupBy.label}</span>}
+                          <ChevronDown className="ml-0.5 h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        <DropdownMenuItem
+                          onClick={() => setGroupBy(null)}
+                          className={!groupBy ? "bg-accent" : ""}
+                        >
+                          No grouping
+                        </DropdownMenuItem>
+                        {groupByOptions.map((opt) => (
+                          <DropdownMenuItem
+                            key={opt.name}
+                            onClick={() => setGroupBy(opt)}
+                            className={groupBy?.name === opt.name ? "bg-accent" : ""}
+                          >
+                            {opt.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    {groupBy && (
+                      <button
+                        onClick={() => setGroupBy(null)}
+                        className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        <X className="h-3 w-3" /> Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <BoardSubheaderControls
+                      fields={boardTasks?.property_name || []}
+                      assigneeOptions={assigneeOptions}
+                      currentUserId={currentUserId}
+                      viewState={viewState}
+                      savedView={boardData?.saved_view}
+                      onChange={setViewState}
+                      onSave={handleSaveView}
+                      onReset={handleResetView}
+                    />
+                    <AutomationsPanel
+                      fields={boardTasks?.property_name || []}
+                      assigneeOptions={assigneeOptions}
+                      automations={automationState}
+                      onChange={setAutomationState}
+                      onSave={handleSaveAutomations}
+                    />
+                  </div>
                 </div>
-              ) : (
-                <layout.element
-                  data={isScrumPage ? scrumScopedBoardTasks : boardTasks}
-                  boardId={boardId}
-                  onTaskCreate={() => setIsTaskModalOpen(true)}
-                  onSubtaskCreate={createSubtask}
-                  onCellChange={handleCellChange}
+              }
+              boardContent={
+                scrumScopedBoardTasks ? (
+                  <ScrumBoardView
+                    data={scrumScopedBoardTasks}
+                    onCellChange={handleCellChange}
+                    assigneeOptions={assigneeOptions}
+                    viewState={viewState}
+                    patchSavedView={patchSavedView}
+                    labelRegistry={labelRegistry}
+                    epicRegistry={epicRegistry}
+                  />
+                ) : null
+              }
+            />
+          )
+        ) : (
+          <>
+            <div className="mb-2 w-full border-b pb-2">
+              <TabsList className="inline-flex h-auto min-h-10 flex-wrap items-center gap-0.5">
+                {orderedLayouts.map((layout) => (
+                  <TabsTrigger key={layout.type} value={layout.type} className="flex items-center gap-2">
+                    <layout.icon className="h-4 w-4" />
+                    {layout.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+
+            <div className="mb-4 flex items-center justify-between border-b py-2 text-sm">
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`flex h-7 items-center gap-1 px-2 text-xs ${groupBy ? "text-primary" : "text-muted-foreground"}`}
+                    >
+                      <Layers className="h-3.5 w-3.5" />
+                      Group by
+                      {groupBy && <span className="ml-1 font-semibold">{groupBy.label}</span>}
+                      <ChevronDown className="ml-0.5 h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    <DropdownMenuItem
+                      onClick={() => setGroupBy(null)}
+                      className={!groupBy ? "bg-accent" : ""}
+                    >
+                      No grouping
+                    </DropdownMenuItem>
+                    {groupByOptions.map((opt) => (
+                      <DropdownMenuItem
+                        key={opt.name}
+                        onClick={() => setGroupBy(opt)}
+                        className={groupBy?.name === opt.name ? "bg-accent" : ""}
+                      >
+                        {opt.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {groupBy && (
+                  <button
+                    onClick={() => setGroupBy(null)}
+                    className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" /> Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <BoardSubheaderControls
+                  fields={boardTasks?.property_name || []}
                   assigneeOptions={assigneeOptions}
-                  groupBy={groupBy}
-                  dependencyOptions={dependencyTaskOptions}
-                  selectedTaskId={selectedTaskId}
-                  onSelectTask={setSelectedTaskId}
+                  currentUserId={currentUserId}
+                  viewState={viewState}
+                  savedView={boardData?.saved_view}
+                  onChange={setViewState}
+                  onSave={handleSaveView}
+                  onReset={handleResetView}
                 />
-              )}
-            </TabsContent>
-          ))
+                <AutomationsPanel
+                  fields={boardTasks?.property_name || []}
+                  assigneeOptions={assigneeOptions}
+                  automations={automationState}
+                  onChange={setAutomationState}
+                  onSave={handleSaveAutomations}
+                />
+              </div>
+            </div>
+
+            {orderedLayouts?.map((layout) => (
+              <TabsContent key={layout.type} value={layout.type}>
+                {isLoading || !boardTasks ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900 dark:border-white" />
+                  </div>
+                ) : (
+                  <layout.element
+                    data={boardTasks}
+                    boardId={boardId}
+                    onTaskCreate={() => setIsTaskModalOpen(true)}
+                    onSubtaskCreate={createSubtask}
+                    onCellChange={handleCellChange}
+                    assigneeOptions={assigneeOptions}
+                    groupBy={groupBy}
+                    dependencyOptions={dependencyTaskOptions}
+                    filterDependenciesBySprint={isScrumBoard}
+                    selectedTaskId={selectedTaskId}
+                    onSelectTask={setSelectedTaskId}
+                    labelRegistry={labelRegistry}
+                    onLabelRegistryChange={patchLabelRegistry}
+                    epicRegistry={epicRegistry}
+                    onEpicRegistryChange={patchEpicRegistry}
+                  />
+                )}
+              </TabsContent>
+            ))}
+          </>
         )}
       </Tabs>
 
@@ -1417,6 +1544,10 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
         onSave={createTask}
         assigneeOptions={assigneeOptions}
         boardFieldDefs={boardFieldDefs}
+        labelRegistry={labelRegistry}
+        onLabelRegistryChange={patchLabelRegistry}
+        epicRegistry={epicRegistry}
+        onEpicRegistryChange={patchEpicRegistry}
       />
     </section>
   )

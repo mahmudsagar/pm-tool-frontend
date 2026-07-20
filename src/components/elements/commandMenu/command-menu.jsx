@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useGlobalSearch } from "@/hooks/queries/useFilesQueries";
 import publicIcon from '@/assets/images/public.svg';
 import ShowIcon from "@/components/common/ShowIcon";
+import { resolveBoardListPageType } from "@/components/elements/dataView/scrum/scrumBoardConstants";
 
 export function CommandMenu({ ...props }) {
   const navigate = useNavigate()
@@ -62,9 +63,10 @@ export function CommandMenu({ ...props }) {
     } else if (entity_type === 'space') {
       navigate(`/space/${_id}`);
     } else if (entity_type === 'page' || entity_type === 'board') {
-      if (page_type === 'scrum') {
+      const boardPageType = resolveBoardListPageType(item);
+      if (boardPageType === 'scrum') {
         navigate(`/scrum/${_id}`);
-      } else if (page_type === 'board' || entity_type === 'board') {
+      } else if (boardPageType === 'board' || entity_type === 'board') {
         navigate(`/board/${_id}`);
       } else {
         navigate(`/document/${_id}`);
@@ -120,6 +122,8 @@ export function CommandMenu({ ...props }) {
                   {list.map((item, index) => {
                     const { title, name } = item || {};
                     const displayName = title || name;
+                    const listPageType = resolveBoardListPageType(item) || item?.page_type;
+                    const iconFile = item?.entity_type === 'board' ? 'board' : (groupKey[group] || item?.entity_type);
                     return (
                       <CommandItem
                         key={index}
@@ -128,7 +132,13 @@ export function CommandMenu({ ...props }) {
                           runCommand(() => handleSearchItemClick(item))
                         }}
                       >
-                        {displayName}
+                        <ShowIcon
+                          file={iconFile}
+                          page={listPageType}
+                          item={item}
+                          size={16}
+                        />
+                        <span className="ml-2">{displayName}</span>
                       </CommandItem>
                     )
                   })}

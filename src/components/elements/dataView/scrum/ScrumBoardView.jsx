@@ -29,6 +29,10 @@ import { useToast } from '@/components/ui/use-toast';
 import { AlertTriangle, Calendar, GripVertical, LayoutGrid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { DEFAULT_SCRUM_VIEW_BLOCK } from '@/components/elements/dataView/scrum/scrumBoardConstants';
+import LabelBadge from '@/components/elements/dataView/scrum/LabelBadge';
+import EpicBadge from '@/components/elements/dataView/scrum/EpicBadge';
+import { parseLabelsString } from '@/components/elements/dataView/scrum/labelUtils';
+import { dodGatesSatisfied, parseDodChecklist } from '@/components/elements/dataView/scrum/dodUtils';
 
 const SWIMLANE_MODES = [
   { value: 'none', label: 'No swimlanes' },
@@ -80,26 +84,6 @@ const normalizedText = (value) => String(value || '').trim().toLowerCase();
 
 const isBlockedStatus = (value) => ['blocked', 'stuck'].includes(normalizedText(value));
 
-const parseDodChecklist = (raw) => {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === 'string') {
-    try {
-      const p = JSON.parse(raw);
-      return Array.isArray(p) ? p : [];
-    } catch {
-      return [];
-    }
-  }
-  return [];
-};
-
-const dodGatesSatisfied = (task) => {
-  const items = parseDodChecklist(task.dod_checklist);
-  if (!items.length) return true;
-  return items.every((x) => x && x.done);
-};
-
 const isDoneColumn = (col) => {
   const t = `${col?.label || ''} ${col?.key || ''}`.toLowerCase();
   return t.includes('done') || t.includes('complete') || t.includes('closed');
@@ -113,15 +97,6 @@ const priorityDotClass = (p) => {
   return 'bg-muted-foreground/40';
 };
 
-const formatLabels = (raw) => {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw.map(String).filter(Boolean);
-  return String(raw)
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-};
-
 function initialsFromLabel(label) {
   if (!label) return '?';
   const parts = String(label).trim().split(/\s+/);
@@ -129,7 +104,7 @@ function initialsFromLabel(label) {
   return String(label).slice(0, 2).toUpperCase();
 }
 
-function ScrumStoryCard({ task, assigneeMap }) {
+function ScrumStoryCard({ task, assigneeMap, labelRegistry = {}, epicRegistry = {} }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `task-${task.id}`,
   });
@@ -140,7 +115,7 @@ function ScrumStoryCard({ task, assigneeMap }) {
   };
 
   const due = resolveDueDate(task);
-  const labels = formatLabels(task.labels);
+  const labels = parseLabelsString(task.labels);
   const dodItems = parseDodChecklist(task.dod_checklist);
   const dodDone = dodItems.length ? dodItems.filter((i) => i?.done).length : 0;
   const blocked =
@@ -190,19 +165,12 @@ function ScrumStoryCard({ task, assigneeMap }) {
               {task.isSubtask ? `↳ ${task.title || 'Untitled subtask'}` : task.title || 'Untitled'}
             </p>
             {task.epic ? (
-              <Badge variant="outline" className="text-[10px] font-normal">
-                {task.epic}
-              </Badge>
+              <EpicBadge name={task.epic} epicRegistry={epicRegistry} size="sm" />
             ) : null}
             {labels.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {labels.slice(0, 4).map((lb) => (
-                  <span
-                    key={lb}
-                    className="rounded-full bg-primary/10 px-1.5 py-0 text-[10px] text-primary"
-                  >
-                    {lb}
-                  </span>
+                  <LabelBadge key={lb} name={lb} labelRegistry={labelRegistry} size="sm" />
                 ))}
                 {labels.length > 4 ? (
                   <span className="text-[10px] text-muted-foreground">+{labels.length - 4}</span>
@@ -303,10 +271,14 @@ export default function ScrumBoardView({
   onCellChange,
   viewState = {},
   patchSavedView,
+  labelRegistry: labelRegistryProp,
+  epicRegistry: epicRegistryProp,
   swimlaneFieldNames = { assigneeField: 'assignee', priorityField: 'priority', epicField: 'epic' },
 }) {
   const { toast } = useToast();
   const scrumCfg = viewState?.scrum || {};
+  const labelRegistry = labelRegistryProp || scrumCfg.label_registry || {};
+  const epicRegistry = epicRegistryProp || scrumCfg.epic_registry || {};
 
   const tasks = useMemo(
     () =>
@@ -563,7 +535,7 @@ export default function ScrumBoardView({
     const currentLane = getSwimlaneKey(task);
 
     const colMeta = statusOptions.find((c) => c.key === targetColumn);
-    if (colMeta && isDoneColumn(colMeta) && !dodGatesSatisfied(task)) {
+    if (colMeta && isDoneColumn(colMeta) && !dodGatesSatisfied(task.dod_checklist)) {
       toast({
         title: 'Definition of Done not complete',
         description: 'Complete all DoD checklist items before moving this card to Done.',
@@ -600,10 +572,10 @@ export default function ScrumBoardView({
     >
       {statusOptions.map((column) => {
         const cell = groupedByLaneAndColumn[laneKey]?.[column.key] || [];
-        const count = cell.length;
+        const columnPoints = aggregatePoints(cell.filter((t) => !t.isSubtask));
         const lim = wipLimits[column.key];
         const limitNum = lim === '' || lim === undefined || lim === null ? null : Number(lim);
-        const wipBreached = !isDoneColumn(column) && limitNum != null && Number.isFinite(limitNum) && count > limitNum;
+        const wipBreached = !isDoneColumn(column) && limitNum != null && Number.isFinite(limitNum) && columnPoints > limitNum;
 
         return (
           <DropColumn
@@ -626,7 +598,7 @@ export default function ScrumBoardView({
                     wipBreached && 'border-amber-500 text-amber-700 dark:text-amber-400'
                   )}
                 >
-                  {count}
+                  {columnPoints} pts
                   {limitNum != null && Number.isFinite(limitNum) ? ` / ${limitNum}` : ''}
                 </span>
               </div>
@@ -637,7 +609,7 @@ export default function ScrumBoardView({
             >
               <div className="space-y-2">
                 {cell.map((task) => (
-                  <ScrumStoryCard key={task.id} task={task} assigneeMap={assigneeMap} />
+                  <ScrumStoryCard key={task.id} task={task} assigneeMap={assigneeMap} labelRegistry={labelRegistry} epicRegistry={epicRegistry} />
                 ))}
                 <div className="w-full rounded-md border border-dashed px-3 py-1.5 text-xs text-muted-foreground">
                   Drop stories here · {aggregatePoints(cell)} pts
@@ -677,9 +649,9 @@ export default function ScrumBoardView({
                 ))}
               </SelectContent>
             </Select>
-            <div className="hidden flex-wrap items-center gap-2 border-l pl-3 sm:flex">
+            <div className="flex flex-wrap items-center gap-2 border-l pl-3">
               <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                WIP
+                WIP (pts)
               </span>
               {statusOptions
                 .filter((c) => !isDoneColumn(c))
@@ -693,6 +665,7 @@ export default function ScrumBoardView({
                       type="number"
                       min={0}
                       className="h-7 w-11 px-1 text-xs"
+                      placeholder="—"
                       value={
                         wipLimits[c.key] === '' ||
                         wipLimits[c.key] == null ||

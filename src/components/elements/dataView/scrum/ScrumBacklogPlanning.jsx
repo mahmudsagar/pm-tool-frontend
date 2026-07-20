@@ -3,7 +3,21 @@ import { AlertTriangle, ArrowRight, ListFilter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DEFAULT_SCRUM_VIEW_BLOCK } from "@/components/elements/dataView/scrum/scrumBoardConstants";
+import EpicBadge from "@/components/elements/dataView/scrum/EpicBadge";
+import {
+  listRegistryEpics,
+  normalizeEpicKey,
+  parseEpicValue,
+  resolveEpicDisplayName,
+} from "@/components/elements/dataView/scrum/epicUtils";
 
 const asPoints = (v) => {
   const n = Number(v);
@@ -17,11 +31,15 @@ export default function ScrumBacklogPlanning({
   patchSavedView,
   sprintFieldName = "sprint",
   moscowFieldName = "moscow",
+  epicFieldName = "epic",
 }) {
   const [filterText, setFilterText] = useState("");
+  const [epicFilter, setEpicFilter] = useState("all");
+
   const stories = useMemo(() => (data?.property_values || []).filter((t) => !t.parent_id), [data?.property_values]);
   const sprintCfg = viewState?.scrum?.sprint_management || DEFAULT_SCRUM_VIEW_BLOCK.sprint_management;
   const backlogCfg = viewState?.scrum?.backlog || DEFAULT_SCRUM_VIEW_BLOCK.backlog;
+  const epicRegistry = viewState?.scrum?.epic_registry || DEFAULT_SCRUM_VIEW_BLOCK.epic_registry || {};
   const activeSprint = sprintCfg.active_sprint || "";
 
   const backlogStories = useMemo(() => {
@@ -29,10 +47,37 @@ export default function ScrumBacklogPlanning({
     return stories.filter((s) => {
       const inBacklog = !String(s.sprint || "").trim();
       if (!inBacklog) return false;
+      const epicKey = normalizeEpicKey(parseEpicValue(s[epicFieldName] ?? s.epic));
+      if (epicFilter === "none" && epicKey) return false;
+      if (epicFilter !== "all" && epicFilter !== "none" && epicKey !== epicFilter) return false;
       if (!q) return true;
-      return String(s.title || "").toLowerCase().includes(q) || String(s.epic || "").toLowerCase().includes(q);
+      const epicName = resolveEpicDisplayName(epicRegistry, s[epicFieldName] ?? s.epic);
+      return (
+        String(s.title || "").toLowerCase().includes(q) ||
+        epicName.toLowerCase().includes(q)
+      );
     });
-  }, [filterText, stories]);
+  }, [epicFieldName, epicFilter, epicRegistry, filterText, stories]);
+
+  const backlogByEpic = useMemo(() => {
+    const groups = new Map();
+    backlogStories.forEach((s) => {
+      const raw = parseEpicValue(s[epicFieldName] ?? s.epic);
+      const key = raw ? normalizeEpicKey(raw) : "__none__";
+      const label = raw
+        ? resolveEpicDisplayName(epicRegistry, raw)
+        : "No epic";
+      const entry = groups.get(key) || { key, label, stories: [], points: 0 };
+      entry.stories.push(s);
+      entry.points += asPoints(s.story_points);
+      groups.set(key, entry);
+    });
+    return [...groups.values()].sort((a, b) => {
+      if (a.key === "__none__") return 1;
+      if (b.key === "__none__") return -1;
+      return a.label.localeCompare(b.label);
+    });
+  }, [backlogStories, epicFieldName, epicRegistry]);
 
   const selectedIds = backlogCfg.selected_story_ids || [];
   const selectedSet = new Set(selectedIds);
@@ -58,6 +103,25 @@ export default function ScrumBacklogPlanning({
   })();
   const projected = currentSprintCommitted + selectedPoints;
   const warning = velocityWarningEnabled && historicalVelocityAvg > 0 && projected > historicalVelocityAvg;
+
+  const epicFilterOptions = useMemo(() => {
+    const fromRegistry = listRegistryEpics(epicRegistry);
+    const fromStories = new Map();
+    stories.forEach((s) => {
+      const raw = parseEpicValue(s[epicFieldName] ?? s.epic);
+      if (!raw) return;
+      const key = normalizeEpicKey(raw);
+      if (!fromStories.has(key)) {
+        fromStories.set(key, resolveEpicDisplayName(epicRegistry, raw));
+      }
+    });
+    fromRegistry.forEach((e) => {
+      fromStories.set(normalizeEpicKey(e.name), e.name);
+    });
+    return [...fromStories.entries()]
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [epicFieldName, epicRegistry, stories]);
 
   const patchBacklog = (updater) => {
     patchSavedView?.((prev) => {
@@ -98,7 +162,7 @@ export default function ScrumBacklogPlanning({
   return (
     <section className="mb-4 space-y-3 rounded-lg border bg-card p-3 text-left">
       <div className="flex flex-wrap items-end gap-2">
-        <div className="min-w-[260px] flex-1">
+        <div className="min-w-[200px] flex-1">
           <p className="mb-1 text-xs text-muted-foreground">Backlog filter</p>
           <div className="relative">
             <ListFilter className="absolute left-2 top-2 h-3.5 w-3.5 text-muted-foreground" />
@@ -109,6 +173,23 @@ export default function ScrumBacklogPlanning({
               placeholder="Filter backlog stories"
             />
           </div>
+        </div>
+        <div className="min-w-[160px]">
+          <p className="mb-1 text-xs text-muted-foreground">Epic</p>
+          <Select value={epicFilter} onValueChange={setEpicFilter}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="All epics" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All epics</SelectItem>
+              <SelectItem value="none">No epic</SelectItem>
+              {epicFilterOptions.map((opt) => (
+                <SelectItem key={opt.key} value={opt.key}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <Button
           size="sm"
@@ -136,35 +217,51 @@ export default function ScrumBacklogPlanning({
         Selected backlog points: <span className="font-medium text-foreground"> {selectedPoints}</span>
       </div>
 
-      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-        {backlogStories.slice(0, 18).map((s) => {
-          const checked = selectedSet.has(String(s.id));
-          return (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => toggleSelected(String(s.id))}
-              className={`rounded border p-2 text-left ${checked ? "border-primary bg-primary/5" : "hover:bg-muted/30"}`}
-            >
-              <div className="mb-1 flex items-center justify-between gap-2">
-                <p className="line-clamp-1 text-xs font-semibold">{s.title || "Untitled story"}</p>
-                <input type="checkbox" readOnly checked={checked} />
-              </div>
-              <div className="flex flex-wrap gap-1 text-[10px] text-muted-foreground">
-                <Badge variant="outline">{asPoints(s.story_points)} pts</Badge>
-                {s.epic && <Badge variant="secondary">{s.epic}</Badge>}
-                {s[moscowFieldName] && <Badge variant="outline">MoSCoW: {s[moscowFieldName]}</Badge>}
-              </div>
-            </button>
-          );
-        })}
-        {backlogStories.length === 0 && (
+      <div className="space-y-4">
+        {backlogByEpic.length === 0 && (
           <div className="rounded border border-dashed p-3 text-xs text-muted-foreground">
             No backlog stories without sprint assignment.
           </div>
         )}
+        {backlogByEpic.map((group) => (
+          <div key={group.key} className="space-y-2">
+            <div className="flex items-center justify-between border-b pb-1">
+              <div className="flex items-center gap-2">
+                {group.key === "__none__" ? (
+                  <span className="text-xs font-semibold text-muted-foreground">{group.label}</span>
+                ) : (
+                  <EpicBadge name={group.label} epicRegistry={epicRegistry} />
+                )}
+                <span className="text-[10px] text-muted-foreground">
+                  {group.stories.length} stories · {group.points} pts
+                </span>
+              </div>
+            </div>
+            <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+              {group.stories.map((s) => {
+                const checked = selectedSet.has(String(s.id));
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => toggleSelected(String(s.id))}
+                    className={`rounded border p-2 text-left ${checked ? "border-primary bg-primary/5" : "hover:bg-muted/30"}`}
+                  >
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <p className="line-clamp-1 text-xs font-semibold">{s.title || "Untitled story"}</p>
+                      <input type="checkbox" readOnly checked={checked} />
+                    </div>
+                    <div className="flex flex-wrap gap-1 text-[10px] text-muted-foreground">
+                      <Badge variant="outline">{asPoints(s.story_points)} pts</Badge>
+                      {s[moscowFieldName] && <Badge variant="outline">MoSCoW: {s[moscowFieldName]}</Badge>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
 }
-

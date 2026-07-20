@@ -5,6 +5,7 @@ import {
   ArrowDownZA,
 } from 'lucide-react';
 import ShowIcon from '@/components/common/ShowIcon';
+import { resolveBoardListPageType } from '@/components/elements/dataView/scrum/scrumBoardConstants';
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -85,7 +86,12 @@ export const createColumns = (onDeleteSuccess, onEditSuccess) => [
       <div className="group flex items-center gap-8">
         <div className='flex items-center gap-3'>
           <div className="w-10 h-10 rounded-full flex items-center justify-center">
-            <ShowIcon file={fileType} page={row.original.page_type} size={20} />
+            <ShowIcon
+              file={fileType}
+              page={row.original.page_type}
+              item={row.original}
+              size={20}
+            />
           </div>
           <span>{row.getValue("name")}</span>
         </div>

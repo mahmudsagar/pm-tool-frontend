@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CalendarDays, Flag, Plus } from "lucide-react";
+import { AlertTriangle, Flag, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { DEFAULT_SCRUM_VIEW_BLOCK } from "@/components/elements/dataView/scrum/scrumBoardConstants";
+import SprintRetroButton from "@/components/elements/dataView/scrum/SprintRetroButton";
+import { cn } from "@/lib/utils";
 
 const DONE_KEYS = ["done", "completed", "complete", "closed"];
 const norm = (v) => String(v || "").trim().toLowerCase();
@@ -20,6 +22,8 @@ export default function ScrumSprintHub({
   patchSavedView,
   onSprintSelected,
   onSprintClosed,
+  compact = false,
+  boardId,
 }) {
   const { toast } = useToast();
   const [newSprintName, setNewSprintName] = useState("");
@@ -27,6 +31,7 @@ export default function ScrumSprintHub({
   const stories = useMemo(() => (data?.property_values || []).filter((t) => !t.parent_id), [data?.property_values]);
 
   const sprintCfg = viewState?.scrum?.sprint_management || DEFAULT_SCRUM_VIEW_BLOCK.sprint_management;
+  const retroBoards = viewState?.scrum?.retro_boards || {};
   const activeSprint = sprintCfg.active_sprint || "";
 
   const sprintStats = useMemo(() => {
@@ -137,10 +142,13 @@ export default function ScrumSprintHub({
   };
 
   return (
-    <section className="mb-4 space-y-3 rounded-lg border bg-card p-3 text-left">
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="min-w-[260px] flex-1">
-          <p className="mb-1 text-xs text-muted-foreground">Create sprint</p>
+    <section className={cn(
+      "space-y-3 text-left",
+      !compact && "mb-4 rounded-lg border bg-card p-3"
+    )}>
+      <div className={cn("flex flex-wrap items-end gap-2", compact && "flex-col items-stretch")}>
+        <div className={cn("min-w-[260px] flex-1", compact && "min-w-0 w-full")}>
+          {!compact && <p className="mb-1 text-xs text-muted-foreground">Create sprint</p>}
           <div className="flex gap-2">
             <Input
               className="h-8 text-xs"
@@ -154,19 +162,21 @@ export default function ScrumSprintHub({
               }}
               placeholder="Sprint 21"
             />
-            <Button type="button" className="h-8" size="sm" onClick={addSprint}>
+            <Button type="button" className="h-8 shrink-0" size="sm" onClick={addSprint}>
               <Plus className="mr-1 h-3.5 w-3.5" />
-              Add Sprint
+              {compact ? "New sprint" : "Add Sprint"}
             </Button>
           </div>
         </div>
-        <div className="grid gap-1 text-xs">
-          <p>Active committed: <span className="font-semibold">{activeStats.committed}</span> pts</p>
-          <p>Historical velocity: <span className="font-semibold">{historicalVelocityAvg}</span> pts</p>
-        </div>
+        {!compact && (
+          <div className="grid gap-1 text-xs">
+            <p>Active committed: <span className="font-semibold">{activeStats.committed}</span> pts</p>
+            <p>Historical velocity: <span className="font-semibold">{historicalVelocityAvg}</span> pts</p>
+          </div>
+        )}
       </div>
 
-      {velocityExceeded && (
+      {!compact && velocityExceeded && (
         <div className="flex items-center gap-2 rounded border border-amber-400/60 bg-amber-50 px-2 py-1.5 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
           <AlertTriangle className="h-3.5 w-3.5" />
           Committed points exceed historical velocity for active sprint.
@@ -182,6 +192,58 @@ export default function ScrumSprintHub({
         {sprintList.map((sprint) => {
           const st = sprintStats.get(sprint) || { committed: 0, completed: 0, stories: 0 };
           const active = sprint === activeSprint;
+          const statusLabel = active ? "Active" : "Upcoming";
+
+          if (compact) {
+            return (
+              <div
+                key={sprint}
+                className="overflow-hidden rounded-xl border"
+              >
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setActiveSprint(sprint)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setActiveSprint(sprint);
+                    }
+                  }}
+                  className="flex cursor-pointer items-center justify-between gap-3 bg-muted/30 px-3.5 py-2.5 text-left hover:bg-muted/50"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">
+                      {sprint}{" "}
+                      <span
+                        className={cn(
+                          "ml-1 inline-flex rounded-md px-2 py-0.5 text-[11px] font-normal",
+                          active
+                            ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200"
+                            : "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {statusLabel}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {st.stories} stories · {st.completed}/{st.committed} pts
+                    </p>
+                  </div>
+                  <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                    <SprintRetroButton
+                      boardId={boardId}
+                      sprint={sprint}
+                      retroBoards={retroBoards}
+                      patchSavedView={patchSavedView}
+                      compact
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div
               key={sprint}
@@ -215,6 +277,12 @@ export default function ScrumSprintHub({
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
               >
+                <SprintRetroButton
+                  boardId={boardId}
+                  sprint={sprint}
+                  retroBoards={retroBoards}
+                  patchSavedView={patchSavedView}
+                />
                 {active ? <Badge variant="default">Active</Badge> : <Badge variant="outline">Open</Badge>}
                 <Button
                   type="button"

@@ -25,6 +25,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import useStatusStore from '@/stores/useStatusStore';
+import LabelsField from '@/components/elements/dataView/scrum/LabelsField';
+import EpicField from '@/components/elements/dataView/scrum/EpicField';
+import DodChecklistField from '@/components/elements/dataView/scrum/DodChecklistField';
+import { syncRegistryWithLabels, parseLabelsString } from '@/components/elements/dataView/scrum/labelUtils';
+import { syncRegistryWithEpics, parseEpicValue } from '@/components/elements/dataView/scrum/epicUtils';
+import {
+  clampScoreValue,
+  SCORE_MAX,
+  SCORE_MIN,
+  validateScoreValue,
+} from '@/components/elements/dataView/scrum/scrumBoardConstants';
+
+const scoreFieldRules = {
+  validate: (value) =>
+    validateScoreValue(value) || `Enter a whole number from ${SCORE_MIN} to ${SCORE_MAX}`,
+};
 
 function TaskFormModal({
   open,
@@ -35,6 +51,10 @@ function TaskFormModal({
   onSave,
   assigneeOptions = [],
   boardFieldDefs = [],
+  labelRegistry = {},
+  onLabelRegistryChange,
+  epicRegistry = {},
+  onEpicRegistryChange,
 }) {
   const { getStatusOptions } = useStatusStore();
 
@@ -173,6 +193,17 @@ function TaskFormModal({
   }, [task, effectiveDefaultStatus, defaultDate, open, form, assigneeOptions, sprintIsText, defaultSprintForCreate]);
 
   const onSubmit = (data) => {
+    if (data.labels) {
+      onLabelRegistryChange?.((prev) =>
+        syncRegistryWithLabels(prev, parseLabelsString(data.labels))
+      );
+    }
+    if (data.epic) {
+      onEpicRegistryChange?.((prev) =>
+        syncRegistryWithEpics(prev, [parseEpicValue(data.epic)])
+      );
+    }
+
     // Generate task ID for new tasks
     const taskId = task?.task_id || `BNH-${String(Math.floor(Math.random() * 1000) + 100).padStart(3, '0')}`;
     const id = task?.id || `task-${Date.now()}`;
@@ -261,7 +292,12 @@ function TaskFormModal({
                       <FormItem>
                         <FormLabel>Epic</FormLabel>
                         <FormControl>
-                          <Input placeholder="Epic name" {...field} />
+                          <EpicField
+                            value={field.value}
+                            onChange={field.onChange}
+                            epicRegistry={epicRegistry}
+                            onRegistryChange={onEpicRegistryChange}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -274,7 +310,12 @@ function TaskFormModal({
                       <FormItem className="md:col-span-2">
                         <FormLabel>Labels</FormLabel>
                         <FormControl>
-                          <Input placeholder="Comma-separated" {...field} />
+                          <LabelsField
+                            value={field.value}
+                            onChange={field.onChange}
+                            labelRegistry={labelRegistry}
+                            onRegistryChange={onLabelRegistryChange}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -310,11 +351,19 @@ function TaskFormModal({
                     <FormField
                       control={form.control}
                       name="effort_score"
+                      rules={scoreFieldRules}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Effort (1–10)</FormLabel>
                           <FormControl>
-                            <Input type="text" inputMode="numeric" {...field} />
+                            <Input
+                              type="number"
+                              min={SCORE_MIN}
+                              max={SCORE_MAX}
+                              step={1}
+                              {...field}
+                              onBlur={(e) => field.onChange(clampScoreValue(e.target.value))}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -325,11 +374,19 @@ function TaskFormModal({
                     <FormField
                       control={form.control}
                       name="value_score"
+                      rules={scoreFieldRules}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Value (1–10)</FormLabel>
                           <FormControl>
-                            <Input type="text" inputMode="numeric" {...field} />
+                            <Input
+                              type="number"
+                              min={SCORE_MIN}
+                              max={SCORE_MAX}
+                              step={1}
+                              {...field}
+                              onBlur={(e) => field.onChange(clampScoreValue(e.target.value))}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -342,12 +399,11 @@ function TaskFormModal({
                       name="dod_checklist"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                          <FormLabel>DoD checklist (JSON)</FormLabel>
+                          <FormLabel>Definition of Done</FormLabel>
                           <FormControl>
-                            <Textarea
-                              placeholder='[{"id":"1","label":"Tests pass","done":false}]'
-                              rows={2}
-                              {...field}
+                            <DodChecklistField
+                              value={field.value}
+                              onChange={field.onChange}
                             />
                           </FormControl>
                           <FormMessage />
