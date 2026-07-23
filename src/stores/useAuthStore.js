@@ -145,6 +145,53 @@ const useAuthStore = create(
         }
       },
 
+      loginWithToken: async (token) => {
+        set({ loading: true });
+        try {
+          const response = await fetch(import.meta.env.BN_BASE_URL + '/v1/auth', {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || 'OAuth login failed');
+          }
+
+          const responseData = await response.json();
+
+          if (responseData.status === 'success' && responseData.data) {
+            const user = responseData.data.user_info;
+            const workspaces = (responseData.data.workspaces || []).map((ws) => ({
+              ...ws,
+              role: ws.role || (ws.owner_id === user._id ? 'owner' : 'member'),
+            }));
+            const currentWorkspace = workspaces[0] || null;
+
+            set({
+              token,
+              user,
+              workspaces,
+              currentWorkspace,
+              isAuthenticated: true,
+              loading: false,
+            });
+
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('workspaces', JSON.stringify(workspaces));
+            localStorage.setItem('currentWorkspace', JSON.stringify(currentWorkspace));
+
+            return { success: true };
+          }
+
+          throw new Error('Invalid response format');
+        } catch (error) {
+          set({ loading: false });
+          return { success: false, error: error.message };
+        }
+      },
+
       setToken: (token) => {
         set({ token, isAuthenticated: !!token });
         if (token) localStorage.setItem('token', token);

@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import useAuthStore from "@/stores/useAuthStore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+
+const OAUTH_ERRORS = {
+  oauth_failed: "Social sign-in failed. Please try again.",
+  oauth_not_configured: "Social sign-in is not configured on the server.",
+};
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -15,6 +20,18 @@ export function LoginForm() {
   const { login, register, loading } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      toast({
+        title: "Sign-in failed",
+        description: OAUTH_ERRORS[error] || "Authentication failed.",
+        variant: "destructive",
+      });
+    }
+  }, [searchParams, toast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,6 +61,10 @@ export function LoginForm() {
         });
       }
     }
+  };
+
+  const startOAuth = (provider) => {
+    window.location.href = `${import.meta.env.BN_BASE_URL}/v1/auth/${provider}`;
   };
 
   return (<div className="flex items-center justify-center h-screen">
@@ -97,6 +118,34 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Processing..." : isLogin ? "Login" : "Register"}
           </Button>
+          <div className="relative w-full">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+          <div className="flex w-full gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={loading}
+              onClick={() => startOAuth("google")}
+            >
+              Google
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={loading}
+              onClick={() => startOAuth("github")}
+            >
+              GitHub
+            </Button>
+          </div>
           <Button
             type="button"
             variant="ghost"

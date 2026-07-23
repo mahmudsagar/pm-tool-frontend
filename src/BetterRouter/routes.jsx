@@ -13,6 +13,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import UsersPage from "@/pages/users";
 import Notifications from "@/pages/Notifications";
 import { LoginForm } from "@/components/auth/LoginForm";
+import OAuthCallback from "@/pages/OAuthCallback";
 import CreateTeam from "@/pages/teams/Create";
 import TeamDetails from "@/pages/teams/TeamDetails";
 import ProfileSettings from "@/pages/settings/Profile";
@@ -114,6 +115,10 @@ export const routes = [
   {
     path: '/login',
     element: <LoginForm />
+  },
+  {
+    path: '/oauth/callback',
+    element: <OAuthCallback />
   },
   {
     path: '/teams/create',
