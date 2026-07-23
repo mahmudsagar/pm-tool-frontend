@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react'
-import { EllipsisVertical, Link2, SquarePen, Settings } from "lucide-react";
+import { EllipsisVertical, Link2, SquarePen, Settings, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from 'react-router-dom';
+import { useCreateSpaceChannel } from '@/hooks/mutations/useChatMutations';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +21,8 @@ const SpaceMenu = ({ id, type = 'space', fileName, initialData, isOpen: external
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const createSpaceChannel = useCreateSpaceChannel();
 
   const isControlled = externalIsOpen !== undefined && externalOnToggle !== undefined;
   const isOpen = isControlled ? !!externalIsOpen[id] : internalOpen;
@@ -40,6 +44,31 @@ const SpaceMenu = ({ id, type = 'space', fileName, initialData, isOpen: external
     setIsSettingsOpen(true);
     handleOpenChange(false);
   };
+
+  const handleCreateChannel = useCallback(async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleOpenChange(false);
+
+    try {
+      const conversation = await createSpaceChannel.mutateAsync({
+        spaceId: id,
+        name: `${fileName || 'Space'} Channel`,
+      });
+      toast({
+        variant: 'success',
+        title: 'Channel created!',
+        description: 'Space channel is ready for members.',
+      });
+      navigate(`/chat?c=${conversation._id}`);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Failed to create channel',
+        description: err.message || 'Could not create space channel',
+      });
+    }
+  }, [id, fileName, createSpaceChannel, toast, navigate, handleOpenChange]);
 
   const handleCopyLink = useCallback((e) => {
     e.preventDefault();
@@ -91,6 +120,10 @@ const SpaceMenu = ({ id, type = 'space', fileName, initialData, isOpen: external
             <DropdownMenuItem className="flex items-center px-4 py-3 font-medium gap-3 cursor-pointer" onSelect={handleCopyLink}>
               <Link2 className="w-4 h-4" />
               Copy Link
+            </DropdownMenuItem>
+            <DropdownMenuItem className="flex items-center px-4 py-3 font-medium gap-3 cursor-pointer" onSelect={handleCreateChannel}>
+              <Hash className="w-4 h-4" />
+              Create Channel
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex items-center px-4 py-3 font-medium gap-3 cursor-pointer" onSelect={handleSettingsClick}>

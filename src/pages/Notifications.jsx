@@ -1,6 +1,6 @@
 import { useNotifications } from '@/hooks/useNotifications';
 import useAuthStore from '@/stores/useAuthStore';
-import { Bell, Check, Trash2, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Bell, Check, Trash2, AlertCircle, CheckCircle, ArrowLeft, AtSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +27,8 @@ const Notifications = () => {
                 return <AlertCircle className="w-5 h-5 text-blue-500" />;
             case 'delete':
                 return <Trash2 className="w-5 h-5 text-red-500" />;
+            case 'mention':
+                return <AtSign className="w-5 h-5 text-purple-500" />;
             default:
                 return <Bell className="w-5 h-5 text-gray-500" />;
         }
@@ -51,6 +53,13 @@ const Notifications = () => {
     const handleNotificationClick = (notification) => {
         if (!notification.is_read) {
             markAsRead(notification._id);
+        }
+        if (notification.action === 'mention' || notification.entity_type === 'conversation') {
+            const conversationId =
+                notification.metadata?.conversation_id || notification.entity_id;
+            if (conversationId) {
+                navigate(`/chat?c=${conversationId}`);
+            }
         }
     };
 

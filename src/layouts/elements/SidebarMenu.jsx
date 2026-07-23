@@ -5,7 +5,8 @@ import { useLocation } from "react-router-dom";
 import {
   LucideCalendar,
   LucideHome,
-  Settings
+  Settings,
+  MessageSquare
 } from "lucide-react";
 import { CommandMenu } from "@/components/elements/commandMenu/command-menu";
 import SidebarMenuItems from "./SidebarMenuItems";
@@ -21,6 +22,11 @@ const sidebarTopLinks = [
     title: "Calendar",
     href: "/check",
     icon: LucideCalendar,
+  },
+  {
+    title: "Chat",
+    href: "/chat",
+    icon: MessageSquare,
   },
   {
     title: "Settings",
@@ -47,14 +53,14 @@ export function SidebarMenu({ setOpen, className }) {
   return (
     <nav className="space-y-4 h-full">
       <CommandMenu />
-      <div className="flex justify-between my-2">
+      <div className="flex justify-between my-2 gap-1">
         {sidebarTopLinks.map((item) => (
           <RouterLink
             key={item.title}
             to={item.href}
-            className={cn("bg-slate-100 dark:bg-transparent dark:border text-slate-500 rounded-lg py-2 px-6",
-              path === item.href ? "text-purple-600 bg-purple-50" : "")}>
-            <item.icon />
+            className={cn("bg-slate-100 dark:bg-transparent dark:border text-slate-500 rounded-lg py-2 px-4 flex-1 flex justify-center",
+              path === item.href || (item.href !== '/' && path.startsWith(item.href)) ? "text-purple-600 bg-purple-50" : "")}>
+            <item.icon size={18} />
           </RouterLink>
         ))}
       </div>

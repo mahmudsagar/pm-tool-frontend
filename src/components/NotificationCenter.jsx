@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '@/hooks/useNotifications';
-import { Bell, Check, Trash2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Bell, Check, Trash2, AlertCircle, CheckCircle, AtSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -24,8 +24,14 @@ export const NotificationCenter = ({ userId, workspaceId, token }) => {
         if (!notification.is_read) {
             markAsRead(notification._id);
         }
-        // Navigate to entity if needed
-        // navigateToEntity(notification.entity_type, notification.entity_id);
+        if (notification.action === 'mention' || notification.entity_type === 'conversation') {
+            const conversationId =
+                notification.metadata?.conversation_id || notification.entity_id;
+            if (conversationId) {
+                setIsOpen(false);
+                navigate(`/chat?c=${conversationId}`);
+            }
+        }
     };
 
     const getActionIcon = (action) => {
@@ -36,6 +42,8 @@ export const NotificationCenter = ({ userId, workspaceId, token }) => {
                 return <AlertCircle className="w-4 h-4 text-blue-500" />;
             case 'delete':
                 return <Trash2 className="w-4 h-4 text-red-500" />;
+            case 'mention':
+                return <AtSign className="w-4 h-4 text-purple-500" />;
             default:
                 return <Bell className="w-4 h-4 text-gray-500" />;
         }

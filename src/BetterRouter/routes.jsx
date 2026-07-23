@@ -1,6 +1,7 @@
 import Default from "@/layouts/Default";
 import Settings from "@/layouts/Settings";
 import Check from "@/pages/Check";
+import Chat from "@/pages/Chat";
 import FileManager from "@/pages/FileManager";
 import Form from "@/pages/Form";
 import Home from "@/pages/Home";
@@ -45,6 +46,10 @@ export const routes = [
       {
         path: '/check',
         element: <Check />
+      },
+      {
+        path: '/chat',
+        element: <Chat />
       },
       {
         path: '/users',

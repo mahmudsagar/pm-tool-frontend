@@ -58,9 +58,11 @@ export default function Sidebar({ className }) {
             <div className="flex justify-between items-center">
               <div className="flex gap-1.5">
                 <div className="w-12 flex flex-row-reverse justify-end items-center relative transform translate-z-0">
-                  <Avatar className="w-8 h-8 relative -mr-3.5">
-                    <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-                    <AvatarFallback>user</AvatarFallback>
+                  <Avatar key={user?.avatar || 'no-avatar'} className="w-8 h-8 relative -mr-3.5">
+                    <AvatarImage src={user?.avatar || undefined} alt={user?.name || "User"} />
+                    <AvatarFallback>
+                      {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                    </AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="flex flex-col justify-center">

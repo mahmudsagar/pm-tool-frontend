@@ -11,34 +11,37 @@ import {
   TextNode,
 } from 'lexical';
 
-function $convertMentionElement(
-  domNode,
-) {
+function $convertMentionElement(domNode) {
   const textContent = domNode.textContent;
+  const userId = domNode.getAttribute('data-lexical-mention-id') || undefined;
 
   if (textContent !== null) {
-    const node = $createMentionNode(textContent);
-    return {
-      node,
-    };
+    const node = $createMentionNode(textContent, userId);
+    return { node };
   }
 
   return null;
 }
 
 const mentionStyle = 'background-color: rgba(24, 119, 232, 0.2)';
+
 export class MentionNode extends TextNode {
   __mention;
+  __userId;
 
   static getType() {
     return 'mention';
   }
 
   static clone(node) {
-    return new MentionNode(node.__mention, node.__text, node.__key);
+    return new MentionNode(node.__mention, node.__text, node.__key, node.__userId);
   }
+
   static importJSON(serializedNode) {
-    const node = $createMentionNode(serializedNode.mentionName);
+    const node = $createMentionNode(
+      serializedNode.mentionName,
+      serializedNode.userId
+    );
     node.setTextContent(serializedNode.text);
     node.setFormat(serializedNode.format);
     node.setDetail(serializedNode.detail);
@@ -47,15 +50,21 @@ export class MentionNode extends TextNode {
     return node;
   }
 
-  constructor(mentionName, text, key) {
+  constructor(mentionName, text, key, userId) {
     super(text ?? mentionName, key);
     this.__mention = mentionName;
+    this.__userId = userId || null;
+  }
+
+  getUserId() {
+    return this.__userId;
   }
 
   exportJSON() {
     return {
       ...super.exportJSON(),
       mentionName: this.__mention,
+      userId: this.__userId || undefined,
       type: 'mention',
       version: 1,
     };
@@ -65,14 +74,20 @@ export class MentionNode extends TextNode {
     const dom = super.createDOM(config);
     dom.style.cssText = mentionStyle;
     dom.className = 'mention';
+    if (this.__userId) {
+      dom.setAttribute('data-lexical-mention-id', this.__userId);
+    }
     return dom;
   }
 
   exportDOM() {
     const element = document.createElement('span');
     element.setAttribute('data-lexical-mention', 'true');
+    if (this.__userId) {
+      element.setAttribute('data-lexical-mention-id', this.__userId);
+    }
     element.textContent = this.__text;
-    return {element};
+    return { element };
   }
 
   static importDOM() {
@@ -102,14 +117,12 @@ export class MentionNode extends TextNode {
   }
 }
 
-export function $createMentionNode(mentionName) {
-  const mentionNode = new MentionNode(mentionName);
+export function $createMentionNode(mentionName, userId) {
+  const mentionNode = new MentionNode(mentionName, undefined, undefined, userId);
   mentionNode.setMode('segmented').toggleDirectionless();
   return $applyNodeReplacement(mentionNode);
 }
 
-export function $isMentionNode(
-  node,
-) {
+export function $isMentionNode(node) {
   return node instanceof MentionNode;
 }

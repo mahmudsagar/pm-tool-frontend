@@ -15,8 +15,9 @@ export const useInitAuth = () => {
     queryFn: async () => {
       const data = await api.get(authBaseUrl);
       if (data.status === 'success' && data.data) {
-        const { setUser, setToken } = useAuthStore.getState();
-        setUser(data.data.user_info);
+        const { setUser, setToken, user: currentUser } = useAuthStore.getState();
+        // Merge so auth init never drops fields (e.g. avatar) if the payload is partial
+        setUser({ ...(currentUser || {}), ...data.data.user_info });
         setToken(token);
         return data.data;
       }

@@ -22,3 +22,12 @@ export const searchEndpoint = baseUrl + '/v1/search';
 
 export const historyEndpoint = '/v1/page/history';
 export const historyBaseUrl = baseUrl + historyEndpoint;
+
+export const chatConversationEndpoint = '/v1/chat/conversation';
+export const chatConversationBaseUrl = baseUrl + chatConversationEndpoint;
+
+export const chatMessageEndpoint = '/v1/chat/message';
+export const chatMessageBaseUrl = baseUrl + chatMessageEndpoint;
+
+export const chatSpaceItemsEndpoint = '/v1/chat/space-items';
+export const chatSpaceItemsBaseUrl = baseUrl + chatSpaceItemsEndpoint;

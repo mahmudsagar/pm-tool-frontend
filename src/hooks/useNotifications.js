@@ -32,29 +32,56 @@ export const useNotifications = (userId, workspaceId, token) => {
         staleTime: 30000 // Cache for 30 seconds
     });
 
-    // Mutation to mark notification as read
+    // Mutation to mark a single notification as read
     const markAsReadMutation = useMutation({
         mutationFn: async (notificationId) => {
             return await api.put(`${baseUrl}/v1/notification?notification_id=${notificationId}`);
         },
-        onSuccess: (data, notificationId) => {
-            // Update cache
+        onSuccess: (_data, notificationId) => {
             queryClient.setQueryData(['notifications', workspaceId], (oldData) => {
                 if (!oldData) return oldData;
+                const wasUnread = oldData.notifications?.some(
+                    n => n._id === notificationId && !n.is_read
+                );
                 return {
                     ...oldData,
-                    notifications: oldData.notifications.map(n =>
+                    notifications: (oldData.notifications || []).map(n =>
                         n._id === notificationId ? { ...n, is_read: true } : n
                     ),
                     count: {
                         ...oldData.count,
-                        unread: Math.max(0, oldData.count.unread - 1)
-                    }
+                        unread: wasUnread
+                            ? Math.max(0, (oldData.count?.unread || 0) - 1)
+                            : (oldData.count?.unread || 0),
+                    },
                 };
             });
-            // Also invalidate to sync with server
+        },
+    });
+
+    // Mutation to mark ALL unread notifications as read (server-side)
+    const markAllAsReadMutation = useMutation({
+        mutationFn: async () => {
+            return await api.put(`${baseUrl}/v1/notification?mark_all=true`);
+        },
+        onSuccess: () => {
+            queryClient.setQueryData(['notifications', workspaceId], (oldData) => {
+                if (!oldData) return oldData;
+                return {
+                    ...oldData,
+                    notifications: (oldData.notifications || []).map(n => ({
+                        ...n,
+                        is_read: true,
+                    })),
+                    count: {
+                        ...oldData.count,
+                        unread: 0,
+                    },
+                };
+            });
+            setUnreadCount(0);
             queryClient.invalidateQueries({ queryKey: ['notifications', workspaceId] });
-        }
+        },
     });
 
     // Setup real-time notifications
@@ -95,12 +122,7 @@ export const useNotifications = (userId, workspaceId, token) => {
     };
 
     const markAllAsRead = async () => {
-        if (!notificationsData?.notifications) return;
-        
-        const unreadNotifications = notificationsData.notifications.filter(n => !n.is_read);
-        await Promise.all(
-            unreadNotifications.map(n => markAsReadMutation.mutateAsync(n._id))
-        );
+        await markAllAsReadMutation.mutateAsync();
     };
 
     return {
