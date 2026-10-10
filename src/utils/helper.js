@@ -29,8 +29,10 @@ export function debounce(func, wait, immediate = false) {
 
 export function formatTime(date) {
   const now = Date.now();
-  const past = new Date(date).getTime();
-  const diffInSeconds = Math.floor((now - past) / 1000);
+  const past = date ? new Date(date).getTime() : NaN;
+  if (Number.isNaN(past)) return '—';
+  const diffInSeconds = Math.max(0, Math.floor((now - past) / 1000));
+  if (diffInSeconds < 10) return 'just now';
 
   if (diffInSeconds >= 86400) {
     // More than 24 hours, return formatted date

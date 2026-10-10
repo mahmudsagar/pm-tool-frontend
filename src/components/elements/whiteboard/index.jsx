@@ -21,7 +21,7 @@ import PageEmbed from "./PageEmbed";
  * @returns 
  */
 export default function ExcalidrawRender({ content, onChange, spaceId }) {
-  const { theme } = useTheme();
+  const { resolvedTheme: theme } = useTheme();
   const wrapperRef = useRef(null);
 
   const [excalidrawAPI, setExcalidrawAPI] = useState(null);

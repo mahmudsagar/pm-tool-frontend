@@ -2,7 +2,7 @@ import { matchRoutes, useSearchParams, useNavigate } from "react-router-dom";
 import React, { useCallback, useState } from "react";
 import Drawer from "../Drawer";
 import { routes } from "../routes";
-import Header from "@/layouts/elements/header";
+import DrawerHeader from "./DrawerHeader";
 import './style.scss';
 import { SheetClose } from "@/components/ui/sheet";
 import { X, Maximize2 } from "lucide-react";
@@ -45,8 +45,7 @@ const ParallelRoutePage = ({ path, target }) => {
       <>
         <Button
           variant="ghost"
-          size="icon"
-          className="rounded-sm opacity-70 hover:opacity-100 w-7 h-7"
+          size="icon-sm"
           onClick={handleExpandFullMode}
           title="Open in full mode"
           >
@@ -91,7 +90,7 @@ const ParallelRoutePage = ({ path, target }) => {
     return '';
   }
   return <Container {...containerProps}>
-    <Header topMenu={topMenu} showPageTitle={false} closeBtn={closeBtn} />
+    <DrawerHeader topMenu={topMenu} closeBtn={closeBtn} />
 
     {React.cloneElement(route.element, { ...params, setTopMenu })}
   </Container>

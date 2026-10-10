@@ -38,6 +38,7 @@ const AddSpaceDialog = ({
   isOpen,
   setIsOpen,
   onEditSuccess,
+  hideTrigger = false,
 }) => {
   const [loading, setLoading] = useState(false);
   const [teamSearch, setTeamSearch] = useState('');
@@ -180,7 +181,7 @@ const AddSpaceDialog = ({
       }
       setIsOpen(open);
     }}>
-      {!isEdit && (
+      {!isEdit && !hideTrigger && (
         <DialogTrigger asChild>
           <Button
             variant="ghost"

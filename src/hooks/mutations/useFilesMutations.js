@@ -49,8 +49,9 @@ export const useUpdateEntityTitle = () => {
       const bodyMap = {
         page: { id, title },
         board: { id, name: title },
-        folder: { name: title },
-        group: { name: title },
+        // The server reads the id from the body for folder and group updates.
+        folder: { id, name: title },
+        group: { id, name: title },
       };
       const result = await api.put(endpointMap[entity], bodyMap[entity]);
       return result;

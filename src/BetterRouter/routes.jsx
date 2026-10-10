@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import Default from "@/layouts/Default";
+import AppShell from "@/layouts/shell/AppShell";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import LazyPage from "./LazyPage";
 import RouteError from "./RouteError";
@@ -34,7 +34,7 @@ const protectedPage = (element) => <ProtectedRoute>{page(element, { fullscreen: 
 export const routes = [
   {
     path: '/',
-    element: <ProtectedRoute><Default /></ProtectedRoute>,
+    element: <ProtectedRoute><AppShell /></ProtectedRoute>,
     errorElement: <RouteError />,
     children: [
       {

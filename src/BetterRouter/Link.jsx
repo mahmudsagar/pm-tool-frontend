@@ -3,7 +3,7 @@
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import useStore from '@/stores/store';
 
-const Link = ({ onClick, layoutType = 'basic', ...props }) => {
+const Link = ({ onClick = undefined, layoutType = 'basic', ...props }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentRoute = useStore((state) => state.currentRoute);
 
