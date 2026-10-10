@@ -1,3 +1,4 @@
+import { getCurrentUserId } from '@/lib/currentUser';
 import { useState } from 'react';
 import { Plus, Circle, ListTodo, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,12 +27,7 @@ export default function SubtaskPanel({ parentTaskId, boardId, subtasks = [], onC
     const trimmed = title.trim();
     if (!trimmed || !parentTaskId || !boardId) return;
     try {
-      const userId = (() => {
-        try {
-          const u = JSON.parse(localStorage.getItem('user') || '{}');
-          return u._id || u.id || localStorage.getItem('userId') || '';
-        } catch { return localStorage.getItem('userId') || ''; }
-      })();
+      const userId = getCurrentUserId() || '';
 
       await createSubtask.mutateAsync({
         boardId,

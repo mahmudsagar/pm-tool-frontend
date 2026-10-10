@@ -1,17 +1,15 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { useRealtimeNotifications, requestNotificationPermission } from './useRealtimeNotifications';
+import { useRealtimeStatus, requestNotificationPermission } from '@/lib/realtime/socket';
 import { useEffect, useState } from 'react';
 import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
 
 /**
  * Hook to manage notifications (both cached and real-time)
- * @param {string} userId - Current user ID
  * @param {string} workspaceId - Current workspace ID
- * @param {string} token - JWT token
  * @returns {Object} Notifications data and methods
  */
-export const useNotifications = (userId, workspaceId, token) => {
+export const useNotifications = (_userId, workspaceId) => {
     const queryClient = useQueryClient();
     const [unreadCount, setUnreadCount] = useState(0);
 
@@ -84,31 +82,9 @@ export const useNotifications = (userId, workspaceId, token) => {
         },
     });
 
-    // Setup real-time notifications
-    const { isConnected, isConnecting } = useRealtimeNotifications(
-        userId,
-        workspaceId,
-        token,
-        (notification) => {
-            // Update cache with new notification
-            queryClient.setQueryData(['notifications', workspaceId], (oldData) => {
-                if (!oldData) {
-                    return {
-                        notifications: [notification],
-                        count: { total: 1, unread: 1 }
-                    };
-                }
-                return {
-                    ...oldData,
-                    notifications: [notification, ...oldData.notifications],
-                    count: {
-                        total: oldData.count.total + 1,
-                        unread: oldData.count.unread + 1
-                    }
-                };
-            });
-        }
-    );
+    const realtimeStatus = useRealtimeStatus();
+    const isConnected = realtimeStatus === 'connected';
+    const isConnecting = realtimeStatus === 'connecting' || realtimeStatus === 'reconnecting';
 
     // Update unread count
     useEffect(() => {

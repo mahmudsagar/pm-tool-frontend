@@ -1,36 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MenuIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarMenu } from "./SidebarMenu";
-import { NavItems } from "./constants/side-nav";
 
 export const MobileSidebar = () => {
-    const [open, setOpen] = useState(false);
-    const [isMounted, setIsMounted] = useState(false);
+  const [open, setOpen] = useState(false);
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    if (!isMounted) {
-        return null;
-    }
-
-    return (
-        <>
-            <Sheet open={open} onOpenChange={setOpen}>
-                <SheetTrigger asChild>
-                    <div className="flex items-center justify-center gap-2">
-                        <MenuIcon />
-                        <h1 className="text-lg font-semibold">Better Notion</h1>
-                    </div>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-72">
-                    <div className="px-1 py-6 pt-16">
-                        <SidebarMenu items={NavItems} setOpen={setOpen} />
-                    </div>
-                </SheetContent>
-            </Sheet>
-        </>
-    );
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <button type="button" className="flex items-center justify-center gap-2" aria-label="Open navigation">
+          <MenuIcon />
+          <span className="text-lg font-semibold">Better Notion</span>
+        </button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-72">
+        <div className="px-1 py-6 pt-16">
+          <SidebarMenu setOpen={setOpen} />
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
 };

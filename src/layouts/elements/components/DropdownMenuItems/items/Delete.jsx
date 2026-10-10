@@ -1,7 +1,6 @@
 import { Trash2 } from "lucide-react";
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import useFileManagerStore from "@/stores/useFileManagerStore";
 import useDialog from '@/hooks/useDialog';
 import { useDeleteEntity } from '@/hooks/mutations/useDeleteMutations';
 
@@ -10,7 +9,6 @@ const Delete = ({ fileId, fileType, onSuccess, wrapperClassName = "" }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
-  const { deleteHandler } = useFileManagerStore(state => state);
   const { confirm } = useDialog();
 
   const getSanitizedSearchAfterDelete = () => {
@@ -59,8 +57,6 @@ const Delete = ({ fileId, fileType, onSuccess, wrapperClassName = "" }) => {
           await deleteEntity({ entityId: fileId, entityType: fileType });
 
           try {
-            deleteHandler(fileId, fileType);
-
             const isViewingDeletedItem =
               id === fileId ||
               location.pathname.includes(fileId) ||

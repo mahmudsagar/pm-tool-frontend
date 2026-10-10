@@ -1,12 +1,13 @@
 import { useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getSocket } from './useRealtimeNotifications';
+import { useSocket } from '@/lib/realtime/socket';
 
 /**
  * Listen for real-time chat messages on the existing WebSocket connection.
  */
 export const useRealtimeChat = (activeConversationId, currentUserId, onMessageDelivered) => {
   const queryClient = useQueryClient();
+  const socket = useSocket();
 
   const handleChatMessage = useCallback((event) => {
     const message = event?.data;
@@ -34,33 +35,18 @@ export const useRealtimeChat = (activeConversationId, currentUserId, onMessageDe
   }, [queryClient, currentUserId, onMessageDelivered]);
 
   useEffect(() => {
-    let attached = false;
-
-    const tryAttach = () => {
-      const socket = getSocket();
-      if (!socket || attached) return;
-      attached = true;
-      socket.on('chat:message', handleChatMessage);
-    };
-
-    tryAttach();
-    const interval = setInterval(tryAttach, 1000);
-
+    if (!socket) return;
+    socket.on('chat:message', handleChatMessage);
     return () => {
-      clearInterval(interval);
-      const socket = getSocket();
-      if (socket) socket.off('chat:message', handleChatMessage);
+      socket.off('chat:message', handleChatMessage);
     };
-  }, [handleChatMessage]);
+  }, [socket, handleChatMessage]);
 
   useEffect(() => {
-    const socket = getSocket();
     if (!socket || !activeConversationId) return;
-
     socket.emit('conversation:join', activeConversationId);
-
     return () => {
       socket.emit('conversation:leave', activeConversationId);
     };
-  }, [activeConversationId]);
+  }, [socket, activeConversationId]);
 };

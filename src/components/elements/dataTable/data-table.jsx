@@ -22,7 +22,7 @@ import {
   buildSpaceNameMap,
   resolveSpaceName,
 } from '@/utils/fileDisplayUtils';
-import useFileManagerStore from '@/stores/useFileManagerStore';
+import { useSpaceTree } from '@/features/spaces/queries';
 
 function DataTable({ propId, propType } = {}) {
   let { id: paramId, type: paramType } = useParams();
@@ -67,10 +67,7 @@ function DataTable({ propId, propType } = {}) {
     return rawData[0].name || rawData[0].title || 'My Files';
   }, [rawData]);
 
-  const { publicSpaces, privateSpaces } = useFileManagerStore(state => ({
-    publicSpaces: state.publicSpaces,
-    privateSpaces: state.privateSpaces,
-  }));
+  const { publicSpaces, privateSpaces } = useSpaceTree();
 
   const spaceNameMap = useMemo(
     () => buildSpaceNameMap([...(publicSpaces || []), ...(privateSpaces || [])]),

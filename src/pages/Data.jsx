@@ -1,4 +1,4 @@
-// import useSyncStore from "@/stores/useSyncStore"
+import { getCurrentUserId } from '@/lib/currentUser';
 
 const EMPTY_ASSIGNEE_OPTIONS = [];
 const DATA_LAYOUT_TYPES = ['table', 'kanban', 'timeline', 'calendar'];
@@ -866,13 +866,13 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
       const parentDoc = (boardData?.documents || []).find((d) => d._id === parentTaskId);
       const inheritedAssignee = taskData.assignee ?? parentDoc?.custom_meta?.values?.assignee;
       const requestBody = {
-        user_id: localStorage.getItem('userId') || "68578b51b1325fc7c9b7b095",
+        user_id: getCurrentUserId(),
         title: taskData.title,
         page_type: 'document',
         entity_type: 'page',
         content: { text: taskData.description || '' },
         summary: taskData.description || '',
-        last_updated_by: localStorage.getItem('userId') || "68578b51b1325fc7c9b7b095",
+        last_updated_by: getCurrentUserId(),
         custom_meta: {
           fields: boardData?.custom_meta?.fields || [],
           values: { ...customMetaValues, ...(inheritedAssignee ? { assignee: inheritedAssignee } : {}) },
@@ -913,7 +913,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
       console.log('Custom meta values:', customMetaValues);
 
       const requestBody = {
-        user_id: localStorage.getItem('userId') || "68578b51b1325fc7c9b7b095",
+        user_id: getCurrentUserId(),
         title: taskData.title,
         page_type: 'document',
         entity_type: 'page',
@@ -921,7 +921,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
           text: taskData.description || ''
         },
         summary: taskData.description || '',
-        last_updated_by: localStorage.getItem('userId') || "68578b51b1325fc7c9b7b095",
+        last_updated_by: getCurrentUserId(),
         custom_meta: {
           fields: boardData?.custom_meta?.fields || [],
           values: customMetaValues
@@ -1213,16 +1213,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
     return (boardTasks?.property_name || []).filter(f => !excluded.includes(f.name));
   }, [boardTasks?.property_name]);
 
-  const currentUserId = useMemo(() => {
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const u = JSON.parse(userStr);
-        return u?._id || u?.id || null;
-      }
-    } catch (_) { /* ignore */ }
-    return null;
-  }, []);
+  const currentUserId = useAuthStore((state) => state.user?._id ?? null);
 
   const activeSprint = viewState?.scrum?.sprint_management?.active_sprint || "";
 

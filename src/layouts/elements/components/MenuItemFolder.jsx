@@ -2,17 +2,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useSidebar } from "@/stores/store";
-import useFileManagerStore from "@/stores/useFileManagerStore";
-import {
-  // Users, 
-  // Folder,
-  // FileText, 
-  // StickyNote, 
-  ChevronRight, 
-  // FileSpreadsheet,
-  ChevronDownIcon,
-  // LayoutGrid,
-} from 'lucide-react';
+import { ChevronRight, ChevronDownIcon } from 'lucide-react';
 import AddFileDialog from "./AddFileDialog";
 import {
   Accordion,
@@ -24,25 +14,56 @@ import ButtonLoading from "./ButtonLoading";
 import MenuEmpty from "./MenuEmpty";
 import FolderMenu from "./DropdownMenuItems/FolderMenu";
 import DocStructure from "./DocStructure";
-import { baseUrl } from '@/utils/constants';
-import { api } from '@/utils/api';
-import { useQueryClient } from '@tanstack/react-query';
 import EllipsisTooltip from "@/components/common/EllipsisTooltip";
 import ShowIcon from "@/components/common/ShowIcon";
 import { resolveBoardListPageType } from "@/components/elements/dataView/scrum/scrumBoardConstants";
 import { formatEntityDisplayName, getEntityRawName } from "@/utils/fileDisplayUtils";
+import { useContainerContents } from "@/features/spaces/queries";
 
-const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
-  if (!folder) return null;    
+const isContainer = (item) => item?.entity_type === 'folder' || item?.entity_type === 'group';
+
+const MenuItemFolder = ({ folder, className }) => {
+  if (!folder) return null;
+  return isContainer(folder)
+    ? <ContainerItem folder={folder} className={className} />
+    : <LeafItem item={folder} className={className} />;
+};
+
+const LeafItem = ({ item, className, openItem = "" }) => {
+  const { isOpen } = useSidebar();
+  const [dropdownOpenStates, setDropdownOpenStates] = useState({});
+  const handleDropdownToggle = (id) =>
+    setDropdownOpenStates((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  return (
+    <DocStructure
+      docId={item._id}
+      docName={formatEntityDisplayName(item)}
+      rawName={getEntityRawName(item)}
+      docType={item.entity_type}
+      fileType={resolveBoardListPageType(item) || item.page_type}
+      hasChild={!!openItem}
+      openItem={openItem}
+      isOpen={isOpen}
+      className={className}
+      dropdownOpenStates={dropdownOpenStates}
+      handleDropdownToggle={handleDropdownToggle}
+    />
+  );
+};
+
+const ContainerItem = ({ folder, className }) => {
   const { isOpen } = useSidebar();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false)
   const [openItem, setOpenItem] = useState("");
   const [lastOpenItem, setLastOpenItem] = useState("");
   const [dropdownOpenStates, setDropdownOpenStates] = useState({});
-  const { storeDocuments, documents } = useFileManagerStore(state => state);    
-  const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const expanded = openItem === folder._id;
+  const { data: contents = [], isPending, isError } = useContainerContents(folder.entity_type, folder._id, expanded);
+
+  // Collapse while the sidebar is collapsed and restore when it reopens.
   useEffect(() => {
     if (isOpen) {
       setOpenItem(lastOpenItem);
@@ -50,198 +71,96 @@ const MenuItemFolder = ({ folder, className, showPinnedOnly = false }) => {
       setLastOpenItem(openItem);
       setOpenItem("");
     }
-  }, [isOpen]);  
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to the sidebar toggling
+  }, [isOpen]);
 
-  const handleDropdownToggle = (id) => {
-    setDropdownOpenStates(prevState => ({
-      ...prevState,
-      [id]: !prevState[id]
-    }));
-  };  
+  const handleDropdownToggle = (id) =>
+    setDropdownOpenStates((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const handleFolderClick = async (id, type) => {    
-    setOpenItem(openItem === id ? "" : id);
-    
-    if (!documents[id]) {
-      setLoading(true);
-      try {
-        const queryKey = type === 'folder' ? ['folders', id, 'contents'] : ['groups', id, 'contents'];
-        const endpoint = type === 'folder' ? `/v1/folder?id=${id}` : `/v1/group?id=${id}`;
-        const result = await queryClient.fetchQuery({
-          queryKey,
-          queryFn: () => api.get(baseUrl + endpoint),
-          staleTime: 2 * 60 * 1000,
-        });
-        storeDocuments(result?.data, id);
-      } catch (error) {
-        console.error('Get document error: ' + error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  }  
-
-  // Handle navigation to show folder contents in main area
   const handleFolderNavigation = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (folder.entity_type === 'folder') {
-      // Navigate to folder view with ID
-      navigate(`/folder/${folder._id}`);
-    } else if (folder.entity_type === 'group') {
-      // Navigate to group view with ID
-      navigate(`/group/${folder._id}`);
-    }
+    navigate(`/${folder.entity_type}/${folder._id}`);
   };
 
-  // Displaying the icon based on their file format.
-  // const showIcon = (file, page) => {
-  //   switch (file) {
-  //     case 'group':
-  //       return <Users size={20} />;
-  //     case 'folder':
-  //       return <Folder width={20} />;
-  //     case 'page':
-  //       switch (page) {
-  //         case 'document':
-  //           return <FileText size={20} />;
-  //         case 'sheet':
-  //           return <FileSpreadsheet size={20} />;
-  //         case 'whiteboard':
-  //           return <StickyNote size={20} />;
-  //         case 'board':
-  //           return <LayoutGrid size={20} />;
-  //         default:
-  //           return <FileText size={20} />;
-  //       }
-  //     default:
-  //       return <FileText size={20} className="inline" />;
-  //   }
-  // };  
-          
+  const children = contents.flatMap((doc) => doc?.childs ?? []);
+
   return (
-    <>
-      { folder.entity_type !== 'page' && folder.entity_type !== 'board' ? (
-        <Accordion
-          type="single"
-          collapsible
-          className="space-y-2"
-          value={openItem}
-          onValueChange={(value) => setOpenItem(value)}
+    <Accordion
+      type="single"
+      collapsible
+      className="space-y-2"
+      value={openItem}
+      onValueChange={setOpenItem}
+    >
+      <AccordionItem value={folder._id} className="border-none mr-0">
+        <AccordionTrigger
+          className="group relative flex h-9 justify-between pl-2 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
         >
-          <AccordionItem value={folder._id} className="border-none mr-0">
-            <AccordionTrigger
-              className={cn(
-                'group relative flex h-9 justify-between pl-2 py-2 text-black dark:text-white duration-200 hover:bg-muted hover:no-underline overflow-hidden',
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleFolderClick(folder?._id, folder?.entity_type);
-              }}
+          <div className="flex justify-between items-center gap-2 overflow-hidden">
+            <span className="inline group-hover:hidden group-data-[state=open]:hidden">
+              <ShowIcon
+                file={folder.entity_type}
+                page={resolveBoardListPageType(folder) || folder.page_type}
+                item={folder}
+              />
+            </span>
+            <ChevronRight
+              strokeWidth={2.5}
+              size={20}
+              className="hidden group-hover:inline-block group-data-[state=open]:hidden"
+            />
+            {expanded && (
+              <ChevronDownIcon strokeWidth={2.5} size={20} className="shrink-0 transition-transform duration-200" />
+            )}
+            <EllipsisTooltip
+              title={folder.name}
+              onClick={handleFolderNavigation}
+              className={cn('text-sm duration-200 text-start cursor-pointer hover:text-purple-600 transition-colors flex-1', !isOpen && className)}
             >
-              <div className="flex justify-between items-center gap-2 overflow-hidden">
-                <span className="inline group-hover:hidden group-data-[state=open]:hidden">
-                  {/* { showIcon(folder?.entity_type, folder?.page_type) } */}
-                  <ShowIcon
-                    file={folder?.entity_type}
-                    page={resolveBoardListPageType(folder) || folder?.page_type}
-                    item={folder}
-                  />
-                </span>
-                <ChevronRight
-                  strokeWidth={2.5}
-                  size={20}
-                  className="hidden group-hover:inline-block group-data-[state=open]:hidden"
-                />
-                {openItem === folder._id && (
-                  <ChevronDownIcon
-                    strokeWidth={2.5}
-                    size={20}
-                    className="shrink-0 transition-transform duration-200"
-                  />
-                )}
-                <EllipsisTooltip title={folder?.name}
-                  onClick={handleFolderNavigation}
-                  className={cn('text-sm duration-200 text-start cursor-pointer hover:text-purple-600 transition-colors flex-1', !isOpen && className)}>
-                  {folder?.name}
-                </EllipsisTooltip>
-                {/* <span 
-                  onClick={handleFolderNavigation}
-                  className={cn('text-sm duration-200 text-start w-[135px] whitespace-nowrap overflow-hidden overflow-ellipsis cursor-pointer hover:text-purple-600 transition-colors', !isOpen && className)}
-                >
-                  {folder.name}
-                </span> */}
-              </div>
-              <div className={`opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${openItem === folder._id || dropdownOpenStates[folder._id] ? 'opacity-100' : ''}`}>
-                <div className="flex gap-1">
-                  <AddFileDialog 
-                    id={folder?._id} 
-                    type={folder?.entity_type} 
-                    isOpen={isAddModalOpen}
-                    setIsOpen={setIsAddModalOpen}
-                  />
-                  <FolderMenu
-                    isOpen={dropdownOpenStates}
-                    onToggle={(id) => handleDropdownToggle(id)}
-                    id={folder?._id}
-                    type={folder?.entity_type}
-                    fileName={getEntityRawName(folder)}
-                  />
+              {folder.name}
+            </EllipsisTooltip>
+          </div>
+          <div className={cn('opacity-0 group-hover:opacity-100 transition-opacity duration-200', (expanded || dropdownOpenStates[folder._id]) && 'opacity-100')}>
+            <div className="flex gap-1">
+              <AddFileDialog
+                id={folder._id}
+                type={folder.entity_type}
+                isOpen={isAddModalOpen}
+                setIsOpen={setIsAddModalOpen}
+              />
+              <FolderMenu
+                isOpen={dropdownOpenStates}
+                onToggle={handleDropdownToggle}
+                id={folder._id}
+                type={folder.entity_type}
+                fileName={getEntityRawName(folder)}
+              />
+            </div>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="space-y-2 py-3">
+          {isPending ? (
+            <ButtonLoading text="Loading..." flex="col" />
+          ) : isError ? (
+            <p className="px-2 text-xs text-destructive">Couldn&apos;t load contents.</p>
+          ) : children.length === 0 ? (
+            <MenuEmpty />
+          ) : (
+            children.map((item) =>
+              isContainer(item) ? (
+                <div key={item._id} className="ml-2.5">
+                  <ContainerItem folder={item} className={className} />
                 </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-2 py-3">
-              { loading ? <ButtonLoading text='Loading...' flex='col' /> :                 
-                Array.isArray(documents[folder?._id]) && documents[folder?._id].length > 0 ? 
-                  documents[folder?._id].map( doc => 
-                    Array.isArray(doc.childs) && doc.childs.length > 0 ? 
-                      doc?.childs.map( item => item.entity_type === 'folder' ? (
-                        <div key={item?._id} className="ml-2.5">
-                        <MenuItemFolder folder={item} className={className} />
-                        </div>
-                      ) : (
-                        <DocStructure
-                          key={item?._id}
-                          docId = {item?._id}
-                          docName = {formatEntityDisplayName(item)}
-                          rawName = {getEntityRawName(item)}
-                          docType = {item?.entity_type}
-                          fileType = { resolveBoardListPageType(item) || item?.page_type }
-                          hasChild = {true}
-                          openItem={openItem}
-                          isOpen = {isOpen}
-                          // showIcon={showIcon}
-                          className = {className}
-                          dropdownOpenStates = {dropdownOpenStates}
-                          handleDropdownToggle = {handleDropdownToggle}
-                        />
-                      ))
-                    :(
-                    <MenuEmpty key={doc._id}/> // Document Child Empty
-                  )) : ( null
-                  // <MenuEmpty/> // Document Empty
-                )                
-              }
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      ) : 
-      (
-        <DocStructure
-          docId = {folder?._id}
-          docName = {formatEntityDisplayName(folder)}
-          rawName = {getEntityRawName(folder)}
-          docType = {folder?.entity_type}
-          fileType = { resolveBoardListPageType(folder) || folder?.page_type }
-          openItem={openItem}
-          isOpen = {isOpen}
-          // showIcon={showIcon}
-          className = {className}
-          dropdownOpenStates = {dropdownOpenStates}
-          handleDropdownToggle = {handleDropdownToggle}
-        />
-      )}      
-    </>
+              ) : (
+                <LeafItem key={item._id} item={item} className={className} openItem={openItem} />
+              ),
+            )
+          )}
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 };
 

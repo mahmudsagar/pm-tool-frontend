@@ -1,10 +1,9 @@
-import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { LogOut } from "lucide-react";
 import { SidebarMenu } from "./SidebarMenu";
 import { useSidebar } from "@/stores/store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import useFileManagerStore from "@/stores/useFileManagerStore";
+import { useSpaceTree } from "@/features/spaces/queries";
 import useAuthStore from "@/stores/useAuthStore";
 import { useInitAuth } from "@/hooks/queries/useAuthQueries";
 import WorkspaceSwitcher from "./components/WorkspaceSwitcher";
@@ -12,37 +11,13 @@ import WorkspaceSwitcher from "./components/WorkspaceSwitcher";
 export default function Sidebar({ className }) {
   const { isOpen } = useSidebar();
   const { logout, user, currentWorkspace } = useAuthStore();
-  const { isSuccess: isAuthReady } = useInitAuth();
-  // Use Zustand store directly for sidebar data - updates immediately on delete
-  const {
-    isSpacesLoading,
-    hasInitializedSpaces,
-    syncSpacesFromAPI,
-    resetInitialization,
-  } = useFileManagerStore(state => state);
-
-  // Only fetch spaces after auth has been validated server-side.
-  // user._id is available immediately from persisted Zustand state, but we must
-  // wait for the auth token to be confirmed before making any authenticated requests.
-  useEffect(() => {
-    if (isAuthReady && user?._id && !hasInitializedSpaces) {
-      syncSpacesFromAPI(user._id);
-    }
-  }, [isAuthReady, user?._id, hasInitializedSpaces, syncSpacesFromAPI]);
-
-  useEffect(() => {
-    // Reset spaces if user is null (logout scenario)
-    if (!user && hasInitializedSpaces) {
-      resetInitialization();
-      return;
-    }
-  }, [user, hasInitializedSpaces, resetInitialization]);
+  useInitAuth();
+  const { isPending: isSpacesLoading } = useSpaceTree();
 
   return (
     <nav
       className={cn(
         `relative hidden h-screen border-r md:block font-inter`,
-        status && "duration-500",
         isOpen ? "w-[272px]" : "w-[78px]",
         className
       )}

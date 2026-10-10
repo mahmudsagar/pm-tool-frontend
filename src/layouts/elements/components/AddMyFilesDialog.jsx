@@ -28,7 +28,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import useAuthStore from '@/stores/useAuthStore';
-import useFileManagerStore from "@/stores/useFileManagerStore";
+import { useInvalidateSpaceData, useSpaceTree } from "@/features/spaces/queries";
 import { useUsers, useSearchUsers } from '@/hooks/queries/useSpacesQueries';
 import { useTeamsByUser, useSearchTeams } from '@/hooks/queries/useTeamsQueries';
 import { ensureArray } from '@/utils/helper';
@@ -70,8 +70,8 @@ const AddMyFilesDialog = ({
   const { data: searchedTeams } = useSearchTeams(userID, teamSearchQuery.length >= 2 ? teamSearchQuery : '');
   const usersData = userSearchQuery.length >= 2 ? ensureArray(searchedUsers) : ensureArray(allUsers);
   const teamsData = teamSearchQuery.length >= 2 ? ensureArray(searchedTeams) : ensureArray(allTeams);
-  const { storeHandler, updateHandler, publicSpaces,
-    privateSpaces, } = useFileManagerStore(state => state);
+  const invalidateSpaceData = useInvalidateSpaceData();
+  const { publicSpaces, privateSpaces } = useSpaceTree();
   const allSpaces = useMemo(() => [...(publicSpaces || []), ...(privateSpaces || [])], [publicSpaces, privateSpaces]);
   const createDocumentMutation = useCreateDocument();
   const createBoardMutation = useCreateBoard();
@@ -171,7 +171,7 @@ const AddMyFilesDialog = ({
           : 'page';
         res = await updateEntityTitleMutation.mutateAsync({ entity, id, title: data.title });
         const updateData = { ...res?.data, ...(entity === 'page' ? { title: data.title } : { name: data.title }) };
-        updateHandler(id, data.filetype, updateData);
+        invalidateSpaceData();
         if (onEditSuccess) onEditSuccess(res?.data);
       } else if (data.filetype === 'page' && (data.page_type === 'board' || data.page_type === 'scrum')) {
         const isPrivateBoard = selectedSpace?.is_private ?? false;
@@ -210,12 +210,7 @@ const AddMyFilesDialog = ({
           folder_id: type === 'folder' ? id : '',
           group_id: type === 'group' ? id : '',
         });
-        const createdBoard = res?.data && typeof res.data === 'object' ? res.data : res;
-        storeHandler(storeParentId, storeParentType, {
-          ...createdBoard,
-          entity_type: 'board',
-          page_type: isScrumBoard ? 'scrum' : 'board',
-        });
+        invalidateSpaceData();
       } else if (data.filetype === 'page') {
         res = await createDocumentMutation.mutateAsync({
           user_id: userID,
@@ -231,21 +226,21 @@ const AddMyFilesDialog = ({
           space_id: spaceId_,
           attachments: [],
         });
-        storeHandler(storeParentId, storeParentType, res?.data);
+        invalidateSpaceData();
       } else if (data.filetype === 'folder') {
         res = await createFolderMutation.mutateAsync({
           user_id: userID, entity_type: 'folder', name: data.title,
           shared_members: data.shared_members, shared_teams: data.shared_teams,
           folder_id: type === 'folder' ? id : '', group_id: type === 'group' ? id : '', space_id: spaceId_,
         });
-        storeHandler(storeParentId, storeParentType, res?.data);
+        invalidateSpaceData();
       } else if (data.filetype === 'group') {
         res = await createGroupMutation.mutateAsync({
           user_id: userID, entity_type: 'group', name: data.title,
           shared_members: data.shared_members, shared_teams: data.shared_teams,
           folder_id: type === 'folder' ? id : '', group_id: type === 'group' ? id : '', space_id: spaceId_,
         });
-        storeHandler(storeParentId, storeParentType, res?.data);
+        invalidateSpaceData();
       }
 
       setIsOpen(false);

@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { EllipsisVertical, Link2, Pin, SquarePen } from "lucide-react";
+import { EllipsisVertical, Link2, SquarePen } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,16 +10,12 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import Delete from './items/Delete';
-import useFileManagerStore from '@/stores/useFileManagerStore';
 import { useToast } from '@/components/ui/use-toast';
 import AddFileDialog from '../AddFileDialog';
 
 const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isPinned, setIsPinned] = useState(false);
-    const [pinLoading, setPinLoading] = useState(false);
     const { toast } = useToast();
-    const { togglePinStatus } = useFileManagerStore();
   // Handle edit button click
     const handleEditClick = (e) => {
       e.preventDefault();
@@ -70,64 +66,6 @@ const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) =
         });
     }, [id, type, toast]);
   
-  // Handle pin toggle with optimistic UI update
-  const handlePinToggle = useCallback(async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setPinLoading(true);
-    const newPinStatus = !isPinned;
-    
-    // Optimistically update UI
-    setIsPinned(newPinStatus);
-    
-    try {
-      const result = await togglePinStatus(id, type, newPinStatus);
-      
-      if (result.error) {
-        // Revert optimistic update if there was an error
-        setIsPinned(!newPinStatus);
-        toast({
-          variant: "destructive",
-          title: "Error updating pin status",
-          description: result.error,
-        });
-      } else {
-        toast({
-          variant: "success",
-          title: newPinStatus ? "Item pinned" : "Item unpinned",
-          description: `${fileName} has been ${newPinStatus ? "pinned to sidebar" : "unpinned"}.`,
-        });
-      }
-    } catch (error) {
-      // Revert optimistic update if there was an error
-      setIsPinned(!newPinStatus);
-      toast({
-        variant: "destructive",
-        title: "Error updating pin status",
-        description: error.message,
-      });
-    } finally {
-      setPinLoading(false);
-      onToggle(id, false);
-    }
-  }, [id, type, fileName, isPinned, togglePinStatus, toast]);
-
-  // Handle successful edit operation
-  const handleEditSuccess = useCallback((updatedItem) => {
-    // Update the item in the table
-    try {
-      onEditSuccess(id, type, updatedItem);
-    } catch (error) {
-      console.error("Error in edit success callback:", error);
-    }
-    try {
-      // Fallback to reuse the same callback to refresh the UI
-      // onDeleteSuccess(id, type, true);
-    } catch (error) {
-      console.error("Error in edit success callback:", error);
-    }
-  }, [id, type]);
   return (
     <>
       <DropdownMenu open={!!isOpen[id]} onOpenChange={() => onToggle(id)}>
@@ -157,14 +95,6 @@ const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) =
             <Link2 className="w-4 h-4" />
             Copy Link
           </DropdownMenuItem>
-          {/* <DropdownMenuItem 
-            className="flex items-center px-4 py-3 font-medium gap-3 cursor-pointer" 
-            onSelect={handlePinToggle}
-            disabled={pinLoading}
-          >
-            <Pin className="w-4 h-4" />
-            {isPinned ? "Unpin" : "Pin"}
-          </DropdownMenuItem> */}
         </DropdownMenuGroup>
           <Delete
             fileId={id}
@@ -182,7 +112,6 @@ const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) =
           initialName={fileName}
           isOpen={isEditModalOpen}
           setIsOpen={setIsEditModalOpen}
-          onEditSuccess={handleEditSuccess}
         />
       )}
     </>

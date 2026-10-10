@@ -1,5 +1,5 @@
 import { Separator } from "@/components/ui/separator";
-import useFileManagerStore from "@/stores/useFileManagerStore";
+import { useSpaceTree } from "@/features/spaces/queries";
 import useAuthStore from "@/stores/useAuthStore";
 import MenuItemSpace from "./components/MenuItemSpace";
 import MenuLoading from "./components/MenuLoading";
@@ -24,19 +24,10 @@ const defaultTeamSpace = {
 };
 
 const SidebarMenuItems = ({ className }) => {
-  // Get spaces and loading state from store
-  const {
-    publicSpaces,
-    privateSpaces,
-    isSpacesLoading,
-    hasInitializedSpaces
-  } = useFileManagerStore(state => state);
-  const isOwner = useAuthStore(state => state.isOwner)();
+  const { publicSpaces, privateSpaces, isPending } = useSpaceTree();
+  const isOwner = useAuthStore(state => state.currentWorkspace?.role === 'owner');
 
-  // console.log("🚀 ~ SidebarMenuItems ~ publicSpaces:", publicSpaces);
-  // console.log("🚀 ~ SidebarMenuItems ~ privateSpaces:", privateSpaces);
-  // Show loading only if we haven't initialized spaces yet and are currently loading
-  if (isSpacesLoading && !hasInitializedSpaces) {
+  if (isPending) {
     return (
       <div className="block mb-5">
         <MenuLoading />
@@ -44,18 +35,8 @@ const SidebarMenuItems = ({ className }) => {
     );
   }
 
-  // Sort items from API to ensure pinned items appear at top
-  const sortedPrivateSpaces = [...(privateSpaces || [])].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    return 0;
-  });
-
-  const sortedPublicSpaces = [...(publicSpaces || [])].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    return 0;
-  });
+  const sortedPrivateSpaces = privateSpaces;
+  const sortedPublicSpaces = publicSpaces;
 
   // Always show the default spaces, even if no API spaces are loaded
   return (

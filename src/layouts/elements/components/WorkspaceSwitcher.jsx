@@ -1,19 +1,14 @@
 import { Check } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import useAuthStore from "@/stores/useAuthStore";
-import useFileManagerStore from "@/stores/useFileManagerStore";
 
 export default function WorkspaceSwitcher({ children }) {
-  const { workspaces, currentWorkspace, setCurrentWorkspace, user } = useAuthStore();
-  const { resetInitialization, syncSpacesFromAPI } = useFileManagerStore();
+  const { workspaces, currentWorkspace, setCurrentWorkspace } = useAuthStore();
 
   const handleSwitch = (ws) => {
     if (ws._id === currentWorkspace?._id) return;
+    // Clears the previous workspace's cached data; queries refetch for the new one.
     setCurrentWorkspace(ws);
-    resetInitialization();
-    if (user?._id) {
-      syncSpacesFromAPI(user._id);
-    }
   };
 
   if (!workspaces?.length) return children;

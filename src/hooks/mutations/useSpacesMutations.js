@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
+import { invalidateSpaceData } from '@/features/spaces/queries';
 
 /**
  * Mutation hook to create a new space
@@ -17,7 +18,7 @@ export const useCreateSpace = () => {
     },
     
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['spaces'] });
+      invalidateSpaceData(queryClient);
       toast({ title: 'Space created successfully' });
     },
     
@@ -40,13 +41,12 @@ export const useUpdateSpace = () => {
 
   return useMutation({
     mutationFn: async ({ spaceId, data }) => {
-      const result = await api.put(`${baseUrl}/v1/space/${spaceId}`, data);
+      const result = await api.put(`${baseUrl}/v1/space`, { ...data, id: spaceId });
       return result.data;
     },
     
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['spaces'] });
-      queryClient.invalidateQueries({ queryKey: ['spaces', variables.spaceId] });
+    onSuccess: () => {
+      invalidateSpaceData(queryClient);
       toast({ title: 'Space updated successfully' });
     },
     
@@ -69,12 +69,11 @@ export const useDeleteSpace = () => {
 
   return useMutation({
     mutationFn: async (spaceId) => {
-      return api.delete(`${baseUrl}/v1/space/${spaceId}`);
+      return api.delete(`${baseUrl}/v1/space?id=${encodeURIComponent(spaceId)}`);
     },
     
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['spaces'] });
-      queryClient.invalidateQueries({ queryKey: ['files'] });
+      invalidateSpaceData(queryClient);
       toast({ title: 'Space deleted successfully' });
     },
     

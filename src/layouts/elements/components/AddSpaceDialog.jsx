@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useSearchWorkspaceMembers } from '@/hooks/queries/useSpacesQueries';
 import { useTeamsByUser, useSearchTeams } from '@/hooks/queries/useTeamsQueries';
-import useFileManagerStore from "@/stores/useFileManagerStore";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +57,6 @@ const AddSpaceDialog = ({
   const [debouncedMemberSearch, setDebouncedMemberSearch] = useState('');
   const [memberDropdownOpen, setMemberDropdownOpen] = useState(false);
   const [memberMap, setMemberMap] = useState({});
-  const { syncSpacesFromAPI, updateHandler } = useFileManagerStore(state => state);
 
   const form = useForm({
     defaultValues: {
@@ -74,7 +72,6 @@ const AddSpaceDialog = ({
   // TanStack Query mutations and client
   const createSpaceMutation = useCreateSpace();
   const updateSpaceMutation = useUpdateSpace();
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     document.getElementById('main-content')?.toggleAttribute('inert', isOpen);
@@ -140,7 +137,7 @@ const AddSpaceDialog = ({
     const spaceData = {
       name: data.name,
       description: data.description,
-      user_id: userID || "66cda5dac6886719e3345c19",
+      user_id: userID,
       is_private: data.is_private ? data.is_private : space_visibility ?? false,
       shared_members: data.shared_members,
       shared_teams: data.shared_teams,
@@ -149,30 +146,13 @@ const AddSpaceDialog = ({
 
     try {
       if (isEdit) {
-        // Update existing space using TanStack Query mutation
-        await updateSpaceMutation.mutateAsync({ 
-          spaceId: id, 
-          data: spaceData 
-        });
-        
-        // Update the file manager store
-        await updateHandler(id, 'space', spaceData);
-
-        // Call the edit success callback if provided
+        await updateSpaceMutation.mutateAsync({ spaceId: id, data: spaceData });
         if (onEditSuccess) {
           onEditSuccess(spaceData);
         }
       } else {
-        // Create new space using TanStack Query mutation
         await createSpaceMutation.mutateAsync(spaceData);
-
-        // Sync the Zustand store so the sidebar reflects the new space
-        await syncSpacesFromAPI(userID);
       }
-
-      // Invalidate and refetch queries to ensure UI updates
-      queryClient.invalidateQueries({ queryKey: ['spaces'] });
-      queryClient.invalidateQueries({ queryKey: ['spaces', userID] });
 
       setLoading(false);
       setIsOpen(false);

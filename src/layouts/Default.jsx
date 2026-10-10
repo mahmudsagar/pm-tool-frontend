@@ -3,8 +3,10 @@ import { Outlet } from "react-router-dom";
 import Header from "./elements/header";
 import Sidebar from "./elements/sidebar";
 import { useState } from "react";
+import { useRealtimeConnection } from "@/lib/realtime/socket";
 
 const Default = ({ children }) => {
+    useRealtimeConnection();
     const [topMenu, setTopMenu] = useState({
         dropdownContent: null,
         inlineContent: null

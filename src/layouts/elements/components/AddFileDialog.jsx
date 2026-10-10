@@ -27,7 +27,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import useAuthStore from '@/stores/useAuthStore';
-import useFileManagerStore from "@/stores/useFileManagerStore";
+import { useInvalidateSpaceData } from "@/features/spaces/queries";
 import { useUsers, useSearchUsers } from '@/hooks/queries/useSpacesQueries';
 import { useTeamsByUser, useSearchTeams } from '@/hooks/queries/useTeamsQueries';
 import { ensureArray } from '@/utils/helper';
@@ -62,7 +62,7 @@ const AddFileDialog = ({
   const { data: searchedTeams } = useSearchTeams(userID, teamSearchQuery.length >= 2 ? teamSearchQuery : '');
   const usersData = userSearchQuery.length >= 2 ? ensureArray(searchedUsers) : ensureArray(allUsers);
   const teamsData = teamSearchQuery.length >= 2 ? ensureArray(searchedTeams) : ensureArray(allTeams);
-  const { storeHandler, updateHandler } = useFileManagerStore(state => state);
+  const invalidateSpaceData = useInvalidateSpaceData();
   const createDocumentMutation = useCreateDocument();
   const createBoardMutation = useCreateBoard();
   const createFolderMutation = useCreateFolder();
@@ -148,7 +148,7 @@ const AddFileDialog = ({
           ...res?.data,
           ...(entity === 'page' ? { title: data.title } : { name: data.title }),
         };
-        updateHandler(id, data.filetype, updateData);
+        invalidateSpaceData();
         if (onEditSuccess) onEditSuccess(res?.data);
       } else if (data.filetype === 'page' && (data.page_type === 'board' || data.page_type === 'scrum')) {
         // Build assignee options from selected shared_members for dynamic reference
@@ -185,12 +185,7 @@ const AddFileDialog = ({
           saved_view: defaultScrumSavedView(),
         };
         res = await createBoardMutation.mutateAsync(isScrumBoard ? scrumBoardPayload : dataBoardPayload);
-        const createdBoard = res?.data && typeof res.data === 'object' ? res.data : res;
-        storeHandler(id, type, {
-          ...createdBoard,
-          entity_type: 'board',
-          page_type: isScrumBoard ? 'scrum' : 'board',
-        });
+        invalidateSpaceData();
       } else if (data.filetype === 'page') {
         const docData = {
           user_id: userID,
@@ -207,21 +202,21 @@ const AddFileDialog = ({
           attachments: [],
         };
         res = await createDocumentMutation.mutateAsync(docData);
-        storeHandler(id, type, res?.data);
+        invalidateSpaceData();
       } else if (data.filetype === 'folder') {
         res = await createFolderMutation.mutateAsync({
           user_id: userID, entity_type: 'folder', name: data.title,
           shared_members: data.shared_members, shared_teams: data.shared_teams,
           folder_id: type === 'folder' ? id : '', group_id: type === 'group' ? id : '', space_id: type === 'space' ? id : '',
         });
-        storeHandler(id, type, res?.data);
+        invalidateSpaceData();
       } else if (data.filetype === 'group') {
         res = await createGroupMutation.mutateAsync({
           user_id: userID, entity_type: 'group', name: data.title,
           shared_members: data.shared_members, shared_teams: data.shared_teams,
           folder_id: type === 'folder' ? id : '', group_id: type === 'group' ? id : '', space_id: type === 'space' ? id : '',
         });
-        storeHandler(id, type, res?.data);
+        invalidateSpaceData();
       }
 
       setIsOpen(false);

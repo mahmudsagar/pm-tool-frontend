@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Paperclip, Edit2, Trash2, X, SendHorizonal } from "lucide-react";
 import { commentBaseUrl, mediaBaseUrl } from '@/utils/constants';
 import { Skeleton } from '@/components/ui/skeleton';
-import useSyncStore from '@/stores/useSyncStore';
+import useAuthStore from '@/stores/useAuthStore';
 import Spinner from '../spinner';
 import { sanitize } from '@/utils/helper';
 import useDialog from '@/hooks/useDialog';
@@ -19,7 +19,7 @@ import {
   useDeleteMedia,
 } from '@/hooks/mutations/useCommentsMutations';
 
-export default function CommentSection({ user_id, page_id, comments: initialComments }) {
+export default function CommentSection({ page_id, comments: initialComments }) {
   const [comments, setComments] = useState(initialComments || []);
   const [newComment, setNewComment] = useState('');
   const [newAttachments, setNewAttachments] = useState([]);
@@ -40,7 +40,9 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
   const deleteMediaMutation = useDeleteMedia();
   const { confirm } = useDialog();
 
-  const { user } = useSyncStore();
+  const user = useAuthStore((state) => state.user);
+  // Comments are always authored by the signed-in user, never the page owner.
+  const user_id = user?._id;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -244,8 +246,8 @@ export default function CommentSection({ user_id, page_id, comments: initialComm
         <div className="relative">
           <div className="relative flex items-start gap-3 w-full">
             <Avatar className="w-8 h-8">
-              <AvatarImage src={user?.profileImage} />
-              <AvatarFallback>{user?.name}</AvatarFallback>
+              <AvatarImage src={user?.avatar || undefined} alt={user?.name || 'You'} />
+              <AvatarFallback>{user?.name?.charAt(0)?.toUpperCase() || 'U'}</AvatarFallback>
             </Avatar>
             <div className="flex-1 relative">
               <Input

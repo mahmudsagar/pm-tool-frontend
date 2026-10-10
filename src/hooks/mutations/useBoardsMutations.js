@@ -1,3 +1,4 @@
+import { getCurrentUserId } from '@/lib/currentUser';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/utils/api';
 import { baseUrl } from '@/utils/constants';
@@ -54,14 +55,7 @@ export const useUpdateBoardTask = () => {
 
   return useMutation({
     mutationFn: async ({ boardId, taskId, custom_meta }) => {
-      let userId = null;
-      try {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          const u = JSON.parse(userStr);
-          userId = u?._id || u?.id || null;
-        }
-      } catch (_) { /* ignore */ }
+      const userId = getCurrentUserId();
 
       const result = await api.put(`${baseUrl}/v1/page/document?id=${taskId}`, {
         id: taskId,

@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { baseUrl } from '@/utils/constants';
 import { useToast } from '@/components/ui/use-toast';
 import { api } from '@/utils/api';
-import useFileManagerStore from '@/stores/useFileManagerStore';
 
 /**
  * Universal delete mutation hook for all entity types
@@ -11,7 +10,6 @@ import useFileManagerStore from '@/stores/useFileManagerStore';
 export const useDeleteEntity = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { deleteHandler } = useFileManagerStore(state => state);
 
   return useMutation({
     mutationFn: async ({ entityId, entityType }) => {
@@ -85,9 +83,6 @@ export const useDeleteEntity = () => {
     },
     
     onSuccess: (data, variables) => {
-      // Update Zustand sidebar store immediately
-      deleteHandler(variables.entityId, variables.entityType);
-
       const deletedId = String(variables.entityId || '');
       const shouldSkipDeletedDetailQuery = (query) => {
         const [root, id] = query.queryKey || [];

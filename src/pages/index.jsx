@@ -20,7 +20,7 @@ import HistoryPanel from '@/components/elements/HistoryPanel';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUsers } from '@/hooks/queries/useSpacesQueries';
 import { useTeams } from '@/hooks/queries/useTeamsQueries';
-import useFileManagerStore from '@/stores/useFileManagerStore';
+import { useInvalidateSpaceData } from '@/features/spaces/queries';
 
 const pageType = {
   document: Document,
@@ -40,7 +40,7 @@ const Page = ({ ...props }) => {
   const isInSidebar = !!props.id;
   const [historyOpen, setHistoryOpen] = useState(false);
   const { confirm } = useDialog();
-  const { deleteHandler } = useFileManagerStore(state => state);
+  const invalidateSpaceData = useInvalidateSpaceData();
 
   // Use TanStack Query to fetch document data
   const { data, isLoading, error } = useDocument(paramId);
@@ -159,8 +159,7 @@ const Page = ({ ...props }) => {
       await deleteDocumentMutation.mutateAsync(paramId);
       // Remove cached query data so it's not refetched after unmount
       queryClient.removeQueries({ queryKey: ['documents', paramId] });
-      // Update the Zustand sidebar store so the deleted item disappears immediately
-      deleteHandler(paramId, 'page');
+      invalidateSpaceData();
 
       if (isInSidebar) {
         // Close just the sidebar by removing its search param
