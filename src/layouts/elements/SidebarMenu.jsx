@@ -3,7 +3,6 @@ import { Link as RouterLink } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
-  LucideCalendar,
   LucideHome,
   Settings,
   MessageSquare
@@ -17,11 +16,6 @@ const sidebarTopLinks = [
     title: "Home",
     href: "/",
     icon: LucideHome,
-  },
-  {
-    title: "Calendar",
-    href: "/check",
-    icon: LucideCalendar,
   },
   {
     title: "Chat",

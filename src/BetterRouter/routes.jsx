@@ -1,146 +1,79 @@
+import { lazy } from "react";
 import Default from "@/layouts/Default";
-import Settings from "@/layouts/Settings";
-import Check from "@/pages/Check";
-import Chat from "@/pages/Chat";
-import FileManager from "@/pages/FileManager";
-import Form from "@/pages/Form";
-import Home from "@/pages/Home";
-import Data from "@/pages/Data";
-import NotFound from "./NotFound";
-import Page from "@/pages";
-import CommentPage from "@/pages/CommentPage";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import UsersPage from "@/pages/users";
-import Notifications from "@/pages/Notifications";
-import { LoginForm } from "@/components/auth/LoginForm";
-import OAuthCallback from "@/pages/OAuthCallback";
-import CreateTeam from "@/pages/teams/Create";
-import TeamDetails from "@/pages/teams/TeamDetails";
-import ProfileSettings from "@/pages/settings/Profile";
-import WorkspaceSettings from "@/pages/settings/Workspace";
-import MembersSettings from "@/pages/settings/Members";
-import TeamsSettings from "@/pages/settings/Teams";
+import LazyPage from "./LazyPage";
+import RouteError from "./RouteError";
+import NotFound from "./NotFound";
+
+// Each page is its own chunk so heavy editors (Lexical, Univer, Excalidraw)
+// only download when a page that needs them is opened.
+const Home = lazy(() => import("@/pages/Home"));
+const Data = lazy(() => import("@/pages/Data"));
+const Chat = lazy(() => import("@/pages/Chat"));
+const UsersPage = lazy(() => import("@/pages/users"));
+const Notifications = lazy(() => import("@/pages/Notifications"));
+const FileManager = lazy(() => import("@/pages/FileManager"));
+const Page = lazy(() => import("@/pages"));
+const CommentPage = lazy(() => import("@/pages/CommentPage"));
+const Settings = lazy(() => import("@/layouts/Settings"));
+const ProfileSettings = lazy(() => import("@/pages/settings/Profile"));
+const WorkspaceSettings = lazy(() => import("@/pages/settings/Workspace"));
+const MembersSettings = lazy(() => import("@/pages/settings/Members"));
+const TeamsSettings = lazy(() => import("@/pages/settings/Teams"));
+const CreateTeam = lazy(() => import("@/pages/teams/Create"));
+const TeamDetails = lazy(() => import("@/pages/teams/TeamDetails"));
+const LoginForm = lazy(() => import("@/components/auth/LoginForm").then((m) => ({ default: m.LoginForm })));
+const OAuthCallback = lazy(() => import("@/pages/OAuthCallback"));
+
+const page = (element, { fullscreen = false } = {}) => (
+  <LazyPage component={element.type} fullscreen={fullscreen} {...element.props} />
+);
+
+const protectedPage = (element) => <ProtectedRoute>{page(element, { fullscreen: true })}</ProtectedRoute>;
 
 export const routes = [
   {
     path: '/',
-    element: <ProtectedRoute>
-      <Default />
-    </ProtectedRoute>, /** layout element */
+    element: <ProtectedRoute><Default /></ProtectedRoute>,
+    errorElement: <RouteError />,
     children: [
       {
-        path: '/',
-        element: <Home />
-      },
-      {
-        path: '/data',
-        element: <Data />
-      },
-      {
-        path: '/board/:id',
-        element: <Data />
-      },
-      {
-        path: '/scrum/:id',
-        element: <Data mode="scrum" />
-      },
-      {
-        path: '/check',
-        element: <Check />
-      },
-      {
-        path: '/chat',
-        element: <Chat />
-      },
-      {
-        path: '/users',
-        element: <UsersPage />
-      },
-      {
-        path: '/notifications',
-        element: <Notifications />
-      },
-      {
-        path: '/file-manager/:type/:id',
-        element: <FileManager />
-      },
-      {
-        path: '/folder/:id',
-        element: <FileManager />
-      },
-      {
-        path: '/group/:id',
-        element: <FileManager />
-      },
-      {
-        path: '/space/:id',
-        element: <FileManager />
-      },
-      {
-        path: '/form/*',
-        element: <Form />
-      },
-      {
-        path: '/document/:id',
-        element: <Page />
-      },
-      {
-        path: '/single/:id',
-        element: <Page />
-      },
-      {
-        path: "/sheet/:id",
-        element: <Page />
-      },
-      {
-        path: "/whiteboard/:id",
-        element: <Page />
-      },
-      {
-        path: "/comment/:id",
-        element: <CommentPage />
-      },
-      {
-        path: '/settings',
-        element: <Settings />,
+        errorElement: <RouteError />,
         children: [
-          { path: '/settings/', element: <ProfileSettings /> },
-          { path: '/settings/workspace', element: <WorkspaceSettings /> },
-          { path: '/settings/members', element: <MembersSettings /> },
-          { path: '/settings/teams', element: <TeamsSettings /> },
-        ]
+          { path: '/', element: page(<Home />) },
+          { path: '/data', element: page(<Data />) },
+          { path: '/board/:id', element: page(<Data />) },
+          { path: '/scrum/:id', element: page(<Data mode="scrum" />) },
+          { path: '/chat', element: page(<Chat />) },
+          { path: '/users', element: page(<UsersPage />) },
+          { path: '/notifications', element: page(<Notifications />) },
+          { path: '/file-manager/:type/:id', element: page(<FileManager />) },
+          { path: '/folder/:id', element: page(<FileManager />) },
+          { path: '/group/:id', element: page(<FileManager />) },
+          { path: '/space/:id', element: page(<FileManager />) },
+          { path: '/document/:id', element: page(<Page />) },
+          { path: '/single/:id', element: page(<Page />) },
+          { path: '/sheet/:id', element: page(<Page />) },
+          { path: '/whiteboard/:id', element: page(<Page />) },
+          { path: '/comment/:id', element: page(<CommentPage />) },
+          {
+            path: '/settings',
+            element: page(<Settings />),
+            children: [
+              { path: '/settings/', element: page(<ProfileSettings />) },
+              { path: '/settings/workspace', element: page(<WorkspaceSettings />) },
+              { path: '/settings/members', element: page(<MembersSettings />) },
+              { path: '/settings/teams', element: page(<TeamsSettings />) },
+            ],
+          },
+          { path: '*', element: <NotFound /> },
+        ],
       },
-    ]
+    ],
   },
-  {
-    path: '/login',
-    element: <LoginForm />
-  },
-  {
-    path: '/oauth/callback',
-    element: <OAuthCallback />
-  },
-  {
-    path: '/teams/create',
-    element: (<ProtectedRoute>
-      <CreateTeam />
-    </ProtectedRoute>) 
-  },
-  {
-    path: '/users/:id',
-    element: (<ProtectedRoute>
-      <TeamDetails />
-    </ProtectedRoute>) 
-  },
-  {
-    path: '/users/edit/:id',
-    element: (<ProtectedRoute>
-      <CreateTeam />
-    </ProtectedRoute>) 
-  },
-  {
-    path: "*",
-    element: <NotFound />
-  }
-]
-
+  { path: '/login', element: page(<LoginForm />, { fullscreen: true }), errorElement: <RouteError /> },
+  { path: '/oauth/callback', element: page(<OAuthCallback />, { fullscreen: true }), errorElement: <RouteError /> },
+  { path: '/teams/create', element: protectedPage(<CreateTeam />), errorElement: <RouteError /> },
+  { path: '/users/:id', element: protectedPage(<TeamDetails />), errorElement: <RouteError /> },
+  { path: '/users/edit/:id', element: protectedPage(<CreateTeam />), errorElement: <RouteError /> },
+];

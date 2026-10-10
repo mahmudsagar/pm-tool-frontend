@@ -1,12 +1,9 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useOutletContext, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { sanitize } from '@/utils/helper';
 import useDialog from '@/hooks/useDialog';
 import NotFound from '@/BetterRouter/NotFound';
-import Spinner from '@/components/elements/spinner';
-import Document from './Document';
-import Sheet from './Sheets';
-import Whiteboard from './Whiteboard';
+import { PageLoader } from '@/components/feedback/PageLoader';
 import { useDocument } from '@/hooks/queries/useFilesQueries';
 import { useBoard } from '@/hooks/queries/useBoardsQueries';
 import { useUpdateDocument, useDeleteDocument } from '@/hooks/mutations/useFilesMutations';
@@ -22,10 +19,11 @@ import { useUsers } from '@/hooks/queries/useSpacesQueries';
 import { useTeams } from '@/hooks/queries/useTeamsQueries';
 import { useInvalidateSpaceData } from '@/features/spaces/queries';
 
+// Each editor is a separate chunk: opening a doc never downloads the sheet or whiteboard engines.
 const pageType = {
-  document: Document,
-  sheet: Sheet,
-  whiteboard: Whiteboard,
+  document: lazy(() => import('./Document')),
+  sheet: lazy(() => import('./Sheets')),
+  whiteboard: lazy(() => import('./Whiteboard')),
 }
 const DEFAULT_VIEW = { sorts: [], filters: [], search: '' };
 const Page = ({ ...props }) => {
@@ -240,11 +238,15 @@ const Page = ({ ...props }) => {
 
   const Component = pageType[page_type] || NotFound;
   return <div className='relative h-full'>
-    {(isLoading || (!data && !error)) ?
-      <Spinner />
-      :
-      data && <Component {...componentProps} />
-    }
+    {error ? (
+      <NotFound />
+    ) : (isLoading || !data) ? (
+      <PageLoader />
+    ) : (
+      <Suspense fallback={<PageLoader />}>
+        <Component {...componentProps} />
+      </Suspense>
+    )}
 
     {paramId && page_type !== 'board' && (
       <HistoryPanel pageId={paramId} open={historyOpen} onOpenChange={setHistoryOpen} />
