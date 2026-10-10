@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Hash, Link2, MoreHorizontal, PanelRight, PencilLine, Settings, Trash2 } from 'lucide-react';
+import { Hash, Link2, MoreHorizontal, PanelRight, PencilLine, Settings, Star, StarOff, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -20,6 +20,7 @@ import { useCreateSpaceChannel } from '@/hooks/mutations/useChatMutations';
 import SpaceSettingsSheet from '@/layouts/elements/components/SpaceSettingsSheet';
 import { KIND_META, entityPath, isContainerKind, type EntityKind } from './entity';
 import { useInvalidateSpaceData } from './queries';
+import { useFavoriteIds, useToggleFavorite } from '@/features/library/queries';
 
 export interface MenuItemTarget {
   id: string;
@@ -54,6 +55,9 @@ export function ItemMenu({ target, triggerClassName, align = 'end' }: ItemMenuPr
   const { confirm } = useDialog() as { confirm: (options: Record<string, unknown>) => void };
   const deleteEntity = useDeleteEntity();
   const createChannel = useCreateSpaceChannel();
+  const favoriteIds = useFavoriteIds();
+  const toggleFavorite = useToggleFavorite();
+  const starred = favoriteIds.has(target.id);
   const path = entityPath({ _id: target.id, entity_type: apiEntity(target.kind), page_type: target.kind });
   const label = KIND_META[target.kind].label.toLowerCase();
 
@@ -126,6 +130,11 @@ export function ItemMenu({ target, triggerClassName, align = 'end' }: ItemMenuPr
               <PanelRight /> Open in side panel
             </DropdownMenuItem>
           )}
+          <DropdownMenuItem
+            onSelect={() => toggleFavorite.mutate({ entityType: apiEntity(target.kind), entityId: target.id, starred: !starred })}
+          >
+            {starred ? <StarOff /> : <Star />} {starred ? 'Remove from starred' : 'Add to starred'}
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setRenameOpen(true)}>
             <PencilLine /> Rename
           </DropdownMenuItem>

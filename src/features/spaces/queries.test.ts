@@ -41,7 +41,7 @@ describe('buildSpaceTree', () => {
 
   it('lists every direct child as a file row, newest first, with its space name', () => {
     expect(tree.files.map((f) => f.id)).toEqual(['d1', 'f1']);
-    expect(tree.files[0]).toMatchObject({ type: 'page', name: 'Notes.document', typeLabel: 'Document', spaceName: 'Mine', pinned: true });
+    expect(tree.files[0]).toMatchObject({ type: 'page', name: 'Notes', kind: 'document', typeLabel: 'Document', spaceName: 'Mine', path: 'Mine', href: '/document/d1', pinned: true });
     expect(tree.files[1]).toMatchObject({ type: 'folder', name: 'Plans', typeLabel: 'Folder' });
   });
 

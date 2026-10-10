@@ -1,26 +1,29 @@
-import { File, FileSpreadsheet, FileText, Folder, LayoutGrid, SquareKanban, StickyNote, Users, type LucideIcon } from 'lucide-react';
-import { formatTime } from '@/utils/helper';
-import {
-  buildSpaceNameMap,
-  formatEntityDisplayName,
-  formatEntityTypeLabel,
-  getEntityRawName,
-  resolveEntityPageType,
-  resolveSpaceName,
-} from '@/utils/fileDisplayUtils';
+import type { LucideIcon } from 'lucide-react';
+import { formatEntityTypeLabel, getEntityRawName, resolveEntityPageType } from '@/utils/fileDisplayUtils';
+import { entityIcon, entityKind, entityPath, type EntityKind } from './entity';
 import type { EntityType, Space, SpaceChild } from '@/types/models';
 
-/** Row shape consumed by the file tables (Home, folder/group/space views). */
+/** Row shape for file lists (hub, space/folder/group pages, search results). */
 export interface FileRow {
   id: string;
   type: EntityType;
+  kind: EntityKind;
   icon: LucideIcon;
+  /** Plain name without type suffix. */
   name: string;
+  /** Kept for older table code that reads rawName. */
   rawName: string;
   typeLabel: string;
   spaceName: string;
-  modified: string;
-  modifiedBy: string;
+  /** "Space / Folder" location label. */
+  path: string;
+  href: string;
+  updatedAt: string | null;
+  createdAt: string | null;
+  /** Who last changed it (falls back to the creator). */
+  modifiedById: string | null;
+  ownerId: string | null;
+  sharedMembers: string[];
   sharing: 'Private' | 'Public';
   pinned?: boolean;
   space_id?: string;
@@ -29,40 +32,39 @@ export interface FileRow {
   page_type: string | null;
 }
 
-const PAGE_ICONS: Record<string, LucideIcon> = {
-  document: FileText,
-  whiteboard: StickyNote,
-  sheet: FileSpreadsheet,
-  board: LayoutGrid,
-  scrum: SquareKanban,
-};
-
-function iconFor(child: SpaceChild, pageType: string | null): LucideIcon {
-  if (child.entity_type === 'folder') return Folder;
-  if (child.entity_type === 'group') return Users;
-  return (pageType && PAGE_ICONS[pageType]) || File;
+interface RowContext {
+  spaces: Pick<Space, '_id' | 'name'>[];
+  /** Name of the container the rows were loaded from, appended to the path. */
+  parentName?: string;
 }
 
-export function toFileRows(children: SpaceChild[], spaces: Pick<Space, '_id' | 'name'>[], fallbackSpaceName = ''): FileRow[] {
-  const spaceNames = buildSpaceNameMap(spaces);
+export function toFileRows(children: SpaceChild[], { spaces, parentName }: RowContext): FileRow[] {
+  const spaceNames = new Map(spaces.map((s) => [String(s._id), s.name]));
   return children.map((child) => {
-    const pageType = resolveEntityPageType(child);
+    const spaceName = (child.space_id && spaceNames.get(String(child.space_id))) || '';
+    const path = [spaceName, parentName].filter(Boolean).join(' / ');
     return {
       id: child._id,
       type: child.entity_type,
-      icon: iconFor(child, pageType),
-      name: formatEntityDisplayName(child),
+      kind: entityKind(child),
+      icon: entityIcon(child),
+      name: getEntityRawName(child) || 'Untitled',
       rawName: getEntityRawName(child),
       typeLabel: formatEntityTypeLabel(child),
-      spaceName: resolveSpaceName(child.space_id, spaceNames, fallbackSpaceName),
-      modified: formatTime(child.updatedAt),
-      modifiedBy: (child.updated_by_name as string) || (child.user_name as string) || '—',
+      spaceName,
+      path,
+      href: entityPath(child),
+      updatedAt: child.updatedAt ?? child.createdAt ?? null,
+      createdAt: child.createdAt ?? null,
+      modifiedById: (child.last_updated_by as string) || child.user_id || null,
+      ownerId: child.user_id ?? null,
+      sharedMembers: Array.isArray(child.shared_members) ? (child.shared_members as string[]) : [],
       sharing: child.is_private ? 'Private' : 'Public',
       pinned: child.pinned,
       space_id: child.space_id,
       folder_id: child.folder_id || child.parent_id || null,
       group_id: child.group_id || null,
-      page_type: pageType || null,
+      page_type: resolveEntityPageType(child) || null,
     };
   });
 }

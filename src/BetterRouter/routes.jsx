@@ -7,12 +7,12 @@ import NotFound from "./NotFound";
 
 // Each page is its own chunk so heavy editors (Lexical, Univer, Excalidraw)
 // only download when a page that needs them is opened.
-const Home = lazy(() => import("@/pages/Home"));
+const HubPage = lazy(() => import("@/pages/hub/HubPage"));
 const Data = lazy(() => import("@/pages/Data"));
 const Chat = lazy(() => import("@/pages/Chat"));
 const UsersPage = lazy(() => import("@/pages/users"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
-const FileManager = lazy(() => import("@/pages/FileManager"));
+const ContainerPage = lazy(() => import("@/pages/hub/ContainerPage"));
 const Page = lazy(() => import("@/pages"));
 const CommentPage = lazy(() => import("@/pages/CommentPage"));
 const Settings = lazy(() => import("@/layouts/Settings"));
@@ -40,17 +40,17 @@ export const routes = [
       {
         errorElement: <RouteError />,
         children: [
-          { path: '/', element: page(<Home />) },
+          { path: '/', element: page(<HubPage />) },
           { path: '/data', element: page(<Data />) },
           { path: '/board/:id', element: page(<Data />) },
           { path: '/scrum/:id', element: page(<Data mode="scrum" />) },
           { path: '/chat', element: page(<Chat />) },
           { path: '/users', element: page(<UsersPage />) },
           { path: '/notifications', element: page(<Notifications />) },
-          { path: '/file-manager/:type/:id', element: page(<FileManager />) },
-          { path: '/folder/:id', element: page(<FileManager />) },
-          { path: '/group/:id', element: page(<FileManager />) },
-          { path: '/space/:id', element: page(<FileManager />) },
+          { path: '/file-manager/:type/:id', element: page(<ContainerPage />) },
+          { path: '/folder/:id', element: page(<ContainerPage />) },
+          { path: '/group/:id', element: page(<ContainerPage />) },
+          { path: '/space/:id', element: page(<ContainerPage />) },
           { path: '/document/:id', element: page(<Page />) },
           { path: '/single/:id', element: page(<Page />) },
           { path: '/sheet/:id', element: page(<Page />) },

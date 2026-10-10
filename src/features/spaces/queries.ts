@@ -54,7 +54,7 @@ export function buildSpaceTree(raw: Space[]): SpaceTree {
     spaces,
     privateSpaces: spaces.filter((s) => s.is_private).sort(byPinnedFirst),
     publicSpaces: spaces.filter((s) => !s.is_private).sort(byPinnedFirst),
-    files: toFileRows(children, spaces),
+    files: toFileRows(children, { spaces }),
   };
 }
 
