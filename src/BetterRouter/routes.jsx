@@ -11,7 +11,7 @@ const HubPage = lazy(() => import("@/pages/hub/HubPage"));
 const Data = lazy(() => import("@/pages/Data"));
 const Chat = lazy(() => import("@/pages/Chat"));
 const UsersPage = lazy(() => import("@/pages/users"));
-const Notifications = lazy(() => import("@/pages/Notifications"));
+const Notifications = lazy(() => import("@/pages/inbox/InboxPage"));
 const ContainerPage = lazy(() => import("@/pages/hub/ContainerPage"));
 const RecentPage = lazy(() => import("@/pages/library/RecentPage"));
 const StarredPage = lazy(() => import("@/pages/library/StarredPage"));
