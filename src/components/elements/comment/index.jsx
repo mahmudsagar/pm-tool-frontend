@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Paperclip, Edit2, Trash2, X, SendHorizonal } from "lucide-react";
-import { commentBaseUrl, mediaBaseUrl } from '@/utils/constants';
 import { Skeleton } from '@/components/ui/skeleton';
 import useAuthStore from '@/stores/useAuthStore';
 import Spinner from '../spinner';

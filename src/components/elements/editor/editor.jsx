@@ -39,7 +39,6 @@ import { LayoutPlugin } from './plugins/LayoutPlugin/LayoutPlugin';
 import ListMaxIndentLevelPlugin from './plugins/ListMaxIndentLevelPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { mediaBaseUrl } from '@/utils/constants';
 import { useUploadMedia, useDeleteMedia } from '@/hooks/mutations/useCommentsMutations';
 import Spinner from '../spinner';
 import { sanitize } from '@/utils/helper';
@@ -89,6 +88,7 @@ export default function Editor({ title, content, page_id, user_id, custom_meta, 
       currentEditorState || editor.getEditorState()
     )
     editor.setEditorState(state)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seed the Lexical editor once with the initial content; re-running on currentEditorState would reset the editor (and cursor) on every keystroke
   }, [editor])
 
   const handleOnChange = (values) => {

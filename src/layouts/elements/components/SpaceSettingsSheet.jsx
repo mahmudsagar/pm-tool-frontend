@@ -17,7 +17,7 @@ const VIEWS = [
   { value: "kanban", label: "Kanban" },
 ];
 
-export default function SpaceSettingsSheet({ spaceId, space, open, onOpenChange }) {
+export default function SpaceSettingsSheet({ spaceId, open, onOpenChange }) {
   const [form, setForm] = useState({
     name: "",
     icon: "",

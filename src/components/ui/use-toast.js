@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 
 const TOAST_LIMIT = 3;
-const TOAST_REMOVE_DELAY = 3000;
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -16,8 +15,6 @@ function genId() {
   count = (count + 1) % Number.MAX_SAFE_INTEGER;
   return count.toString();
 }
-
-const toastTimeouts = new Map();
 
 function reducer(state, action) {
   switch (action.type) {

@@ -113,111 +113,6 @@ function buildBurndownSeries(sprintStories) {
   return { total, series };
 }
 
-function BurndownChart({ series, total }) {
-  if (!series.length || total <= 0) {
-    return <p className="text-sm text-muted-foreground">No burndown data for this sprint yet.</p>;
-  }
-
-  const maxY = total;
-  const w = 100;
-  const h = 48;
-  const idealPoints = series
-    .map((p, i) => {
-      const x = (i / Math.max(1, series.length - 1)) * w;
-      const y = h - (p.ideal / maxY) * h;
-      return `${x},${y}`;
-    })
-    .join(" ");
-  const actualPoints = series
-    .map((p, i) => {
-      const x = (i / Math.max(1, series.length - 1)) * w;
-      const y = h - (p.remaining / maxY) * h;
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  return (
-    <div className="space-y-2">
-      <svg viewBox={`0 0 ${w} ${h}`} className="h-36 w-full text-xs" preserveAspectRatio="none">
-        {[0, 0.25, 0.5, 0.75, 1].map((t) => (
-          <line
-            key={t}
-            x1={0}
-            y1={h * t}
-            x2={w}
-            y2={h * t}
-            className="stroke-muted"
-            strokeWidth={0.3}
-          />
-        ))}
-        <polyline fill="none" className="stroke-muted-foreground" strokeWidth={1} strokeDasharray="2 2" points={idealPoints} />
-        <polyline fill="none" className="stroke-primary" strokeWidth={1.5} points={actualPoints} />
-      </svg>
-      <div className="flex justify-between text-[10px] text-muted-foreground">
-        <span>{series[0]?.label}</span>
-        <span>{series[series.length - 1]?.label}</span>
-      </div>
-      <div className="flex gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-0.5 w-4 border-t border-dashed border-muted-foreground" />
-          Ideal
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-0.5 w-4 bg-primary" />
-          Remaining
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function VelocityChart({ bySprint, highlightSprint }) {
-  if (bySprint.length === 0) {
-    return <p className="text-sm text-muted-foreground">No sprint velocity data yet.</p>;
-  }
-  const maxVal = Math.max(1, ...bySprint.flatMap((s) => [s.committed, s.completed]));
-
-  return (
-    <div className="space-y-3">
-      {bySprint.map((s) => {
-        const active = highlightSprint && s.sprint === highlightSprint;
-        return (
-          <div key={s.sprint} className={`space-y-1 rounded border p-2 ${active ? "border-primary bg-primary/5" : ""}`}>
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium">{s.sprint}</span>
-              <span className="text-muted-foreground">
-                {s.doneItems}/{s.totalItems} stories
-              </span>
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-[10px]">
-                <span className="w-16 text-muted-foreground">Committed</span>
-                <div className="h-2 flex-1 rounded bg-muted">
-                  <div
-                    className="h-2 rounded bg-amber-500/70"
-                    style={{ width: `${Math.max(4, (s.committed / maxVal) * 100)}%` }}
-                  />
-                </div>
-                <span className="w-8 text-right font-medium">{s.committed}</span>
-              </div>
-              <div className="flex items-center gap-2 text-[10px]">
-                <span className="w-16 text-muted-foreground">Completed</span>
-                <div className="h-2 flex-1 rounded bg-muted">
-                  <div
-                    className="h-2 rounded bg-emerald-500/80"
-                    style={{ width: `${Math.max(4, (s.completed / maxVal) * 100)}%` }}
-                  />
-                </div>
-                <span className="w-8 text-right font-medium">{s.completed}</span>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 function SprintReport({ stories, sprintList, selectedSprint, onSelectSprint, activeSprint }) {
   const sprintStories = useMemo(
     () => stories.filter((s) => String(s.sprint || "") === String(selectedSprint)),
@@ -513,7 +408,10 @@ export default function ScrumReportsSection({
   );
 
   const sprintCfg = viewState?.scrum?.sprint_management || DEFAULT_SCRUM_VIEW_BLOCK.sprint_management;
-  const epicRegistry = viewState?.scrum?.epic_registry || DEFAULT_SCRUM_VIEW_BLOCK.epic_registry || {};
+  const epicRegistry = useMemo(
+    () => viewState?.scrum?.epic_registry || DEFAULT_SCRUM_VIEW_BLOCK.epic_registry || {},
+    [viewState?.scrum?.epic_registry]
+  );
 
   const sprintList = useMemo(() => {
     const names = new Set((sprintCfg.sprints || []).filter(Boolean));

@@ -9,13 +9,13 @@ const trendMeta = {
   flat: { label: 'Flat', icon: ArrowRight, className: 'text-muted-foreground' },
 };
 
-export function formatCoveragePercent(value) {
+function formatCoveragePercent(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return '—';
   return `${Math.round(n * 10) / 10}%`;
 }
 
-export function getSprintCoverageEntry(bySprint, sprintName) {
+function getSprintCoverageEntry(bySprint, sprintName) {
   if (!sprintName || !bySprint) return null;
   return bySprint[sprintName] || null;
 }

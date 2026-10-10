@@ -17,7 +17,6 @@ export const NotificationCenter = ({ userId, workspaceId, token }) => {
         isConnecting,
         markAsRead,
         markAllAsRead,
-        requestNotificationPermission
     } = useNotifications(userId, workspaceId, token);
 
     const handleNotificationClick = (notification) => {

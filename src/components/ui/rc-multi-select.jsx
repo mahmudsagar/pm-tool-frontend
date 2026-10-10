@@ -10,7 +10,8 @@ export const RcMultiSelect = ({
   onChange,
   onSearchChange,
   placeholder = "Select options",
-  searchPlaceholder = "Type to search...",
+  // Accepted but unused; destructured so it is not forwarded to rc-select via ...props.
+  searchPlaceholder: _searchPlaceholder = "Type to search...",
   className,
   ...props
 }) => {

@@ -242,7 +242,7 @@ export const useUpdateDocument = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ documentId, content, boardId }) => {
+    mutationFn: async ({ documentId, content }) => {
       const payload = { id: documentId };
       if (content && typeof content === 'object' && !Array.isArray(content)) {
         // Editor sends a compound payload: { title, content, custom_meta, inner_comments }

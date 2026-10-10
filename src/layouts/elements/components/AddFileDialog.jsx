@@ -149,7 +149,7 @@ const AddFileDialog = ({
           ...(entity === 'page' ? { title: data.title } : { name: data.title }),
         };
         invalidateSpaceData();
-        if (onEditSuccess) onEditSuccess(res?.data);
+        if (onEditSuccess) onEditSuccess(updateData);
       } else if (data.filetype === 'page' && (data.page_type === 'board' || data.page_type === 'scrum')) {
         // Build assignee options from selected shared_members for dynamic reference
         const isPrivateBoard = space_visibility ?? false;

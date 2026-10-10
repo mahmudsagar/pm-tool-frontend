@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { AlertTriangle, ArrowUpRight, Mail, ShieldAlert } from 'lucide-react';
+import { ArrowUpRight, Mail, ShieldAlert } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -97,7 +97,7 @@ export default function TeamHealthDashboard({
     [data?.property_values]
   );
   const scrumCfg = viewState?.scrum || DEFAULT_SCRUM_VIEW_BLOCK;
-  const standups = scrumCfg.standups || [];
+  const standups = useMemo(() => scrumCfg.standups || [], [scrumCfg.standups]);
   const teamHealth = scrumCfg.team_health || DEFAULT_SCRUM_VIEW_BLOCK.team_health;
   const assigneeMap = useMemo(() => buildAssigneeLabelMap(assigneeOptions), [assigneeOptions]);
 

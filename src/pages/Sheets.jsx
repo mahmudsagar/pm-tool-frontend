@@ -6,7 +6,7 @@ import { debounce } from '@/utils/helper';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Copy, LucideHistory, MessageSquareMore, Save, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, onOpenHistory, ...props }) => {
+const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id, onOpenHistory }) => {
   const univerRef = useRef();
   const { toast } = useToast();
   const [firstLoad, setFirstLoad] = useState(true);
@@ -19,6 +19,12 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
       description: new Date().toLocaleString(),
     })
   }
+
+  // Parent passes fresh callbacks each render (and handleSaveData is recreated
+  // each render); read them via refs so the top-menu effect does not re-run on
+  // every render.
+  const callbacksRef = useRef({ setOpenDeleteDialog, onOpenHistory, handleSaveData });
+  callbacksRef.current = { setOpenDeleteDialog, onOpenHistory, handleSaveData };
 
   const onChange = debounce((sheetData) => {
     if (!pageContent) {
@@ -52,14 +58,14 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
           if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
           }
-          setOpenDeleteDialog(true);
+          callbacksRef.current.setOpenDeleteDialog?.(true);
         }, 150);
       }}>
         <div className='flex items-center gap-1'>
           <Trash size={12} /> Delete this sheet
         </div>
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={handleSaveData} className="cursor-pointer">
+      <DropdownMenuItem onClick={() => callbacksRef.current.handleSaveData()} className="cursor-pointer">
         <div className='flex items-center gap-1'>
           <Save size={12} /> Save
         </div>
@@ -68,7 +74,7 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
     </>
 
     const inlineContent = <>
-      <Button variant="ghost" size="icon" onClick={onOpenHistory}>
+      <Button variant="ghost" size="icon" onClick={() => callbacksRef.current.onOpenHistory?.()}>
         <LucideHistory size={20} />
       </Button>
       <Link href={`/comment/${_id}`} target="_sidebar" className="text-sm font-medium text-primary">
@@ -83,7 +89,7 @@ const Sheet = ({ pageContent, setTopMenu, setOpenDeleteDialog, handleSubmit, _id
       inlineContent
     })
     setFirstLoad(true);
-  }, [pageContent]);
+  }, [pageContent, setTopMenu, _id]);
   return (
     pageContent ? (
         <UniverSheet

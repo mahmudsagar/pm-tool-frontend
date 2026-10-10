@@ -1,10 +1,7 @@
-const DONE_KEYS = ['done', 'completed', 'complete', 'closed'];
-
 export const HEALTH_LEVELS = ['low', 'medium', 'high'];
 export const SIGNAL_WEIGHTS = { sentiment: 0.4, workload: 0.35, blocker: 0.25 };
 export const SUSTAINED_WEEKS_REQUIRED = 2;
 
-const norm = (v) => String(v || '').trim().toLowerCase();
 const asPoints = (v) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;

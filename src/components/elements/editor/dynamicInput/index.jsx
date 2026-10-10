@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -190,7 +190,7 @@ const Field = ({ field, control, onChange, handleFormChange, assigneeOptions = [
     if (field.initialized === false) {
       setOpen(true);
     }
-  }, [])
+  }, [field.initialized])
 
   return <tr className=''>
     <td className='w-[150px]'>
@@ -467,8 +467,11 @@ const DynamicInput = ({ initialData, onChange, assigneeOptions = [], dependencyO
     }
   }
 
+  // Ref holds the latest (per-render) debounced handler so this effect only
+  // fires when the number of fields changes, not on every render.
+  const handleFormChangeRef = useRef(null);
   useEffect(() => {
-    handleFormChange();
+    handleFormChangeRef.current?.();
   }, [customFields.length]);
 
   const handleFormChange = debounce(() => {
@@ -477,6 +480,7 @@ const DynamicInput = ({ initialData, onChange, assigneeOptions = [], dependencyO
     const fields = customFields.map(({ ...rest }) => ({ ...rest }));
     onChange({ values, fields });
   }, 1000);
+  handleFormChangeRef.current = handleFormChange;
 
   const renderPropertyField = (customField) => (
     <Field

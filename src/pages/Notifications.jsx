@@ -116,7 +116,7 @@ const Notifications = () => {
                         <div className="text-center">
                             <Bell className="w-12 h-12 mx-auto mb-4 opacity-50" />
                             <p className="text-lg font-medium">No notifications yet</p>
-                            <p className="text-sm mt-1">You're all caught up!</p>
+                            <p className="text-sm mt-1">You&apos;re all caught up!</p>
                         </div>
                     </div>
                 ) : (

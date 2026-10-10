@@ -33,7 +33,10 @@ export default function ScrumEpicHub({ data, viewState, patchSavedView, compact 
     [data?.property_values]
   );
 
-  const epicRegistry = viewState?.scrum?.epic_registry || DEFAULT_SCRUM_VIEW_BLOCK.epic_registry || {};
+  const epicRegistry = useMemo(
+    () => viewState?.scrum?.epic_registry || DEFAULT_SCRUM_VIEW_BLOCK.epic_registry || {},
+    [viewState?.scrum?.epic_registry]
+  );
 
   const epicStats = useMemo(() => {
     const map = new Map();
@@ -121,7 +124,6 @@ export default function ScrumEpicHub({ data, viewState, patchSavedView, compact 
       });
       return;
     }
-    const key = normalizeEpicKey(name);
     setOptimisticEpics((prev) => (prev.includes(name) ? prev : [...prev, name]));
     if (
       !persistEpicRegistry((current) =>

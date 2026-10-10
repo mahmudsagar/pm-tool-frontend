@@ -64,7 +64,7 @@ const FolderMenu = ({ isOpen = {}, onToggle = () => { }, id, type, fileName }) =
             description: "Could not copy link to clipboard",
           });
         });
-    }, [id, type, toast]);
+    }, [id, type, toast, onToggle]);
   
   return (
     <>

@@ -119,26 +119,6 @@ const useStatusStore = create(subscribeWithSelector((set, get) => ({
     set({ statuses: DEFAULT_STATUSES });
   },
 
-  // Delete functionality for File, Folder
-  deleteHandler: (id, type) => {
-    set((state) => {
-      const updatedDocuments = { ...state.documents };
-      Object.keys(updatedDocuments).forEach((key) => {
-        updatedDocuments[key] = updatedDocuments[key].filter(
-          (child) => !(child._id === id && child.entity_type === type)
-        );
-      });
-
-      const removeChild = (spaces) =>
-        spaces?.map((space) => ({
-          ...space,
-          childs: space.childs.filter(
-            (child) => !(child._id === id && child.entity_type === type)
-          ),
-        })) || [];
-    });
-  },
-
   // Timeline specific methods - Updated for Notion-style timeline
   getTimelineGroups: () => {
     return [
@@ -196,7 +176,6 @@ const useStatusStore = create(subscribeWithSelector((set, get) => ({
       endDate = endDate || defaultEnd;
     }
 
-    const timelineItems = [];
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);

@@ -658,7 +658,7 @@ export default function CommentPlugin({ onChange, showComments, setShowComments 
       }
       onChange(commentStore.getComments());
     },
-    [commentStore, editor, markNodeMap],
+    [commentStore, editor, markNodeMap, onChange],
   );
 
   const submitAddComment = useCallback(
@@ -683,7 +683,7 @@ export default function CommentPlugin({ onChange, showComments, setShowComments 
       }
       onChange(commentStore.getComments());
     },
-    [commentStore, editor],
+    [commentStore, editor, onChange],
   );
 
   useEffect(() => {
@@ -708,7 +708,7 @@ export default function CommentPlugin({ onChange, showComments, setShowComments 
         changedElem.classList.remove('selected');
       }
     };
-  }, [activeIDs, editor, markNodeMap]);
+  }, [activeIDs, editor, markNodeMap, setShowComments]);
 
   useEffect(() => {
     const markNodeKeysToIDs = new Map();

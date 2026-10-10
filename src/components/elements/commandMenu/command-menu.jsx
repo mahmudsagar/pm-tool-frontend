@@ -56,7 +56,7 @@ export function CommandMenu({ ...props }) {
   }
 
   const handleSearchItemClick = (item) => {
-    const { entity_type, page_type, _id } = item || {};
+    const { entity_type, _id } = item || {};
     if (entity_type === 'folder') {
       navigate(`/folder/${_id}`);
     } else if (entity_type === 'group') {

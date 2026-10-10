@@ -26,157 +26,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
-import { PlusIcon, Pencil, Trash2, Check, ChevronsUpDown, XIcon } from 'lucide-react';
+
+
+
+
+import { PlusIcon, Pencil, Trash2, Check, XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUsers, useWorkspaceMembers, useSearchUsers, useSearchWorkspaceMembers } from '@/hooks/queries/useSpacesQueries';
+import { useWorkspaceMembers, useSearchUsers, useSearchWorkspaceMembers } from '@/hooks/queries/useSpacesQueries';
 import { useTeams } from '@/hooks/queries/useTeamsQueries';
-import { useCreateUser, useUpdateUser, useDeleteUser } from '@/hooks/mutations/useUsersMutations';
+import { useDeleteUser } from '@/hooks/mutations/useUsersMutations';
 import { useCreateTeam, useUpdateTeam, useDeleteTeam } from '@/hooks/mutations/useTeamsMutations';
 import { useAddWorkspaceMember } from '@/hooks/mutations/useWorkspaceMutations';
 import useAuthStore from '@/stores/useAuthStore';
 import useDialog from '@/hooks/useDialog';
-
-// ─── User Form ────────────────────────────────────────────────────────────────
-
-function UserFormDialog({ open, onOpenChange, user }) {
-  const isEdit = !!user;
-  const createUser = useCreateUser();
-  const updateUser = useUpdateUser();
-
-  const [form, setForm] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    password: '',
-    role: user?.role || 'member',
-  });
-
-  // Sync form state when user prop changes (e.g. opening edit for different user)
-  const handleOpen = (isOpen) => {
-    if (isOpen) {
-      setForm({
-        name: user?.name || '',
-        email: user?.email || '',
-        password: '',
-        role: user?.role || 'member',
-      });
-    }
-    onOpenChange(isOpen);
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const payload = { name: form.name, email: form.email, role: form.role };
-    if (!isEdit || form.password) payload.password = form.password;
-
-    if (isEdit) {
-      updateUser.mutate(
-        { userId: user._id, data: payload },
-        { onSuccess: () => onOpenChange(false) }
-      );
-    } else {
-      createUser.mutate(payload, { onSuccess: () => onOpenChange(false) });
-    }
-  };
-
-  const isPending = createUser.isPending || updateUser.isPending;
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit Member' : 'Add Member'}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Full name"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="user@example.com"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">
-              Password {isEdit && <span className="text-muted-foreground text-xs">(leave blank to keep current)</span>}
-            </Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder={isEdit ? 'Enter new password to change' : 'Password'}
-              required={!isEdit}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select
-              value={form.role}
-              onValueChange={(value) => setForm((prev) => ({ ...prev, role: value }))}
-            >
-              <SelectTrigger id="role">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="viewer">Viewer</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? 'Saving...' : isEdit ? 'Update' : 'Create'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 // ─── Team Form Dialog ─────────────────────────────────────────────────────────
 
@@ -516,7 +378,6 @@ function MembersTab() {
     setSelected(selected.length === users.length ? [] : users.map((u) => u._id));
   };
 
-  const openEdit = (user) => {};
   const openDeleteSingle = (id) => {
     setTimeout(() => {
       if (document.activeElement instanceof HTMLElement) {

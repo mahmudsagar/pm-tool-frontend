@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from "react-hook-form";
 import { Plus, Check, XIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -23,14 +23,12 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
-  FormDescription
+  FormMessage
 } from "@/components/ui/form";
 import ButtonLoading from './ButtonLoading';
 import useAuthStore from '@/stores/useAuthStore';
 import { ensureArray } from '@/utils/helper';
 import { useCreateSpace, useUpdateSpace } from '@/hooks/mutations/useSpacesMutations';
-import { useQueryClient } from '@tanstack/react-query';
 
 const AddSpaceDialog = ({
   id,
@@ -40,14 +38,13 @@ const AddSpaceDialog = ({
   isOpen,
   setIsOpen,
   onEditSuccess,
-  parentId = null
 }) => {
   const [loading, setLoading] = useState(false);
   const [teamSearch, setTeamSearch] = useState('');
   const [debouncedTeamSearch, setDebouncedTeamSearch] = useState('');
   const [teamDropdownOpen, setTeamDropdownOpen] = useState(false);
   const [teamMap, setTeamMap] = useState({});
-  const { user, currentWorkspace } = useAuthStore();
+  const { user } = useAuthStore();
   const userID = user?._id;
   const { data: allTeams } = useTeamsByUser(userID);
   const { data: searchedTeams } = useSearchTeams(userID, debouncedTeamSearch.length >= 2 ? debouncedTeamSearch : '');

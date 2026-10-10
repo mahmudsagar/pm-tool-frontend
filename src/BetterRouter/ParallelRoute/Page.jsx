@@ -1,5 +1,5 @@
 import { matchRoutes, useSearchParams, useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import Drawer from "../Drawer";
 import { routes } from "../routes";
 import Header from "@/layouts/elements/header";
@@ -23,11 +23,12 @@ const ParallelRoutePage = ({ path, target }) => {
     navigate(path);
   };
 
-  const setTopMenu = (menu) => {
+  // Stable identity: child pages list setTopMenu as an effect dependency.
+  const setTopMenu = useCallback((menu) => {
     if (menu && typeof menu === 'object') {
       setPageTopMenu(menu);
     }
-  };
+  }, []);
 
   const closeBtn = (
     <div className="flex items-center gap-1">

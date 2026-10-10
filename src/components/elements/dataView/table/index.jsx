@@ -203,7 +203,6 @@ export default function TableView({ data, assigneeOptions = [], groupBy = null, 
 
   const renderEditableCell = (item, field, isSubtask = false) => {
     const value = item?.[field.name];
-    const selectValue = normalizeSelectLikeValue(value) || "__empty__";
     const commonClass = isSubtask
       ? "h-7 w-full border-0 bg-transparent px-0 text-xs shadow-none outline-none focus:ring-0"
       : "h-8 w-full border-0 bg-transparent px-0 text-xs shadow-none outline-none focus:ring-0";

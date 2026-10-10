@@ -24,7 +24,7 @@ const App = () => {
     catch (_) {
       //
     }
-  }, [href, pathname, search]);
+  }, [href, pathname, search, setCurrentRoute]);
   return (
     <>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">

@@ -12,7 +12,7 @@ export const useCreateBoardTask = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ boardId, taskData }) => {
+    mutationFn: async ({ taskData }) => {
       const result = await api.post(`${baseUrl}/v1/page/document`, taskData);
       return result.data;
     },
@@ -54,7 +54,7 @@ export const useUpdateBoardTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ boardId, taskId, custom_meta }) => {
+    mutationFn: async ({ taskId, custom_meta }) => {
       const userId = getCurrentUserId();
 
       const result = await api.put(`${baseUrl}/v1/page/document?id=${taskId}`, {
@@ -115,7 +115,7 @@ export const useCreateSubtask = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ boardId, parentTaskId, taskData }) => {
+    mutationFn: async ({ parentTaskId, taskData }) => {
       const result = await api.post(`${baseUrl}/v1/page/document`, {
         ...taskData,
         parent_id: parentTaskId,

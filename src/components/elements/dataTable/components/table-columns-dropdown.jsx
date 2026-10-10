@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Link2, MoreVertical, SquareArrowOutUpRight, SquarePen } from 'lucide-react';
 import {
   DropdownMenu,

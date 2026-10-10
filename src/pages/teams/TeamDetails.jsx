@@ -173,7 +173,7 @@ export default function TeamDetails() {
             <h3 className="text-lg font-medium mb-4">Members</h3>
             {team.shared_members && team.shared_members.length > 0 ? (
               <ul className="space-y-2">
-                {team.shared_members.map((memberId, index) => (
+                {team.shared_members.map((memberId) => (
                   <li key={memberId} className="p-2 bg-muted rounded-md flex justify-between items-center">
                     <span>User ID: {memberId}</span>
                     {memberId === team.user_id && 
@@ -218,8 +218,8 @@ export default function TeamDetails() {
                         <SelectContent>
                           {loadingUsers ? (
                             <SelectItem value="loading" disabled>Loading users...</SelectItem>
-                          ) : availableUsers.length > 0 ? (
-                            availableUsers.map(user => (
+                          ) : filteredAvailableUsers.length > 0 ? (
+                            filteredAvailableUsers.map(user => (
                               <SelectItem key={user._id} value={user._id}>
                                 {user.name || user.email || user._id}
                               </SelectItem>
@@ -240,7 +240,7 @@ export default function TeamDetails() {
                 <DialogFooter>
                   <Button
                     onClick={handleAddMember}
-                    disabled={addMember.isPending || loadingUsers || availableUsers.length === 0}
+                    disabled={addMember.isPending || loadingUsers || filteredAvailableUsers.length === 0}
                   >
                     {addMember.isPending ? "Adding..." : "Add Member"}
                   </Button>

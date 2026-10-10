@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "@/BetterRouter/Link";
 import {
   DndContext,
@@ -195,7 +195,7 @@ export default function TimelineView({
       });
     });
     return items;
-  }, [tasks, assigneeMap]);
+  }, [tasks, assigneeMap, optimisticRanges]);
 
   const dependencyInfoById = useMemo(() => {
     const idMap = new Map();

@@ -39,7 +39,11 @@ export function buildSpaceTree(raw: Space[]): SpaceTree {
     // Children of a private space are private regardless of their own flag.
     childs: [...(space.childs ?? [])]
       .sort(byPinnedFirst)
-      .map((child) => ({ ...child, is_private: space.is_private ?? child.is_private })),
+      .map((child) => ({
+        ...child,
+        space_id: child.space_id || space._id,
+        is_private: space.is_private ?? child.is_private,
+      })),
   }));
 
   const children = spaces

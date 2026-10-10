@@ -120,7 +120,7 @@ function DataTable({ propId, propType } = {}) {
   const handleBulkDeleteSuccess = handleDeleteSuccess;
 
   // Handler for successful edit - invalidate queries to refetch
-  const handleEditSuccess = useCallback((fileId, fileType, updatedData) => {
+  const handleEditSuccess = useCallback(() => {
     // Invalidate queries to trigger refetch
     queryClient.invalidateQueries({ queryKey: ['folders', id] });
     queryClient.invalidateQueries({ queryKey: ['groups', id] });

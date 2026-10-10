@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "../../../../BetterRouter/Link";
 import {
   DndContext,
@@ -175,7 +175,7 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null,
     }));
   }, [statusFieldDef]);
 
-  const normalizeStatus = (rawStatus) => {
+  const normalizeStatus = useCallback((rawStatus) => {
     const text = String(rawStatus ?? "").trim();
     const lowered = text.toLowerCase();
     if (!text) return statusOptions[0]?.key || "backlog";
@@ -197,7 +197,7 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null,
       return statusOptions.find((opt) => String(opt.label || opt.key).toLowerCase().includes("progress"))?.key || "in_progress";
     }
     return statusOptions.find((opt) => String(opt.label || opt.key).toLowerCase().includes("backlog"))?.key || statusOptions[0]?.key || "backlog";
-  };
+  }, [statusOptions]);
   const [optimisticColumns, setOptimisticColumns] = useState({});
   const [activeTaskId, setActiveTaskId] = useState(/** @type {string | null} */ (null));
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
@@ -207,7 +207,7 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null,
   }, [data?.property_values, group?.name]);
 
   const fieldName = group?.name || statusFieldName;
-  const getTaskColumnKey = (task) => {
+  const getTaskColumnKey = useCallback((task) => {
     const overridden = optimisticColumns[task.id];
     if (overridden !== undefined) return overridden;
     if (group) {
@@ -216,7 +216,7 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null,
     }
     const statusValue = statusFieldName ? task?.[statusFieldName] : task?.status;
     return normalizeStatus(statusValue);
-  };
+  }, [optimisticColumns, group, statusFieldName, normalizeStatus]);
 
   const { columns, grouped } = useMemo(() => {
     /** @type {Record<string, any[]>} */
@@ -275,7 +275,7 @@ export default function KanbanView({ data, assigneeOptions = [], groupBy = null,
       columns: statusOptions,
       grouped: buckets,
     };
-  }, [tasks, groupBy, data?.property_name, assigneeOptions, optimisticColumns, statusOptions]);
+  }, [tasks, groupBy, data?.property_name, assigneeOptions, statusOptions, getTaskColumnKey]);
 
   const taskById = useMemo(
     () => Object.fromEntries(tasks.map((t) => [t.id, t])),

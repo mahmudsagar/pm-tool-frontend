@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 // utils
 import Link from '@/BetterRouter/Link';
@@ -11,7 +11,11 @@ import { Copy, History, MessageSquareMore, Share, Trash } from 'lucide-react';
 import "@betternotion/excalidraw/index.css";
 import { Button } from '@/components/ui/button';
 
-export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setOpenDeleteDialog, _id, space_id, onOpenHistory }) {
+export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setOpenDeleteDialog, _id, onOpenHistory }) {
+  // Parent passes fresh callbacks each render; read them via refs so the
+  // top-menu effect does not re-run (and re-set the menu) on every render.
+  const callbacksRef = useRef({ setOpenDeleteDialog, onOpenHistory });
+  callbacksRef.current = { setOpenDeleteDialog, onOpenHistory };
   useEffect(() => {
     if (!pageContent) return;
     const dropdownContent = <>
@@ -31,7 +35,7 @@ export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setO
           if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
           }
-          setOpenDeleteDialog(true);
+          callbacksRef.current.setOpenDeleteDialog?.(true);
         }, 150);
       }}>
         <div className='flex items-center gap-1'>
@@ -41,7 +45,7 @@ export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setO
     </>
 
     const inlineContent = <>
-      <Button variant="ghost" size="icon" onClick={onOpenHistory}>
+      <Button variant="ghost" size="icon" onClick={() => callbacksRef.current.onOpenHistory?.()}>
         <History size={20} />
       </Button>
       <Link href={`/comment/${_id}`} target="_sidebar" className="text-sm font-medium text-primary">
@@ -55,7 +59,7 @@ export default function Whiteboard({ pageContent, handleSubmit, setTopMenu, setO
       dropdownContent,
       inlineContent
     })
-  }, [pageContent]);
+  }, [pageContent, setTopMenu, _id]);
 
   return (
     <div className="text-center h-full pt-16 -mt-16 overflow-hidden">

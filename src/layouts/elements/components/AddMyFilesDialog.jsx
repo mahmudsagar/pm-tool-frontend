@@ -43,26 +43,20 @@ import { useToast } from '@/components/ui/use-toast';
 const AddMyFilesDialog = ({
   id,
   type,
-  space_visibility,
   isEdit = false,
   initialName = '',
   isOpen,
   setIsOpen,
   onEditSuccess
 }) => {
-  console.log("🚀 ~ AddMyFilesDialog ~ id:", id)
-  console.log("🚀 ~ AddMyFilesDialog ~ type:", type)
-  console.log("🚀 ~ AddMyFilesDialog ~ space_visibility:", space_visibility)
   const defaultFileType = 'page'; // Always default to page instead of using type
   const [loading, setLoading] = useState(false); // Submitting Data loading
   const [fileName, setFileName] = useState(initialName || ''); // Track filename separately
   const [spaceId, setSpaceId] = useState(''); // Track space ID separately
   const [selectedSpace, setSelectedSpace] = useState({}) // Track selected space object
-  console.log("🚀 ~ selectedSpace:", selectedSpace)
-  console.log("🚀 ~ spaceId:", spaceId)
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [teamSearchQuery, setTeamSearchQuery] = useState('');
-  const { user, currentWorkspace } = useAuthStore();
+  const { user } = useAuthStore();
   const userID = user?._id;
   const { data: allUsers } = useUsers();
   const { data: allTeams } = useTeamsByUser(userID);
@@ -149,7 +143,6 @@ const AddMyFilesDialog = ({
     setLoading(true);
     const spaceId_ = type === 'space' ? id : (selectedSpace?.entity_type === 'space' ? selectedSpace._id : (spaceId || ''));
     const storeParentId = id || spaceId_ || '';
-    const storeParentType = type || (spaceId_ ? 'space' : '');
 
     if (!isEdit && !storeParentId) {
       toast({
@@ -172,7 +165,7 @@ const AddMyFilesDialog = ({
         res = await updateEntityTitleMutation.mutateAsync({ entity, id, title: data.title });
         const updateData = { ...res?.data, ...(entity === 'page' ? { title: data.title } : { name: data.title }) };
         invalidateSpaceData();
-        if (onEditSuccess) onEditSuccess(res?.data);
+        if (onEditSuccess) onEditSuccess(updateData);
       } else if (data.filetype === 'page' && (data.page_type === 'board' || data.page_type === 'scrum')) {
         const isPrivateBoard = selectedSpace?.is_private ?? false;
         // For private boards, always include owner in shared_members

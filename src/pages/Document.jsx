@@ -1,8 +1,8 @@
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { debounce } from '@/utils/helper';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Copy, ExternalLink, History, Maximize2, MessageSquareMore } from 'lucide-react';
+import { Copy, ExternalLink, History, Maximize2 } from 'lucide-react';
 import Delete from '@/layouts/elements/components/DropdownMenuItems/items/Delete';
 import { Button } from '@/components/ui/button';
 import PlaygroundNodes from '@/components/elements/editor/nodes/PlaygroundNodes';
@@ -31,13 +31,18 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, a
     if (Array.isArray(dependencyOptionsProp) && dependencyOptionsProp.length) {
       return dependencyOptionsProp;
     }
-    const sprintScope = resolveDependencySprintScope(board, { _id, ...rest });
+    // Only custom_meta (sprint value) is read from the task; `parent_id` is destructured above.
+    const sprintScope = resolveDependencySprintScope(board, { _id, custom_meta: rest.custom_meta });
     return buildDependencyOptionsFromDocuments(board?.documents || [], {
       excludeTaskId: _id,
       sprintScope,
     });
-  }, [board, _id, dependencyOptionsProp, rest.custom_meta, rest.parent_id]);
+  }, [board, _id, dependencyOptionsProp, rest.custom_meta]);
   const [showComments, setShowComments] = useState(false);
+  // Parent passes a fresh onOpenHistory each render; read it via ref so the
+  // top-menu effect does not re-run (and re-set the menu) on every render.
+  const onOpenHistoryRef = useRef(onOpenHistory);
+  onOpenHistoryRef.current = onOpenHistory;
   useEffect(() => {
     if (!pageContent) return;
     const dropdownContent = <>
@@ -60,7 +65,7 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, a
     </>
 
     const inlineContent = <>
-      <Button variant="ghost" size="icon" onClick={onOpenHistory}>
+      <Button variant="ghost" size="icon" onClick={() => onOpenHistoryRef.current?.()}>
         <History size={20} />
       </Button>
       {/* <Link href={`/comment/${_id}`} target="_sidebar" className="text-sm font-medium text-primary">
@@ -73,7 +78,7 @@ const Document = ({ pageContent, setTopMenu, handleSubmit, _id, onOpenHistory, a
       dropdownContent,
       inlineContent
     })
-  }, [pageContent, setTopMenu]);
+  }, [pageContent, setTopMenu, _id]);
 
   const onChange = debounce((value) => {
     if (!pageContent) {

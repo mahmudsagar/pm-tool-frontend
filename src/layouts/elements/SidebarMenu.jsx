@@ -1,6 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Link as RouterLink } from "react-router-dom";
-import { useEffect, useState } from "react";
+import RouterLink from "@/BetterRouter/Link";
 import { useLocation } from "react-router-dom";
 import {
   LucideHome,
@@ -9,7 +8,6 @@ import {
 } from "lucide-react";
 import { CommandMenu } from "@/components/elements/commandMenu/command-menu";
 import SidebarMenuItems from "./SidebarMenuItems";
-import { useSidebar } from "@/stores/store";
 
 const sidebarTopLinks = [
   {
@@ -31,19 +29,6 @@ const sidebarTopLinks = [
 
 export function SidebarMenu({ setOpen, className }) {
   const path = useLocation().pathname;
-  const { isOpen } = useSidebar();
-  const [openItem, setOpenItem] = useState("");
-  const [lastOpenItem, setLastOpenItem] = useState("");
-  
-  useEffect(() => {
-    if (isOpen) {
-      setOpenItem(lastOpenItem);
-    } else {
-      setLastOpenItem(openItem);
-      setOpenItem("");
-    }
-  }, [isOpen]);
-
   return (
     <nav className="space-y-4 h-full">
       <CommandMenu />

@@ -103,10 +103,10 @@ export function defaultScrumSavedView() {
 }
 
 /**
- * @param {BoardOption[]} memberOptions
+ * Assignee options are resolved at runtime from board members (source: 'board-members').
  * @returns {{ board_kind: string, fields: object[] }}
  */
-export function buildScrumBoardCustomMeta(memberOptions) {
+export function buildScrumBoardCustomMeta() {
   return {
     board_kind: SCRUM_BOARD_KIND,
     fields: [

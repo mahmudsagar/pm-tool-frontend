@@ -6,7 +6,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Label } from '@/components/ui/label';
 import useAuthStore from "@/stores/useAuthStore";
 import { Check, XIcon } from 'lucide-react';
-import { baseUrl } from '@/utils/constants';
 import { cn } from "@/lib/utils";
 import { Badge } from '@/components/ui/badge';
 import { useSearchWorkspaceMembers } from '@/hooks/queries/useSpacesQueries';

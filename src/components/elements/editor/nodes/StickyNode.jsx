@@ -74,7 +74,7 @@ export class StickyNode extends DecoratorNode {
     };
   }
 
-  createDOM(config) {
+  createDOM() {
     const div = document.createElement('div');
     div.style.display = 'contents';
     return div;
@@ -96,7 +96,7 @@ export class StickyNode extends DecoratorNode {
     writable.__color = writable.__color === 'pink' ? 'yellow' : 'pink';
   }
 
-  decorate(editor, config) {
+  decorate() {
     return createPortal(
       <Suspense fallback={null}>
         <StickyComponent

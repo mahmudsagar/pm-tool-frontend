@@ -70,7 +70,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getSelectedNode } from "../../utils/getSelectedNode";
 import { sanitizeUrl } from "../../utils/url";
-import { INSERT_IMAGE_COMMAND, InsertImageDialog } from "../ImagesPlugin";
+import { InsertImageDialog } from "../ImagesPlugin";
 import { InsertTableDialog } from "../TablePlugin";
 import FontSize from "./fontSize";
 import { isMacOs } from "environment";
@@ -82,7 +82,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import {
-  AArrowDown,
   ALargeSmall,
   AlignCenter,
   AlignEndHorizontal,
@@ -98,13 +97,11 @@ import {
   Code,
   Columns,
   DivideSquare,
-  FoldHorizontal,
   FoldVertical,
   Heading1,
   Heading2,
   Heading3,
   Image,
-  ImagePlay,
   Indent,
   Italic,
   Link,
@@ -129,16 +126,11 @@ import {
   Vote,
 } from "lucide-react";
 import DropdownColorPicker from "../../ui/colorpicker/DropdownColorPicker";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import ColorPicker from "../../ui/colorpicker/ColorPicker";
+
+
 import { EmbedConfigs } from "../AutoEmbedPlugin";
 import { INSERT_EMBED_COMMAND } from "@lexical/react/LexicalAutoEmbedPlugin";
 import useModal from "@/components/elements/modal/useModal";
-import { InsertInlineImageDialog } from "../InlineImagePlugin";
 import InsertLayoutDialog from "../LayoutPlugin/InsertLayoutDialog";
 import { INSERT_PAGE_BREAK } from "../PageBreakPlugin";
 import { INSERT_COLLAPSIBLE_COMMAND } from "../CollapsiblePlugin";

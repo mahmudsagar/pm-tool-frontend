@@ -10,7 +10,7 @@ module.exports = {
   ignorePatterns: ['dist', '.eslintrc.cjs', 'public'],
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   settings: { react: { version: '18.2' } },
-  plugins: ['react-refresh'],
+  plugins: ['react-refresh', 'unused-imports'],
   overrides: [
     {
       files: ['**/*.ts', '**/*.tsx'],
@@ -18,9 +18,13 @@ module.exports = {
       plugins: ['@typescript-eslint'],
       extends: ['plugin:@typescript-eslint/recommended'],
       rules: {
-        'no-unused-vars': 'off',
-        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+        '@typescript-eslint/no-unused-vars': 'off',
       },
+    },
+    {
+      // shadcn primitives and Lexical nodes/plugins export helpers next to components by design.
+      files: ['src/components/ui/**', 'src/components/elements/editor/**'],
+      rules: { 'react-refresh/only-export-components': 'off' },
     },
     {
       files: ['**/*.test.{js,jsx,ts,tsx}', 'src/test/**'],
@@ -29,12 +33,15 @@ module.exports = {
     },
   ],
   rules: {
-    'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrors: 'none' }],
+    'no-unused-vars': 'off',
+    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-vars': ['error', { args: 'after-used', argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrors: 'none', ignoreRestSiblings: true }],
+    'react/no-unknown-property': ['error', { ignore: ['cmdk-input-wrapper'] }],
     'react/jsx-no-target-blank': 'off',
     'react/prop-types': 'off',
     'react-refresh/only-export-components': [
       'warn',
-      { allowConstantExport: true },
+      { allowConstantExport: true, allowExportNames: ['useTheme'] },
     ],
     "no-restricted-imports": [
       "error",

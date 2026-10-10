@@ -130,7 +130,6 @@ import {
 } from "@/components/elements/dataView/scrum/epicUtils"
 import {
   buildDependencyOptionsFromDocuments,
-  filterDependencyOptionsForTask,
 } from "@/components/elements/dataView/scrum/dependencyOptionsUtils"
 import { isScrumBoardKind } from "@/components/elements/dataView/scrum/scrumBoardConstants"
 
@@ -311,7 +310,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
   const boardDataId = boardData?._id;
   const boardDataSavedView = boardData?.saved_view;
   const boardDataAutomations = boardData?.automations;
-  const boardFieldDefs = boardData?.custom_meta?.fields || [];
+  const boardFieldDefs = useMemo(() => boardData?.custom_meta?.fields || [], [boardData?.custom_meta?.fields]);
   const resolvedStatusField = useMemo(() => resolveFieldName(boardFieldDefs, "status"), [boardFieldDefs]);
   const resolvedAssigneeField = useMemo(() => resolveFieldName(boardFieldDefs, "assignee"), [boardFieldDefs]);
   const resolvedPriorityField = useMemo(() => resolveFieldName(boardFieldDefs, "priority"), [boardFieldDefs]);
@@ -480,7 +479,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
         },
       },
     });
-  }, [boardData?.custom_meta?.fields, boardId, updateBoardMutation]);
+  }, [boardData?.custom_meta, boardId, updateBoardMutation]);
 
   // Derive assignee options based on board visibility and sharing:
   // - Private board: only the owner (auto-assigned)
@@ -540,7 +539,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
     </>;
 
     setTopMenu({ dropdownContent });
-  }, [boardId, setTopMenu]);
+  }, [boardId, isScrumPage, setTopMenu]);
 
   // Handle inline cell edits from the table — persist changed custom_meta value to the server
   const handleCellChange = useCallback((rowData, fieldName, newValue) => {
@@ -1335,7 +1334,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
               patchSavedView={patchSavedView}
               boardId={boardId}
               activeSprint={activeSprint}
-              epicFieldName={resolveFieldName(boardFieldDefs, "epic")}
+              epicFieldName={resolvedEpicField}
               assigneeOptions={assigneeOptions}
               teams={allTeams || []}
               workspace={currentWorkspace}

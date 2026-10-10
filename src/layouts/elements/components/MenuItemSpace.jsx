@@ -48,12 +48,6 @@ const MenuItemSpace = ({
     setIsExpanded(!isExpanded);
   };
 
-  // Handle add button click
-  const handleAddClick = (e) => {
-    e.stopPropagation();
-    setIsAddModalOpen(true);
-  };
-
   // Determine if this space has children to show
   const hasChildren = isRootSpace
     ? childSpaces.length > 0

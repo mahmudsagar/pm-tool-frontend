@@ -32,7 +32,7 @@ export default function useModal() {
         {content}
       </Modal>
     );
-  }, [modalContent, onClose]);
+  }, [modalContent, onClose, open]);
 
   const showModal = useCallback(
     (

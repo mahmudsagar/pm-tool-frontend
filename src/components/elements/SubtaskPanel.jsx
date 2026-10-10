@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from '@/BetterRouter/Link';
 import { useCreateSubtask } from '@/hooks/mutations/useBoardsMutations';
-import { useToast } from '@/components/ui/use-toast';
 
 /**
  * Reusable subtask panel — shows existing subtasks and an inline create form.
@@ -21,7 +20,6 @@ export default function SubtaskPanel({ parentTaskId, boardId, subtasks = [], onC
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState('');
   const createSubtask = useCreateSubtask();
-  const { toast } = useToast();
 
   const handleCreate = async () => {
     const trimmed = title.trim();

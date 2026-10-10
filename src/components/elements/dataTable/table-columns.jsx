@@ -176,4 +176,3 @@ export const createColumns = (onDeleteSuccess, onEditSuccess) => [
   },
 ];
 
-export default createColumns(() => {}, () => {});

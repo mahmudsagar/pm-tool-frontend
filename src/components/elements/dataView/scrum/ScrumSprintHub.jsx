@@ -21,7 +21,7 @@ export default function ScrumSprintHub({
   viewState,
   patchSavedView,
   onSprintSelected,
-  onSprintClosed,
+  onSprintClosed: _onSprintClosed, // only used by the commented-out "Close sprint view" UI below
   compact = false,
   boardId,
 }) {
@@ -134,11 +134,6 @@ export default function ScrumSprintHub({
         active_sprint: nextActive,
       };
     });
-  };
-
-  const closeActiveSprint = () => {
-    if (!activeSprint) return;
-    onSprintClosed?.();
   };
 
   return (
@@ -310,7 +305,7 @@ export default function ScrumSprintHub({
             size="sm"
             variant="outline"
             className="h-7 text-xs"
-            onClick={closeActiveSprint}
+            onClick={() => activeSprint && _onSprintClosed?.()}
           >
             Close sprint view
           </Button>
