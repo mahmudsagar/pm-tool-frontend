@@ -4,7 +4,8 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 // Stylesheet
-import "@fontsource/inter/index.css";
+import "@fontsource-variable/geist";
+import "@fontsource-variable/jetbrains-mono";
 import './index.css';
 import App from './App';
 import { queryClient } from './lib/queryClient';
