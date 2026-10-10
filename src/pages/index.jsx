@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useUsers } from '@/hooks/queries/useSpacesQueries';
 import { useTeams } from '@/hooks/queries/useTeamsQueries';
 import { useInvalidateSpaceData } from '@/features/spaces/queries';
+import { useRecordView } from '@/features/library/queries';
 
 // Each editor is a separate chunk: opening a doc never downloads the sheet or whiteboard engines.
 const pageType = {
@@ -34,6 +35,7 @@ const Page = ({ ...props }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const paramId = props.id || id;
+  useRecordView('page', paramId);
   // If props.id is set, this page is rendered inside a sidebar/parallel route
   const isInSidebar = !!props.id;
   const [historyOpen, setHistoryOpen] = useState(false);

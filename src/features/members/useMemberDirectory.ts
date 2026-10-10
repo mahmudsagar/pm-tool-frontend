@@ -18,7 +18,7 @@ export function useMemberDirectory() {
 }
 
 /** Short display name: "Alex R." */
-export function shortName(user?: Pick<User, 'name' | 'email'> | null) {
+export function shortName(user?: { name?: string; email?: string } | null) {
   if (!user) return 'Unknown';
   const parts = (user.name || user.email || '').trim().split(/\s+/);
   if (parts.length < 2) return parts[0] || 'Unknown';

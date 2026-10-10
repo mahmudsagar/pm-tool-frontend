@@ -13,6 +13,9 @@ const Chat = lazy(() => import("@/pages/Chat"));
 const UsersPage = lazy(() => import("@/pages/users"));
 const Notifications = lazy(() => import("@/pages/Notifications"));
 const ContainerPage = lazy(() => import("@/pages/hub/ContainerPage"));
+const RecentPage = lazy(() => import("@/pages/library/RecentPage"));
+const StarredPage = lazy(() => import("@/pages/library/StarredPage"));
+const TrashPage = lazy(() => import("@/pages/library/TrashPage"));
 const Page = lazy(() => import("@/pages"));
 const CommentPage = lazy(() => import("@/pages/CommentPage"));
 const Settings = lazy(() => import("@/layouts/Settings"));
@@ -41,6 +44,9 @@ export const routes = [
         errorElement: <RouteError />,
         children: [
           { path: '/', element: page(<HubPage />) },
+          { path: '/recent', element: page(<RecentPage />) },
+          { path: '/starred', element: page(<StarredPage />) },
+          { path: '/trash', element: page(<TrashPage />) },
           { path: '/data', element: page(<Data />) },
           { path: '/board/:id', element: page(<Data />) },
           { path: '/scrum/:id', element: page(<Data mode="scrum" />) },

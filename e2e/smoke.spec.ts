@@ -54,7 +54,7 @@ test('register, browse the workspace, open a document, sign out', async ({ page,
   await page.getByLabel('Password').fill('Password123!');
   await page.getByRole('button', { name: 'Register', exact: true }).click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText('My Files')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /^Good (morning|afternoon|evening)/ })).toBeVisible();
 
   // Data created through the API appears in the sidebar via the space tree query.
   const session = await readSession(page);
@@ -85,8 +85,25 @@ test('register, browse the workspace, open a document, sign out', async ({ page,
 
   await page.reload();
   await openNav(page, isMobile);
-  await expect(page.getByText('E2E Space').first()).toBeVisible();
+  // On phones the desktop sidebar is hidden and the drawer holds the navigation.
+  const nav = isMobile ? page.getByRole('dialog') : page.getByRole('complementary', { name: 'Main navigation' });
+  await expect(nav.getByText('E2E Space')).toBeVisible();
   if (isMobile) await page.keyboard.press('Escape');
+
+  // Create a document through the New menu and the create dialog.
+  await page.getByRole('button', { name: 'Create new' }).click();
+  await page.getByRole('menuitem', { name: /Document/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Create new resource' });
+  await dialog.getByLabel('Title').fill('Made from dialog');
+  await dialog.getByRole('button', { name: /^Create document/ }).click();
+  await expect(page).toHaveURL(/\/document\//);
+  await expect(page.locator('[contenteditable="true"]').first()).toBeVisible({ timeout: 30_000 });
+
+  // Search finds it through the command palette.
+  await page.keyboard.press('Control+k');
+  await page.getByPlaceholder(/Search docs/).fill('Made from');
+  await expect(page.getByRole('option', { name: /Made from dialog/ })).toBeVisible();
+  await page.keyboard.press('Escape');
 
   // The document route lazy-loads the editor.
   await page.goto(`/document/${doc._id}`);

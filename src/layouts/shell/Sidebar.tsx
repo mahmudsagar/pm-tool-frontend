@@ -1,6 +1,6 @@
 import { useState, type ComponentType, type ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Check, ChevronDown, ChevronsUpDown, Home, Inbox, MessageSquare, PanelLeftClose, Plus, Settings, Users } from 'lucide-react';
+import { Check, ChevronDown, ChevronsUpDown, Clock, Home, Inbox, MessageSquare, PanelLeftClose, Plus, Settings, Star, Trash2, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,6 +9,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import useAuthStore from '@/stores/useAuthStore';
 import { useSpaceTree } from '@/features/spaces/queries';
 import { useNotifications } from '@/hooks/useNotifications';
+import { Progress } from '@/components/ui/progress';
+import { formatBytes, useStorageUsage } from '@/features/library/queries';
 import AddSpaceDialog from '@/layouts/elements/components/AddSpaceDialog';
 import { SpaceNode } from './SpaceTree';
 import { useShellState } from './treeState';
@@ -158,6 +160,28 @@ function SpaceSection({ id, title, spaces, isPrivate, canCreate }: { id: string;
   );
 }
 
+/** Storage meter; hidden until the API reports usage. */
+function StorageCard() {
+  const { data } = useStorageUsage();
+  if (!data) return null;
+  const pct = data.quota_bytes ? Math.round((data.used_bytes / data.quota_bytes) * 100) : null;
+  return (
+    <div className="space-y-2 rounded-lg border border-border bg-card px-3 py-2.5">
+      <div className="flex items-center justify-between text-2xs">
+        <span className="text-muted-foreground">Storage</span>
+        <span className="font-mono text-foreground">{pct !== null ? `${pct}%` : formatBytes(data.used_bytes)}</span>
+      </div>
+      {pct !== null && <Progress value={pct} tone={pct > 90 ? 'danger' : pct > 75 ? 'warning' : 'neutral'} />}
+      <div className="flex items-center justify-between text-2xs text-muted-foreground">
+        <span>
+          {data.active_contributors} active contributor{data.active_contributors === 1 ? '' : 's'}
+        </span>
+        <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
 export function Sidebar({ onNavigate, className }: { onNavigate?: () => void; className?: string }) {
   const { privateSpaces, publicSpaces, isPending } = useSpaceTree();
   const workspace = useAuthStore((s) => s.currentWorkspace);
@@ -193,6 +217,8 @@ export function Sidebar({ onNavigate, className }: { onNavigate?: () => void; cl
       <div className="min-h-0 flex-1 overflow-y-auto pb-4">
         <nav className="space-y-px px-2.5 pt-3">
           <NavItem to="/" end icon={Home} label="All Files" />
+          <NavItem to="/recent" icon={Clock} label="Recent" />
+          <NavItem to="/starred" icon={Star} label="Starred" />
           <NavItem
             to="/notifications"
             icon={Inbox}
@@ -224,8 +250,12 @@ export function Sidebar({ onNavigate, className }: { onNavigate?: () => void; cl
         )}
       </div>
 
-      <div className="shrink-0 border-t border-border p-2.5">
-        <NavItem to="/settings" icon={Settings} label="Settings" />
+      <div className="shrink-0 space-y-2 border-t border-border p-2.5">
+        <StorageCard />
+        <div className="grid grid-cols-2 gap-1">
+          <NavItem to="/settings" icon={Settings} label="Settings" />
+          <NavItem to="/trash" icon={Trash2} label="Trash" />
+        </div>
       </div>
     </aside>
   );

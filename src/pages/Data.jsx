@@ -152,6 +152,7 @@ import Delete from "@/layouts/elements/components/DropdownMenuItems/items/Delete
 import { useUsers } from "@/hooks/queries/useSpacesQueries"
 import { useTeams } from "@/hooks/queries/useTeamsQueries"
 import useAuthStore from "@/stores/useAuthStore"
+import { useRecordView } from "@/features/library/queries"
 
 const BASE_LAYOUT_DEFINITIONS = {
   table: { type: "table", label: "Table", icon: Table, element: TableView },
@@ -255,6 +256,7 @@ export default function Data({ id: propId, setTopMenu, mode = "board" }) {
       }
     }
   }
+  useRecordView('board', boardId);
 
   const isScrumPage = mode === "scrum";
   const [activeTab, setActiveTab] = useState(isScrumPage ? "kanban" : "table");
