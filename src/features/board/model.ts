@@ -28,6 +28,11 @@ export interface RawTask {
   subtasks?: RawTask[];
   task_key?: string;
   task_number?: number;
+  completed_at?: string | null;
+  started_at?: string | null;
+  blocked_at?: string | null;
+  locked?: boolean;
+  locked_by?: string;
   sort_order?: number | null;
   comment_count?: number;
   attachment_count?: number;
@@ -53,7 +58,22 @@ export interface RawBoard {
   custom_meta?: { fields?: BoardField[]; board_kind?: string };
   saved_view?: Record<string, unknown> | null;
   automations?: Record<string, unknown> | null;
+  capacity?: BoardCapacity | null;
   documents?: RawTask[];
+}
+
+export interface MemberCapacity {
+  capacity_pts?: number;
+  hours_per_day?: number;
+  pto?: string[];
+  role?: string;
+  skills?: string[];
+}
+
+export interface BoardCapacity {
+  members?: Record<string, MemberCapacity>;
+  policy?: { safety_ceiling?: number; commitment_cap?: number };
+  working_days?: number[];
 }
 
 export type StatusCategory = 'backlog' | 'todo' | 'in_progress' | 'review' | 'blocked' | 'done';
@@ -78,6 +98,13 @@ export interface Task {
   type: string;
   epic: string;
   dependsOn: string[];
+  sprintId: string;
+  blocked: boolean;
+  blockedReason: string;
+  blockedAt: Date | null;
+  completedAt: Date | null;
+  startedAt: Date | null;
+  locked: boolean;
   progress: number | null;
   checklist: { done: number; total: number } | null;
   subtaskIds: string[];
@@ -105,6 +132,7 @@ export interface FieldMap {
   epic: string | null;
   dependsOn: string | null;
   checklist: string | null;
+  sprint: string | null;
 }
 
 /* --------------------------------------------------------------- helpers */
@@ -139,6 +167,7 @@ export function resolveFieldMap(fields: BoardField[]): FieldMap {
     epic: fields.find((f) => f.type === 'epic')?.name ?? findField(fields, 'epic')?.name ?? null,
     dependsOn: findField(fields, 'depends_on', 'blocked_by', 'dependent on')?.name ?? null,
     checklist: fields.find((f) => f.type === 'dod_checklist')?.name ?? null,
+    sprint: findField(fields, 'sprint', 'iteration')?.name ?? null,
   };
 }
 
@@ -262,6 +291,13 @@ function toTask(doc: RawTask, map: FieldMap, fallbackKey: string, subtasks: RawT
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
+    sprintId: String(values[map.sprint ?? 'sprint'] ?? '').trim(),
+    blocked: category === 'blocked' || values.blocked === true || values.blocked === 'true',
+    blockedReason: String(values.blocked_reason ?? values.risk_reason ?? ''),
+    blockedAt: parseDate(doc.blocked_at),
+    completedAt: parseDate(doc.completed_at),
+    startedAt: parseDate(doc.started_at),
+    locked: !!doc.locked,
     progress: progress === null ? null : Math.max(0, Math.min(100, progress)),
     checklist,
     subtaskIds: subtasks.map((s) => s._id),
