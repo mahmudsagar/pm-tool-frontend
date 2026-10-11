@@ -51,6 +51,7 @@ export interface TrashRecord {
 export interface StorageUsage {
   used_bytes: number;
   quota_bytes: number | null;
+  percent?: number | null;
   by_type: { images: number; documents: number; other: number };
   file_count: number;
   active_contributors: number;

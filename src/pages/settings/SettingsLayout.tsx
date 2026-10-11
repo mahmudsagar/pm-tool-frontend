@@ -7,6 +7,7 @@ const TABS = [
   { to: '/settings/spaces', label: 'Spaces' },
   { to: '/settings/members', label: 'Members & roles' },
   { to: '/settings/teams', label: 'Teams' },
+  { to: '/settings/security', label: 'Security & audit' },
 ];
 
 /** Settings sub-layout: underline tab bar inside the main shell. */

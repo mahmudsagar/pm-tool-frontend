@@ -26,6 +26,7 @@ const WorkspaceSettings = lazy(() => import("@/pages/settings/WorkspacePage"));
 const SpacesSettings = lazy(() => import("@/pages/settings/SpacesPage"));
 const MembersSettings = lazy(() => import("@/pages/settings/MembersPage"));
 const TeamsSettings = lazy(() => import("@/pages/settings/TeamsPage"));
+const AuditSettings = lazy(() => import("@/pages/settings/AuditPage"));
 const InvitePage = lazy(() => import("@/pages/InvitePage"));
 const LoginForm = lazy(() => import("@/components/auth/LoginForm").then((m) => ({ default: m.LoginForm })));
 const OAuthCallback = lazy(() => import("@/pages/OAuthCallback"));
@@ -76,6 +77,7 @@ export const routes = [
               { path: '/settings/spaces', element: page(<SpacesSettings />) },
               { path: '/settings/members', element: page(<MembersSettings />) },
               { path: '/settings/teams', element: page(<TeamsSettings />) },
+              { path: '/settings/security', element: page(<AuditSettings />) },
             ],
           },
           { path: '*', element: <NotFound /> },

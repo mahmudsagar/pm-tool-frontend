@@ -45,6 +45,8 @@ export interface WorkspaceSettings extends Workspace {
   auto_archive_days?: number;
   space_policies?: { allow_member_public_create?: boolean; default_space_id?: string | null };
   archived_at?: string | null;
+  storage_quota_bytes?: number | null;
+  domains?: import('./governance').WorkspaceDomain[];
 }
 
 export interface WorkspaceMember extends ProfileUser {
@@ -64,6 +66,8 @@ export interface Invitation {
   expires_at: string;
   status: 'pending' | 'accepted' | 'revoked' | 'expired';
   token?: string;
+  last_email_status?: string | null;
+  last_emailed_at?: string | null;
 }
 
 export interface InviteResult {
@@ -71,6 +75,7 @@ export interface InviteResult {
   outcome: 'added' | 'invited' | 'skipped';
   reason?: string;
   invitation?: Pick<Invitation, '_id' | 'token' | 'expires_at'>;
+  email_delivery?: { sent: boolean; reason?: 'not_configured' | 'send_failed' };
 }
 
 const useWorkspaceId = () => useAuthStore((s) => s.currentWorkspace?._id ?? '');
@@ -283,8 +288,13 @@ export function useResendInvitation() {
   const invalidate = useInvalidateMembers();
   const { toast } = useToast();
   return useMutation({
-    mutationFn: (id: string) => http.post<Invitation>('/v1/workspace/invitation/resend', { id }),
-    onSuccess: () => toast({ variant: 'success', title: 'Invitation renewed', description: 'The invite link was refreshed for 14 more days.' }),
+    mutationFn: (id: string) => http.post<Invitation & { email_delivery?: InviteResult['email_delivery'] }>('/v1/workspace/invitation/resend', { id }),
+    onSuccess: (inv) =>
+      toast(
+        inv?.email_delivery?.sent
+          ? { variant: 'success', title: 'Invitation emailed again', description: `A fresh link was sent to ${inv.email}. It works for 14 days.` }
+          : { variant: 'success', title: 'Invitation renewed', description: 'The link works for 14 more days. Email isn’t set up, so copy the link and send it yourself.' },
+      ),
     onError: (error) => toast({ variant: 'destructive', title: 'Could not renew invitation', description: errorText(error) }),
     onSettled: invalidate,
   });

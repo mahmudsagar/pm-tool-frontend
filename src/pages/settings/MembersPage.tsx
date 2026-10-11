@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import { Ban, Check, Copy, Download, Contact, Link2, Mail, MoreVertical, RefreshCw, RotateCcw, Search, ShieldCheck, UserPlus, UserRound, Users, X } from 'lucide-react';
+import { Ban, Check, Copy, Download, Contact, Link2, Mail, MailCheck, MailWarning, MoreVertical, RefreshCw, RotateCcw, Search, ShieldCheck, UserPlus, UserRound, Users, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,7 @@ import useAuthStore from '@/stores/useAuthStore';
 import { useSpaceTree } from '@/features/spaces/queries';
 import { formatDate } from '@/features/files/formatDate';
 import { SettingsHeader, StatCard } from '@/features/settings/components';
+import { useMailStatus } from '@/features/settings/governance';
 import {
   inviteLink,
   useBulkUpdateMembers,
@@ -108,6 +109,7 @@ function SpaceChips({ ids, names }: { ids: string[]; names: Map<string, string> 
 function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const { spaces } = useSpaceTree();
   const invite = useInviteMembers();
+  const mail = useMailStatus(open);
   const [emails, setEmails] = useState('');
   const [role, setRole] = useState<AssignableRole>('member');
   const [spaceIds, setSpaceIds] = useState<string[]>([]);
@@ -160,6 +162,12 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
             Existing users join right away. New people join automatically when they sign up with the invited email, or you can share their invite link.
           </DialogDescription>
         </DialogHeader>
+        {mail.data && !mail.data.configured && (
+          <p className="flex items-start gap-2 rounded-lg border border-warning/25 bg-warning/10 px-3 py-2 text-2xs text-warning-foreground">
+            <MailWarning className="mt-px size-3.5 shrink-0" />
+            Email sending isn&apos;t set up for this server, so invitations won&apos;t be emailed. Copy each invite link and send it yourself.
+          </p>
+        )}
 
         {results ? (
           <div className="space-y-3">
@@ -169,6 +177,11 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
                   <span className="min-w-0 flex-1 truncate text-foreground">{r.email}</span>
                   {r.outcome === 'added' && <Badge variant="success">Added</Badge>}
                   {r.outcome === 'invited' && <Badge variant="info">Invited</Badge>}
+                  {r.outcome === 'invited' && r.email_delivery && (
+                    <Badge variant={r.email_delivery.sent ? 'success' : 'warning'} title={r.email_delivery.reason === 'send_failed' ? 'The mail server rejected the message' : undefined}>
+                      {r.email_delivery.sent ? <MailCheck /> : <MailWarning />} {r.email_delivery.sent ? 'Emailed' : r.email_delivery.reason === 'send_failed' ? 'Email failed' : 'Not emailed'}
+                    </Badge>
+                  )}
                   {r.outcome === 'skipped' && (
                     <Badge variant="outline" title={r.reason}>
                       {r.reason || 'Skipped'}
