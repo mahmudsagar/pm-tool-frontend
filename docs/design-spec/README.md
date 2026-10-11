@@ -26,7 +26,7 @@ These per-area specs were derived from the screens:
 ## Roadmap
 
 1. **Foundations.** Done on `ui-overhaul/phase-1-foundations`.
-2. **Design system, app shell and hub.**
+2. **Design system, app shell, hub and settings.** Done on `ui-overhaul/phase-2-design-system` (frontend) and `ui-overhaul/phase-2-backend` (api-server). Settings were pulled forward from phase 7 at the user's request.
    - Frontend: tokens, primitives, sidebar, top bar, ⌘K search, the "New" menu and create/share modal, the hub page and mobile navigation.
    - Backend: per-user favorites, recent items, trash (soft delete), storage size.
 3. **Board views.**
@@ -39,7 +39,5 @@ These per-area specs were derived from the screens:
    - Frontend: document, sheet and whiteboard studio chrome.
    - Backend: presence, per-item permissions, share links, templates.
 6. **Chat.** Threads, reactions, typing indicators, unread counts, pins and bookmarks. Voice huddles come later.
-7. **Settings.**
-   - Frontend: profile, workspace, spaces governance and members.
-   - Backend: invitations, new fields, audit log, quotas, domain verification.
+7. **Settings extras.** Profile, workspace, spaces, members, teams and invitations shipped in phase 2. Still to do: audit log, storage quotas, domain verification, invite emails (needs a mail provider).
 8. **Hardening.** Accessibility, end-to-end coverage, performance.

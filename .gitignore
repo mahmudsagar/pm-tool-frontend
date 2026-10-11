@@ -24,3 +24,6 @@ dist-ssr
 # Playwright
 test-results/
 playwright-report/
+
+#dev folders
+stitch_all_in_one_workspace_ui
