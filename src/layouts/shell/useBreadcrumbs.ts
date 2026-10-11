@@ -38,7 +38,7 @@ const STATIC_PAGES: Record<string, string> = {
 const SETTINGS_TABS: Record<string, string> = {
   '': 'Profile',
   workspace: 'Workspace',
-  members: 'Members',
+  members: 'Members & roles',
   teams: 'Teams',
   spaces: 'Spaces',
 };

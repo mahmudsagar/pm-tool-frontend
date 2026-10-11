@@ -98,6 +98,23 @@
   }
 }
 
+/* Accent choices from Profile → Appearance (default is indigo). */
+@layer base {
+  :root[data-accent="emerald"] { --brand: 161.4 93.5% 30.4%; --ring: 161.4 93.5% 30.4%; }
+  .dark[data-accent="emerald"] { --brand: 158.1 64.4% 51.6%; --ring: 158.1 64.4% 51.6%; }
+  :root[data-accent="violet"] { --brand: 262.1 83.3% 57.8%; --ring: 262.1 83.3% 57.8%; }
+  .dark[data-accent="violet"] { --brand: 258.3 89.5% 66.3%; --ring: 258.3 89.5% 66.3%; }
+  :root[data-accent="cyan"] { --brand: 191.6 91.4% 36.5%; --ring: 191.6 91.4% 36.5%; }
+  .dark[data-accent="cyan"] { --brand: 187.9 85.7% 53.3%; --ring: 187.9 85.7% 53.3%; }
+  :root[data-accent="amber"] { --brand: 32.1 94.6% 43.7%; --ring: 32.1 94.6% 43.7%; }
+  .dark[data-accent="amber"] { --brand: 37.7 92.1% 50.2%; --ring: 37.7 92.1% 50.2%; }
+  :root[data-accent="slate"] { --brand: 215.3 19.3% 34.5%; --ring: 215.3 19.3% 34.5%; }
+  .dark[data-accent="slate"] { --brand: 215 20.2% 65.1%; --ring: 215 20.2% 65.1%; }
+
+  /* Compact density scales the rem-based UI down slightly. */
+  :root[data-density="compact"] { font-size: 15px; }
+}
+
 @layer base {
   * {
     @apply border-border;

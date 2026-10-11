@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { formatBytes, useStorageUsage } from '@/features/library/queries';
 import AddSpaceDialog from '@/layouts/elements/components/AddSpaceDialog';
 import { SpaceNode } from './SpaceTree';
+import { useWorkspaceFeatures } from '@/features/settings/features';
 import { useShellState } from './treeState';
 import type { Space } from '@/types/models';
 
@@ -188,6 +189,7 @@ export function Sidebar({ onNavigate, className }: { onNavigate?: () => void; cl
   const isOwner = workspace?.role === 'owner';
   const { unreadCount } = useNotifications('', workspace?._id ?? '') as { unreadCount: number };
   const setSidebarOpen = useShellState((s) => s.setSidebarOpen);
+  const { isOn } = useWorkspaceFeatures();
 
   return (
     <aside
@@ -229,8 +231,8 @@ export function Sidebar({ onNavigate, className }: { onNavigate?: () => void; cl
               ) : null
             }
           />
-          <NavItem to="/chat" icon={MessageSquare} label="Direct & Channels" />
-          <NavItem to="/users" icon={Users} label="Members" />
+          {isOn('chat') && <NavItem to="/chat" icon={MessageSquare} label="Direct & Channels" />}
+          <NavItem to="/settings/members" icon={Users} label="Members" />
         </nav>
 
         {isPending ? (

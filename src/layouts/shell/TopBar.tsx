@@ -45,6 +45,7 @@ import { cn } from '@/lib/utils';
 import { useShellState } from './treeState';
 import { useBreadcrumbs } from './useBreadcrumbs';
 import { useShortcutsDialog } from './shortcuts';
+import { useWorkspaceFeatures } from '@/features/settings/features';
 
 export interface TopMenu {
   /** Page actions rendered inline in the top bar (e.g. history, share). */
@@ -98,6 +99,7 @@ function Breadcrumbs() {
 
 function NewMenu() {
   const show = useCreateDialog((s) => s.show);
+  const { canCreate } = useWorkspaceFeatures();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -108,7 +110,7 @@ function NewMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>Create</DropdownMenuLabel>
-        {NEW_KINDS.map(({ kind, shortcut }) => {
+        {NEW_KINDS.filter(({ kind }) => canCreate(kind)).map(({ kind, shortcut }) => {
           const Icon = KIND_META[kind].icon;
           return (
             <DropdownMenuItem key={kind} onSelect={() => show({ kind })}>
@@ -190,7 +192,7 @@ function UserMenu() {
         <DropdownMenuItem onSelect={() => navigate('/settings/workspace')}>
           <Settings /> Workspace settings
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => navigate('/users')}>
+        <DropdownMenuItem onSelect={() => navigate('/settings/members')}>
           <Users /> Members
         </DropdownMenuItem>
         <DropdownMenuSeparator />

@@ -12,6 +12,7 @@ import { Sidebar } from './Sidebar';
 import { TopBar, type TopMenu } from './TopBar';
 import { ShortcutsDialog } from './ShortcutsDialog';
 import { useGlobalShortcuts } from './shortcuts';
+import { useAppearanceSync } from '@/features/settings/appearance';
 import { useShellState } from './treeState';
 
 /**
@@ -24,6 +25,7 @@ export default function AppShell() {
   useInitAuth();
   useRealtimeConnection();
   useGlobalShortcuts();
+  useAppearanceSync();
   const [topMenu, setTopMenu] = useState<TopMenu>({ inlineContent: null, dropdownContent: null });
   const { sidebarOpen, mobileNavOpen, setMobileNavOpen } = useShellState();
 

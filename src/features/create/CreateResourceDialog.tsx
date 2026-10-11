@@ -15,6 +15,7 @@ import { KIND_META } from '@/features/spaces/entity';
 import { useCreateDialog } from './createDialogStore';
 import { useCreateResource, type ContainerRef, type CreatableKind } from './useCreateResource';
 import { AccessPicker } from './AccessPicker';
+import { useWorkspaceFeatures } from '@/features/settings/features';
 import type { Space, SpaceChild } from '@/types/models';
 
 const KINDS: { kind: CreatableKind; hint: string }[] = [
@@ -41,6 +42,8 @@ export function CreateResourceDialog() {
   const { open, kind: initialKind, parent: initialParent, close } = useCreateDialog();
   const { spaces, isPending: spacesLoading } = useSpaceTree();
   const { create, isPending } = useCreateResource();
+  const { canCreate } = useWorkspaceFeatures();
+  const kinds = KINDS.filter((k) => canCreate(k.kind));
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -56,7 +59,7 @@ export function CreateResourceDialog() {
   useEffect(() => {
     if (!open) return;
     const located = locate(spaces, initialParent);
-    setKind(initialKind);
+    setKind(canCreate(initialKind) ? initialKind : 'document');
     setTitle('');
     setSpaceId(located.spaceId);
     setContainerKey(located.containerKey);
@@ -135,7 +138,7 @@ export function CreateResourceDialog() {
           <fieldset className="space-y-2">
             <legend className="mb-2 text-2xs font-medium uppercase tracking-wider text-subtle">Type</legend>
             <div role="radiogroup" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {KINDS.map(({ kind: option, hint }) => {
+              {kinds.map(({ kind: option, hint }) => {
                 const Icon = KIND_META[option].icon;
                 const selected = option === kind;
                 return (

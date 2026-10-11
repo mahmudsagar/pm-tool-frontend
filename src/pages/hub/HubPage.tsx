@@ -20,6 +20,7 @@ import { FilesExplorer } from '@/features/files/FilesExplorer';
 import { formatDate } from '@/features/files/formatDate';
 import { useMemberDirectory } from '@/features/members/useMemberDirectory';
 import { useFavoriteIds } from '@/features/library/queries';
+import { useWorkspaceFeatures } from '@/features/settings/features';
 import { getEntityRawName } from '@/utils/fileDisplayUtils';
 import type { Space, User } from '@/types/models';
 
@@ -53,13 +54,15 @@ const TILES: { kind: CreatableKind | 'chat'; title: string; hint: string; shortc
 function CreateTiles() {
   const show = useCreateDialog((s) => s.show);
   const navigate = useNavigate();
+  const { canCreate, isOn } = useWorkspaceFeatures();
+  const tiles = TILES.filter(({ kind }) => (kind === 'chat' ? isOn('chat') : canCreate(kind)));
   return (
     <section aria-labelledby="create-heading" className="space-y-3">
       <h2 id="create-heading" className="text-2xs font-medium uppercase tracking-wider text-subtle">
         Create resource
       </h2>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        {TILES.map(({ kind, title, hint, shortcut }) => {
+        {tiles.map(({ kind, title, hint, shortcut }) => {
           const Icon = kind === 'chat' ? MessageSquare : KIND_META[kind].icon;
           return (
             <button

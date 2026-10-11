@@ -18,6 +18,7 @@ import { KIND_META, entityIcon, entityPath } from '@/features/spaces/entity';
 import { useCreateDialog } from '@/features/create/createDialogStore';
 import type { CreatableKind } from '@/features/create/useCreateResource';
 import { useCommandPalette } from './commandPaletteStore';
+import { useWorkspaceFeatures } from '@/features/settings/features';
 
 const GROUP_LABELS: Record<string, string> = {
   spaces: 'Spaces',
@@ -49,6 +50,7 @@ export function CommandPalette() {
   const { open, setOpen } = useCommandPalette();
   const navigate = useNavigate();
   const showCreate = useCreateDialog((s) => s.show);
+  const { canCreate } = useWorkspaceFeatures();
   const { resolvedTheme: theme, setTheme } = useTheme();
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
@@ -106,7 +108,7 @@ export function CommandPalette() {
                       <CommandItem
                         key={`${group}-${item._id}`}
                         value={`${group}-${item._id}`}
-                        onSelect={() => run(() => navigate(isTeam ? `/users/${item._id}` : entityPath(item)))}
+                        onSelect={() => run(() => navigate(isTeam ? '/settings/teams' : entityPath(item)))}
                       >
                         <Icon />
                         <span className="truncate">{formatEntityDisplayName(item) || item.name || item.title}</span>
@@ -121,7 +123,7 @@ export function CommandPalette() {
           <>
             <CommandEmpty>No matching commands.</CommandEmpty>
             <CommandGroup heading="Create">
-              {CREATE_ACTIONS.map(({ kind, shortcut }) => {
+              {CREATE_ACTIONS.filter(({ kind }) => canCreate(kind)).map(({ kind, shortcut }) => {
                 const Icon = KIND_META[kind].icon;
                 return (
                   <CommandItem key={kind} value={`new ${KIND_META[kind].label}`} onSelect={() => run(() => showCreate({ kind }))}>
@@ -143,7 +145,7 @@ export function CommandPalette() {
               <CommandItem value="go chat direct channels" onSelect={() => run(() => navigate('/chat'))}>
                 <MessageSquare /> Direct &amp; channels
               </CommandItem>
-              <CommandItem value="go members people" onSelect={() => run(() => navigate('/users'))}>
+              <CommandItem value="go members people" onSelect={() => run(() => navigate('/settings/members'))}>
                 <Users /> Members
               </CommandItem>
               <CommandItem value="go settings preferences" onSelect={() => run(() => navigate('/settings'))}>

@@ -1,4 +1,5 @@
 import { lazy } from "react";
+import { Navigate } from "react-router-dom";
 import AppShell from "@/layouts/shell/AppShell";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import LazyPage from "./LazyPage";
@@ -10,7 +11,6 @@ import NotFound from "./NotFound";
 const HubPage = lazy(() => import("@/pages/hub/HubPage"));
 const Data = lazy(() => import("@/pages/Data"));
 const Chat = lazy(() => import("@/pages/Chat"));
-const UsersPage = lazy(() => import("@/pages/users"));
 const Notifications = lazy(() => import("@/pages/inbox/InboxPage"));
 const ContainerPage = lazy(() => import("@/pages/hub/ContainerPage"));
 const RecentPage = lazy(() => import("@/pages/library/RecentPage"));
@@ -18,13 +18,13 @@ const StarredPage = lazy(() => import("@/pages/library/StarredPage"));
 const TrashPage = lazy(() => import("@/pages/library/TrashPage"));
 const Page = lazy(() => import("@/pages"));
 const CommentPage = lazy(() => import("@/pages/CommentPage"));
-const Settings = lazy(() => import("@/layouts/Settings"));
-const ProfileSettings = lazy(() => import("@/pages/settings/Profile"));
-const WorkspaceSettings = lazy(() => import("@/pages/settings/Workspace"));
-const MembersSettings = lazy(() => import("@/pages/settings/Members"));
-const TeamsSettings = lazy(() => import("@/pages/settings/Teams"));
-const CreateTeam = lazy(() => import("@/pages/teams/Create"));
-const TeamDetails = lazy(() => import("@/pages/teams/TeamDetails"));
+const Settings = lazy(() => import("@/pages/settings/SettingsLayout"));
+const ProfileSettings = lazy(() => import("@/pages/settings/ProfilePage"));
+const WorkspaceSettings = lazy(() => import("@/pages/settings/WorkspacePage"));
+const SpacesSettings = lazy(() => import("@/pages/settings/SpacesPage"));
+const MembersSettings = lazy(() => import("@/pages/settings/MembersPage"));
+const TeamsSettings = lazy(() => import("@/pages/settings/TeamsPage"));
+const InvitePage = lazy(() => import("@/pages/InvitePage"));
 const LoginForm = lazy(() => import("@/components/auth/LoginForm").then((m) => ({ default: m.LoginForm })));
 const OAuthCallback = lazy(() => import("@/pages/OAuthCallback"));
 
@@ -32,7 +32,6 @@ const page = (element, { fullscreen = false } = {}) => (
   <LazyPage component={element.type} fullscreen={fullscreen} {...element.props} />
 );
 
-const protectedPage = (element) => <ProtectedRoute>{page(element, { fullscreen: true })}</ProtectedRoute>;
 
 export const routes = [
   {
@@ -51,7 +50,10 @@ export const routes = [
           { path: '/board/:id', element: page(<Data />) },
           { path: '/scrum/:id', element: page(<Data mode="scrum" />) },
           { path: '/chat', element: page(<Chat />) },
-          { path: '/users', element: page(<UsersPage />) },
+          { path: '/users', element: <Navigate to="/settings/members" replace /> },
+          { path: '/users/:id', element: <Navigate to="/settings/teams" replace /> },
+          { path: '/users/edit/:id', element: <Navigate to="/settings/teams" replace /> },
+          { path: '/teams/create', element: <Navigate to="/settings/teams" replace /> },
           { path: '/notifications', element: page(<Notifications />) },
           { path: '/file-manager/:type/:id', element: page(<ContainerPage />) },
           { path: '/folder/:id', element: page(<ContainerPage />) },
@@ -68,6 +70,7 @@ export const routes = [
             children: [
               { path: '/settings/', element: page(<ProfileSettings />) },
               { path: '/settings/workspace', element: page(<WorkspaceSettings />) },
+              { path: '/settings/spaces', element: page(<SpacesSettings />) },
               { path: '/settings/members', element: page(<MembersSettings />) },
               { path: '/settings/teams', element: page(<TeamsSettings />) },
             ],
@@ -78,8 +81,6 @@ export const routes = [
     ],
   },
   { path: '/login', element: page(<LoginForm />, { fullscreen: true }), errorElement: <RouteError /> },
+  { path: '/invite/:token', element: page(<InvitePage />, { fullscreen: true }), errorElement: <RouteError /> },
   { path: '/oauth/callback', element: page(<OAuthCallback />, { fullscreen: true }), errorElement: <RouteError /> },
-  { path: '/teams/create', element: protectedPage(<CreateTeam />), errorElement: <RouteError /> },
-  { path: '/users/:id', element: protectedPage(<TeamDetails />), errorElement: <RouteError /> },
-  { path: '/users/edit/:id', element: protectedPage(<CreateTeam />), errorElement: <RouteError /> },
 ];
