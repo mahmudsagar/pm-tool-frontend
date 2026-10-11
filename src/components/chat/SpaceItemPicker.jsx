@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 
 const KIND_CONFIG = {
   task: { label: 'Task', icon: ListTodo, color: 'text-blue-600' },
-  story: { label: 'Story', icon: BookOpen, color: 'text-purple-600' },
+  story: { label: 'Story', icon: BookOpen, color: 'text-brand' },
   subtask: { label: 'Subtask', icon: GitBranch, color: 'text-slate-500' },
 };
 

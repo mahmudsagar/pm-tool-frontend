@@ -34,7 +34,7 @@ function MentionMenuItem({ index, isSelected, onClick, onMouseEnter, option }) {
       onMouseEnter={onMouseEnter}
       onClick={onClick}
     >
-      <span className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-200 flex items-center justify-center text-xs font-semibold shrink-0">
+      <span className="w-7 h-7 rounded-full bg-brand/15 text-brand flex items-center justify-center text-xs font-semibold shrink-0">
         {(member.name || member.email || '?')[0]?.toUpperCase()}
       </span>
       <span className="min-w-0 flex-1">

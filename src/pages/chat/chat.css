@@ -1,0 +1,68 @@
+/* Message bodies render with the Lexical playground theme; tune it for compact chat. */
+.qp-chat-body {
+  font-size: 0.875rem;
+  line-height: 1.45rem;
+  color: hsl(var(--foreground) / 0.92);
+}
+
+.qp-chat-body p,
+.qp-chat-body .CommentEditorTheme__paragraph,
+.qp-chat-body .PlaygroundEditorTheme__paragraph {
+  margin: 0;
+}
+
+.qp-chat-body .PlaygroundEditorTheme__link {
+  color: hsl(var(--brand));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.qp-chat-body .PlaygroundEditorTheme__textCode {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.8em;
+  padding: 0.1em 0.35em;
+  border-radius: 0.3rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.6);
+}
+
+/* Code block card: hairline frame, mono text, no playground gutter. */
+.qp-chat-body .PlaygroundEditorTheme__code {
+  display: block;
+  margin: 0.5rem 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.6rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.45);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.78rem;
+  line-height: 1.25rem;
+  white-space: pre;
+  overflow-x: auto;
+  tab-size: 2;
+}
+
+.qp-chat-body .PlaygroundEditorTheme__code::before {
+  display: none;
+}
+
+.qp-chat-body .PlaygroundEditorTheme__ul,
+.qp-chat-body .PlaygroundEditorTheme__ol1 {
+  margin: 0.25rem 0;
+  padding-left: 1.25rem;
+}
+
+.qp-chat-body .PlaygroundEditorTheme__quote {
+  margin: 0.35rem 0;
+  padding-left: 0.75rem;
+  border-left: 2px solid hsl(var(--border-strong, var(--border)));
+  color: hsl(var(--muted-foreground));
+}
+
+.qp-chat-body .mention {
+  background: hsl(var(--brand) / 0.14) !important;
+  color: hsl(var(--brand));
+  border-radius: 0.3rem;
+  padding: 0 0.2rem;
+  font-weight: 500;
+}

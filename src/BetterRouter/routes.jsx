@@ -12,7 +12,7 @@ const HubPage = lazy(() => import("@/pages/hub/HubPage"));
 const Data = lazy(() => import("@/pages/Data"));
 const BoardPage = lazy(() => import("@/pages/board/BoardPage"));
 const ScrumPage = lazy(() => import("@/pages/scrum/ScrumPage"));
-const Chat = lazy(() => import("@/pages/Chat"));
+const Chat = lazy(() => import("@/pages/chat/ChatPage"));
 const Notifications = lazy(() => import("@/pages/inbox/InboxPage"));
 const ContainerPage = lazy(() => import("@/pages/hub/ContainerPage"));
 const RecentPage = lazy(() => import("@/pages/library/RecentPage"));

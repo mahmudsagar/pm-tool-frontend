@@ -105,7 +105,7 @@ function ClearOnSignalPlugin({ clearSignal, onCleared }) {
   return null;
 }
 
-function MiniToolbar() {
+function MiniToolbar({ allowIssues }) {
   const [editor] = useLexicalComposerContext();
   const [formats, setFormats] = useState({
     bold: false,
@@ -150,13 +150,22 @@ function MiniToolbar() {
     { key: 'ol', icon: ListOrdered, active: false, action: () => run(INSERT_ORDERED_LIST_COMMAND), title: 'Numbered list' },
   ];
 
+  // Typing the trigger character opens the mention / issue pickers.
+  const insertTrigger = (char) =>
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) selection.insertText(char);
+    });
+
   return (
-    <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border/50">
+    <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-border/60">
       {tools.map(({ key, icon: Icon, active, action, title }) => (
         <button
           key={key}
           type="button"
           title={title}
+          aria-label={title}
+          aria-pressed={active}
           onMouseDown={(e) => {
             e.preventDefault();
             action();
@@ -169,6 +178,31 @@ function MiniToolbar() {
           <Icon size={14} />
         </button>
       ))}
+      <span className="mx-1 h-4 w-px bg-border" aria-hidden />
+      <button
+        type="button"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          editor.focus();
+          insertTrigger('@');
+        }}
+        className="h-7 inline-flex items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
+        @ Mention
+      </button>
+      {allowIssues && (
+        <button
+          type="button"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            editor.focus();
+            insertTrigger('#');
+          }}
+          className="h-7 inline-flex items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          # Issue
+        </button>
+      )}
     </div>
   );
 }
@@ -188,8 +222,13 @@ export default function ChatRichEditor({
   members = [],
   onSelectTask,
   onAttachClick,
+  onTyping,
+  toolbar = 'toggle',
+  submitLabel,
+  footer,
+  ariaLabel = 'Message',
 }) {
-  const [showToolbar, setShowToolbar] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(toolbar === 'always');
 
   const initialConfig = useMemo(
     () => ({
@@ -218,6 +257,7 @@ export default function ChatRichEditor({
         };
         walk($getRoot());
 
+        onTyping?.(!empty);
         onChange?.({
           plain,
           empty,
@@ -226,24 +266,25 @@ export default function ChatRichEditor({
         });
       });
     },
-    [onChange]
+    [onChange, onTyping]
   );
 
   return (
     <div
       className={cn(
-        'ChatRichEditor flex-1 min-w-0 rounded-xl border border-input bg-background overflow-hidden focus-within:ring-1 focus-within:ring-ring',
+        'ChatRichEditor flex-1 min-w-0 rounded-xl border border-border bg-card overflow-hidden focus-within:border-brand/50 focus-within:ring-2 focus-within:ring-brand/15',
         className
       )}
     >
       <LexicalComposer initialConfig={initialConfig}>
-        {showToolbar && <MiniToolbar />}
+        {showToolbar && <MiniToolbar allowIssues={!!spaceId} />}
 
         <div className="relative">
           <RichTextPlugin
             contentEditable={
               <LexicalContentEditable
                 className="ChatRichEditor__input"
+                ariaLabel={ariaLabel}
                 placeholder={placeholder}
                 placeholderClassName="ChatRichEditor__placeholder"
               />
@@ -256,33 +297,41 @@ export default function ChatRichEditor({
           <button
             type="button"
             title="Attach file"
+            aria-label="Attach file"
             className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
             onClick={onAttachClick}
           >
             <Paperclip size={16} />
           </button>
-          <button
-            type="button"
-            title={showToolbar ? 'Hide formatting' : 'Show formatting'}
-            className={cn(
-              'h-8 w-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground',
-              showToolbar && 'bg-purple-50 text-purple-600 dark:bg-purple-900/30'
-            )}
-            onClick={() => setShowToolbar((v) => !v)}
-          >
-            <Type size={16} />
-          </button>
+          {toolbar === 'toggle' && (
+            <button
+              type="button"
+              title={showToolbar ? 'Hide formatting' : 'Show formatting'}
+              aria-label={showToolbar ? 'Hide formatting' : 'Show formatting'}
+              aria-pressed={showToolbar}
+              className={cn(
+                'h-8 w-8 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground',
+                showToolbar && 'bg-brand/10 text-brand'
+              )}
+              onClick={() => setShowToolbar((v) => !v)}
+            >
+              <Type size={16} />
+            </button>
+          )}
 
-          <div className="flex-1" />
+          <div className="flex-1 min-w-0 px-1 text-2xs text-subtle truncate">{footer}</div>
 
           <button
             type="submit"
-            title="Send"
+            title="Send (Enter)"
+            aria-label={submitLabel || 'Send'}
             disabled={!canSubmit}
             className={cn(
-              'h-8 w-8 inline-flex items-center justify-center rounded-lg text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-35 disabled:pointer-events-none'
+              'h-8 inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand text-brand-foreground hover:bg-brand/90 disabled:opacity-35 disabled:pointer-events-none',
+              submitLabel ? 'px-3 text-xs font-medium' : 'w-8'
             )}
           >
+            {submitLabel}
             <SendHorizonal size={15} />
           </button>
         </div>
