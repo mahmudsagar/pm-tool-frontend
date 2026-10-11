@@ -127,7 +127,7 @@ export function MessageFeed({ conversationKey, messages, loading, hasOlder, load
         {!loading && messages.length === 0 && empty}
         {rows.map((row) =>
           row.kind === 'day' ? (
-            <div key={row.key} className="sticky top-0 z-[1] my-3 flex items-center gap-3" role="separator" aria-label={row.label}>
+            <div key={row.key} className="my-3 flex items-center gap-3" role="separator" aria-label={row.label}>
               <span className="h-px flex-1 bg-border" />
               <span className="rounded-full border border-border bg-card px-3 py-0.5 text-2xs font-medium text-muted-foreground">{row.label}</span>
               <span className="h-px flex-1 bg-border" />

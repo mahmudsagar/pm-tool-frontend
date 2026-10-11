@@ -40,6 +40,9 @@ These per-area specs were derived from the screens:
 5. **Editors.** Mostly done, pulled forward into `ui-overhaul/phase-2-design-system` and `ui-overhaul/phase-2-backend`.
    - Done: document, sheet and whiteboard studios; the side panel ("parallel routes", `?/document/<id>=_sidebar`) with tabs for docs, folders, sheets and whiteboards; presence over Socket.IO (socket JWT auth now required); page status, subtitle, cover position and locking (a locked page returns 423 to everyone except admins, the creator and the locker); page stats endpoint; sharing with members and teams.
    - Still to do: public share links, templates.
-6. **Chat.** Threads, reactions, typing indicators, unread counts, pins and bookmarks. Voice huddles come later.
+6. **Chat.** Done on `ui-overhaul/phase-2-design-system` (frontend) and `ui-overhaul/phase-2-backend` (api-server).
+   - Frontend: `/chat` rebuilt in `src/pages/chat` and `src/features/chat`: sidebar with unread/mention badges, typing and presence; channel header with members, pinned messages, search, pin/mute, topic & members; bookmarks bar; threads; reactions; edit/delete/pin; live task cards; paged history.
+   - Backend: threads, reactions, pins, edit/soft delete, search, paged history, read state with unread and mention counts, per-user pin/mute, bookmarks, topic, group member management, typing and workspace presence over the socket. Socket rooms and channels now follow live access (channel membership follows space access).
+   - Not built: voice huddles (later phase), AI bot / AI Assist (AI later). Presence and the typing throttle are in-process, so multiple API instances would need a shared store (e.g. Redis).
 7. **Settings extras.** Profile, workspace, spaces, members, teams and invitations shipped in phase 2. Still to do: audit log, storage quotas, domain verification, invite emails (needs a mail provider).
 8. **Hardening.** Accessibility, end-to-end coverage, performance.
