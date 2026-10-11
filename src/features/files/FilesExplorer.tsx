@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { FileSearch, Globe, LayoutGrid, List, Lock, Search, Star, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,7 @@ import type { FileRow } from '@/features/spaces/fileRows';
 import { shortName, useMemberDirectory } from '@/features/members/useMemberDirectory';
 import { toApiEntityType, useFavoriteIds, useToggleFavorite } from '@/features/library/queries';
 import type { User } from '@/types/models';
+import { useOpenEntity } from '@/features/peek/useOpenEntity';
 import { formatDate } from './formatDate';
 
 type TypeFilter = 'all' | 'document' | 'sheet' | 'whiteboard' | 'scrum' | 'board' | 'containers';
@@ -39,6 +39,8 @@ const TYPE_OPTIONS: { value: TypeFilter; label: string }[] = [
 ];
 
 const PAGE_SIZE = 25;
+
+type OpenRowEvent = { metaKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean };
 
 function matchesType(kind: EntityKind, filter: TypeFilter) {
   if (filter === 'all') return true;
@@ -95,8 +97,8 @@ export function FilesExplorer({
   onOpenRow,
   compact = false,
 }: FilesExplorerProps) {
-  const navigateTo = useNavigate();
-  const openRow = (row: FileRow) => (onOpenRow ? onOpenRow(row) : navigateTo(row.href));
+  const openEntity = useOpenEntity();
+  const openRow = (row: FileRow, event?: OpenRowEvent) => (onOpenRow ? onOpenRow(row) : openEntity(row.href, row.kind, event));
   const { byId } = useMemberDirectory();
   const favoriteIds = useFavoriteIds();
   const toggleFavorite = useToggleFavorite();
@@ -212,7 +214,7 @@ export function FilesExplorer({
       ) : view === 'grid' ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {visible.map((row) => (
-            <GridCard key={row.id} row={row} byId={byId} starred={favoriteIds.has(row.id)} onStar={() => star(row)} onOpen={() => openRow(row)} />
+            <GridCard key={row.id} row={row} byId={byId} starred={favoriteIds.has(row.id)} onStar={() => star(row)} onOpen={(e) => openRow(row, e)} />
           ))}
         </div>
       ) : (
@@ -244,7 +246,7 @@ export function FilesExplorer({
                   onSelect={() => toggleOne(row.id)}
                   starred={favoriteIds.has(row.id)}
                   onStar={() => star(row)}
-                  onOpen={() => openRow(row)}
+                  onOpen={(e) => openRow(row, e)}
                 />
               ))}
             </tbody>
@@ -426,7 +428,7 @@ interface RowProps {
   byId: Map<string, User>;
   starred: boolean;
   onStar: () => void;
-  onOpen: () => void;
+  onOpen: (event?: OpenRowEvent) => void;
 }
 
 function FileTableRow({ row, byId, selected, onSelect, starred, onStar, onOpen }: RowProps & { selected: boolean; onSelect: () => void }) {
@@ -442,7 +444,7 @@ function FileTableRow({ row, byId, selected, onSelect, starred, onStar, onOpen }
       className={cn('group cursor-pointer transition-colors hover:bg-accent/40', selected && 'bg-brand/5')}
       onClick={onOpen}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' && e.target === e.currentTarget) onOpen();
+        if (e.key === 'Enter' && e.target === e.currentTarget) onOpen(e);
       }}
       tabIndex={0}
       aria-label={`Open ${row.name}`}
@@ -498,7 +500,7 @@ function GridCard({ row, byId, starred, onStar, onOpen }: RowProps) {
       role="link"
       tabIndex={0}
       onClick={onOpen}
-      onKeyDown={(e) => e.key === 'Enter' && onOpen()}
+      onKeyDown={(e) => e.key === 'Enter' && onOpen(e)}
       className="group flex cursor-pointer flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="flex items-start justify-between">

@@ -12,7 +12,8 @@ import useAuthStore from '@/stores/useAuthStore';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useRealtimeStatus } from '@/lib/realtime/socket';
 import { useSpaceTree } from '@/features/spaces/queries';
-import { KIND_META, entityIcon, entityPath } from '@/features/spaces/entity';
+import { KIND_META, entityIcon, entityKind, entityPath } from '@/features/spaces/entity';
+import { useOpenEntity } from '@/features/peek/useOpenEntity';
 import { ItemMenu } from '@/features/spaces/ItemMenu';
 import { useCreateDialog } from '@/features/create/createDialogStore';
 import type { CreatableKind } from '@/features/create/useCreateResource';
@@ -96,6 +97,7 @@ function lastActivity(space: Space) {
 
 function SpaceCard({ space, members }: { space: Space; members: Map<string, User> }) {
   const navigate = useNavigate();
+  const openEntity = useOpenEntity();
   const show = useCreateDialog((s) => s.show);
   const Icon = entityIcon(space);
   const shared = [space.user_id as string | undefined, ...((space.shared_members as string[] | undefined) ?? [])]
@@ -136,7 +138,7 @@ function SpaceCard({ space, members }: { space: Space; members: Map<string, User
                 <li key={child._id}>
                   <button
                     type="button"
-                    onClick={() => navigate(entityPath(child))}
+                    onClick={(e) => openEntity(entityPath(child), entityKind(child), e)}
                     className="flex w-full items-center gap-2 rounded px-1 py-0.5 text-left text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
                   >
                     <ChildIcon className="size-3.5 shrink-0" />

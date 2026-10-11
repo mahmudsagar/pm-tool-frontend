@@ -56,11 +56,18 @@ test('side panel tabs, document studio editing, lock and presence', async ({ pag
   await signIn(page, owner, ws, 'owner');
 
   // Open the document, then the folder, in the side panel from the file list.
+  // Clicking a page in the main list opens it in side peek, keeping the list in place.
   await page.goto('/');
-  await page.getByRole('row', { name: /Studio Spec/ }).getByRole('button', { name: 'More actions for Studio Spec' }).click();
-  await page.getByRole('menuitem', { name: 'Open in side panel' }).click();
+  await page.getByRole('row', { name: /Studio Spec/ }).getByText('Studio Spec').click();
   const panel = page.getByRole('complementary', { name: 'Side panel' });
   await expect(panel).toBeVisible();
+  await expect(page).toHaveURL(/\/\?/);
+  await expect(panel.getByLabel('Title')).toHaveValue('Studio Spec');
+  await panel.getByRole('button', { name: 'Close panel' }).click();
+  await expect(panel).toHaveCount(0);
+
+  await page.getByRole('row', { name: /Studio Spec/ }).getByRole('button', { name: 'More actions for Studio Spec' }).click();
+  await page.getByRole('menuitem', { name: 'Open in side panel' }).click();
   await expect(panel.getByLabel('Title')).toHaveValue('Studio Spec');
 
   await page.goto(`/?${encodeURIComponent(`/document/${doc._id}`)}=_sidebar&${encodeURIComponent(`/folder/${folder._id}`)}=_sidebar`);
