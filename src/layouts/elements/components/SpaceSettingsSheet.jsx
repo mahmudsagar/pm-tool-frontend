@@ -66,7 +66,7 @@ export default function SpaceSettingsSheet({ spaceId, open, onOpenChange }) {
     init();
 
     return () => { cancelled = true; };
-  }, [open, spaceId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, spaceId]);  
 
   const handleSaveSettings = async () => {
     setSaving(true);

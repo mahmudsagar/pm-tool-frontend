@@ -6,9 +6,6 @@
 
 /* customize theme */
 
-html.dark .univer-container {
-  filter: invert(1);
-}
 
 .univer-container .univer-tooltip-inner{
   max-width: 130px;

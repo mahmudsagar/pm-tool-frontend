@@ -22,9 +22,9 @@ import { useRecordView } from '@/features/library/queries';
 
 // Each editor is a separate chunk: opening a doc never downloads the sheet or whiteboard engines.
 const pageType = {
-  document: lazy(() => import('./Document')),
-  sheet: lazy(() => import('./Sheets')),
-  whiteboard: lazy(() => import('./Whiteboard')),
+  document: lazy(() => import('./document/DocumentPage')),
+  sheet: lazy(() => import('./sheet/SheetPage')),
+  whiteboard: lazy(() => import('./whiteboard/WhiteboardPage')),
 }
 const DEFAULT_VIEW = { sorts: [], filters: [], search: '' };
 const Page = ({ ...props }) => {
@@ -51,6 +51,7 @@ const Page = ({ ...props }) => {
 
   const { page_type, ...restData } = data || {}
   const saveDebounceRef = useRef(null);
+  const pendingSaveRef = useRef(null);
 
   // Compute live assignee options for board documents so DynamicInput
   // can render the 'dynamic-select' assignee field with the correct users.
@@ -183,27 +184,44 @@ const Page = ({ ...props }) => {
     }
   }
 
+  // Saves are debounced and merged: a title edit and a body edit within the
+  // debounce window are sent together instead of one overwriting the other.
+  const pendingPayloadRef = useRef({});
+  const [saveState, setSaveState] = useState('idle');
   const handleSubmit = (value) => {
     const documentId = data?._id;
     if (!documentId) return;
-    const sanitized = sanitize(value);
+    pendingPayloadRef.current = { ...pendingPayloadRef.current, ...sanitize(value) };
+    setSaveState('saving');
 
     if (saveDebounceRef.current) {
       clearTimeout(saveDebounceRef.current);
     }
 
-    saveDebounceRef.current = setTimeout(() => {
-      updateDocumentMutation.mutate({
-        documentId,
-        content: sanitized,
-        boardId: data?.board_id,
-      });
-    }, 500);
+    const save = () => {
+      const payload = pendingPayloadRef.current;
+      pendingPayloadRef.current = {};
+      saveDebounceRef.current = null;
+      pendingSaveRef.current = null;
+      updateDocumentMutation.mutate(
+        { documentId, content: payload, boardId: data?.board_id },
+        {
+          onSuccess: () => setSaveState('saved'),
+          onError: () => setSaveState('error'),
+        },
+      );
+    };
+    pendingSaveRef.current = save;
+    saveDebounceRef.current = setTimeout(save, 600);
   }
 
+  // Flush (don't drop) a pending save when the page unmounts, e.g. closing a side-panel tab.
   useEffect(() => {
     return () => {
-      if (saveDebounceRef.current) clearTimeout(saveDebounceRef.current);
+      if (saveDebounceRef.current) {
+        clearTimeout(saveDebounceRef.current);
+        pendingSaveRef.current?.();
+      }
     };
   }, []);
 
@@ -227,6 +245,9 @@ const Page = ({ ...props }) => {
     setTopMenu,
     setOpenDeleteDialog: openDeleteDialog,
     handleSubmit,
+    saveState,
+    peek: !!props.peek,
+    peekPath: props.peekPath,
     onOpenHistory: () => setHistoryOpen(true),
     assigneeOptions,
     dependencyOptions,

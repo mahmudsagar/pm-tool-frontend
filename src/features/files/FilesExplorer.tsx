@@ -77,6 +77,10 @@ interface FilesExplorerProps {
   emptyAction?: ReactNode;
   emptyTitle?: string;
   emptyDescription?: string;
+  /** Override what clicking a row does (e.g. open it as a side-panel tab). */
+  onOpenRow?: (row: FileRow) => void;
+  /** Narrow container (side panel): only name, modified and actions columns. */
+  compact?: boolean;
 }
 
 export function FilesExplorer({
@@ -88,8 +92,11 @@ export function FilesExplorer({
   emptyAction,
   emptyTitle = 'Nothing here yet',
   emptyDescription = 'Create a document, board or folder to get started.',
+  onOpenRow,
+  compact = false,
 }: FilesExplorerProps) {
-  const navigate = useNavigate();
+  const navigateTo = useNavigate();
+  const openRow = (row: FileRow) => (onOpenRow ? onOpenRow(row) : navigateTo(row.href));
   const { byId } = useMemberDirectory();
   const favoriteIds = useFavoriteIds();
   const toggleFavorite = useToggleFavorite();
@@ -150,7 +157,7 @@ export function FilesExplorer({
   const filtersActive = query || type !== 'all' || access !== 'all';
 
   return (
-    <div className="space-y-3">
+    <div className={cn('space-y-3', compact && 'qp-files--compact')}>
       <Toolbar
         query={query}
         onQuery={setQuery}
@@ -205,7 +212,7 @@ export function FilesExplorer({
       ) : view === 'grid' ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {visible.map((row) => (
-            <GridCard key={row.id} row={row} byId={byId} starred={favoriteIds.has(row.id)} onStar={() => star(row)} onOpen={() => navigate(row.href)} />
+            <GridCard key={row.id} row={row} byId={byId} starred={favoriteIds.has(row.id)} onStar={() => star(row)} onOpen={() => openRow(row)} />
           ))}
         </div>
       ) : (
@@ -217,11 +224,11 @@ export function FilesExplorer({
                   <Checkbox checked={allVisibleSelected} onCheckedChange={toggleAll} aria-label="Select all on this page" />
                 </th>
                 <th className="py-2.5 pr-3 font-medium">Name</th>
-                <th className="hidden w-32 py-2.5 pr-3 font-medium lg:table-cell">Type</th>
-                <th className="hidden w-56 py-2.5 pr-3 font-medium xl:table-cell">Space &amp; path</th>
-                <th className="hidden w-28 py-2.5 pr-3 font-medium lg:table-cell">Access</th>
+                <th data-col="wide" className="hidden w-32 py-2.5 pr-3 font-medium lg:table-cell">Type</th>
+                <th data-col="wide" className="hidden w-56 py-2.5 pr-3 font-medium xl:table-cell">Space &amp; path</th>
+                <th data-col="wide" className="hidden w-28 py-2.5 pr-3 font-medium lg:table-cell">Access</th>
                 <th className="hidden w-36 py-2.5 pr-3 font-medium sm:table-cell">Last modified</th>
-                <th className="hidden w-28 py-2.5 pr-3 font-medium xl:table-cell">Collaborators</th>
+                <th data-col="wide" className="hidden w-28 py-2.5 pr-3 font-medium xl:table-cell">Collaborators</th>
                 <th className="w-16 py-2.5 pr-3 sm:w-20">
                   <span className="sr-only">Actions</span>
                 </th>
@@ -237,7 +244,7 @@ export function FilesExplorer({
                   onSelect={() => toggleOne(row.id)}
                   starred={favoriteIds.has(row.id)}
                   onStar={() => star(row)}
-                  onOpen={() => navigate(row.href)}
+                  onOpen={() => openRow(row)}
                 />
               ))}
             </tbody>
@@ -452,25 +459,25 @@ function FileTableRow({ row, byId, selected, onSelect, starred, onStar, onOpen }
             <p className="truncate text-sm font-medium text-foreground">{row.name}</p>
             <p className="truncate text-2xs text-muted-foreground">
               <span className="sm:hidden">{formatDate(row.updatedAt)} · </span>
-              <span className="lg:hidden">{row.typeLabel} · </span>
-              <span className="xl:hidden">{row.path || 'Workspace'}</span>
-              <span className="hidden xl:inline">{row.typeLabel}</span>
+              <span className="lg:hidden" data-compact="show">{row.typeLabel} · </span>
+              <span className="xl:hidden" data-compact="show">{row.path || 'Workspace'}</span>
+              <span className="hidden xl:inline" data-compact="hide">{row.typeLabel}</span>
             </p>
           </div>
         </div>
       </td>
-      <td className="hidden py-3 pr-3 lg:table-cell">
+      <td data-col="wide" className="hidden py-3 pr-3 lg:table-cell">
         <Badge variant="tag">{row.typeLabel}</Badge>
       </td>
-      <td className="hidden truncate py-3 pr-3 text-xs text-muted-foreground xl:table-cell">{row.path || '—'}</td>
-      <td className="hidden py-3 pr-3 lg:table-cell">
+      <td data-col="wide" className="hidden truncate py-3 pr-3 text-xs text-muted-foreground xl:table-cell">{row.path || '—'}</td>
+      <td data-col="wide" className="hidden py-3 pr-3 lg:table-cell">
         <AccessLabel sharing={row.sharing} />
       </td>
       <td className="hidden py-3 pr-3 sm:table-cell">
         <p className="text-xs text-foreground/90">{formatDate(row.updatedAt)}</p>
         {modifiedBy && <p className="truncate text-2xs text-muted-foreground">by {shortName(modifiedBy)}</p>}
       </td>
-      <td className="hidden py-3 pr-3 xl:table-cell">
+      <td data-col="wide" className="hidden py-3 pr-3 xl:table-cell">
         {collaborators.length > 0 ? <AvatarStack users={collaborators} max={3} size="xs" /> : <span className="text-xs text-subtle">—</span>}
       </td>
       <td className="py-3 pr-3" onClick={(e) => e.stopPropagation()}>

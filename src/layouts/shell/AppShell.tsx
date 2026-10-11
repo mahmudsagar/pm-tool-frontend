@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import ParallelRoute from '@/BetterRouter/ParallelRoute';
+import { SidePanel } from '@/features/peek/SidePanel';
 import { useRealtimeConnection } from '@/lib/realtime/socket';
 import { useInitAuth } from '@/hooks/queries/useAuthQueries';
 import { CommandPalette } from '@/features/search/CommandPalette';
@@ -54,10 +54,10 @@ export default function AppShell() {
           <TopBar topMenu={topMenu} />
           <main id="main-content" className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
             <Outlet context={[topMenu, setTopMenu]} />
-            <ParallelRoute />
           </main>
         </div>
 
+        <SidePanel />
         <CommandPalette />
         <CreateResourceDialog />
         <ShortcutsDialog />

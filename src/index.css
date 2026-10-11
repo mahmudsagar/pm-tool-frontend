@@ -161,3 +161,8 @@ body,
 .excalidraw .HelpDialog__header {
   @apply !hidden;
 }
+
+/* Files explorer in narrow containers (side panel): drop secondary columns. */
+.qp-files--compact [data-col="wide"] { display: none !important; }
+.qp-files--compact [data-compact="show"] { display: inline !important; }
+.qp-files--compact [data-compact="hide"] { display: none !important; }

@@ -20,12 +20,21 @@ import PageEmbed from "./PageEmbed";
  * @param {viewId} viewId of the current page
  * @returns 
  */
-export default function ExcalidrawRender({ content, onChange, spaceId }) {
+export default function ExcalidrawRender({ content, onChange, spaceId, onApiReady, onSceneChange, viewModeEnabled = false }) {
   const { resolvedTheme: theme } = useTheme();
   const wrapperRef = useRef(null);
 
   const [excalidrawAPI, setExcalidrawAPI] = useState(null);
-  const setExcalidrawAPICallback = useCallback((api) => setExcalidrawAPI(api), []);
+  const createStickyNoteRef = useRef(null);
+  const createPageEmbedRef = useRef(null);
+  const onApiReadyRef = useRef(onApiReady);
+  onApiReadyRef.current = onApiReady;
+  const onSceneChangeRef = useRef(onSceneChange);
+  onSceneChangeRef.current = onSceneChange;
+  const setExcalidrawAPICallback = useCallback((api) => {
+    setExcalidrawAPI(api);
+    onApiReadyRef.current?.(api, { createStickyNote: () => createStickyNoteRef.current?.(), createPageEmbed: (id) => createPageEmbedRef.current?.(id) });
+  }, []);
 
   // Refs for values only used in handleChange — avoids re-renders and keeps handleChange stable
   const justLoadedRef = useRef(true);
@@ -53,6 +62,9 @@ export default function ExcalidrawRender({ content, onChange, spaceId }) {
 
     excalidrawAPI.updateScene({ elements });
   };
+
+  createStickyNoteRef.current = () => excalidrawAPI && createStickyNote();
+  createPageEmbedRef.current = (id) => excalidrawAPI && createPageEmbed(id);
 
   const createPageEmbed = (id) => {
     const { scrollX, scrollY } = excalidrawAPI.getAppState();
@@ -86,6 +98,8 @@ export default function ExcalidrawRender({ content, onChange, spaceId }) {
    * @returns 
    */
   const handleChange = useCallback((elements, state) => {
+    // Cheap notification for studio chrome (zoom, active tool, minimap).
+    onSceneChangeRef.current?.(elements, state);
     // Making sure we are not updating data during element events (drag, resize, edit etc)
     if (
       state.resizingElement === null &&
@@ -141,6 +155,7 @@ export default function ExcalidrawRender({ content, onChange, spaceId }) {
           }
         }}
         theme={theme}
+        viewModeEnabled={viewModeEnabled}
         onChange={handleChange}
       >
         <MainMenu>

@@ -45,7 +45,6 @@ interface CommandInputProps extends React.ComponentPropsWithoutRef<typeof Comman
 
 const CommandInput = React.forwardRef<React.ElementRef<typeof CommandPrimitive.Input>, CommandInputProps>(
   ({ className, loading = false, disabled = false, ...props }, ref) => (
-    // eslint-disable-next-line react/no-unknown-property -- cmdk styling hook attribute
     <div className="relative flex items-center gap-2 border-b border-border px-3" cmdk-input-wrapper="">
       <Search className="size-4 shrink-0 text-subtle" aria-hidden="true" />
       <CommandPrimitive.Input

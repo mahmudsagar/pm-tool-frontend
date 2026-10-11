@@ -1,0 +1,52 @@
+/* Whiteboard studio: our dock replaces Excalidraw's shape toolbar on desktop. */
+@media (min-width: 768px) {
+  .qp-whiteboard .excalidraw .App-toolbar-content,
+  .qp-whiteboard .excalidraw .App-toolbar,
+  .qp-whiteboard .excalidraw .shapes-section,
+  .qp-whiteboard .excalidraw .layer-ui__wrapper__footer {
+    display: none !important;
+  }
+}
+
+/* Tone Excalidraw's islands (menus, property panels) to the design tokens. */
+.qp-whiteboard .excalidraw {
+  --color-primary: hsl(var(--brand));
+  --color-primary-darker: hsl(var(--brand) / 0.9);
+  --color-primary-darkest: hsl(var(--brand) / 0.8);
+  --color-primary-light: hsl(var(--brand) / 0.15);
+  --island-bg-color: hsl(var(--elevated));
+  --default-border-color: hsl(var(--border));
+  --ui-font: "Geist Variable", Geist, ui-sans-serif, system-ui, sans-serif;
+}
+.qp-whiteboard .excalidraw .Island {
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-overlay);
+}
+
+/* Presenting: no editing chrome at all. */
+.qp-whiteboard--presenting .excalidraw .layer-ui__wrapper {
+  display: none !important;
+}
+
+/* Dotted grid background like the design (canvas stays transparent). */
+.qp-whiteboard {
+  background-image: radial-gradient(hsl(var(--border-strong) / 0.6) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* "Embed page" picker rendered inside our dock. */
+.qp-whiteboard .qp-embed > div {
+  margin: 0 !important;
+}
+.qp-whiteboard .qp-embed button {
+  height: 1.75rem;
+  width: auto !important;
+  padding: 0 0.6rem;
+  font-size: 0.75rem;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+}
+.qp-whiteboard .qp-embed button:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+}

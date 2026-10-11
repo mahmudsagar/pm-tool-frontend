@@ -1,0 +1,277 @@
+/*
+ * Quiet Precision skin for the Lexical editor inside the document studio.
+ * Overrides the playground theme (light-only colors) with design tokens.
+ */
+
+.qp-doc .lexical-editor,
+.qp-doc .editor-shell,
+.qp-doc .editor-container,
+.qp-doc .editor-inner {
+  background: transparent;
+  color: hsl(var(--foreground));
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+}
+
+.qp-doc .editor-shell {
+  min-height: 40vh;
+}
+
+.qp-doc .editor-input {
+  min-height: 40vh;
+  padding: 0 0 2rem;
+  font-size: 15px;
+  line-height: 1.7;
+  caret-color: hsl(var(--brand));
+  outline: none;
+  tab-size: 2;
+}
+
+.qp-doc .editor-input [data-lexical-text="true"] {
+  color: inherit;
+}
+
+.qp-doc .editor-placeholder,
+.qp-doc .ContentEditable__placeholder,
+.qp-doc .editor-input + div[aria-hidden] {
+  color: hsl(var(--subtle-foreground));
+  font-size: 15px;
+  left: 0;
+  top: 0;
+}
+
+/* Typography */
+.qp-doc .PlaygroundEditorTheme__paragraph {
+  margin: 0 0 0.6em;
+  color: hsl(var(--foreground) / 0.9);
+}
+.qp-doc .PlaygroundEditorTheme__h1 {
+  font-size: 1.75rem;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 1.6em 0 0.5em;
+  color: hsl(var(--foreground));
+}
+.qp-doc .PlaygroundEditorTheme__h2 {
+  font-size: 1.375rem;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 1.5em 0 0.45em;
+  color: hsl(var(--foreground));
+  text-transform: none;
+}
+.qp-doc .PlaygroundEditorTheme__h3 {
+  font-size: 1.125rem;
+  line-height: 1.4;
+  font-weight: 600;
+  margin: 1.3em 0 0.4em;
+  color: hsl(var(--foreground));
+  text-transform: none;
+}
+.qp-doc .PlaygroundEditorTheme__quote {
+  margin: 1em 0;
+  padding: 0.25em 0 0.25em 1em;
+  border-left: 2px solid hsl(var(--border-strong));
+  color: hsl(var(--muted-foreground));
+  font-size: 15px;
+}
+.qp-doc .PlaygroundEditorTheme__link {
+  color: hsl(var(--brand));
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--brand) / 0.35);
+  text-underline-offset: 3px;
+}
+.qp-doc .PlaygroundEditorTheme__textCode {
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  font-family: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.86em;
+  color: hsl(var(--warning-foreground));
+}
+
+/* Code blocks */
+.qp-doc .PlaygroundEditorTheme__code {
+  display: block;
+  margin: 1em 0;
+  padding: 2.25rem 1rem 1rem 3.25rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  background: hsl(var(--card));
+  font-family: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: hsl(var(--foreground) / 0.9);
+  overflow-x: auto;
+  position: relative;
+  tab-size: 2;
+}
+.qp-doc .PlaygroundEditorTheme__code::before {
+  /* Line numbers gutter from the playground, toned down. */
+  background: transparent;
+  border-right: 1px solid hsl(var(--border));
+  color: hsl(var(--subtle-foreground));
+  top: 2.25rem;
+  padding: 0 0.6rem;
+}
+.qp-doc .PlaygroundEditorTheme__code::after {
+  /* Window chrome dots, as in the design. */
+  content: "";
+  position: absolute;
+  top: 0.85rem;
+  left: 1rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #ef4444;
+  box-shadow: 14px 0 0 #f59e0b, 28px 0 0 #10b981;
+  opacity: 0.8;
+}
+.qp-doc .PlaygroundEditorTheme__tokenComment { color: hsl(var(--subtle-foreground)); font-style: italic; }
+.qp-doc .PlaygroundEditorTheme__tokenPunctuation { color: hsl(var(--muted-foreground)); }
+.qp-doc .PlaygroundEditorTheme__tokenProperty { color: hsl(var(--info-foreground)); }
+.qp-doc .PlaygroundEditorTheme__tokenSelector { color: hsl(var(--success-foreground)); }
+.qp-doc .PlaygroundEditorTheme__tokenOperator { color: hsl(var(--muted-foreground)); }
+.qp-doc .PlaygroundEditorTheme__tokenAttr { color: hsl(var(--brand)); }
+.qp-doc .PlaygroundEditorTheme__tokenVariable { color: hsl(var(--warning-foreground)); }
+.qp-doc .PlaygroundEditorTheme__tokenFunction { color: hsl(var(--brand)); }
+
+/* Lists and checklists */
+.qp-doc .PlaygroundEditorTheme__ul,
+.qp-doc .PlaygroundEditorTheme__ol1,
+.qp-doc .PlaygroundEditorTheme__ol2,
+.qp-doc .PlaygroundEditorTheme__ol3 {
+  margin: 0 0 0.6em;
+  padding-left: 1.25rem;
+}
+.qp-doc .PlaygroundEditorTheme__listItem {
+  margin: 0.2em 0;
+  color: hsl(var(--foreground) / 0.9);
+}
+.qp-doc .PlaygroundEditorTheme__listItem::marker {
+  color: hsl(var(--subtle-foreground));
+}
+.qp-doc .PlaygroundEditorTheme__listItemChecked,
+.qp-doc .PlaygroundEditorTheme__listItemUnchecked {
+  padding-left: 1.75rem;
+  margin: 0.3em 0;
+}
+.qp-doc .PlaygroundEditorTheme__listItemChecked {
+  color: hsl(var(--muted-foreground));
+  text-decoration: line-through;
+}
+.qp-doc .PlaygroundEditorTheme__listItemUnchecked::before,
+.qp-doc .PlaygroundEditorTheme__listItemChecked::before {
+  width: 16px;
+  height: 16px;
+  top: 4px;
+  border-radius: 4px;
+  border: 1px solid hsl(var(--border-strong));
+  background: hsl(var(--background));
+}
+.qp-doc .PlaygroundEditorTheme__listItemChecked::before {
+  border-color: hsl(var(--brand));
+  background-color: hsl(var(--brand));
+}
+.qp-doc .PlaygroundEditorTheme__listItemChecked::after {
+  border-color: hsl(var(--brand-foreground));
+  top: 7px;
+  left: 6px;
+}
+
+/* Tables */
+.qp-doc .PlaygroundEditorTheme__table {
+  border-collapse: collapse;
+  margin: 1em 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+.qp-doc .PlaygroundEditorTheme__tableCell {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem 0.75rem;
+  font-size: 13px;
+  color: hsl(var(--foreground) / 0.9);
+}
+.qp-doc .PlaygroundEditorTheme__tableCellHeader {
+  background: hsl(var(--muted) / 0.5);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: hsl(var(--subtle-foreground));
+}
+.qp-doc .PlaygroundEditorTheme__tableCellSelected {
+  background: hsl(var(--brand) / 0.12);
+}
+
+/* Misc blocks */
+.qp-doc .PlaygroundEditorTheme__hr {
+  border: none;
+  border-top: 1px solid hsl(var(--border));
+  margin: 1.5em 0;
+}
+.qp-doc .PlaygroundEditorTheme__hr::after {
+  background-color: hsl(var(--border));
+}
+.qp-doc .PlaygroundEditorTheme__layoutContainer,
+.qp-doc .Collapsible__container {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  background: hsl(var(--card) / 0.6);
+}
+.qp-doc .Collapsible__title {
+  font-weight: 500;
+  font-size: 14px;
+}
+.qp-doc .editor-shell .editor-image img.focused,
+.qp-doc .editor-shell .inline-editor-image img.focused {
+  outline: 2px solid hsl(var(--brand));
+}
+
+/* Toolbar: compact, sticky at the top of the scrolling page, tokenized. */
+.qp-doc .toolbar {
+  position: sticky;
+  top: 0;
+  margin-bottom: 1rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  background: hsl(var(--elevated) / 0.92) !important;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-overlay) !important;
+  padding: 2px 4px;
+}
+.qp-doc .toolbar button.toolbar-item,
+.qp-doc .toolbar .toolbar-item {
+  color: hsl(var(--muted-foreground));
+  border-radius: 6px;
+}
+.qp-doc .toolbar button.toolbar-item:hover:not([disabled]) {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+}
+.qp-doc .toolbar button.toolbar-item.active {
+  background: hsl(var(--brand) / 0.15);
+  color: hsl(var(--foreground));
+}
+.qp-doc .toolbar .divider {
+  background: hsl(var(--border));
+}
+.qp-doc .toolbar i.format,
+.qp-doc .toolbar .icon {
+  opacity: 0.75;
+}
+.dark .qp-doc .toolbar i.format,
+.dark .qp-doc .toolbar .icon,
+.dark .qp-doc .toolbar .chevron-down {
+  filter: invert(1);
+}
+
+/* Side panel: tighter spacing. */
+.qp-doc--peek .editor-input {
+  min-height: 24vh;
+}

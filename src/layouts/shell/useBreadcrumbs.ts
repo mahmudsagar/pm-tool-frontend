@@ -13,7 +13,7 @@ export interface Crumb {
 type Located = { name?: string; title?: string; space_id?: string; folder_id?: string; group_id?: string; parent_id?: string };
 
 /** Reads the first cached query matching a key prefix, re-rendering when the cache changes. */
-function useCachedData<T>(prefix: QueryKey | null): T | undefined {
+export function useCachedData<T>(prefix: QueryKey | null): T | undefined {
   const queryClient = useQueryClient();
   const cache = queryClient.getQueryCache();
   return useSyncExternalStore(

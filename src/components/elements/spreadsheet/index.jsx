@@ -1,5 +1,5 @@
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useCallback } from 'react'
-import { LocaleType,  Univer, UniverInstanceType } from '@univerjs/core'
+import { LocaleType, ThemeService, Univer, UniverInstanceType } from '@univerjs/core'
 import { UniverDocsPlugin } from '@univerjs/docs'
 import { UniverDocsUIPlugin } from '@univerjs/docs-ui'
 import { UniverFormulaEnginePlugin } from'@univerjs/engine-formula'
@@ -46,7 +46,7 @@ import '@univerjs/sheets-crosshair-highlight/lib/index.css'
 
 
 // eslint-disable-next-line react/display-name
-const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval = 3000 }, ref) => {
+const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval = 3000, darkMode = false }, ref) => {
   const univerRef = useRef(null);
   const workbookRef = useRef(null);
   const containerRef = useRef(null);
@@ -67,6 +67,7 @@ const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval
     }
     const univer = new Univer({
       theme: defaultTheme,
+      darkMode,
       locale: LocaleType.EN_US,
       locales: {
         [LocaleType.ZH_CN]: zhCN,
@@ -111,7 +112,17 @@ const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval
     univer.registerPlugin(UniverSheetsZenEditorPlugin)
     // create workbook instance
     workbookRef.current = univer.createUnit(UniverInstanceType.UNIVER_SHEET, data);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- dark mode changes are applied by the effect below
   }, []);
+
+  // Follow the app theme without recreating the workbook.
+  useEffect(() => {
+    try {
+      univerRef.current?.__getInjector().get(ThemeService).setDarkMode(darkMode);
+    } catch {
+      // Univer not ready yet; init picks up the current value.
+    }
+  }, [darkMode]);
 
   /**
    * Destroy univer instance and workbook instance
@@ -141,7 +152,13 @@ const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval
   }, []); // Only init once on mount; key={_id} in the parent handles document switching
 
   useEffect(() => {
+    // Start from the loaded data so opening a sheet doesn't trigger a save.
     let lastSnapshot = null;
+    try {
+      lastSnapshot = workbookRef.current ? JSON.stringify(getData()) : null;
+    } catch {
+      lastSnapshot = null;
+    }
     const timer = setInterval(() => {
       if (!workbookRef.current) return;
       const { handleSubmit: hs, onChange: oc } = callbackRef.current;
@@ -162,6 +179,7 @@ const UniverSheet = forwardRef(({ data, onChange, handleSubmit, autoSaveInterval
     }, autoSaveInterval);
 
     return () => clearInterval(timer);
+     
   }, [autoSaveInterval]);
 
   return <div ref={containerRef} className="univer-container" />;

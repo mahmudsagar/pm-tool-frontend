@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { withTabActive } from '@/features/peek/peekUrl';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -55,12 +56,15 @@ function PageHeader({ kind, id, name, subtitle, icon: Icon }: HeaderProps) {
 }
 
 /** Space, folder and group pages: a header plus the shared files explorer. */
-export default function ContainerPage({ id: propId }: { id?: string }) {
+export default function ContainerPage({ id: propId, peek = false, peekPath }: { id?: string; peek?: boolean; peekPath?: string }) {
   const params = useParams();
   const { pathname } = useLocation();
   const id = propId ?? params.id ?? '';
-  const kind = resolveType(pathname, params.type);
+  // In the side panel the route comes from the panel tab, not the page URL.
+  const kind = resolveType(peekPath ?? pathname, peekPath ? undefined : params.type);
   const { spaces, isPending: treePending } = useSpaceTree();
+  const navigate = useNavigate();
+  const location = useLocation();
   const contents = useContainerContents(kind === 'space' ? 'folder' : kind, id, kind !== 'space');
 
   useRecordView(kind, id);
@@ -91,7 +95,7 @@ export default function ContainerPage({ id: propId }: { id?: string }) {
   const error = kind === 'space' ? null : contents.error;
 
   return (
-    <div className="mx-auto w-full max-w-[1360px] space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+    <div className={peek ? 'space-y-4 p-4' : 'mx-auto w-full max-w-[1360px] space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8'}>
       {loading ? (
         <div className="flex items-center gap-3 border-b border-border pb-6">
           <Skeleton className="size-11 rounded-xl" />
@@ -110,6 +114,8 @@ export default function ContainerPage({ id: propId }: { id?: string }) {
           <FilesExplorer
             rows={view.rows}
             showAccessFilter={false}
+            compact={peek}
+            onOpenRow={peek ? (row) => navigate({ pathname: location.pathname, search: withTabActive(location.search, row.href) }) : undefined}
             emptyTitle={`This ${KIND_META[kind].label.toLowerCase()} is empty`}
             emptyDescription="Add a document, board, sheet or folder."
           />

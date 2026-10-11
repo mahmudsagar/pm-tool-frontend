@@ -35,9 +35,9 @@ These per-area specs were derived from the screens:
 4. **Scrum and analytics.**
    - Frontend: the sprint board and the analytics studios.
    - Backend: task event log, sprint objects (dates, goal, snapshot), member capacity, analytics endpoints, bulk reassign.
-5. **Editors.**
-   - Frontend: document, sheet and whiteboard studio chrome.
-   - Backend: presence, per-item permissions, share links, templates.
+5. **Editors.** Mostly done, pulled forward into `ui-overhaul/phase-2-design-system` and `ui-overhaul/phase-2-backend`.
+   - Done: document, sheet and whiteboard studios; the side panel ("parallel routes", `?/document/<id>=_sidebar`) with tabs for docs, folders, sheets and whiteboards; presence over Socket.IO (socket JWT auth now required); page status, subtitle, cover position and locking (a locked page returns 423 to everyone except admins, the creator and the locker); page stats endpoint; sharing with members and teams.
+   - Still to do: public share links, templates.
 6. **Chat.** Threads, reactions, typing indicators, unread counts, pins and bookmarks. Voice huddles come later.
 7. **Settings extras.** Profile, workspace, spaces, members, teams and invitations shipped in phase 2. Still to do: audit log, storage quotas, domain verification, invite emails (needs a mail provider).
 8. **Hardening.** Accessibility, end-to-end coverage, performance.
