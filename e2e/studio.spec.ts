@@ -62,29 +62,29 @@ test('side panel tabs, document studio editing, lock and presence', async ({ pag
   const panel = page.getByRole('complementary', { name: 'Side panel' });
   await expect(panel).toBeVisible();
   await expect(page).toHaveURL(/\/\?/);
-  await expect(panel.getByLabel('Title')).toHaveValue('Studio Spec');
+  await expect(panel.getByLabel('Title', { exact: true })).toHaveValue('Studio Spec');
   await panel.getByRole('button', { name: 'Close panel' }).click();
   await expect(panel).toHaveCount(0);
 
   await page.getByRole('row', { name: /Studio Spec/ }).getByRole('button', { name: 'More actions for Studio Spec' }).click();
   await page.getByRole('menuitem', { name: 'Open in side panel' }).click();
-  await expect(panel.getByLabel('Title')).toHaveValue('Studio Spec');
+  await expect(panel.getByLabel('Title', { exact: true })).toHaveValue('Studio Spec');
 
   await page.goto(`/?${encodeURIComponent(`/document/${doc._id}`)}=_sidebar&${encodeURIComponent(`/folder/${folder._id}`)}=_sidebar`);
   const tabs = panel.getByRole('tab');
   await expect(tabs).toHaveCount(2);
   await expect(panel.getByRole('heading', { name: 'Specs Folder' })).toBeVisible();
   await tabs.filter({ hasText: 'Studio Spec' }).getByRole('button').first().click();
-  await expect(panel.getByLabel('Title')).toHaveValue('Studio Spec');
+  await expect(panel.getByLabel('Title', { exact: true })).toHaveValue('Studio Spec');
 
   // Rename inside the panel; it saves, and the full page shows the new title.
-  await panel.getByLabel('Title').fill('Studio Spec v2');
+  await panel.getByLabel('Title', { exact: true }).fill('Studio Spec v2');
   await expect(panel.getByText('Saved').first()).toBeVisible({ timeout: 10_000 });
   await panel.getByRole('button', { name: 'Open full page' }).first().click();
   await expect(page).toHaveURL(new RegExp(`/document/${doc._id}$`));
   await expect(panel).toHaveCount(0);
   await page.reload();
-  await expect(page.getByLabel('Title')).toHaveValue('Studio Spec v2');
+  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Studio Spec v2');
 
   // Status and lock.
   await page.getByRole('button', { name: 'Document status' }).click();
@@ -96,7 +96,7 @@ test('side panel tabs, document studio editing, lock and presence', async ({ pag
   // A teammate opening the page shows up in presence; the locked page is read-only for them.
   const matePage = await newSignedInPage(browser, mate, ws, 'member');
   await matePage.goto(`/document/${doc._id}`);
-  await expect(matePage.getByLabel('Title')).toBeDisabled();
+  await expect(matePage.getByLabel('Title', { exact: true })).toBeDisabled();
   await expect(page.getByLabel(/1 other person here/)).toBeVisible({ timeout: 15_000 });
   await matePage.context().close();
   await expect(page.getByLabel(/1 other person here/)).toHaveCount(0, { timeout: 15_000 });
@@ -125,15 +125,15 @@ test('sheet and whiteboard studios render and rename', async ({ page, isMobile }
   await signIn(page, owner, ws, 'owner');
 
   await page.goto(`/document/${sheet._id}`);
-  await expect(page.getByLabel('Title')).toHaveValue('Budget Sheet');
+  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Budget Sheet');
   await expect(page.getByRole('button', { name: 'Export CSV' })).toBeVisible();
   await expect(page.locator('canvas').first()).toBeVisible({ timeout: 20_000 });
-  await page.getByLabel('Title').fill('Budget Sheet 2026');
-  await page.getByLabel('Title').press('Enter');
+  await page.getByLabel('Title', { exact: true }).fill('Budget Sheet 2026');
+  await page.getByLabel('Title', { exact: true }).press('Enter');
   await expect(page.getByText('Saved').first()).toBeVisible({ timeout: 10_000 });
 
   await page.goto(`/document/${board._id}`);
-  await expect(page.getByLabel('Title')).toHaveValue('Flow Board');
+  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Flow Board');
   await expect(page.getByRole('button', { name: 'Present' })).toBeVisible();
   await expect(page.locator('.excalidraw canvas').first()).toBeVisible({ timeout: 20_000 });
 

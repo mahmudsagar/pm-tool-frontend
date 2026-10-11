@@ -10,6 +10,7 @@ import NotFound from "./NotFound";
 // only download when a page that needs them is opened.
 const HubPage = lazy(() => import("@/pages/hub/HubPage"));
 const Data = lazy(() => import("@/pages/Data"));
+const BoardPage = lazy(() => import("@/pages/board/BoardPage"));
 const Chat = lazy(() => import("@/pages/Chat"));
 const Notifications = lazy(() => import("@/pages/inbox/InboxPage"));
 const ContainerPage = lazy(() => import("@/pages/hub/ContainerPage"));
@@ -47,7 +48,7 @@ export const routes = [
           { path: '/starred', element: page(<StarredPage />) },
           { path: '/trash', element: page(<TrashPage />) },
           { path: '/data', element: page(<Data />) },
-          { path: '/board/:id', element: page(<Data />) },
+          { path: '/board/:id', element: page(<BoardPage />) },
           { path: '/scrum/:id', element: page(<Data mode="scrum" />) },
           { path: '/chat', element: page(<Chat />) },
           { path: '/users', element: <Navigate to="/settings/members" replace /> },

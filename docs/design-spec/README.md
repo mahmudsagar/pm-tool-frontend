@@ -29,9 +29,10 @@ These per-area specs were derived from the screens:
 2. **Design system, app shell, hub and settings.** Done on `ui-overhaul/phase-2-design-system` (frontend) and `ui-overhaul/phase-2-backend` (api-server). Settings were pulled forward from phase 7 at the user's request.
    - Frontend: tokens, primitives, sidebar, top bar, ⌘K search, the "New" menu and create/share modal, the hub page and mobile navigation.
    - Backend: per-user favorites, recent items, trash (soft delete), storage size.
-3. **Board views.**
-   - Frontend: table, kanban, calendar, timeline and the tabbed side drawer.
-   - Backend: task keys, manual ordering, priority migration, estimates, WIP limits, milestones, bulk update.
+3. **Board views.** Done on `ui-overhaul/phase-2-design-system` (frontend) and `ui-overhaul/phase-2-backend` (api-server).
+   - Frontend: databoards (`/board/:id`, also in the side panel) rebuilt in `src/pages/board` and `src/features/board`. Table (grouping, inline edits, drag reorder, bulk actions, per-group add, columns, CSV export), Kanban (WIP limits, swimlanes, card menu, Done collapse), Calendar (month/week/day/list, multi-day bars, unscheduled tray, drag to reschedule) and Timeline (zoom levels, parent/status/assignee/epic tree, drag and resize, Alt-drag dependencies, critical path, milestones). Shared view settings live in `saved_view.databoard`; the active tab and collapsed groups are per person (localStorage). Scrum boards still use the old `pages/Data.jsx` until phase 4.
+   - Backend: board access check on GET, persistent task keys (`board.key` + atomic `task_seq`), `sort_order`, comment/attachment counts, `PUT/DELETE /v1/board/tasks` (server-side merge, lock-aware), `custom_meta_values` merge on the single-task PUT.
+   - Still to do: board key uniqueness per workspace; tightening the middleware so parent-space access no longer lets members write to private boards through the older routes.
 4. **Scrum and analytics.**
    - Frontend: the sprint board and the analytics studios.
    - Backend: task event log, sprint objects (dates, goal, snapshot), member capacity, analytics endpoints, bulk reassign.
