@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useTheme, type Theme } from '@/components/theme-provider';
 import { http } from '@/lib/api/client';
 import useAuthStore from '@/stores/useAuthStore';
+import { BrowserNotificationsCard } from '@/features/notifications/BrowserNotificationsCard';
 import { Field, FieldGrid, LockedValue, MetaTag, SettingsSection, UnsavedBar } from '@/features/settings/components';
 import { ACCENTS, applyAppearance } from '@/features/settings/appearance';
 import {
@@ -446,6 +447,7 @@ export default function ProfilePage() {
           </SettingsSection>
 
           <SettingsSection icon={BellRing} title="Notifications" meta={<MetaTag>{snoozed ? 'Snoozed' : 'Active'}</MetaTag>}>
+            <BrowserNotificationsCard />
             <div className="grid gap-2 sm:grid-cols-3">
               {(
                 [

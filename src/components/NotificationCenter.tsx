@@ -7,6 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/feedback/EmptyState';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDate } from '@/features/files/formatDate';
+import { Switch } from '@/components/ui/switch';
+import { disableBrowserNotifications, enableBrowserNotifications, useBrowserNotificationSettings, useNotificationPermission } from '@/features/notifications/browserNotifications';
 import { notificationTarget, type AppNotification } from '@/features/notifications/notificationTarget';
 import { cn } from '@/lib/utils';
 
@@ -108,12 +110,13 @@ export function NotificationCenter({ workspaceId }: { userId?: string; workspace
             </div>
           )}
         </div>
-        {notifications.length > 0 && (
-          <div className="border-t border-border p-1.5">
+        <div className="flex items-center gap-2 border-t border-border p-1.5">
+          <DesktopAlertsToggle />
+          {notifications.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="w-full"
+              className="ml-auto"
               onClick={() => {
                 setOpen(false);
                 navigate('/notifications');
@@ -121,10 +124,29 @@ export function NotificationCenter({ workspaceId }: { userId?: string; workspace
             >
               Open inbox
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+/** Compact on/off for desktop alerts in the bell popover; full options live in profile settings. */
+function DesktopAlertsToggle() {
+  const [permission, setPermission] = useNotificationPermission();
+  const enabled = useBrowserNotificationSettings((s) => s.enabled);
+  if (permission === 'unsupported') return null;
+  const on = enabled && permission === 'granted';
+  return (
+    <label className={cn('flex items-center gap-2 px-2 text-2xs text-muted-foreground', permission === 'denied' ? 'opacity-60' : 'cursor-pointer')} title={permission === 'denied' ? 'Blocked in browser settings' : undefined}>
+      <Switch
+        checked={on}
+        disabled={permission === 'denied'}
+        aria-label="Desktop notifications"
+        onCheckedChange={(v) => (v ? void enableBrowserNotifications().then(setPermission) : disableBrowserNotifications())}
+      />
+      Desktop alerts{permission === 'denied' ? ' (blocked)' : ''}
+    </label>
   );
 }
 

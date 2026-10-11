@@ -4,6 +4,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { Socket } from 'socket.io-client';
 import useAuthStore from '@/stores/useAuthStore';
 import { wsUrl } from '@/utils/constants';
+import { http } from '@/lib/api/client';
+import { enableBrowserNotifications, notifyFromChat, notifyFromServer } from '@/features/notifications/browserNotifications';
+import type { AppNotification } from '@/features/notifications/notificationTarget';
 
 /**
  * One Socket.IO connection per signed-in session and workspace.
@@ -24,29 +27,12 @@ export const useSocket = () => useRealtimeStore((s) => s.socket);
 export const useRealtimeStatus = () => useRealtimeStore((s) => s.status);
 
 interface NotificationEvent {
-  data?: {
-    message?: string;
-    action?: string;
-    entity_type?: string;
-    entity_name?: string;
-    metadata?: { actor_name?: string };
-  };
+  data?: AppNotification;
 }
 
-function showBrowserNotification(notification: NotificationEvent['data']) {
-  if (!notification || !('Notification' in window) || Notification.permission !== 'granted') return;
-  if (document.visibilityState === 'visible') return; // The in-app bell already shows it.
-  const title = notification.message || `New ${notification.entity_type ?? ''} ${notification.action ?? ''}`.trim();
-  new Notification(title, {
-    icon: '/logo.png',
-    body: `${notification.metadata?.actor_name || 'Someone'} ${notification.action ?? ''} ${notification.entity_name ?? ''}`.trim(),
-  });
-}
-
+/** Kept for older callers: turns desktop alerts on (asks for permission if needed). */
 export function requestNotificationPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    void Notification.requestPermission();
-  }
+  void enableBrowserNotifications();
 }
 
 export function useRealtimeConnection() {
@@ -78,7 +64,22 @@ export function useRealtimeConnection() {
       socket.on('connect_error', () => set({ status: 'reconnecting' }));
       socket.on('notification', (event: NotificationEvent) => {
         queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        showBrowserNotification(event?.data);
+        notifyFromServer(event?.data);
+      });
+      socket.on('chat:message', (event: { data?: Parameters<typeof notifyFromChat>[0] }) => {
+        const message = event?.data;
+        if (!message?.conversation_id) return;
+        type Conv = NonNullable<Parameters<typeof notifyFromChat>[1]>;
+        const cached = queryClient.getQueryData<Conv[]>(['chat', 'conversations']);
+        const known = cached?.find((c) => c?._id === message.conversation_id);
+        // Outside the chat page the list may not be loaded (or may predate a new DM): fetch it.
+        const lookup = known
+          ? Promise.resolve(known)
+          : queryClient
+              .fetchQuery({ queryKey: ['chat', 'conversations'], queryFn: async () => (await http.get<Conv[]>('/v1/chat/conversation')) ?? [], staleTime: 0 })
+              .then((list) => list.find((c) => c._id === message.conversation_id))
+              .catch(() => undefined);
+        void lookup.then((conversation) => notifyFromChat(message, conversation, userId));
       });
 
       set({ socket });

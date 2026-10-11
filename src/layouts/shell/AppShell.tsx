@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { SidePanel } from '@/features/peek/SidePanel';
@@ -14,6 +14,7 @@ import { ShortcutsDialog } from './ShortcutsDialog';
 import { useGlobalShortcuts } from './shortcuts';
 import { useAppearanceSync } from '@/features/settings/appearance';
 import { useShellState } from './treeState';
+import { useNotificationClickNavigation } from '@/features/notifications/browserNotifications';
 
 /**
  * App layout from the "workspace landing hub" design: fixed sidebar on desktop,
@@ -26,6 +27,8 @@ export default function AppShell() {
   useRealtimeConnection();
   useGlobalShortcuts();
   useAppearanceSync();
+  const navigate = useNavigate();
+  useNotificationClickNavigation(navigate);
   const [topMenu, setTopMenu] = useState<TopMenu>({ inlineContent: null, dropdownContent: null });
   const { sidebarOpen, mobileNavOpen, setMobileNavOpen } = useShellState();
 

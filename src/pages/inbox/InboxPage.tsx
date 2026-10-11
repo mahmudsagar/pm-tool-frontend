@@ -9,7 +9,7 @@ import { ErrorState } from '@/components/feedback/ErrorState';
 import { NotificationRow } from '@/components/NotificationCenter';
 import { notificationTarget, type AppNotification } from '@/features/notifications/notificationTarget';
 import { useNotifications } from '@/hooks/useNotifications';
-import { requestNotificationPermission } from '@/lib/realtime/socket';
+import { enableBrowserNotifications, useBrowserNotificationSettings, useNotificationPermission } from '@/features/notifications/browserNotifications';
 import useAuthStore from '@/stores/useAuthStore';
 
 type Filter = 'all' | 'unread' | 'mentions';
@@ -38,7 +38,16 @@ export default function InboxPage() {
     markAsRead: (id: string) => void;
     markAllAsRead: () => Promise<void>;
   };
-  const browserNotificationsOff = typeof Notification !== 'undefined' && Notification.permission === 'default';
+  const [permission, setPermission] = useNotificationPermission();
+  const desktopEnabled = useBrowserNotificationSettings((s) => s.enabled);
+  const [bannerDismissed, setBannerDismissed] = useState(() => {
+    try {
+      return localStorage.getItem('inbox-desktop-banner') === 'dismissed';
+    } catch {
+      return false;
+    }
+  });
+  const browserNotificationsOff = permission !== 'unsupported' && permission !== 'denied' && !(desktopEnabled && permission === 'granted') && !bannerDismissed;
 
   const groups = useMemo(() => {
     const list = notifications.filter((n) => (filter === 'unread' ? !n.is_read : filter === 'mentions' ? n.action === 'mention' : true));
@@ -90,9 +99,25 @@ export default function InboxPage() {
       {browserNotificationsOff && (
         <div className="flex flex-col gap-2 rounded-xl border border-info/20 bg-info/5 px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between">
           <span className="text-muted-foreground">Get desktop alerts for mentions and updates while this tab is in the background.</span>
-          <Button variant="outline" size="xs" onClick={requestNotificationPermission}>
-            Enable desktop notifications
-          </Button>
+          <span className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => {
+                setBannerDismissed(true);
+                try {
+                  localStorage.setItem('inbox-desktop-banner', 'dismissed');
+                } catch {
+                  // Not critical.
+                }
+              }}
+            >
+              Not now
+            </Button>
+            <Button variant="outline" size="xs" onClick={() => void enableBrowserNotifications().then(setPermission)}>
+              Turn on desktop notifications
+            </Button>
+          </span>
         </div>
       )}
 
